@@ -12,6 +12,9 @@ void *mkd_string(char*,int);		/* assemble input from a buffer */
 
 void markdown(void*, FILE*, int);	/* mark it on down */
 
+void mkd_push(char *, int);
+void mkd_text(FILE *out);
+
 #define MKD_NOLINKS	0x01
 #define MKD_NOIMAGE	0x02
 

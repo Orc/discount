@@ -97,8 +97,8 @@ mkd_firstnonblank(Line *p)
 static Cstring output;
 static unsigned int csp = 0;
 
-static void
-push(char *t, int s)
+void
+mkd_push(char *t, int s)
 {
     int i;
 
@@ -388,8 +388,8 @@ smartypants(int c, int *flags, FILE *out)
 static void code(int, FILE*);
 
 
-static void
-text(FILE *out)
+void
+mkd_text(FILE *out)
 {
     int c, j;
     int em = 0;
@@ -527,7 +527,7 @@ setext(Line *p, FILE *out)
 	i = (*q == '=') ? 1 : 2;
 
 	fprintf(out, "<H%d>", i);
-	push(T(p->text), S(p->text)); text(out);
+	mkd_push(T(p->text), S(p->text)); mkd_text(out);
 	fprintf(out, "</H%d>\n", i);
 
 	return 1;
@@ -564,7 +564,7 @@ etx(Line *p, FILE *out)
     if ( j < i ) return 0;
 
     fprintf(out, "<H%d>", H);
-    push(T(p->text)+i, 1+(j-i)); text(out);
+    mkd_push(T(p->text)+i, 1+(j-i)); mkd_text(out);
     fprintf(out, "</H%d>", H);
     return 1;
 }
@@ -577,17 +577,17 @@ printblock(Line *t, FILE *out)
 	if ( S(t->text) ) {
 	    if ( S(t->text) > 2 && T(t->text)[S(t->text)-2] == ' '
 				&& T(t->text)[S(t->text)-1] == ' ') {
-		push(T(t->text), S(t->text)-2);
-		push("<br/>\n", 6);
+		mkd_push(T(t->text), S(t->text)-2);
+		mkd_push("<br/>\n", 6);
 	    }
 	    else {
-		push(T(t->text), S(t->text));
-		push("\n", 1);
+		mkd_push(T(t->text), S(t->text));
+		mkd_push("\n", 1);
 	    }
 	}
 	t = t->next;
     }
-    text(out);
+    mkd_text(out);
 }
 
 
@@ -599,11 +599,11 @@ printcode(Line *t, FILE *out)
     for ( blanks = 0; t ; t = t->next )
 	if ( S(t->text) ) {
 	    while ( blanks ) {
-		push("\n", 1);
+		mkd_push("\n", 1);
 		--blanks;
 	    }
-	    push(T(t->text), S(t->text));
-	    push("\n", 1);
+	    mkd_push(T(t->text), S(t->text));
+	    mkd_push("\n", 1);
 	}
 	else blanks++;
     code(0, out);
