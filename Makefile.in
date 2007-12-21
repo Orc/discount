@@ -4,6 +4,8 @@ RANLIB=@RANLIB@
 
 BINDIR=@exedir@
 MANDIR=@mandir@
+LIBDIR=@libdir@
+INCDIR=@prefix@/include
 
 PGM=markdown
 MKDLIB=libmarkdown.a
@@ -13,11 +15,12 @@ all: $(PGM)
 
 install: $(PGM)
 	@INSTALL_PROGRAM@ $(PGM) $(BINDIR)
-	@MKSUID@ $(BINDIR)/$(PGM)
+	@INSTALL_DATA@ $(MKDLIB) $(LIBDIR)
+	@INSTALL_DATA@ mkdio.h $(INCDIR)
 
 # install.man:
-# 	@INSTALL_DIR@ $(MANDIR)/man1
-# 	@INSTALL_DATA@ pstree.1 $(MANDIR)/man1
+# 	@INSTALL_DIR@ $(MANDIR)/man3
+# 	@INSTALL_DATA@ markdown.3 mkdio.3 $(MANDIR)/man3
 
 version.o: VERSION
 	echo 'char version[] = VERSION;' > version.c && \
