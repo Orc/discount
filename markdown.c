@@ -103,10 +103,7 @@ static int
 peek(int i)
 {
 
-    if ( i > 0 )
-	i += (csp-1);
-    else
-	i = (csp + i)-1;
+    i += (csp-1);
 
     return (i >= 0) && (i < S(output)) ? T(output)[i] : EOF;
 }
@@ -122,6 +119,21 @@ pull()
 }
 
 
+static char*
+cursor()
+{
+    return T(output) + csp;
+}
+
+
+static void
+shift(int i)
+{
+    if ( (csp + i >= 0) && (csp + i < S(output)) )
+	csp += i;
+}
+
+
 static void
 skipblankc()
 {
@@ -129,14 +141,6 @@ skipblankc()
 	pull();
 }
 
-
-static void
-pullcopy(char *dest, int size)
-{
-    while ( size-- > 0 )
-	*dest++ = pull();
-    *dest = 0;
-}
 
 static void
 linkylinky(int image, FILE *out)
@@ -149,24 +153,33 @@ linkylinky(int image, FILE *out)
 	if ( c == EOF )
 	    return;
     
-    label = alloca(labelsize+1);
-    pullcopy(label, labelsize);
+    label = cursor();
 
-    skipblankc();
+    for (j=labelsize+1; isspace(c = peek(j)); j++)
+	;
+
+    if ( (c != '[') && (c != '(') ) {
+	fputc('[', out);
+	return;
+    }
+    shift(j);
 
     fprintf(out, image ?  "<img" : "<a");
     
-    if ( (c=pull()) == '(' ) /* inline link */ {
+    switch (c) {
 	char *link;
-	
+	char *tag;
+	Footnote key, *ret;
+    
+    case '(':
 	for ( size =1; (c=peek(size)) != ')' && !isspace(c); ++size)
 	    if ( c == EOF )
-		goto failed;
+		break;
 	    
-	link = alloca(size);
-	pullcopy(link, size-1);
+	link = cursor();
+	shift(size);
 
-	fprintf(out, " %s=\"%.*s\"", image ? "src" : "href", size, link);
+	fprintf(out, " %s=\"%.*s\"", image ? "src" : "href", size-1, link);
 	skipblankc();
 
 	if ( image && (peek(1) == '=') ) {
@@ -188,25 +201,25 @@ linkylinky(int image, FILE *out)
 	if ( (qc=peek(1)) == '"' || qc == '\'' ) {
 	    fprintf(out, " title=\"");
 	    pull();
-	    while ( (c=pull()) != EOF && c != qc )
+	    while ( ((c=pull()) != EOF) && (c != qc) )
 		fputc(c, out);
 	    fputc('"', out);
 	}
 	if ( peek(1) == ')' ) pull();
-    }
-    else if ( c == '[' ) {	/* footnote link */
-	char *tag;
-	Footnote key, *ret;
-    
+	break;
+
+    case '[':
 	for ( size = 0; (c=peek(size+1)) != ']'; ++size)
 	    if ( c == EOF )
-		goto failed;
+		break;
 
 	tag = alloca ( 2 + (size ? size : labelsize) );
 	tag[0] = '[';
 
-	if ( size )
-	    pullcopy(tag+1, size+1);
+	if ( size ) {
+	    memcpy(tag+1, cursor(), size+1);
+	    shift(size+1);
+	}
 	else  {
 	    memcpy(tag+1, label, labelsize);
 	    tag[labelsize+1] = 0;
@@ -226,13 +239,9 @@ linkylinky(int image, FILE *out)
 	    if ( image && ret->height && ret->width )
 		fprintf(out, " height=%d width=%d", ret->height, ret->width);
 	}
+	break;
     }
-    else
-	return;
-	
-    fprintf(out, image ? " alt=\"%.*s\"" : ">%.*s</a", labelsize-1, label);
-failed:
-    fputc('>', out);
+    fprintf(out, image ? " alt=\"%.*s\"" : ">%.*s</a>", labelsize-1, label);
 }
 
 
@@ -267,28 +276,39 @@ handle_less_than(FILE *out)
 	return 1;
     }
 
-    text = alloca(size+2);
-    pullcopy(text,size);
+    text = cursor();
+    shift(size);
 
     for ( i=0; i < SZAUTOPREFIX; i++ )
 	if ( strncasecmp(text, autoprefix[i], strlen(autoprefix[i])) == 0 ) {
-	    printf("<a href=\"%s\">%s</a", text, text);
+	    printf("&lt;<a href=\"%.*s\">%.*s</a>", size, text, size, text);
 	    return 1;
 	}
     if ( maybeaddress ) {
-	fprintf(out, "<a href=\"");
-	for ( i=0; text[i]; i++ )
+	fprintf(out, "&lt;<a href=\"mailto:");
+	for ( i=0; i < size; i++ )
 	    fprintf(out, hexfmt(), (unsigned char)text[i]);
 	fprintf(out,"\">");
-	for ( i=0; text[i]; i++ )
+	for ( i=0; i < size; i++ )
 	    fprintf(out,hexfmt(), (unsigned char)text[i]);
 	fprintf(out,"</a>");
 	return 1;
     }
 
-    fprintf(out,"&lt;%s", text);
+    fprintf(out,"&lt;");
+    shift(-size);
     return 1;
 }
+
+
+static int
+isthisblank(i)
+{
+    int c = peek(i);
+
+    return (c == EOF) || isspace(c);
+}
+
 
 static void code(int, FILE*);
 
@@ -387,11 +407,14 @@ text(FILE *out)
 		    dquo = !dquo;
 		    break;
 
-#if 0
-	case '\'':  fprintf(out, "&%csquo;", squo ? 'r' : 'l' );
-		    squo = !squo;
+	case '\'':  if ( isthisblank( squo ? 1 : -1 ) ) {
+			fprintf(out, "&%csquo;", squo ? 'r' : 'l' );
+			squo = !squo;
+		    }
+		    else
+			fputc(c,out);
 		    break;
-#endif
+		    break;
 
 	case '.':   if ( peek(1) == '.' && peek(2) == '.' ) {
 			fprintf(out,"&hellip;");
@@ -601,7 +624,7 @@ listdisplay(Paragraph *p, FILE* out)
     while ( p && (p->typ == typ) ) {
 	fprintf(out, "<li>");
 	emit(p->down, out);
-	fprintf(out, "</li>");
+	fprintf(out, "</li>\n");
 
 	p = p->next;
     }
