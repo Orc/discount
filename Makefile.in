@@ -14,12 +14,12 @@ install: $(PGM)
 # 	@INSTALL_DIR@ $(MANDIR)/man1
 # 	@INSTALL_DATA@ pstree.1 $(MANDIR)/man1
 
-$(PGM): markdown.c
-	$(CC) -o $(PGM) -DPROGRAM=1 markdown.c @LIBS@
+version.o: VERSION
+	echo 'char version[] = VERSION;' > version.c && \
+	    $(CC) -DVERSION=\"`cat VERSION`\" -c version.c
 
-# version.o: VERSION
-# 	echo 'char version[] = VERSION;' > version.c
-# 	$(CC) -DVERSION=\"`cat VERSION`\" -c version.c
+$(PGM): markdown.c version.o
+	$(CC) -o $(PGM) -DPROGRAM=1 markdown.c version.o @LIBS@
 
 clean:
 	rm -f $(PGM) *.o
