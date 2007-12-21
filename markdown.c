@@ -260,7 +260,7 @@ handle_less_than(FILE *out)
     int maybetag=1, maybelink=0, maybeaddress=0;
 
     for ( size=0; ((c = peek(size+1)) != '>') && !isspace(c); size++ ) {
-	if ( ! (c == '/' || isalnum(c)) )
+	if ( ! (c == '/' || isalnum(c) || c == '~') )
 	    maybetag=0;
 	if ( c == '@' )
 	    maybeaddress=1;
@@ -451,6 +451,8 @@ text(FILE *out)
 		    break;
 	}
     }
+    if ( em ) fputs("</em>", out);
+    if ( strong ) fputs("</strong>", out);
 }
 
 
@@ -476,7 +478,7 @@ code(int escape, FILE *out)
 	default:    fputc(c, out); break;
 	}
     }
-
+    fprintf(out, "</code>");
 }
 
 
@@ -793,7 +795,7 @@ islist(Line *t, int *trim)
     int i, j;
     char *q;
     
-    if ( (t == 0) || (t->dle > 3) )
+    if ( blankline(t) || (t->dle > 3) )
 	return 0;
 
     if ( islabel(T(t->text) + t->dle) ) {
@@ -886,6 +888,7 @@ codeblock(Paragraph *p)
 static int
 centered(Line *first, Line *last)
 {
+
     if ( first&&last ) {
 	int len = S(last->text);
 
@@ -912,6 +915,7 @@ textblock(Paragraph *p)
 	    return 0;
 	}
 	else if ( fancy(r) ){
+	    p->align = centered(p->text, t);
 	    t->next = 0;
 	    return r;
 	}
@@ -1004,6 +1008,7 @@ listblock(Paragraph *p, int trim)
 	    last = t;
 	    t = t->next;
 	}
+
 	CLIP(last->text,0,trim);
 	last->dle = mkd_firstnonblank(last);
 
