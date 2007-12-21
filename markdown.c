@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "cstring.h"
+#include "markdown.h"
 
 /* prefixes for <automatic links>
  */
@@ -20,44 +21,6 @@ static char *blocktags[] = { "ADDRESS", "BDO", "BLOCKQUOTE", "CENTER",
 		      "P", "OL", "DL", "PLAINTEXT", "PRE",
 		       "WBR", "XMP" };
 #define SZBLOCKTAGS	(sizeof blocktags / sizeof blocktags[0])
-
-/* reference-style links (and images) are stored in an array
- * of footnotes.
- */
-typedef struct footnote {
-    Cstring tag;		/* the tag for the reference link */
-    Cstring link;		/* what this footnote points to */
-    Cstring title;		/* what it's called (TITLE= attribute) */
-    int height, width;		/* dimensions (for image link) */
-} Footnote;
-
-static STRING(Footnote) footnotes;
-
-
-/* each input line is read into a Line, which contains the line,
- * the offset of the first non-space character [this assumes 
- * that all tabs will be expanded to spaces!], and a pointer to
- * the next line.
- */
-typedef struct line {
-    Cstring text;
-    struct line *next;
-    int dle;
-} Line;
-
-
-/* a paragraph is a collection of Lines, with links to the next paragraph
- * and (if it's a QUOTE, UL, or OL) to the reparsed contents of this
- * paragraph.
- */
-typedef struct paragraph {
-    struct paragraph *next;	/* next paragraph */
-    struct paragraph *down;	/* recompiled contents of this paragraph */
-    struct line *text;		/* all the text in this paragraph */
-    enum { FORCED, CODE=1, QUOTE, MARKUP, HTML, UL, OL, HR } typ;
-    int para;
-    enum { LEFT, RIGHT, CENTER} align;
-} Paragraph;
 
 
 /* case insensitive string sort (for qsort() and bsearch() of block tags)
@@ -114,72 +77,10 @@ nextnonblank(Line *t, int i)
 
 /* find the first nonblank character on the Line.
  */
-static int
-firstnonblank(Line *p)
+int
+mkd_firstnonblank(Line *p)
 {
     return nextnonblank(p,0);
-}
-
-
-/* read in the markdown source document, assemble into a linked
- * list.   Tabs ('\t') will be expanded to spaces here to make
- * the rest of the compilation easier.
- */
-Line *
-in(FILE *input)
-{
-    int i, c, xp;
-    Line *p;
-
-    ANCHOR(Line) list = { 0, 0 };
-
-    p = calloc(sizeof *p, 1);
-    CREATE(p->text);
-    xp = 0;
-
-    for (; (c = getc(input)) != EOF; ) {
-	if (c == '\n') {
-	    /* add a trailing null, then exclude it from
-	     * the string size
-	     */
-	    EXPAND(p->text) = 0;
-	    --S(p->text);
-
-	    p->dle = firstnonblank(p);
-
-	    ATTACH(list, p);
-
-	    p = calloc(sizeof *p, 1);
-	    CREATE(p->text);
-	    xp = 0;
-	}
-	else if ( c != '\t' ) {
-	    EXPAND(p->text) = c;
-	    xp++;
-	}
-	else {
-	    /* expand tabs into 1..4 spaces.  This is not
-	     * the traditional tab spacing, but the language
-	     * definition /really really/ wants tabs to be
-	     * 4 spaces wide (indents are in terms of tabs
-	     * *or* 4 spaces.
-	     */
-	    do {
-		EXPAND(p->text) = ' ';
-	    } while ( ++xp & 03 );
-	}
-    }
-    if ( S(p->text) ) {
-	/* It's not an error if the input doesn't end on a newline
-	 */
-	EXPAND(p->text) = 0;
-	--S(p->text);
-
-	p->dle = firstnonblank(p);
-
-	ATTACH(list, p);
-    }
-    return T(list);
 }
 
 
@@ -946,7 +847,7 @@ codeblock(Paragraph *p)
 
     for ( t = p->text; t; t = r ) {
 	CLIP(t->text,0,4);
-	t->dle = firstnonblank(t);
+	t->dle = mkd_firstnonblank(t);
 
 	r = t->next;
 	if ( r && S(r->text) && !iscode(r) ) {
@@ -1043,7 +944,7 @@ quoteblock(Paragraph *p)
 
 	if ( (qp = quoteprefix(t)) > 0 ) {
 	    CLIP(t->text, 0, qp);
-	    t->dle = firstnonblank(t);
+	    t->dle = mkd_firstnonblank(t);
 	}
     }
     return t;
@@ -1081,7 +982,7 @@ listblock(Paragraph *p, int trim)
 	    t = t->next;
 	}
 	CLIP(last->text,0,trim);
-	last->dle = firstnonblank(last);
+	last->dle = mkd_firstnonblank(last);
 
 	if ( t ) trim = (t->dle < 4) ? t->dle : 4;
     } while ( t );
@@ -1271,7 +1172,7 @@ initmarkdown()
 
 
 void
-markdown(Line *text, FILE *out)
+markdown(Line *text, FILE *out, int flags)
 {
     Paragraph *paragraph;
     initmarkdown();
@@ -1294,7 +1195,7 @@ main(int argc, char **argv)
 	perror(argv[1]);
 	exit(1);
     }
-    markdown(in(stdin), stdout);
+    markdown(in(stdin), stdout, 0);
     exit(0);
 }
 #endif

@@ -819,6 +819,24 @@ AC_PROG_YACC () {
 
 
 #
+# AC_PROG looks for a program
+#
+AC_PROG () {
+    PN=`basename $1 | tr '[a-z]' '[A-Z]' | tr -dc '[A-Z]'`
+    TLOGN "looking for $1"
+    DEST=`acLookFor $1`
+    if [ "$DEST" ]; then
+	AC_SUB $PN $DEST
+	TLOG " ($DEST)"
+	return 0
+    fi
+    AC_SUN $PN true
+    TLOG " (not found)"
+    return 1
+}
+
+
+#
 # AC_PROG_LN_S checks to see if ln exists, and, if so, if ln -s works
 #
 AC_PROG_LN_S () {

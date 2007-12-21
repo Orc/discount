@@ -19,6 +19,9 @@ case "$AC_CC $AC_CFLAGS" in
 	    AC_DEFINE 'if(x)' 'if( (x) != 0 )' ;;
 esac
 
+AC_PROG ar || AC_FAIL "$TARGET requires ar"
+AC_PROG ranlib
+
 AC_C_VOLATILE
 AC_C_CONST
 AC_SCALAR_TYPES

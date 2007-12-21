@@ -1,8 +1,13 @@
 CC=@CC@
+AR=@AR@
+RANLIB=@RANLIB@
+
 BINDIR=@exedir@
 MANDIR=@mandir@
 
 PGM=markdown
+MKDLIB=libmarkdown.a
+OBJS=mkdio.o markdown.o
 
 all: $(PGM)
 
@@ -18,8 +23,12 @@ version.o: VERSION
 	echo 'char version[] = VERSION;' > version.c && \
 	    $(CC) -DVERSION=\"`cat VERSION`\" -c version.c
 
-$(PGM): markdown.c version.o
-	$(CC) -o $(PGM) -DPROGRAM=1 markdown.c version.o @LIBS@
+$(PGM): main.c version.o $(MKDLIB)
+	$(CC) -o $(PGM) -DPROGRAM=1 main.c version.o $(MKDLIB) @LIBS@
+
+$(MKDLIB): $(OBJS)
+	$(AR) crv $(MKDLIB) $(OBJS)
+	$(RANLIB) $(MKDLIB)
 
 clean:
 	rm -f $(PGM) *.o
@@ -29,3 +38,5 @@ distclean spotless: clean
 
 
 markdown.o: markdown.c config.h cstring.h
+mkdio.o: mkdio.c mkdio.h cstring.h
+$(PGM): mkdio.h config.h
