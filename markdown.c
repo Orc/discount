@@ -321,7 +321,7 @@ isthisblank(i)
 {
     int c = peek(i);
 
-    return (c == EOF) || isspace(c);
+    return (c == EOF) || isspace(c) || ispunct(c);
 }
 
 
