@@ -1,0 +1,31 @@
+CC=@CC@
+BINDIR=@exedir@
+MANDIR=@mandir@
+
+PGM=markdown
+
+all: $(PGM)
+
+install: $(PGM)
+	@INSTALL_PROGRAM@ $(PGM) $(BINDIR)
+	@MKSUID@ $(BINDIR)/$(PGM)
+
+# install.man:
+# 	@INSTALL_DIR@ $(MANDIR)/man1
+# 	@INSTALL_DATA@ pstree.1 $(MANDIR)/man1
+
+$(PGM): markdown.c
+	$(CC) -o $(PGM) -DPROGRAM=1 markdown.c @LIBS@
+
+# version.o: VERSION
+# 	echo 'char version[] = VERSION;' > version.c
+# 	$(CC) -DVERSION=\"`cat VERSION`\" -c version.c
+
+clean:
+	rm -f $(PGM) *.o
+
+distclean spotless: clean
+	rm -f @GENERATED_FILES@ @CONFIGURE_FILES@
+
+
+markdown.o: markdown.c config.h cstring.h
