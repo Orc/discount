@@ -251,7 +251,7 @@ linkylinky(int image, FILE *out)
 	}
 	break;
     }
-    fprintf(out, image ? " alt=\"%.*s\"" : ">%.*s</a>", labelsize-1, label);
+    fprintf(out, image ? " alt=\"%.*s\">" : ">%.*s</a>", labelsize-1, label);
 }
 
 
