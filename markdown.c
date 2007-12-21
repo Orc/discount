@@ -238,7 +238,7 @@ pullcopy(char *dest, int size)
 }
 
 static void
-linkylinky(int image)
+linkylinky(int image, FILE *out)
 {
     char *label;
     int labelsize, size;
@@ -253,7 +253,7 @@ linkylinky(int image)
 
     skipblankc();
 
-    printf( image ?  "<img" : "<a");
+    fprintf(out, image ?  "<img" : "<a");
     
     if ( (c=pull()) == '(' ) /* inline link */ {
 	char *link;
@@ -265,7 +265,7 @@ linkylinky(int image)
 	link = alloca(size);
 	pullcopy(link, size-1);
 
-	printf(" %s=\"%.*s\"", image ? "src" : "href", size, link);
+	fprintf(out, " %s=\"%.*s\"", image ? "src" : "href", size, link);
 	skipblankc();
 
 	if ( image && (peek(1) == '=') ) {
@@ -278,18 +278,18 @@ linkylinky(int image)
 
 	    if ( i ) {
 		if ( sscanf(T(output)+csp, "%dx%d", &width, &height) == 2 )
-		    printf(" width=%d height=%d", width, height);
+		    fprintf(out, " width=%d height=%d", width, height);
 		while ( i-- ) pull();
 	    }
 	    skipblankc();
 	}
 
 	if ( (qc=peek(1)) == '"' || qc == '\'' ) {
-	    printf(" title=\"");
+	    fprintf(out, " title=\"");
 	    pull();
 	    while ( (c=pull()) != EOF && c != qc )
-		putchar(c);
-	    putchar('"');
+		fputc(c, out);
+	    fputc('"', out);
 	}
 	if ( peek(1) == ')' ) pull();
     }
@@ -317,21 +317,21 @@ linkylinky(int image)
 
 	if ( ret ) {
 	    if ( S(ret->link) )
-		printf(" %s=\"%.*s\"", image ? "src" : "href", 
+		fprintf(out, " %s=\"%.*s\"", image ? "src" : "href", 
 					S(ret->link), T(ret->link));
 	    if ( S(ret->title) )
-		printf(" title=\"%.*s\"", S(ret->title), T(ret->title));
+		fprintf(out, " title=\"%.*s\"", S(ret->title), T(ret->title));
 
 	    if ( image && ret->height && ret->width )
-		printf(" height=%d width=%d", ret->height, ret->width);
+		fprintf(out, " height=%d width=%d", ret->height, ret->width);
 	}
     }
     else
 	return;
 	
-    printf(image ? " alt=\"%.*s\"" : ">%.*s</a", labelsize-1, label);
+    fprintf(out, image ? " alt=\"%.*s\"" : ">%.*s</a", labelsize-1, label);
 failed:
-    putchar('>');
+    fputc('>', out);
 }
 
 
@@ -343,7 +343,7 @@ hexfmt()
 
 
 static int
-handle_less_than()
+handle_less_than(FILE *out)
 {
     char *text;
     int c, size, i;
@@ -362,7 +362,7 @@ handle_less_than()
 	return 0;
 
     if ( maybetag ) {
-	putchar('<');
+	fputc('<', out);
 	return 1;
     }
 
@@ -375,24 +375,24 @@ handle_less_than()
 	    return 1;
 	}
     if ( maybeaddress ) {
-	printf("<a href=\"");
+	fprintf(out, "<a href=\"");
 	for ( i=0; text[i]; i++ )
-	    printf(hexfmt(), (unsigned char)text[i]);
-	printf("\">");
+	    fprintf(out, hexfmt(), (unsigned char)text[i]);
+	fprintf(out,"\">");
 	for ( i=0; text[i]; i++ )
-	    printf(hexfmt(), (unsigned char)text[i]);
-	printf("</a>");
+	    fprintf(out,hexfmt(), (unsigned char)text[i]);
+	fprintf(out,"</a>");
 	return 1;
     }
 
-    printf("&lt;%s", text);
+    fprintf(out,"&lt;%s", text);
     return 1;
 }
 
-static void code(int);
+static void code(int, FILE*);
 
 static void
-text()
+text(FILE *out)
 {
     int c, j;
     int em = 0;
@@ -409,62 +409,62 @@ text()
  */
 	case '!':   if ( peek(1) == '[' ) {
 			pull();
-			linkylinky(1);
+			linkylinky(1, out);
 		    }
 		    else
-			putchar(c);
+			fputc(c, out);
 		    break;
-	case '[':   linkylinky(0);
+	case '[':   linkylinky(0, out);
 		    break;
 	case '*':
 	case '_':   if (peek(1) == c) {
 			pull();
 			if ( c == strong ) {
-			    printf("</strong>");
+			    fprintf(out, "</strong>");
 			    strong = 0;
 			}
 			else if ( strong == 0 ) {
-			    printf("<strong>");
+			    fprintf(out, "<strong>");
 			    strong = c;
 			}
 			else {
-			    putchar(c);
-			    putchar(c);
+			    fputc(c, out);
+			    fputc(c, out);
 			}
 		    }
 		    else {
 			if (c == em ) {
-			    printf("</em>");
+			    fprintf(out, "</em>");
 			    em = 0;
 			}
 			else if ( em == 0 ) {
-			    printf("<em>");
+			    fprintf(out, "<em>");
 			    em = c;
 			}
 			else
-			    putchar(c);
+			    fputc(c, out);
 		    }
 		    break;
 	
-	case '`':   printf("<code>");
+	case '`':   fprintf(out, "<code>");
 		    if ( peek(1) == '`' ) {
 			pull();
-			code(2);
+			code(2, out);
 		    }
 		    else
-			code(1);
+			code(1, out);
 		    break;
 
 	case '\\':  if ( (c = pull()) == '&' )
-			printf("&amp;");
+			fprintf(out, "&amp;");
 		    else if ( c == '<' )
-			printf("&lt;");
+			fprintf(out, "&lt;");
 		    else
-			putchar( c ? c : '\\');
+			fputc( c ? c : '\\', out);
 		    break;
 
-	case '<':   if ( !handle_less_than() )
-			printf("&lt;");
+	case '<':   if ( !handle_less_than(out) )
+			fprintf(out, "&lt;");
 		    break;
 
 	case '&':   j = (peek(1) == '#' ) ? 2 : 1;
@@ -472,58 +472,58 @@ text()
 			++j;
 
 		    if ( peek(j) != ';' )
-			printf("&amp;");
+			fprintf(out, "&amp;");
 		    else
-			putchar(c);
+			fputc(c, out);
 		    break;
 
-	default:    putchar(c);
+	default:    fputc(c, out);
 		    break;
 
 /* Smarty-pants-style chrome for quotes, -, ellipses, and (r)(c)(tm)
  */
-	case '"':   printf("&%cdquo;", dquo ? 'r' : 'l' );
+	case '"':   fprintf(out, "&%cdquo;", dquo ? 'r' : 'l' );
 		    dquo = !dquo;
 		    break;
 
 #if 0
-	case '\'':  printf("&%csquo;", squo ? 'r' : 'l' );
+	case '\'':  fprintf(out, "&%csquo;", squo ? 'r' : 'l' );
 		    squo = !squo;
 		    break;
 #endif
 
 	case '.':   if ( peek(1) == '.' && peek(2) == '.' ) {
-			printf("&hellip;");
+			fprintf(out,"&hellip;");
 			pull();pull();
 		    }
 		    else
-			putchar(c);
+			fputc(c, out);
 		    break;
 
 	case '-':   if ( peek(1) == '-' ) {
-			printf("&mdash;");
+			fprintf(out, "&mdash;");
 			pull();
 		    }
 		    else if ( isspace(peek(-1)) && isspace(peek(1)) )
-			printf("&ndash;");
+			fprintf(out, "&ndash;");
 		    else
-			putchar(c);
+			fputc(c, out);
 		    break;
 
 	case '(':   if (  (j = toupper(peek(1))) == 'R' || j == 'C' ) {
 			if ( peek(2) == ')' ) {
-			    printf( "&%s;", (j=='C') ? "copy" : "reg" );
+			    fprintf(out, "&%s;", (j=='C') ? "copy" : "reg" );
 			    pull();pull();
 			    break;
 			}
 		    }
 		    else if ( j == 'T' && toupper(peek(2)) == 'M'
 		                       && peek(3) == ')' ) {
-			printf("&trade;");
+			fprintf(out, "&trade;");
 			pull();pull();pull();
 			break;
 		    }
-		    putchar(c);
+		    fputc(c, out);
 		    break;
 	}
     }
@@ -531,7 +531,7 @@ text()
 
 
 static void
-code(int escape)
+code(int escape, FILE *out)
 {
     int c, j;
 
@@ -540,40 +540,26 @@ code(int escape)
 	case '`':   switch (escape) {
 		    case 2: if ( peek(1) == '`' ) {
 				pull();
-		    case 1:     printf("</code>");
+		    case 1:     fprintf(out, "</code>");
 				return;
 		            }
 		    }
-		    putchar(c);
+		    fputc(c, out);
 		    break;
 
-	case '&':   printf("&amp;"); break;
-	case '<':   printf("&lt;"); break;
-	default:    putchar(c); break;
+	case '&':   fprintf(out, "&amp;"); break;
+	case '<':   fprintf(out, "&lt;"); break;
+	default:    fputc(c, out); break;
 	}
     }
 
 }
 
 
-
-static int
-alto(char *t, int s)
-{
-    int i;
-
-    for (i=0; (i < s) && isalnum(t[i]); i++)
-	;
-
-    return (i < s) ? i : 0;
-
-
-}
-
 /* setext header;  2 lines, second is ==== or -----
  */
 static int
-setext(Line *p)
+setext(Line *p, FILE *out)
 {
     char *q;
     int i;
@@ -588,9 +574,9 @@ setext(Line *p)
 
 	i = (*q == '=') ? 1 : 2;
 
-	printf("<H%d>", i);
-	push(T(p->text), S(p->text)); text();
-	printf("</H%d>\n", i);
+	fprintf(out, "<H%d>", i);
+	push(T(p->text), S(p->text)); text(out);
+	fprintf(out, "</H%d>\n", i);
 
 	return 1;
     }
@@ -601,7 +587,7 @@ setext(Line *p)
 /* etx header;  # of #'s in front is the H level
  */
 static int
-etx(Line *p)
+etx(Line *p, FILE *out)
 {
     int H = 0;
     int i, j;
@@ -625,15 +611,15 @@ etx(Line *p)
 
     if ( j < i ) return 0;
 
-    printf("<H%d>", H);
-    push(T(p->text)+i, 1+(j-i)); text();
-    printf("</H%d>", H);
+    fprintf(out, "<H%d>", H);
+    push(T(p->text)+i, 1+(j-i)); text(out);
+    fprintf(out, "</H%d>", H);
     return 1;
 }
 
 
 void
-printblock(Line *t)
+printblock(Line *t, FILE *out)
 {
     while (t) {
 	if ( S(t->text) ) {
@@ -649,12 +635,12 @@ printblock(Line *t)
 	}
 	t = t->next;
     }
-    text();
+    text(out);
 }
 
 
 void
-printcode(Line *t)
+printcode(Line *t, FILE *out)
 {
     int blanks;
 
@@ -668,58 +654,58 @@ printcode(Line *t)
 	    push("\n", 1);
 	}
 	else blanks++;
-    code(0);
+    code(0, out);
 }
 
 
 void
-printhtml(Line *t)
+printhtml(Line *t, FILE *out)
 {
     int blanks;
     
     for ( blanks=0; t ; t = t->next )
 	if ( S(t->text) ) {
 	    while ( blanks ) {
-		putchar('\n');
+		fputc('\n', out);
 		--blanks;
 	    }
-	    fwrite(T(t->text), S(t->text), 1, stdout);
-	    putchar('\n');
+	    fwrite(T(t->text), S(t->text), 1, out);
+	    fputc('\n', out);
 	}
 	else
 	    blanks++;
 }
 
 
-static Paragraph *display(Paragraph*, int);
+static Paragraph *display(Paragraph*, FILE*, int);
 
 
 static void
-emit(Paragraph *p)
+emit(Paragraph *p, FILE *out)
 {
     int multiple = p->next;
 
-    while ( p = display(p, multiple) )
+    while ( p = display(p, out, multiple) )
 	;
 }
 
 
 static Paragraph*
-listdisplay(Paragraph *p)
+listdisplay(Paragraph *p, FILE* out)
 {
     int typ = p->typ;
 
-    printf( "<%cl>\n", (typ==UL)?'u':'o');
+    fprintf(out, "<%cl>\n", (typ==UL)?'u':'o');
 
     while ( p && (p->typ == typ) ) {
-	printf("<li>");
-	emit(p->down);
-	printf("</li>");
+	fprintf(out, "<li>");
+	emit(p->down, out);
+	fprintf(out, "</li>");
 
 	p = p->next;
     }
 
-    printf( "</%cl>\n", (typ==UL)?'u':'o');
+    fprintf(out, "</%cl>\n", (typ==UL)?'u':'o');
     return p;
 }
 
@@ -734,7 +720,7 @@ nextislist(Paragraph *p)
 /* dump out a Paragraph in the desired manner
  */
 static Paragraph*
-display(Paragraph *p, int multiple)
+display(Paragraph *p, FILE *out, int multiple)
 {
     char *pp = 0;
 
@@ -743,27 +729,27 @@ display(Paragraph *p, int multiple)
 	break;
 
     case HTML:
-	printhtml(p->text);
+	printhtml(p->text, out);
 	break;
 	
     case CODE:
-	printf("<p><code><pre>");
-	printcode(p->text);
-	puts("</pre></code></p>");
+	fprintf(out, "<p><code><pre>");
+	printcode(p->text, out);
+	fprintf(out, "</pre></code></p>\n");
 	break;
 	
     case QUOTE:
-	printf("<blockquote>");
-	emit(p->down);
-	puts("</blockquote>");
+	fprintf(out, "<blockquote>");
+	emit(p->down, out);
+	fprintf(out, "</blockquote>\n");
 	break;
 	
     case UL:
     case OL:
-	return listdisplay(p);
+	return listdisplay(p, out);
 
     case HR:
-	puts("<HR>");
+	fprintf(out, "<HR>\n");
 	break;
 
     default:
@@ -772,10 +758,10 @@ display(Paragraph *p, int multiple)
 	else if ( multiple && p->para )
 	    pp = "p";
 
-	if ( pp ) printf("<%s>", pp);
-	if ( !(setext(p->text)||etx(p->text)) )
-	    printblock(p->text);
-	if ( pp ) printf("</%s>\n", pp);
+	if ( pp ) fprintf(out, "<%s>", pp);
+	if ( !(setext(p->text, out)||etx(p->text, out)) )
+	    printblock(p->text, out);
+	if ( pp ) fprintf(out, "</%s>\n", pp);
 	break;
     }
     return p->next;
@@ -1285,7 +1271,7 @@ initmarkdown()
 
 
 void
-markdown(Line *text)
+markdown(Line *text, FILE *out)
 {
     Paragraph *paragraph;
     initmarkdown();
@@ -1293,7 +1279,7 @@ markdown(Line *text)
     paragraph = compile(text, 1);
     qsort(T(footnotes), S(footnotes), sizeof T(footnotes)[0], footsort);
 
-    emit(paragraph);
+    emit(paragraph, out);
 
     freefootnotes();
     freeParagraph(paragraph);
@@ -1308,7 +1294,7 @@ main(int argc, char **argv)
 	perror(argv[1]);
 	exit(1);
     }
-    markdown(in(stdin));
+    markdown(in(stdin), stdout);
     exit(0);
 }
 #endif
