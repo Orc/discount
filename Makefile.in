@@ -22,12 +22,15 @@ install: $(PGM)
 # 	@INSTALL_DIR@ $(MANDIR)/man3
 # 	@INSTALL_DATA@ markdown.3 mkdio.3 $(MANDIR)/man3
 
-version.o: VERSION
+version.o: VERSION config.h
 	echo 'char version[] = VERSION;' > version.c && \
 	    $(CC) -DVERSION=\"`cat VERSION`\" -c version.c
 
-$(PGM): main.c version.o $(MKDLIB)
-	$(CC) -L. -I. -o $(PGM) main.c version.o -lmarkdown @LIBS@
+$(PGM): main.o version.o $(MKDLIB)
+	$(CC) -L. -o $(PGM) main.o version.o -lmarkdown @LIBS@
+
+main.o: main.c mkdio.h config.h
+	$(CC) -I. -c main.c
 
 $(MKDLIB): $(OBJS)
 	$(AR) crv $(MKDLIB) $(OBJS)
@@ -41,5 +44,4 @@ distclean spotless: clean
 
 
 markdown.o: markdown.c config.h cstring.h
-mkdio.o: mkdio.c mkdio.h cstring.h
-$(PGM): mkdio.h config.h
+mkdio.o: mkdio.c mkdio.h cstring.h config.h

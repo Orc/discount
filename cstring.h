@@ -20,7 +20,7 @@
 			    : !((x).text = realloc((x).text, sizeof T(x)[0] * ((x).alloc += 100)))), \
 			(x).size++]
 
-#define DELETE(x)	(x).alloc ? (free(T(x)), S(x) x.alloc = 0) \
+#define DELETE(x)	(x).alloc ? (free(T(x)), S(x) = (x).alloc = 0) \
 				  : ( S(x) = 0 )
 #define CLIP(t,i,sz)	\
 	    ( ((i) >= 0) && ((sz) > 0) && (((i)+(sz)) <= S(t)) ) ? \

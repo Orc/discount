@@ -7,7 +7,8 @@ void *mkd_open();			/* open a mkdio input assembler */
 int   mkd_write(void*, char*, int);	/* write text into the assembler */
 void *mkd_close(void*);			/* get the assembled input */
 
-void *mkd_in(FILE*);			/* get assembled input from a file */
+void *mkd_in(FILE*);			/* assemble input from a file */
+void *mkd_string(char*,int);		/* assemble input from a buffer */
 
 void markdown(void*, FILE*, int);	/* mark it on down */
 

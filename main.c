@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <mkdio.h>
 
+float
 main(int argc, char **argv)
 {
 

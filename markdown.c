@@ -1,10 +1,16 @@
 /* markdown: a C implementation of John Gruber's Markdown markup language.
+ *
+ * Copyright (C) 2007 David L Parsons.
+ * The redistribution terms are provided in the COPYRIGHT file that must
+ * be distributed with this source code.
  */
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ctype.h>
+
 #include "cstring.h"
 #include "markdown.h"
 
@@ -20,8 +26,12 @@ static char *blocktags[] = { "ADDRESS", "BDO", "BLOCKQUOTE", "CENTER",
 		      "H5", "H6", "LISTING", "NOBR", "UL",
 		      "P", "OL", "DL", "PLAINTEXT", "PRE",
 		       "WBR", "XMP" };
-#define SZBLOCKTAGS	(sizeof blocktags / sizeof blocktags[0])
+#define SZTAGS	(sizeof blocktags / sizeof blocktags[0])
 
+static STRING(Footnote) footnotes;
+
+
+typedef int (*stfu)(const void*,const void*);
 
 /* case insensitive string sort (for qsort() and bsearch() of block tags)
  */
@@ -47,7 +57,7 @@ footsort(Footnote *a, Footnote *b)
 static char *
 isblocktag(char *tag)
 {
-    char **r=bsearch(&tag, blocktags, SZBLOCKTAGS, sizeof blocktags[0], casort);
+    char **r=bsearch(&tag, blocktags, SZTAGS, sizeof blocktags[0], (stfu)casort);
 
     return r ? (*r) : 0;
 }
@@ -87,7 +97,7 @@ mkd_firstnonblank(Line *p)
 static Cstring output;
 static unsigned int csp = 0;
 
-static int
+static void
 push(char *t, int s)
 {
     int i;
@@ -183,7 +193,6 @@ linkylinky(int image, FILE *out)
 	skipblankc();
 
 	if ( image && (peek(1) == '=') ) {
-	    char *dim;
 	    int width, height;
 
 	    pull();
@@ -227,7 +236,8 @@ linkylinky(int image, FILE *out)
 	}
 
 	T(key.tag) = tag;
-	ret = bsearch(&key, T(footnotes), S(footnotes), sizeof key, footsort);
+	ret = bsearch(&key, T(footnotes), S(footnotes),
+	               sizeof key, (stfu)footsort);
 
 	if ( ret ) {
 	    if ( S(ret->link) )
@@ -245,19 +255,26 @@ linkylinky(int image, FILE *out)
 }
 
 
-static char*
-hexfmt()
+static void
+mangle(unsigned char *s, int len, FILE *out)
 {
-    return (random()&1) ? "&#x%02x;" : "&#%02d;";
+    while ( len-- > 0 )
+	fprintf(out, (random()&1) ? "&#x%02x;" : "&#%02d;", *s++);
 }
 
 
+/* a < may be just a regular character, the start of an embedded html
+ * tag, or the start of an <automatic link>.    If it's an automatic
+ * link, we also need to know if it's an email address because if it
+ * is we need to mangle it in our futile attempt to cut down on the
+ * spaminess of the rendered page.
+ */
 static int
-handle_less_than(FILE *out)
+maybe_tag_or_link(FILE *out)
 {
     char *text;
     int c, size, i;
-    int maybetag=1, maybelink=0, maybeaddress=0;
+    int maybetag=1, maybeaddress=0;
 
     for ( size=0; ((c = peek(size+1)) != '>') && !isspace(c); size++ ) {
 	if ( ! (c == '/' || isalnum(c) || c == '~') )
@@ -285,20 +302,18 @@ handle_less_than(FILE *out)
 	    return 1;
 	}
     if ( maybeaddress ) {
-	fprintf(out, "&lt;<a href=\"mailto:");
-	for ( i=0; i < size; i++ )
-	    fprintf(out, hexfmt(), (unsigned char)text[i]);
+	fprintf(out, "&lt;<a href=\"");
+	mangle("mailto:", 7, out);
+	mangle(text, size, out);
 	fprintf(out,"\">");
-	for ( i=0; i < size; i++ )
-	    fprintf(out,hexfmt(), (unsigned char)text[i]);
+	mangle(text, size, out);
 	fprintf(out,"</a>");
 	return 1;
     }
 
-    fprintf(out,"&lt;");
     shift(-size);
-    return 1;
-}
+    return 0;
+} /* maybe_tag_or_link */
 
 
 static int
@@ -310,7 +325,68 @@ isthisblank(i)
 }
 
 
+/* Smarty-pants-style chrome for quotes, -, ellipses, and (r)(c)(tm)
+ */
+static int
+smartypants(int c, int *flags, FILE *out)
+{
+    int squo, dquo;
+
+    switch (c) {
+    case '"':   dquo = 0x01 & (*flags);
+		if ( isthisblank ( dquo ? 1 : -1 ) ) {
+		    fprintf(out, "&%cdquo;", dquo ? 'r' : 'l' );
+		    (*flags) ^= 0x01;
+		    return 1;
+		}
+		break;
+
+    case '\'':  squo = 0x02 & (*flags);
+		if ( isthisblank( squo ? 1 : -1 ) ) {
+		    fprintf(out, "&%csquo;", squo ? 'r' : 'l' );
+		    (*flags) ^= 0x02;
+		    return 1;
+		}
+		break;
+
+    case '.':   if ( peek(1) == '.' && peek(2) == '.' ) {
+		    fprintf(out,"&hellip;");
+		    shift(2);
+		    return 1;
+		}
+		break;
+
+    case '-':   if ( peek(1) == '-' ) {
+		    fprintf(out, "&mdash;");
+		    pull();
+		    return 1;
+		}
+		else if ( isspace(peek(-1)) && isspace(peek(1)) ) {
+		    fprintf(out, "&ndash;");
+		    return 1;
+		}
+		break;
+
+    case '(':   c = toupper(peek(1));
+		if ( (c == 'C' || c == 'R') && (peek(2) == ')') ) {
+		    fprintf(out, "&%s;", (c=='C') ? "copy" : "reg" );
+		    shift(2);
+		    return 1;
+		}
+		else if ( (c == 'T') && (toupper(peek(2)) == 'M')
+		                     && (peek(3) == ')') ) {
+		    fprintf(out, "&trade;");
+		    shift(3);
+		    return 1;
+		}
+		break;
+    }
+    return 0;
+} /* smartypants */
+
+
 static void code(int, FILE*);
+
 
 static void
 text(FILE *out)
@@ -318,10 +394,11 @@ text(FILE *out)
     int c, j;
     int em = 0;
     int strong = 0;
-    int dquo = 0;
-    int squo = 0;
+    int smartyflags = 0;
 
     while ( (c = pull()) != EOF ) {
+	if (smartypants(c, &smartyflags, out))
+	    continue;
 	switch (c) {
 	case 0:     break;
 
@@ -374,6 +451,7 @@ text(FILE *out)
 		    }
 		    else
 			code(1, out);
+		    fprintf(out, "</code>");
 		    break;
 
 	case '\\':  if ( (c = pull()) == '&' )
@@ -384,8 +462,7 @@ text(FILE *out)
 			fputc( c ? c : '\\', out);
 		    break;
 
-	case '<':   if ( !handle_less_than(out) )
-			fprintf(out, "&lt;");
+	case '<':   maybe_tag_or_link(out) || fprintf(out, "&lt;");
 		    break;
 
 	case '&':   j = (peek(1) == '#' ) ? 2 : 1;
@@ -400,86 +477,35 @@ text(FILE *out)
 
 	default:    fputc(c, out);
 		    break;
-
-/* Smarty-pants-style chrome for quotes, -, ellipses, and (r)(c)(tm)
- */
-	case '"':   fprintf(out, "&%cdquo;", dquo ? 'r' : 'l' );
-		    dquo = !dquo;
-		    break;
-
-	case '\'':  if ( isthisblank( squo ? 1 : -1 ) ) {
-			fprintf(out, "&%csquo;", squo ? 'r' : 'l' );
-			squo = !squo;
-		    }
-		    else
-			fputc(c,out);
-		    break;
-		    break;
-
-	case '.':   if ( peek(1) == '.' && peek(2) == '.' ) {
-			fprintf(out,"&hellip;");
-			pull();pull();
-		    }
-		    else
-			fputc(c, out);
-		    break;
-
-	case '-':   if ( peek(1) == '-' ) {
-			fprintf(out, "&mdash;");
-			pull();
-		    }
-		    else if ( isspace(peek(-1)) && isspace(peek(1)) )
-			fprintf(out, "&ndash;");
-		    else
-			fputc(c, out);
-		    break;
-
-	case '(':   if (  (j = toupper(peek(1))) == 'R' || j == 'C' ) {
-			if ( peek(2) == ')' ) {
-			    fprintf(out, "&%s;", (j=='C') ? "copy" : "reg" );
-			    pull();pull();
-			    break;
-			}
-		    }
-		    else if ( j == 'T' && toupper(peek(2)) == 'M'
-		                       && peek(3) == ')' ) {
-			fprintf(out, "&trade;");
-			pull();pull();pull();
-			break;
-		    }
-		    fputc(c, out);
-		    break;
 	}
     }
     if ( em ) fputs("</em>", out);
     if ( strong ) fputs("</strong>", out);
-}
+} /* text */
 
 
+/* the only characters that have special meaning in a code block are
+ * `<' and `&' , which are /always/ expanded to &lt; and &amp;
+ */
 static void
 code(int escape, FILE *out)
 {
-    int c, j;
+    int c;
 
     while ( (c = pull()) != EOF ) {
 	switch (c) {
-	case '`':   switch (escape) {
-		    case 2: if ( peek(1) == '`' ) {
-				pull();
-		    case 1:     fprintf(out, "</code>");
-				return;
-		            }
-		    }
-		    fputc(c, out);
-		    break;
-
 	case '&':   fprintf(out, "&amp;"); break;
 	case '<':   fprintf(out, "&lt;"); break;
+	case '`':   switch (escape) {
+		    case 2: if ( peek(1) == '`' ) {
+				shift(1);
+		    case 1:     return;
+		            }
+		    }
 	default:    fputc(c, out); break;
 	}
     }
-    fprintf(out, "</code>");
-}
+} /* code */
 
 
 /* setext header;  2 lines, second is ==== or -----
@@ -609,9 +635,9 @@ static Paragraph *display(Paragraph*, FILE*, int);
 static void
 emit(Paragraph *p, FILE *out)
 {
-    int multiple = p->next;
+    int multiple = ( p->next != 0 );
 
-    while ( p = display(p, out, multiple) )
+    while (( p = display(p, out, multiple) ))
 	;
 }
 
@@ -633,13 +659,6 @@ listdisplay(Paragraph *p, FILE* out)
 
     fprintf(out, "</%cl>\n", (typ==UL)?'u':'o');
     return p;
-}
-
-
-static int
-nextislist(Paragraph *p)
-{
-    return p && (p->typ == UL || p->typ == OL);
 }
 
 
@@ -982,7 +1001,7 @@ static Line *
 listblock(Paragraph *p, int trim)
 {
     Line *t = p->text;
-    Line *first = t, *blank, *last = 0;
+    Line *last = 0;
 
     do {
 	if ( last ) {
@@ -1112,7 +1131,7 @@ compile(Line *ptr, int toplevel)
     char *key;
     int list_type, indent;
 
-    while ( ptr = skipempty(ptr) ) {
+    while (( ptr = skipempty(ptr) )) {
 	if ( toplevel && (key = isopentag(ptr)) ) {
 	    p = Pp(&d, ptr, HTML, 0);
 	    ptr = htmlblock(p, key);
@@ -1125,7 +1144,7 @@ compile(Line *ptr, int toplevel)
 	    p = Pp(&d, 0, HR, 0);
 	    ptr = ptr->next;
 	}
-	else if ( list_type = islist(ptr, &indent) ) {
+	else if (( list_type = islist(ptr, &indent) )) {
 	    p = Pp(&d, ptr, list_type, 0);
 	    ptr = listblock(p, indent);
 
@@ -1161,8 +1180,6 @@ freeLine(Line *p)
 static void
 freeParagraph(Paragraph *p)
 {
-    Line *t;
-
     if (p->next) freeParagraph(p->next);
     if (p->down) freeParagraph(p->down);
     else if (p->text) freeLine(p->text);
@@ -1176,9 +1193,9 @@ freefootnotes()
     int i;
 
     for (i=0; i < S(footnotes); i++) {
-	free(T(T(footnotes)[i].tag));
-	free(T(T(footnotes)[i].link));
-	free(T(T(footnotes)[i].title));
+	DELETE(T(footnotes)[i].tag);
+	DELETE(T(footnotes)[i].link);
+	DELETE(T(footnotes)[i].title);
     }
     S(footnotes) = 0;
 }
@@ -1192,7 +1209,7 @@ initmarkdown()
     if ( init ) return;
 
     srandom((unsigned int)time(0));
-    qsort(blocktags, SZBLOCKTAGS, sizeof blocktags[0], casort);
+    qsort(blocktags, SZTAGS, sizeof blocktags[0], (stfu)casort);
     CREATE(footnotes);
     CREATE(output);
     init = 1;
@@ -1206,7 +1223,7 @@ markdown(Line *text, FILE *out, int flags)
     initmarkdown();
 
     paragraph = compile(text, 1);
-    qsort(T(footnotes), S(footnotes), sizeof T(footnotes)[0], footsort);
+    qsort(T(footnotes), S(footnotes), sizeof T(footnotes)[0], (stfu)footsort);
 
     emit(paragraph, out);
 

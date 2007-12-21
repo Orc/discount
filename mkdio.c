@@ -1,3 +1,10 @@
+/*
+ * mkdio -- markdown front end input functions
+ *
+ * Copyright (C) 2007 David L Parsons.
+ * The redistribution terms are provided in the COPYRIGHT file that must
+ * be distributed with this source code.
+ */
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -73,26 +80,52 @@ mkd_close(LineAnchor *p)
 Line *
 mkd_in(FILE *input)
 {
-    int i, c, xp;
-    Line *p;
-    static Cstring line = { 0, 0 };
+    int c;
+    Cstring line;
     LineAnchor *a = mkd_open();
 
     if ( !a ) return 0;
 
+    CREATE(line);
     for (; (c = getc(input)) != EOF; ) {
 	if (c == '\n') {
-	    xp = 0;
 	    mkd_write(a, T(line), S(line));
 	    S(line) = 0;
 	}
 	else {
 	    EXPAND(line) = c;
-	    xp++;
 	}
     }
-    if ( xp )
+    if ( S(line) )
 	mkd_write(a, T(line), S(line));
 
+    DELETE(line);
+    return mkd_close(a);
+}
+
+
+/* convert a block of text into a linked list
+ */
+Line *
+mkd_string(char *buf, int len)
+{
+    Cstring line;
+    LineAnchor *a = mkd_open();
+
+    if ( !a ) return 0;
+
+    CREATE(line);
+    for ( ; len-- > 0; ++buf ) {
+	if ( *buf == '\n' ) {
+	    mkd_write(a, T(line), S(line));
+	    S(line) = 0;
+	}
+	else
+	    EXPAND(line) = *buf;
+    }
+    if ( S(line) )
+	mkd_write(a, T(line), S(line));
+
+    DELETE(line);
     return mkd_close(a);
 }
