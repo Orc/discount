@@ -24,7 +24,7 @@ version.o: VERSION
 	    $(CC) -DVERSION=\"`cat VERSION`\" -c version.c
 
 $(PGM): main.c version.o $(MKDLIB)
-	$(CC) -o $(PGM) -DPROGRAM=1 main.c version.o $(MKDLIB) @LIBS@
+	$(CC) -I. -o $(PGM) main.c version.o $(MKDLIB) @LIBS@
 
 $(MKDLIB): $(OBJS)
 	$(AR) crv $(MKDLIB) $(OBJS)
