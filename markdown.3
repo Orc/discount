@@ -1,0 +1,95 @@
+.\"
+.Dd December 20, 2007
+.Dt MARKDOWN 3
+.Os Mastodon
+.Sh NAME
+.Nm markdown,
+.Nm mkd_text
+.Nd process Markdown documents
+.Sh SYNOPSIS
+.Fd #include <mkdio.h>
+.Ft int
+.Fn markdown "void *blob" "FILE *output" "int flags"
+.Ft void
+.Fn mkd_text "char *string" "int size" "FILE *output" "int flags"
+.Ft void*
+.Fn mkd_in "FILE *input"
+.Ft void*
+.Fn mkd_string "char *string" "int size"
+.Sh DESCRIPTION
+These functions
+convert
+.Em Markdown
+documents and strings into HTML.
+.Fn markdown
+processes an entire document, while
+.Fn mkd_text
+processes a single string.
+.Pp
+The 
+.Fn markdown
+function expects to recieve a preprocessed text from the
+.Fn mkd_in
+or
+.Fn mkd_string
+functions, while
+.Fn mkd_text
+treats your input text as a single paragraph of markup.
+.Pp
+To process a file, you pass a FILE* to
+.Fn mkd_in ,
+and if it returns a nonzero value you pass that in to 
+.Fn markdown ,
+which then writes the converted document to the specified
+.Em FILE* .
+If your input has already been written into a string (generated
+input or a file opened 
+with 
+.Xr mmap 2 )
+you can feed that string to 
+.Fn mkd_string
+and pass its return value to
+.Fn markdown.
+.Pp
+.Fn Markdown
+and
+.Fn mkd_text
+accept the following flag values (or-ed together if needed)
+to restrict how they process their input:
+.Bl -tag -width MKD_NOIMAGES -compact
+.It Ar MKD_NOIMAGES
+Remove
+.Em \<img\>
+tags from the output.
+.It Ar MKD_NOLINKS
+Remove
+.Em \<a\>
+tags from the output.
+.It Ar MKD_NOFANCY
+Do not do Fancypants-style mangling of quotes, dashes, or ellipses.
+.El
+.Sh RETURN VALUES
+The functions
+.Fn markdown
+and
+.Fn mkd_text
+return 0 on success, 1 on failure.
+The
+.Fn mkd_in
+and
+.Fn mkd_string
+functions return a compiled object blob on success, null on failure.
+.Sh SEE ALSO
+.Xr markdown 1 ,
+.Xr markdown 7 ,
+.Xr mmap 2 .
+.Pp
+http://daringfireball.net/projects/markdown/syntax
+.Sh BUGS
+None of the 
+.Fn markdown
+or
+.Fn mkd_text
+flags are supported.
+.Pp
+Error handling is minimal at best.
