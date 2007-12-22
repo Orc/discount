@@ -38,6 +38,20 @@ typedef struct paragraph {
 } Paragraph;
 
 
+/* a magic markdown io thing holds all the data structures needed to
+ * do the backend processing of a markdown document
+ */
+typedef struct mmiot {
+    FILE *out;
+    Cstring in;
+    int isp;
+    STRING(Footnote) footnotes;
+    int flags;
+#define DENY_A		0x01
+#define DENY_IMG	0x02
+#define DENY_SMARTY	0x04
+} MMIOT;
+
 extern int mkd_firstnonblank(Line *);
 
 #endif/*_MARKDOWN_D*/

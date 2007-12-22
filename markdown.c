@@ -28,9 +28,6 @@ static char *blocktags[] = { "ADDRESS", "BDO", "BLOCKQUOTE", "CENTER",
 		       "WBR", "XMP" };
 #define SZTAGS	(sizeof blocktags / sizeof blocktags[0])
 
-static STRING(Footnote) footnotes;
-
-
 typedef int (*stfu)(const void*,const void*);
 
 /* case insensitive string sort (for qsort() and bsearch() of block tags)
@@ -94,87 +91,84 @@ mkd_firstnonblank(Line *p)
 }
 
 
-static Cstring output;
-static unsigned int csp = 0;
-
-void
-mkd_push(char *t, int s)
+static void
+push(char *t, int s, MMIOT *f)
 {
     int i;
 
     for (i=0; i < s; i++)
-	EXPAND(output) = t[i];
+	EXPAND(f->in) = t[i];
 }
 
 
 /* look <i> characters ahead of the cursor.
  */
 static int
-peek(int i)
+peek(MMIOT *f, int i)
 {
 
-    i += (csp-1);
+    i += (f->isp-1);
 
-    return (i >= 0) && (i < S(output)) ? T(output)[i] : EOF;
+    return (i >= 0) && (i < S(f->in)) ? T(f->in)[i] : EOF;
 }
 
 
 static int
-pull()
+pull(MMIOT *f)
 {
-    if ( csp < S(output) ) return T(output)[csp++];
+    if ( f->isp < S(f->in) ) return T(f->in)[f->isp++];
 
-    S(output) = csp = 0;
+    S(f->in) = f->isp = 0;
     return EOF;
 }
 
 
 static char*
-cursor()
+cursor(MMIOT *f)
 {
-    return T(output) + csp;
+    return T(f->in) + f->isp;
 }
 
 
 static void
-shift(int i)
+shift(MMIOT *f, int i)
 {
-    if ( (csp + i >= 0) && (csp + i < S(output)) )
-	csp += i;
+    if (f->isp + i >= 0 )
+	f->isp += i;
 }
 
 
 static void
-skipblankc()
+skipblankc(MMIOT *f)
 {
-    while ( isspace(peek(1)) )
-	pull();
+    while ( isspace(peek(f,1)) )
+	pull(f);
 }
 
 
 static void
-linkylinky(int image, FILE *out)
+linkylinky(int image, MMIOT *f)
 {
     char *label;
     int labelsize, size;
     int qc, c, i, j;
     
-    for ( labelsize = 1; (c=peek(labelsize)) != ']'; ++labelsize)
+    for ( labelsize = 1; (c=peek(f, labelsize)) != ']'; ++labelsize)
 	if ( c == EOF )
 	    return;
     
-    label = cursor();
+    label = cursor(f);
 
-    for (j=labelsize+1; isspace(c = peek(j)); j++)
+    for (j=labelsize+1; isspace(c = peek(f,j)); j++)
 	;
 
     if ( (c != '[') && (c != '(') ) {
-	fputc('[', out);
+	fputc('[', f->out);
 	return;
     }
-    shift(j);
+    shift(f, j);
 
-    fprintf(out, image ?  "<img" : "<a");
+    fprintf(f->out, image ?  "<img" : "<a");
     
     switch (c) {
 	char *link;
@@ -182,43 +176,43 @@ linkylinky(int image, FILE *out)
 	Footnote key, *ret;
     
     case '(':
-	for ( size =1; (c=peek(size)) != ')' && !isspace(c); ++size)
+	for ( size =1; (c=peek(f, size)) != ')' && !isspace(c); ++size)
 	    if ( c == EOF )
 		break;
 	    
-	link = cursor();
-	shift(size);
+	link = cursor(f);
+	shift(f, size);
 
-	fprintf(out, " %s=\"%.*s\"", image ? "src" : "href", size-1, link);
-	skipblankc();
+	fprintf(f->out, " %s=\"%.*s\"", image ? "src" : "href", size-1, link);
+	skipblankc(f);
 
-	if ( image && (peek(1) == '=') ) {
+	if ( image && (peek(f,1) == '=') ) {
 	    int width, height;
 
-	    pull();
-	    for (i=0; isdigit(c=peek(i+1)) || (c == 'x'); i++)
+	    pull(f);
+	    for (i=0; isdigit(c=peek(f,i+1)) || (c == 'x'); i++)
 		;
 
 	    if ( i ) {
-		if ( sscanf(T(output)+csp, "%dx%d", &width, &height) == 2 )
-		    fprintf(out, " width=%d height=%d", width, height);
-		while ( i-- ) pull();
+		if ( sscanf(cursor(f), "%dx%d", &width, &height) == 2 )
+		    fprintf(f->out, " width=%d height=%d", width, height);
+		shift(f, i);
 	    }
-	    skipblankc();
+	    skipblankc(f);
 	}
 
-	if ( (qc=peek(1)) == '"' || qc == '\'' ) {
-	    fprintf(out, " title=\"");
-	    pull();
-	    while ( ((c=pull()) != EOF) && (c != qc) )
-		fputc(c, out);
-	    fputc('"', out);
+	if ( (qc=peek(f,1)) == '"' || qc == '\'' ) {
+	    fprintf(f->out, " title=\"");
+	    pull(f);
+	    while ( ((c=pull(f)) != EOF) && (c != qc) )
+		fputc(c, f->out);
+	    fputc('"', f->out);
 	}
-	if ( peek(1) == ')' ) pull();
+	if ( peek(f,1) == ')' ) pull(f);
 	break;
 
     case '[':
-	for ( size = 0; (c=peek(size+1)) != ']'; ++size)
+	for ( size = 0; (c=peek(f, size+1)) != ']'; ++size)
 	    if ( c == EOF )
 		break;
 
@@ -226,40 +220,43 @@ linkylinky(int image, FILE *out)
 	tag[0] = '[';
 
 	if ( size ) {
-	    memcpy(tag+1, cursor(), size+1);
-	    shift(size+1);
+	    memcpy(tag+1, cursor(f), size+1);
+	    tag[size+2] = 0;
+	    shift(f,size+1);
 	}
 	else  {
 	    memcpy(tag+1, label, labelsize);
 	    tag[labelsize+1] = 0;
-	    pull();	/* discard the ']' from [] */
+	    pull(f);	/* discard the ']' from [] */
 	}
 
 	T(key.tag) = tag;
-	ret = bsearch(&key, T(footnotes), S(footnotes),
+	ret = bsearch(&key, T(f->footnotes), S(f->footnotes),
 	               sizeof key, (stfu)footsort);
 
 	if ( ret ) {
 	    if ( S(ret->link) )
-		fprintf(out, " %s=\"%.*s\"", image ? "src" : "href", 
-					S(ret->link), T(ret->link));
+		fprintf(f->out, " %s=\"%.*s\"", image ? "src" : "href", 
+				S(ret->link), T(ret->link));
 	    if ( S(ret->title) )
-		fprintf(out, " title=\"%.*s\"", S(ret->title), T(ret->title));
+		fprintf(f->out, " title=\"%.*s\"",
+				S(ret->title), T(ret->title));
 
 	    if ( image && ret->height && ret->width )
-		fprintf(out, " height=%d width=%d", ret->height, ret->width);
+		fprintf(f->out, " height=%d width=%d",
+				ret->height, ret->width);
 	}
 	break;
     }
-    fprintf(out, image ? " alt=\"%.*s\">" : ">%.*s</a>", labelsize-1, label);
+    fprintf(f->out, image ? " alt=\"%.*s\">" : ">%.*s</a>", labelsize-1, label);
 }
 
 
 static void
-mangle(unsigned char *s, int len, FILE *out)
+mangle(unsigned char *s, int len, MMIOT *f)
 {
     while ( len-- > 0 )
-	fprintf(out, (random()&1) ? "&#x%02x;" : "&#%02d;", *s++);
+	fprintf(f->out, (random()&1) ? "&#x%02x;" : "&#%02d;", *s++);
 }
 
 
@@ -270,13 +267,13 @@ mangle(unsigned char *s, int len, FILE *out)
  * spaminess of the rendered page.
  */
 static int
-maybe_tag_or_link(FILE *out)
+maybe_tag_or_link(MMIOT *f)
 {
     char *text;
     int c, size, i;
     int maybetag=1, maybeaddress=0;
 
-    for ( size=0; ((c = peek(size+1)) != '>') && !isspace(c); size++ ) {
+    for ( size=0; ((c = peek(f,size+1)) != '>') && !isspace(c); size++ ) {
 	if ( ! (c == '/' || isalnum(c) || c == '~') )
 	    maybetag=0;
 	if ( c == '@' )
@@ -289,37 +286,38 @@ maybe_tag_or_link(FILE *out)
 	return 0;
 
     if ( maybetag ) {
-	fputc('<', out);
+	fputc('<', f->out);
 	return 1;
     }
 
-    text = cursor();
-    shift(size);
+    text = cursor(f);
+    shift(f, size);
 
     for ( i=0; i < SZAUTOPREFIX; i++ )
 	if ( strncasecmp(text, autoprefix[i], strlen(autoprefix[i])) == 0 ) {
-	    printf("&lt;<a href=\"%.*s\">%.*s</a>", size, text, size, text);
+	    fprintf(f->out, "&lt;<a href=\"%.*s\">%.*s</a>",
+			    size, text, size, text);
 	    return 1;
 	}
     if ( maybeaddress ) {
-	fprintf(out, "&lt;<a href=\"");
-	mangle("mailto:", 7, out);
-	mangle(text, size, out);
-	fprintf(out,"\">");
-	mangle(text, size, out);
-	fprintf(out,"</a>");
+	fprintf(f->out, "&lt;<a href=\"");
+	mangle("mailto:", 7, f);
+	mangle(text, size, f);
+	fprintf(f->out,"\">");
+	mangle(text, size, f);
+	fprintf(f->out,"</a>");
 	return 1;
     }
 
-    shift(-size);
+    shift(f, -size);
     return 0;
 } /* maybe_tag_or_link */
 
 
 static int
-isthisblank(i)
+isthisblank(MMIOT *f, int i)
 {
-    int c = peek(i);
+    int c = peek(f, i);
 
     return (c == EOF) || isspace(c) || ispunct(c);
 }
@@ -328,55 +326,55 @@ isthisblank(i)
 /* Smarty-pants-style chrome for quotes, -, ellipses, and (r)(c)(tm)
  */
 static int
-smartypants(int c, int *flags, FILE *out)
+smartypants(int c, int *flags, MMIOT *f)
 {
     int squo, dquo;
 
     switch (c) {
     case '"':   dquo = 0x01 & (*flags);
-		if ( isthisblank ( dquo ? 1 : -1 ) ) {
-		    fprintf(out, "&%cdquo;", dquo ? 'r' : 'l' );
+		if ( isthisblank (f, dquo ? 1 : -1 ) ) {
+		    fprintf(f->out, "&%cdquo;", dquo ? 'r' : 'l' );
 		    (*flags) ^= 0x01;
 		    return 1;
 		}
 		break;
 
     case '\'':  squo = 0x02 & (*flags);
-		if ( isthisblank( squo ? 1 : -1 ) ) {
-		    fprintf(out, "&%csquo;", squo ? 'r' : 'l' );
+		if ( isthisblank(f, squo ? 1 : -1 ) ) {
+		    fprintf(f->out, "&%csquo;", squo ? 'r' : 'l' );
 		    (*flags) ^= 0x02;
 		    return 1;
 		}
 		break;
 
-    case '.':   if ( peek(1) == '.' && peek(2) == '.' ) {
-		    fprintf(out,"&hellip;");
-		    shift(2);
+    case '.':   if ( peek(f, 1) == '.' && peek(f, 2) == '.' ) {
+		    fprintf(f->out, "&hellip;");
+		    shift(f,2);
 		    return 1;
 		}
 		break;
 
-    case '-':   if ( peek(1) == '-' ) {
-		    fprintf(out, "&mdash;");
-		    pull();
+    case '-':   if ( peek(f, 1) == '-' ) {
+		    fprintf(f->out, "&mdash;");
+		    pull(f);
 		    return 1;
 		}
-		else if ( isspace(peek(-1)) && isspace(peek(1)) ) {
-		    fprintf(out, "&ndash;");
+		else if ( isspace(peek(f,-1)) && isspace(peek(f,1)) ) {
+		    fprintf(f->out, "&ndash;");
 		    return 1;
 		}
 		break;
 
-    case '(':   c = toupper(peek(1));
-		if ( (c == 'C' || c == 'R') && (peek(2) == ')') ) {
-		    fprintf(out, "&%s;", (c=='C') ? "copy" : "reg" );
-		    shift(2);
+    case '(':   c = toupper(peek(f,1));
+		if ( (c == 'C' || c == 'R') && (peek(f,2) == ')') ) {
+		    fprintf(f->out, "&%s;", (c=='C') ? "copy" : "reg" );
+		    shift(f,2);
 		    return 1;
 		}
-		else if ( (c == 'T') && (toupper(peek(2)) == 'M')
-		                     && (peek(3) == ')') ) {
-		    fprintf(out, "&trade;");
-		    shift(3);
+		else if ( (c == 'T') && (toupper(peek(f,2)) == 'M')
+		                     && (peek(f,3) == ')') ) {
+		    fprintf(f->out, "&trade;");
+		    shift(f,3);
 		    return 1;
 		}
 		break;
@@ -385,19 +383,19 @@ smartypants(int c, int *flags, FILE *out)
 } /* smartypants */
 
 
-static void code(int, FILE*);
+static void code(int, MMIOT*);
 
 
-void
-mkd_text(FILE *out)
+static void
+text(MMIOT *f)
 {
     int c, j;
     int em = 0;
     int strong = 0;
     int smartyflags = 0;
 
-    while ( (c = pull()) != EOF ) {
-	if (smartypants(c, &smartyflags, out))
+    while ( (c = pull(f)) != EOF ) {
+	if (smartypants(c, &smartyflags, f))
 	    continue;
 	switch (c) {
 	case 0:     break;
@@ -405,82 +403,82 @@ mkd_text(FILE *out)
 /* Markdown transformations  (additional chrome is done at the end of this
  * switch)
  */
-	case '!':   if ( peek(1) == '[' ) {
-			pull();
-			linkylinky(1, out);
+	case '!':   if ( peek(f,1) == '[' ) {
+			pull(f);
+			linkylinky(1, f);
 		    }
 		    else
-			fputc(c, out);
+			fputc(c, f->out);
 		    break;
-	case '[':   linkylinky(0, out);
+	case '[':   linkylinky(0, f);
 		    break;
 	case '*':
-	case '_':   if (peek(1) == c) {
-			pull();
+	case '_':   if (peek(f,1) == c) {
+			pull(f);
 			if ( c == strong ) {
-			    fprintf(out, "</strong>");
+			    fprintf(f->out, "</strong>");
 			    strong = 0;
 			}
 			else if ( strong == 0 ) {
-			    fprintf(out, "<strong>");
+			    fprintf(f->out, "<strong>");
 			    strong = c;
 			}
 			else {
-			    fputc(c, out);
-			    fputc(c, out);
+			    fputc(c, f->out);
+			    fputc(c, f->out);
 			}
 		    }
 		    else {
 			if (c == em ) {
-			    fprintf(out, "</em>");
+			    fprintf(f->out, "</em>");
 			    em = 0;
 			}
 			else if ( em == 0 ) {
-			    fprintf(out, "<em>");
+			    fprintf(f->out, "<em>");
 			    em = c;
 			}
 			else
-			    fputc(c, out);
+			    fputc(c, f->out);
 		    }
 		    break;
 	
-	case '`':   fprintf(out, "<code>");
-		    if ( peek(1) == '`' ) {
-			pull();
-			code(2, out);
+	case '`':   fprintf(f->out, "<code>");
+		    if ( peek(f, 1) == '`' ) {
+			pull(f);
+			code(2, f);
 		    }
 		    else
-			code(1, out);
-		    fprintf(out, "</code>");
+			code(1, f);
+		    fprintf(f->out, "</code>");
 		    break;
 
-	case '\\':  if ( (c = pull()) == '&' )
-			fprintf(out, "&amp;");
+	case '\\':  if ( (c = pull(f)) == '&' )
+			fprintf(f->out, "&amp;");
 		    else if ( c == '<' )
-			fprintf(out, "&lt;");
+			fprintf(f->out, "&lt;");
 		    else
-			fputc( c ? c : '\\', out);
+			fputc( c ? c : '\\', f->out);
 		    break;
 
-	case '<':   maybe_tag_or_link(out) || fprintf(out, "&lt;");
+	case '<':   maybe_tag_or_link(f) || fprintf(f->out, "&lt;");
 		    break;
 
-	case '&':   j = (peek(1) == '#' ) ? 2 : 1;
-		    while ( isalnum(peek(j)) )
+	case '&':   j = (peek(f,1) == '#' ) ? 2 : 1;
+		    while ( isalnum(peek(f,j)) )
 			++j;
 
-		    if ( peek(j) != ';' )
-			fprintf(out, "&amp;");
+		    if ( peek(f,j) != ';' )
+			fprintf(f->out, "&amp;");
 		    else
-			fputc(c, out);
+			fputc(c, f->out);
 		    break;
 
-	default:    fputc(c, out);
+	default:    fputc(c, f->out);
 		    break;
 	}
     }
-    if ( em ) fputs("</em>", out);
-    if ( strong ) fputs("</strong>", out);
+    if ( em ) fputs("</em>", f->out);
+    if ( strong ) fputs("</strong>", f->out);
 } /* text */
 
 
@@ -488,21 +486,21 @@ mkd_text(FILE *out)
  * `<' and `&' , which are /always/ expanded to &lt; and &amp;
  */
 static void
-code(int escape, FILE *out)
+code(int escape, MMIOT *f)
 {
     int c;
 
-    while ( (c = pull()) != EOF ) {
+    while ( (c = pull(f)) != EOF ) {
 	switch (c) {
-	case '&':   fprintf(out, "&amp;"); break;
-	case '<':   fprintf(out, "&lt;"); break;
+	case '&':   fprintf(f->out, "&amp;"); break;
+	case '<':   fprintf(f->out, "&lt;"); break;
 	case '`':   switch (escape) {
-		    case 2: if ( peek(1) == '`' ) {
-				shift(1);
+		    case 2: if ( peek(f,1) == '`' ) {
+				shift(f,1);
 		    case 1:     return;
 		            }
 		    }
-	default:    fputc(c, out); break;
+	default:    fputc(c, f->out); break;
 	}
     }
 } /* code */
@@ -511,7 +509,7 @@ code(int escape, FILE *out)
 /* setext header;  2 lines, second is ==== or -----
  */
 static int
-setext(Line *p, FILE *out)
+setext(Line *p, MMIOT *f)
 {
     char *q;
     int i;
@@ -526,9 +524,9 @@ setext(Line *p, FILE *out)
 
 	i = (*q == '=') ? 1 : 2;
 
-	fprintf(out, "<H%d>", i);
-	mkd_push(T(p->text), S(p->text)); mkd_text(out);
-	fprintf(out, "</H%d>\n", i);
+	fprintf(f->out, "<H%d>", i);
+	push(T(p->text), S(p->text), f); text(f);
+	fprintf(f->out, "</H%d>\n", i);
 
 	return 1;
     }
@@ -539,7 +537,7 @@ setext(Line *p, FILE *out)
 /* etx header;  # of #'s in front is the H level
  */
 static int
-etx(Line *p, FILE *out)
+etx(Line *p, MMIOT *f)
 {
     int H = 0;
     int i, j;
@@ -563,101 +561,101 @@ etx(Line *p, FILE *out)
 
     if ( j < i ) return 0;
 
-    fprintf(out, "<H%d>", H);
-    mkd_push(T(p->text)+i, 1+(j-i)); mkd_text(out);
-    fprintf(out, "</H%d>", H);
+    fprintf(f->out, "<H%d>", H);
+    push(T(p->text)+i, 1+(j-i), f); text(f);
+    fprintf(f->out, "</H%d>", H);
     return 1;
 }
 
 
-void
-printblock(Line *t, FILE *out)
+static int
+printblock(Line *t, MMIOT *f)
 {
     while (t) {
 	if ( S(t->text) ) {
 	    if ( S(t->text) > 2 && T(t->text)[S(t->text)-2] == ' '
 				&& T(t->text)[S(t->text)-1] == ' ') {
-		mkd_push(T(t->text), S(t->text)-2);
-		mkd_push("<br/>\n", 6);
+		push(T(t->text), S(t->text)-2, f);
+		push("<br/>\n", 6, f);
 	    }
 	    else {
-		mkd_push(T(t->text), S(t->text));
-		mkd_push("\n", 1);
+		push(T(t->text), S(t->text), f);
+		push("\n", 1, f);
 	    }
 	}
 	t = t->next;
     }
-    mkd_text(out);
+    text(f);
+    return 1;
 }
 
 
 void
-printcode(Line *t, FILE *out)
+printcode(Line *t, MMIOT *f)
 {
     int blanks;
 
     for ( blanks = 0; t ; t = t->next )
 	if ( S(t->text) ) {
 	    while ( blanks ) {
-		mkd_push("\n", 1);
+		push("\n", 1, f);
 		--blanks;
 	    }
-	    mkd_push(T(t->text), S(t->text));
-	    mkd_push("\n", 1);
+	    push(T(t->text), S(t->text), f);
+	    push("\n", 1, f);
 	}
 	else blanks++;
-    code(0, out);
+    code(0, f);
 }
 
 
 void
-printhtml(Line *t, FILE *out)
+printhtml(Line *t, MMIOT *f)
 {
     int blanks;
     
     for ( blanks=0; t ; t = t->next )
 	if ( S(t->text) ) {
-	    while ( blanks ) {
-		fputc('\n', out);
-		--blanks;
-	    }
-	    fwrite(T(t->text), S(t->text), 1, out);
-	    fputc('\n', out);
+	    for ( ; blanks; --blanks ) 
+		fputc('\n', f->out);
+
+	    fwrite(T(t->text), S(t->text), 1, f->out);
+	    fputc('\n', f->out);
 	}
 	else
 	    blanks++;
 }
 
 
-static Paragraph *display(Paragraph*, FILE*, int);
+static Paragraph *display(Paragraph*, MMIOT*, int);
 
 
 static void
-emit(Paragraph *p, FILE *out)
+emit(Paragraph *p, MMIOT *f)
 {
     int multiple = ( p->next != 0 );
 
-    while (( p = display(p, out, multiple) ))
+    while (( p = display(p, f, multiple) ))
 	;
 }
 
 
 static Paragraph*
-listdisplay(Paragraph *p, FILE* out)
+listdisplay(Paragraph *p, MMIOT* f)
 {
     int typ = p->typ;
 
-    fprintf(out, "<%cl>\n", (typ==UL)?'u':'o');
+    fprintf(f->out, "<%cl>\n", (typ==UL)?'u':'o');
 
     while ( p && (p->typ == typ) ) {
-	fprintf(out, "<li>");
-	emit(p->down, out);
-	fprintf(out, "</li>\n");
+	fprintf(f->out, "<li>");
+	emit(p->down, f);
+	fprintf(f->out, "</li>\n");
 
 	p = p->next;
     }
 
-    fprintf(out, "</%cl>\n", (typ==UL)?'u':'o');
+    fprintf(f->out, "</%cl>\n", (typ==UL)?'u':'o');
     return p;
 }
 
@@ -665,7 +663,7 @@ listdisplay(Paragraph *p, FILE* out)
 /* dump out a Paragraph in the desired manner
  */
 static Paragraph*
-display(Paragraph *p, FILE *out, int multiple)
+display(Paragraph *p, MMIOT *f, int multiple)
 {
     char *pp = 0;
 
@@ -674,27 +672,27 @@ display(Paragraph *p, FILE *out, int multiple)
 	break;
 
     case HTML:
-	printhtml(p->text, out);
+	printhtml(p->text, f);
 	break;
 	
     case CODE:
-	fprintf(out, "<p><code><pre>");
-	printcode(p->text, out);
-	fprintf(out, "</pre></code></p>\n");
+	fprintf(f->out, "<code><pre>\n");
+	printcode(p->text, f);
+	fprintf(f->out, "</pre></code>\n");
 	break;
 	
     case QUOTE:
-	fprintf(out, "<blockquote>");
-	emit(p->down, out);
-	fprintf(out, "</blockquote>\n");
+	fprintf(f->out, "<blockquote>\n");
+	emit(p->down, f);
+	fprintf(f->out, "</blockquote>\n");
 	break;
 	
     case UL:
     case OL:
-	return listdisplay(p, out);
+	return listdisplay(p, f);
 
     case HR:
-	fprintf(out, "<HR>\n");
+	fprintf(f->out, "<HR>\n");
 	break;
 
     default:
@@ -703,10 +701,9 @@ display(Paragraph *p, FILE *out, int multiple)
 	else if ( multiple && p->para )
 	    pp = "p";
 
-	if ( pp ) fprintf(out, "<%s>", pp);
-	if ( !(setext(p->text, out)||etx(p->text, out)) )
-	    printblock(p->text, out);
-	if ( pp ) fprintf(out, "</%s>\n", pp);
+	if ( pp ) fprintf(f->out, "<%s>", pp);
+	setext(p->text, f) || etx(p->text, f) || printblock(p->text, f);
+	if ( pp ) fprintf(f->out, "</%s>\n", pp);
 	break;
     }
     return p->next;
@@ -1053,13 +1050,13 @@ tgood(char c)
  * add a new (image or link) footnote to the footnote table
  */
 static Line*
-addfootnote(Line *p)
+addfootnote(Line *p, MMIOT* f)
 {
     int j, i;
     int c;
     Line *p2 = p->next;
 
-    Footnote *foot = &EXPAND(footnotes);
+    Footnote *foot = &EXPAND(f->footnotes);
     
     CREATE(foot->tag);
     CREATE(foot->link);
@@ -1124,7 +1121,7 @@ Pp(Document *d, Line *ptr, int typ, int para)
  * be marked up.
  */
 static Paragraph *
-compile(Line *ptr, int toplevel)
+compile(Line *ptr, int toplevel, MMIOT *f)
 {
     Document d = { 0, 0 };
     Paragraph *p;
@@ -1148,15 +1145,15 @@ compile(Line *ptr, int toplevel)
 	    p = Pp(&d, ptr, list_type, 0);
 	    ptr = listblock(p, indent);
 
-	    p->down = compile(p->text, 0);
+	    p->down = compile(p->text, 0, f);
 	}
 	else if ( isquote(ptr) ) {
 	    p = Pp(&d, ptr, QUOTE, 0);
 	    ptr = quoteblock(p);
-	    p->down = compile(p->text, 0);
+	    p->down = compile(p->text, 0, f);
 	}
 	else if ( toplevel && (isfootnote(ptr)) ) {
-	    ptr = addfootnote(ptr);
+	    ptr = addfootnote(ptr, f);
 	    continue;
 	}
 	else {
@@ -1172,7 +1169,7 @@ static void
 freeLine(Line *p)
 {
     if (p->next) freeLine(p->next);
-    free(T(p->text));
+    DELETE(p->text);
     free(p);
 }
 
@@ -1188,59 +1185,79 @@ freeParagraph(Paragraph *p)
 
 
 static void
-freefootnotes()
+freefootnotes(MMIOT *f)
 {
     int i;
 
-    for (i=0; i < S(footnotes); i++) {
-	DELETE(T(footnotes)[i].tag);
-	DELETE(T(footnotes)[i].link);
-	DELETE(T(footnotes)[i].title);
+    for (i=0; i < S(f->footnotes); i++) {
+	DELETE(T(f->footnotes)[i].tag);
+	DELETE(T(f->footnotes)[i].link);
+	DELETE(T(f->footnotes)[i].title);
     }
-    S(footnotes) = 0;
+    DELETE(f->footnotes);
 }
 
 
 static void
 initmarkdown()
 {
-    static int init = 0;
+    static int first = 1;
 
-    if ( init ) return;
-
-    srandom((unsigned int)time(0));
-    qsort(blocktags, SZTAGS, sizeof blocktags[0], (stfu)casort);
-    CREATE(footnotes);
-    CREATE(output);
-    init = 1;
+    if ( first-- > 0 ) {
+	first = 0;
+	srandom((unsigned int)time(0));
+	qsort(blocktags, SZTAGS, sizeof blocktags[0], (stfu)casort);
+    }
 }
 
 
+/* 
+ */
 void
+mkd_text(char *p, int size, FILE *output, int flags)
+{
+    MMIOT f;
+
+    bzero(&f, sizeof f);
+    f.out = output;
+    CREATE(f.in);
+    f.isp = 0;
+    f.flags = flags;
+
+    while ( size-- > 0 )
+	EXPAND(f.in) = *p++;
+
+    text(&f);
+
+    DELETE(f.in);
+}
+
+/* convert some markdown text to html
+ */
+int
 markdown(Line *text, FILE *out, int flags)
 {
+    MMIOT *f = calloc(sizeof *f, 1);
     Paragraph *paragraph;
+
+    if ( !f ) return 1;
+
+    f->out = out;
+
+    CREATE(f->footnotes);
+    CREATE(f->in);
+    f->flags = flags;
+
     initmarkdown();
 
-    paragraph = compile(text, 1);
-    qsort(T(footnotes), S(footnotes), sizeof T(footnotes)[0], (stfu)footsort);
+    paragraph = compile(text, 1, f);
+    qsort(T(f->footnotes), S(f->footnotes), sizeof T(f->footnotes)[0],
+							(stfu)footsort);
+    emit(paragraph, f);
 
-    emit(paragraph, out);
-
-    freefootnotes();
+    freefootnotes(f);
     freeParagraph(paragraph);
+    DELETE(f->in);
+    free(f);
+    return 0;
 }
-
-
-#if PROGRAM
-main(int argc, char **argv)
-{
-
-    if ( (argc > 1) && !freopen(argv[1], "r", stdin) ) {
-	perror(argv[1]);
-	exit(1);
-    }
-    markdown(in(stdin), stdout, 0);
-    exit(0);
-}
-#endif

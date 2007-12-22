@@ -16,7 +16,7 @@ typedef ANCHOR(Line) LineAnchor;
 
 /* set up a line anchor for mkd_add()
  */
-LineAnchor*
+static LineAnchor*
 mkd_open()
 {
     LineAnchor* p;
@@ -27,7 +27,7 @@ mkd_open()
 
 /* add a line to the markdown input chain
  */
-void
+static void
 mkd_write(LineAnchor* a, char *s, int len)
 {
     Line *p = calloc(sizeof *p, 1);
@@ -63,7 +63,7 @@ mkd_write(LineAnchor* a, char *s, int len)
 /* finish attaching input, return the
  * input chain.
  */
-Line*
+static Line*
 mkd_close(LineAnchor *p)
 {
     Line *ret = T(*p);
