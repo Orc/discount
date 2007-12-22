@@ -590,7 +590,7 @@ printblock(Line *t, MMIOT *f)
 }
 
 
-void
+static void
 printcode(Line *t, MMIOT *f)
 {
     int blanks;
@@ -609,7 +609,7 @@ printcode(Line *t, MMIOT *f)
 }
 
 
-void
+static void
 printhtml(Line *t, MMIOT *f)
 {
     int blanks;
