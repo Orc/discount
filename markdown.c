@@ -161,6 +161,8 @@ reparse(char *bfr, int size, MMIOT *f)
 
     CREATE(sub.in);
     push(bfr, size, &sub);
+    EXPAND(sub.in) = 0;
+    S(sub.in)--;
     text(&sub);
     DELETE(sub.in);
 }
@@ -1281,6 +1283,8 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
     f.flags = flags;
 
     push(bfr, size, &f);
+    EXPAND(f.in) = 0;
+    S(f.in)--;
     text(&f);
 
     DELETE(f.in);
