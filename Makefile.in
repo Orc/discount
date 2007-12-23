@@ -44,7 +44,7 @@ $(MKDLIB): $(OBJS)
 	$(RANLIB) $(MKDLIB)
 
 clean:
-	rm -f $(PGM) *.o
+	rm -f $(PGM) *.o $(MKDLIB)
 
 distclean spotless: clean
 	rm -f @GENERATED_FILES@ @CONFIGURE_FILES@
