@@ -30,6 +30,11 @@ static char *blocktags[] = { "ADDRESS", "BDO", "BLOCKQUOTE", "CENTER",
 
 typedef int (*stfu)(const void*,const void*);
 
+
+static void code(int, MMIOT*);
+static void text(MMIOT *f);
+
+
 /* case insensitive string sort (for qsort() and bsearch() of block tags)
  */
 static int
@@ -92,12 +97,10 @@ mkd_firstnonblank(Line *p)
 
 
 static void
-push(char *t, int s, MMIOT *f)
+push(char *bfr, int size, MMIOT *f)
 {
-    int i;
-
-    for (i=0; i < s; i++)
-	EXPAND(f->in) = t[i];
+    while ( size-- > 0 )
+	EXPAND(f->in) = *bfr++;
 }
 
 
@@ -147,19 +150,41 @@ skipblankc(MMIOT *f)
 
 
 static void
+reparse(char *bfr, int size, MMIOT *f)
+{
+    MMIOT sub;
+
+    bzero(&sub, sizeof sub);
+    sub.out = f->out;
+    sub.isp = 0;
+    sub.flags = f->flags|DENY_A;
+
+    CREATE(sub.in);
+    push(bfr, size, &sub);
+    text(&sub);
+    DELETE(sub.in);
+}
+
+
+static void
 linkylinky(int image, MMIOT *f)
 {
     char *label;
     int labelsize, size;
-    int qc, c, i, j;
+    int qc, c, i, j, indent;
     
-    for ( labelsize = 1; (c=peek(f, labelsize)) != ']'; ++labelsize)
-	if ( c == EOF )
+    for ( indent = labelsize = 1; indent > 0; ++labelsize) {
+	if ( (c=peek(f, labelsize)) == EOF )
 	    return;
+	else if ( c == '[' )
+	    ++indent;
+	else if ( c == ']' )
+	    --indent;
+    }
     
     label = cursor(f);
 
-    for (j=labelsize+1; isspace(c = peek(f,j)); j++)
+    for (j=labelsize; isspace(c = peek(f,j)); j++)
 	;
 
     if ( (c != '[') && (c != '(') ) {
@@ -181,7 +206,7 @@ linkylinky(int image, MMIOT *f)
 		break;
 	    
 	link = cursor(f);
-	shift(f, size);
+	shift(f, size-1);
 
 	fprintf(f->out, " %s=\"%.*s\"", image ? "src" : "href", size-1, link);
 	skipblankc(f);
@@ -226,10 +251,9 @@ linkylinky(int image, MMIOT *f)
 	}
 	else  {
 	    memcpy(tag+1, label, labelsize);
-	    tag[labelsize+1] = 0;
+	    tag[labelsize] = 0;
 	    pull(f);	/* discard the ']' from [] */
 	}
-
 	T(key.tag) = tag;
 	ret = bsearch(&key, T(f->footnotes), S(f->footnotes),
 	               sizeof key, (stfu)footsort);
@@ -248,7 +272,14 @@ linkylinky(int image, MMIOT *f)
 	}
 	break;
     }
-    fprintf(f->out, image ? " alt=\"%.*s\">" : ">%.*s</a>", labelsize-1, label);
+
+    if ( image )
+	fprintf(f->out, " alt=\"%.*s\">", labelsize-2, label);
+    else {
+	fputc('>', f->out);
+	reparse(label, labelsize-2, f);
+	fprintf(f->out, "</a>");
+    }
 }
 
 
@@ -257,6 +288,24 @@ mangle(unsigned char *s, int len, MMIOT *f)
 {
     while ( len-- > 0 )
 	fprintf(f->out, (random()&1) ? "&#x%02x;" : "&#%02d;", *s++);
+}
+
+
+/* before letting a tag through, validate against
+ * DENY_A and DENY_IMG
+ */
+static int
+forbidden_tag(MMIOT *f)
+{
+    int c = toupper(peek(f, 1));
+
+    if ( c == 'A' && (f->flags & DENY_A) && !isalnum(peek(f,2)) )
+	return 1;
+    if ( c == 'I' && (f->flags & DENY_IMG)
+		  && strncasecmp(cursor(f)+1, "MG", 2) == 0
+		  && !isalnum(peek(f,4)) )
+	return 1;
+    return 0;
 }
 
 
@@ -286,7 +335,7 @@ maybe_tag_or_link(MMIOT *f)
 	return 0;
 
     if ( maybetag ) {
-	fputc('<', f->out);
+	fprintf(f->out, forbidden_tag(f) ? "&lt;" : "<");
 	return 1;
     }
 
@@ -329,6 +378,9 @@ static int
 smartypants(int c, int *flags, MMIOT *f)
 {
     int squo, dquo;
+
+    if ( f->flags & DENY_SMARTY )
+	return 0;
 
     switch (c) {
     case '"':   dquo = 0x01 & (*flags);
@@ -383,9 +435,6 @@ smartypants(int c, int *flags, MMIOT *f)
 } /* smartypants */
 
 
-static void code(int, MMIOT*);
-
-
 static void
 text(MMIOT *f)
 {
@@ -403,14 +452,17 @@ text(MMIOT *f)
 /* Markdown transformations  (additional chrome is done at the end of this
  * switch)
  */
-	case '!':   if ( peek(f,1) == '[' ) {
+	case '!':   if ( (f->flags & DENY_IMG) || (peek(f,1) != '[') )
+			fputc(c, f->out);
+		    else {
 			pull(f);
 			linkylinky(1, f);
 		    }
-		    else
-			fputc(c, f->out);
 		    break;
-	case '[':   linkylinky(0, f);
+	case '[':   if ( f->flags & DENY_A )
+			fputc(c, f->out);
+		    else
+			linkylinky(0, f);
 		    break;
 	case '*':
 	case '_':   if (peek(f,1) == c) {
@@ -1067,10 +1119,12 @@ addfootnote(Line *p, MMIOT* f)
 	EXPAND(foot->tag) = T(p->text)[j];
 
     EXPAND(foot->tag) = T(p->text)[j++];
+    EXPAND(foot->tag) = 0;
     j = nextnonblank(p, j+1);
 
     while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
 	EXPAND(foot->link) = T(p->text)[j++];
+    EXPAND(foot->link) = 0;
     j = nextnonblank(p,j);
 
     if ( T(p->text)[j] == '=' ) {
@@ -1086,9 +1140,11 @@ addfootnote(Line *p, MMIOT* f)
 	p = p2;
     }
 
-    if ( (c = tgood(T(p->text)[j])) )
+    if ( (c = tgood(T(p->text)[j])) ) {
 	while ( (j < S(p->text)-1) && (T(p->text)[++j] != c) )
 	    EXPAND(foot->title) = T(p->text)[j];
+	EXPAND(foot->title) = 0;
+    }
 
     return p->next;
 }
@@ -1214,7 +1270,7 @@ initmarkdown()
 /* 
  */
 void
-mkd_text(char *p, int size, FILE *output, int flags)
+mkd_text(char *bfr, int size, FILE *output, int flags)
 {
     MMIOT f;
 
@@ -1224,40 +1280,36 @@ mkd_text(char *p, int size, FILE *output, int flags)
     f.isp = 0;
     f.flags = flags;
 
-    while ( size-- > 0 )
-	EXPAND(f.in) = *p++;
-
+    push(bfr, size, &f);
     text(&f);
 
     DELETE(f.in);
 }
+
 
 /* convert some markdown text to html
  */
 int
 markdown(Line *text, FILE *out, int flags)
 {
-    MMIOT *f = calloc(sizeof *f, 1);
     Paragraph *paragraph;
+    MMIOT f;
 
-    if ( !f ) return 1;
-
-    f->out = out;
-
-    CREATE(f->footnotes);
-    CREATE(f->in);
-    f->flags = flags;
+    bzero(&f, sizeof f);
+    f.out = out;
+    f.flags = flags;
+    CREATE(f.in);
+    CREATE(f.footnotes);
 
     initmarkdown();
 
-    paragraph = compile(text, 1, f);
-    qsort(T(f->footnotes), S(f->footnotes), sizeof T(f->footnotes)[0],
-							(stfu)footsort);
-    emit(paragraph, f);
+    paragraph = compile(text, 1, &f);
+    qsort(T(f.footnotes), S(f.footnotes), sizeof T(f.footnotes)[0],
+						    (stfu)footsort);
+    emit(paragraph, &f);
 
-    freefootnotes(f);
+    freefootnotes(&f);
     freeParagraph(paragraph);
-    DELETE(f->in);
-    free(f);
+    DELETE(f.in);
     return 0;
 }

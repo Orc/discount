@@ -59,13 +59,14 @@ and
 .Fn mkd_text
 accept the following flag values (or-ed together if needed)
 to restrict how they process their input:
-.Bl -tag -width MKD_NOIMAGES -compact
-.It Ar MKD_NOIMAGES
-Remove
+.Bl -tag -width MKD_NOIMAGE -compact
+.It Ar MKD_NOIMAGE
+Do not process `![]' and
+remove
 .Em \<img\>
 tags from the output.
 .It Ar MKD_NOLINKS
-Remove
+Do not process `[]' and remove
 .Em \<a\>
 tags from the output.
 .It Ar MKD_NOFANCY
