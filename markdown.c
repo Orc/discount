@@ -415,7 +415,7 @@ smartypants(int c, int *flags, MMIOT *f)
 		    while ( (c=peek(f,j)) != EOF ) {
 			if ( c == '\'' && peek(f, j+1) == '\'' ) {
 			    fprintf(f->out, "&ldquo;");
-			    reparse(cursor(f)+2, j-3, f);
+			    reparse(cursor(f)+1, j-2, f);
 			    fprintf(f->out, "&rdquo;");
 			    shift(f,j+1);
 			    return 1;
