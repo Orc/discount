@@ -393,7 +393,15 @@ smartypants(int c, int *flags, MMIOT *f)
 		}
 		break;
 
-    case '\'':  squo = 0x02 & (*flags);
+    case '\'':  if ( (c=toupper(peek(f,1)) == 'S' || c == 'T')
+		     && isthisblank(f, 2) ) {
+		    /* 's or 't -> contraction or possessive ess.  Not
+		     * smart enough
+		     */
+		    fprintf(f->out, "&rsquo;");
+		    return 1;
+		}
+		squo = 0x02 & (*flags);
 		if ( isthisblank(f, squo ? 1 : -1 ) ) {
 		    fprintf(f->out, "&%csquo;", squo ? 'r' : 'l' );
 		    (*flags) ^= 0x02;
@@ -401,6 +409,23 @@ smartypants(int c, int *flags, MMIOT *f)
 		}
 		break;
 
+    case '`':   if ( peek(f, 1) == '`' ) {
+		    int j = 2;
+
+		    while ( (c=peek(f,j)) != EOF ) {
+			if ( c == '\'' && peek(f, j+1) == '\'' ) {
+			    fprintf(f->out, "&ldquo;");
+			    reparse(cursor(f)+2, j-3, f);
+			    fprintf(f->out, "&rdquo;");
+			    shift(f,j+1);
+			    return 1;
+			}
+			else ++j;
+		    }
+
+		}
+		break;
+		
     case '.':   if ( peek(f, 1) == '.' && peek(f, 2) == '.' ) {
 		    fprintf(f->out, "&hellip;");
 		    shift(f,2);
@@ -510,6 +535,8 @@ text(MMIOT *f)
 			fprintf(f->out, "&amp;");
 		    else if ( c == '<' )
 			fprintf(f->out, "&lt;");
+		    else if ( c == '>' )
+			fprintf(f->out, "&gt;");
 		    else
 			fputc( c ? c : '\\', f->out);
 		    break;
