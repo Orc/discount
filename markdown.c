@@ -374,26 +374,39 @@ isthisblank(MMIOT *f, int i)
 }
 
 
+/* smartyquote code that's common for single and double quotes
+ */
+static int
+smartyquote(int *flags, char typeofquote, MMIOT *f)
+{
+    int bit = (typeofquote == 's') ? 0x01 : 0x02;
+
+    if ( bit & (*flags) ) {
+	if ( isthisblank(f,1) ) {
+	    fprintf(f->out, "&r%cquo;", typeofquote);
+	    (*flags) &= ~bit;
+	    return 1;
+	}
+    }
+    else if ( isthisblank(f,-1) && peek(f,1) != EOF ) {
+	fprintf(f->out, "&l%cquo;", typeofquote);
+	(*flags) |= bit;
+	return 1;
+    }
+    return 0;
+}
+
+
 /* Smarty-pants-style chrome for quotes, -, ellipses, and (r)(c)(tm)
  */
 static int
 smartypants(int c, int *flags, MMIOT *f)
 {
-    int squo, dquo;
-
     if ( f->flags & DENY_SMARTY )
 	return 0;
 
     switch (c) {
-    case '"':   dquo = 0x01 & (*flags);
-		if ( isthisblank (f, dquo ? 1 : -1 ) ) {
-		    fprintf(f->out, "&%cdquo;", dquo ? 'r' : 'l' );
-		    (*flags) ^= 0x01;
-		    return 1;
-		}
-		break;
-
-    case '\'':  if ( (c=toupper(peek(f,1)) == 'S' || c == 'T')
+    case '\'':  if ( (c=toupper(peek(f,1)) == 'S' || c == 'T' )
 		     && isthisblank(f, 2) ) {
 		    /* 's or 't -> contraction or possessive ess.  Not
 		     * smart enough
@@ -401,19 +414,21 @@ smartypants(int c, int *flags, MMIOT *f)
 		    fprintf(f->out, "&rsquo;");
 		    return 1;
 		}
-		squo = 0x02 & (*flags);
-		if ( isthisblank(f, squo ? 1 : -1 ) ) {
-		    fprintf(f->out, "&%csquo;", squo ? 'r' : 'l' );
-		    (*flags) ^= 0x02;
-		    return 1;
-		}
+		if ( smartyquote(flags, 's', f) ) return 1;
+		break;
+
+    case '"':	if ( smartyquote(flags, 'd', f) ) return 1;
 		break;
 
     case '`':   if ( peek(f, 1) == '`' ) {
 		    int j = 2;
 
 		    while ( (c=peek(f,j)) != EOF ) {
-			if ( c == '\'' && peek(f, j+1) == '\'' ) {
+			if ( c == '\\' )
+			    j += 2;
+			else if ( c == '`' )
+			    break;
+			else if ( c == '\'' && peek(f, j+1) == '\'' ) {
 			    fprintf(f->out, "&ldquo;");
 			    reparse(cursor(f)+1, j-2, f);
 			    fprintf(f->out, "&rdquo;");
