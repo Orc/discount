@@ -1072,7 +1072,7 @@ quoteblock(Paragraph *p)
 	    blank = last;
 	    t = skipempty(t);
 
-	    if ( !isquote(t) ) {
+	    if ( !(t && isquote(t)) ) {
 		blank->next = 0;
 		return t;
 	    }
