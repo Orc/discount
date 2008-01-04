@@ -602,13 +602,38 @@ code(int escape, MMIOT *f)
 } /* code */
 
 
+static char*
+align(Paragraph *pp)
+{
+    if ( pp->align == CENTER )
+	return "center";
+    return 0;
+}
+
+
+/* print a header block (called by setext() or etx() [below])
+ */
+static void
+header(char *p, int size, MMIOT *f, char *align, int depth)
+{
+    if ( align )
+	 fprintf(f->out, "<%s>\n", align);
+    fprintf(f->out, "<H%d>", depth);
+    push(p, size, f); text(f);
+    fprintf(f->out, "</H%d>\n", depth);
+    if ( align )
+	 fprintf(f->out, "</%s>\n", align);
+}
+
+
 /* setext header;  2 lines, second is ==== or -----
  */
 static int
-setext(Line *p, MMIOT *f)
+setext(Paragraph *pp, MMIOT *f)
 {
+    Line *p = pp->text;
     char *q;
-    int i;
+    int i, H;
 
     if ( (p->next == 0) || p->next->next ) return 0;
 
@@ -618,12 +643,9 @@ setext(Line *p, MMIOT *f)
 	    if ( *q != T(p->next->text)[i] )
 		return 0;
 
-	i = (*q == '=') ? 1 : 2;
+	H = (*q == '=') ? 1 : 2;
 
-	fprintf(f->out, "<H%d>", i);
-	push(T(p->text), S(p->text), f); text(f);
-	fprintf(f->out, "</H%d>\n", i);
-
+	header(T(p->text), S(p->text), f, align(pp), H);
 	return 1;
     }
     return 0;
@@ -633,8 +655,9 @@ setext(Line *p, MMIOT *f)
 /* etx header;  # of #'s in front is the H level
  */
 static int
-etx(Line *p, MMIOT *f)
+etx(Paragraph *pp, MMIOT *f)
 {
+    Line *p = pp->text;
     int H = 0;
     int i, j;
 
@@ -657,16 +680,20 @@ etx(Line *p, MMIOT *f)
 
     if ( j < i ) return 0;
 
-    fprintf(f->out, "<H%d>", H);
-    push(T(p->text)+i, 1+(j-i), f); text(f);
-    fprintf(f->out, "</H%d>", H);
+    header(T(p->text)+i, 1+(j-i), f, align(pp), H);
     return 1;
 }
 
 
 static int
-printblock(Line *t, MMIOT *f)
+printblock(Paragraph *pp, MMIOT *f, int multiple)
 {
+    Line *t = pp->text;
+    char *blocking = align(pp);
+
+    if ( (blocking == 0) && multiple && pp->para )
+	blocking = "p";
+    
     while (t) {
 	if ( S(t->text) ) {
 	    if ( S(t->text) > 2 && T(t->text)[S(t->text)-2] == ' '
@@ -681,7 +708,9 @@ printblock(Line *t, MMIOT *f)
 	}
 	t = t->next;
     }
+    if ( blocking ) fprintf(f->out, "<%s>\n", blocking);
     text(f);
+    if ( blocking ) fprintf(f->out, "</%s>\n", blocking);
     return 1;
 }
 
@@ -761,8 +790,6 @@ listdisplay(Paragraph *p, MMIOT* f)
 static Paragraph*
 display(Paragraph *p, MMIOT *f, int multiple)
 {
-    char *pp = 0;
-
     switch ( p->typ ) {
     case FORCED:
 	break;
@@ -792,14 +819,7 @@ display(Paragraph *p, MMIOT *f, int multiple)
 	break;
 
     default:
-	if ( p->align == CENTER )
-	    pp = "center";
-	else if ( multiple && p->para )
-	    pp = "p";
-
-	if ( pp ) fprintf(f->out, "<%s>", pp);
-	setext(p->text, f) || etx(p->text, f) || printblock(p->text, f);
-	if ( pp ) fprintf(f->out, "</%s>\n", pp);
+	setext(p, f) || etx(p, f) || printblock(p, f, multiple);
 	break;
     }
     return p->next;
