@@ -758,7 +758,7 @@ static Paragraph *display(Paragraph*, MMIOT*, int);
 static void
 emit(Paragraph *p, MMIOT *f)
 {
-    int multiple = ( p->next != 0 );
+    int multiple = p && p->next;
 
     while (( p = display(p, f, multiple) ))
 	;
@@ -790,6 +790,8 @@ listdisplay(Paragraph *p, MMIOT* f)
 static Paragraph*
 display(Paragraph *p, MMIOT *f, int multiple)
 {
+    if ( !p ) return;
+    
     switch ( p->typ ) {
     case FORCED:
 	break;
