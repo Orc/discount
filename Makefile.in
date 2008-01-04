@@ -43,6 +43,11 @@ $(MKDLIB): $(OBJS)
 	$(AR) crv $(MKDLIB) $(OBJS)
 	$(RANLIB) $(MKDLIB)
 
+test:	$(PGM)
+	@for x in tests/*.t; do \
+	    sh $$x; \
+	done
+	
 clean:
 	rm -f $(PGM) *.o $(MKDLIB)
 
