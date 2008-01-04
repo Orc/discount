@@ -790,7 +790,7 @@ listdisplay(Paragraph *p, MMIOT* f)
 static Paragraph*
 display(Paragraph *p, MMIOT *f, int multiple)
 {
-    if ( !p ) return;
+    if ( !p ) return 0;
     
     switch ( p->typ ) {
     case FORCED:
