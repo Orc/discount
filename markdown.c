@@ -691,7 +691,7 @@ printblock(Paragraph *pp, MMIOT *f, int multiple)
     Line *t = pp->text;
     char *blocking = align(pp);
 
-    if ( (blocking == 0) && multiple && pp->para )
+    if ( (blocking == 0) && multiple )
 	blocking = "p";
     
     while (t) {
@@ -793,7 +793,7 @@ display(Paragraph *p, MMIOT *f, int multiple)
     if ( !p ) return 0;
     
     switch ( p->typ ) {
-    case FORCED:
+    case WHITESPACE:
 	break;
 
     case HTML:
@@ -1042,33 +1042,21 @@ textblock(Paragraph *p)
 {
     Line *t, *r;
 
-    for ( t = p->text; t ; t = t->next ) {
-	if ( (r = t->next) == 0 ) {
-	    p->para = 2;
-	    p->align = centered(p->text, t);
-	    return 0;
-	}
-	else if ( fancy(r) ){
+    for ( t = p->text; t ; t = t->next )
+	if ( ((r = t->next) == 0) || fancy(r) || blankline(r) ) {
 	    p->align = centered(p->text, t);
 	    t->next = 0;
 	    return r;
 	}
-	else if ( blankline(r) ) {
-	    p->align = centered(p->text, t);
-	    p->para = 2;
-	    t->next = 0;
-	    return r;
-	}
-    }
     return t;
 }
 
 
 static Line *
-skipempty(Line *p)
+skipempty(Line *p, Line **q)
 {
-    while ( p && (p->dle == S(p->text)) )
-	p = p->next;
+    for ( *q = 0;  p && (p->dle == S(p->text)); *q = p, p = p->next )
+	;
     return p;
 }
 
@@ -1086,7 +1074,7 @@ quoteprefix(Line *t)
 static Line *
 quoteblock(Paragraph *p)
 {
-    Line *t, *q;
+    Line *t, *q, *rest;
     int qp;
 
     for ( t = p->text; t ; t = q ) {
@@ -1095,14 +1083,14 @@ quoteblock(Paragraph *p)
 	    t->dle = mkd_firstnonblank(t);
 	}
 
-	if ( (q = skipempty(t->next)) == 0 ) {
+	if ( (q = skipempty(t->next, &rest)) == 0 ) {
 	    t->next = 0;
-	    return 0;
+	    return rest;
 	}
 
 	if ( (q != t->next) && !isquote(q) ) {
 	    t->next = 0;
-	    return q;
+	    return rest;
 	}
     }
     return t;
@@ -1118,18 +1106,22 @@ quoteblock(Paragraph *p)
 static Line *
 listblock(Paragraph *p, int trim)
 {
-    Line *t, *q;
+    Line *t, *q, *rest;
 
     for ( t = p->text; t ; t = q) {
 	CLIP(t->text, 0, trim);
 	t->dle = mkd_firstnonblank(t);
 
-	if ( (q = skipempty(t->next)) == 0 ) {
-	    t->next = 0;
+	if ( (q = skipempty(t->next, &rest)) == 0 )
 	    return 0;
-	}
 
-	if ( (q != t->next && q->dle < 4) || islist(q, &trim) ) {
+	if ( islist(q, &trim) ) {
+	    if ( !rest ) rest = t;
+	    rest->next = 0;
+	    return q;
+	}
+	else if ( rest && (q->dle < 4) ) {
+	    q = t->next;
 	    t->next = 0;
 	    return q;
 	}
@@ -1218,7 +1210,6 @@ Pp(Document *d, Line *ptr, int typ, int para)
 
     ret->text = ptr;
     ret->typ = typ;
-    ret->para = para;
     ret->align = LEFT;
 
     return ATTACH(*d, ret);
@@ -1236,10 +1227,17 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     Document d = { 0, 0 };
     Paragraph *p;
     char *key;
+    Line *rest;
     int list_type, indent;
 
-    while (( ptr = skipempty(ptr) )) {
-	if ( toplevel && (key = isopentag(ptr)) ) {
+    while ( ptr ) {
+
+	if ( skipempty(ptr, &rest) != ptr ) {
+	    p = Pp(&d, ptr, WHITESPACE, 0);
+	    ptr = rest->next;
+	    rest->next = 0;
+	}
+	else if ( toplevel && (key = isopentag(ptr)) ) {
 	    p = Pp(&d, ptr, HTML, 0);
 	    ptr = htmlblock(p, key);
 	}

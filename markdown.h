@@ -32,8 +32,7 @@ typedef struct paragraph {
     struct paragraph *next;	/* next paragraph */
     struct paragraph *down;	/* recompiled contents of this paragraph */
     struct line *text;		/* all the text in this paragraph */
-    enum { FORCED, CODE=1, QUOTE, MARKUP, HTML, UL, OL, HR } typ;
-    int para;
+    enum { WHITESPACE, CODE=1, QUOTE, MARKUP, HTML, UL, OL, HR } typ;
     enum { LEFT, RIGHT, CENTER} align;
 } Paragraph;
 
