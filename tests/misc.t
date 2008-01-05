@@ -9,9 +9,9 @@ RES=`echo AAA | ./markdown`
 count=`echo "$RES" | grep -i '<p>' | wc -l`
 
 if [ "$count" -eq 1 ]; then
-    echo "OK"
+    echo "ok"
 else
-    echo "Failed"
+    echo "FAILED"
     rc=1
 fi
 

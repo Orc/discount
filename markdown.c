@@ -30,6 +30,8 @@ static char *blocktags[] = { "ADDRESS", "BDO", "BLOCKQUOTE", "CENTER",
 
 typedef int (*stfu)(const void*,const void*);
 
+typedef ANCHOR(Paragraph) Document;
+
 
 static void code(int, MMIOT*);
 static void text(MMIOT *f);
@@ -607,6 +609,8 @@ align(Paragraph *pp)
 {
     if ( pp->align == CENTER )
 	return "center";
+    if ( pp->align == PARA )
+	return "p";
     return 0;
 }
 
@@ -755,40 +759,36 @@ printhtml(Line *t, MMIOT *f)
 static Paragraph *display(Paragraph*, MMIOT*, int);
 
 
-static int
-wanttoblock(Paragraph *p)
+static void
+emit(Paragraph *p, MMIOT *f, int multiple)
 {
-    return p && (p->typ == MARKUP || p->typ == WHITESPACE);
+    if ( !multiple ) multiple = p && p->next;
+
+    while (( p = display(p, f, multiple) ))
+	;
 }
 
 
 static void
-emit(Paragraph *p, MMIOT *f, int multiple)
-{
-    if ( !multiple ) multiple = p && wanttoblock(p->next);
-
-    while (( p = display(p, f, multiple) ))
-	multiple = 1;
-}
-
-
-static Paragraph*
 listdisplay(Paragraph *p, MMIOT* f)
 {
-    int typ = p->typ;
+    int typ;
+    
+    if ( p ) {
+	typ = p->typ;
 
-    fprintf(f->out, "<%cl>\n", (typ==UL)?'u':'o');
+	fprintf(f->out, "<%cl>\n", (typ==UL)?'u':'o');
 
-    while ( p && (p->typ == typ) ) {
-	fprintf(f->out, "<li>");
-	emit(p->down, f, 0);
-	fprintf(f->out, "</li>\n");
+	while ( p && (p->typ == typ) ) {
+	    fprintf(f->out, "<li>");
+	    emit(p->down, f, 0);
+	    fprintf(f->out, "</li>\n");
 
-	p = p->next;
+	    p = p->next;
+	}
+
+	fprintf(f->out, "</%cl>\n", (typ==UL)?'u':'o');
     }
-
-    fprintf(f->out, "</%cl>\n", (typ==UL)?'u':'o');
-    return p;
 }
 
 
@@ -821,7 +821,8 @@ display(Paragraph *p, MMIOT *f, int multiple)
 	
     case UL:
     case OL:
-	return listdisplay(p, f);
+	listdisplay(p->down, f);
+	break;
 
     case HR:
 	fprintf(f->out, "<HR>\n");
@@ -1040,7 +1041,7 @@ centered(Line *first, Line *last)
 	    return CENTER;
 	}
     }
-    return LEFT;
+    return 0;
 }
 
 
@@ -1104,6 +1105,10 @@ quoteblock(Paragraph *p)
 }
 
 
+static Paragraph *Pp(Document *, Line *, int);
+static Paragraph *compile(Line *, int, MMIOT *);
+
+
 /*
  * pull in a list block.  A list block starts with a list marker and
  * runs until the next list marker, the next non-indented paragraph,
@@ -1111,7 +1116,7 @@ quoteblock(Paragraph *p)
  * marker, but multiple paragraphs need to start with a 4-space indent.
  */
 static Line *
-listblock(Paragraph *p, int trim)
+listitem(Paragraph *p, int trim)
 {
     Line *t, *q, *rest;
 
@@ -1122,12 +1127,7 @@ listblock(Paragraph *p, int trim)
 	if ( (q = skipempty(t->next, &rest)) == 0 )
 	    return 0;
 
-	if ( islist(q, &trim) ) {
-	    if ( !rest ) rest = t;
-	    rest->next = 0;
-	    return q;
-	}
-	else if ( rest && (q->dle < 4) ) {
+	if ( islist(q, &trim) || (rest && (q->dle < 4)) ) {
 	    q = t->next;
 	    t->next = 0;
 	    return q;
@@ -1136,6 +1136,33 @@ listblock(Paragraph *p, int trim)
 	trim = (q->dle < 4) ? q->dle : 4;
     }
     return t;
+}
+
+
+static Line *
+listblock(Paragraph *top, int trim, MMIOT *f)
+{
+    Document d = { 0, 0 };
+    Paragraph *p;
+    Line *rest = 0, *text = top->text;
+
+    while (1) {
+	p = Pp(&d, text, top->typ);
+	    
+	text = listitem(p, trim);
+	p->down = compile(p->text, 0, f);
+
+	if ( rest ) p->down->align = PARA;
+	
+	text = skipempty(text, &rest);
+
+	if ( !(text && (islist(text, &trim) == top->typ)) )
+	    break;
+
+	if ( rest ) p->down->align = PARA;
+    }
+    top->down = T(d);
+    return top->text = rest ? rest : text;
 }
 
 
@@ -1203,21 +1230,17 @@ addfootnote(Line *p, MMIOT* f)
 }
 
 
-typedef ANCHOR(Paragraph) Document;
-
-
 /*
  * allocate a paragraph header, link it to the
  * tail of the current document
  */
 static Paragraph *
-Pp(Document *d, Line *ptr, int typ, int para)
+Pp(Document *d, Line *ptr, int typ)
 {
     Paragraph *ret = calloc(sizeof *ret, 1);
 
     ret->text = ptr;
     ret->typ = typ;
-    ret->align = LEFT;
 
     return ATTACH(*d, ret);
 }
@@ -1240,30 +1263,28 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     while ( ptr ) {
 
 	if ( skipempty(ptr, &rest) != ptr ) {
-	    p = Pp(&d, ptr, WHITESPACE, 0);
+	    p = Pp(&d, ptr, WHITESPACE);
 	    ptr = rest->next;
 	    rest->next = 0;
 	}
 	else if ( toplevel && (key = isopentag(ptr)) ) {
-	    p = Pp(&d, ptr, HTML, 0);
+	    p = Pp(&d, ptr, HTML);
 	    ptr = htmlblock(p, key);
 	}
 	else if ( iscode(ptr) ) {
-	    p = Pp(&d, ptr, CODE, 0);
+	    p = Pp(&d, ptr, CODE);
 	    ptr = codeblock(p);
 	}
 	else if ( ishr(ptr) ) {
-	    p = Pp(&d, 0, HR, 0);
+	    p = Pp(&d, 0, HR);
 	    ptr = ptr->next;
 	}
 	else if (( list_type = islist(ptr, &indent) )) {
-	    p = Pp(&d, ptr, list_type, 0);
-	    ptr = listblock(p, indent);
-
-	    p->down = compile(p->text, 0, f);
+	    p = Pp(&d, ptr, list_type);
+	    ptr = listblock(p, indent, f);
 	}
 	else if ( isquote(ptr) ) {
-	    p = Pp(&d, ptr, QUOTE, 0);
+	    p = Pp(&d, ptr, QUOTE);
 	    ptr = quoteblock(p);
 	    p->down = compile(p->text, 0, f);
 	}
@@ -1272,7 +1293,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    continue;
 	}
 	else {
-	    p = Pp(&d, ptr, MARKUP, toplevel);
+	    p = Pp(&d, ptr, MARKUP);
 	    ptr = textblock(p);
 	}
     }
@@ -1372,7 +1393,7 @@ markdown(Line *text, FILE *out, int flags)
     emit(paragraph, &f, 1);
 
     freefootnotes(&f);
-    freeParagraph(paragraph);
+    if ( paragraph ) freeParagraph(paragraph);
     DELETE(f.in);
     return 0;
 }
