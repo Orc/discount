@@ -1339,6 +1339,8 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
     f.isp = 0;
     f.flags = flags;
 
+    initmarkdown();
+
     push(bfr, size, &f);
     EXPAND(f.in) = 0;
     S(f.in)--;

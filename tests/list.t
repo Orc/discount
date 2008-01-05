@@ -2,13 +2,15 @@ echo "lists"
 
 rc=0
 
-echo -n '  two separated items .............. '
+echo -n '  two separated items (1) .......... '
 
 SEP=' * A
 
 * B'
 
-count=`echo "$SEP" | ./markdown | grep -i '<ul>' | wc -l`
+RES=`echo "$SEP" | ./markdown`
+
+count=`echo "$RES" | grep -i '<ul>' | wc -l`
 
 if [ "$count" -eq 1 ]; then
     echo "OK"
@@ -16,6 +18,18 @@ else
     echo "FAILED"
     rc=1
 fi
+
+echo -n '  two separated items (2) .......... '
+
+count=`echo "$RES" | grep -i '<p>' | wc -l`
+
+case `expr $count` in
+2)  echo "OK" ;;
+1)  echo "FAILED (known bug)" ;;
+*)  echo "FAILED ($count)" 
+    rc=1 ;;
+esac
+
 
 echo -n '  two adjacent items ............... '
 

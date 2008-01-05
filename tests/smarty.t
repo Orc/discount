@@ -100,3 +100,15 @@ else
     echo "FAILED"
     rc=1
 fi
+
+echo -n "  it's -> it&rsquo;s ............... "
+
+if  echo "it's" | ./markdown | grep 'it&rsquo;s' >/dev/null; then
+    echo "OK"
+else
+    echo "FAILED"
+    rc=1
+fi
+
+
+exit $rc
