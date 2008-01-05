@@ -1086,68 +1086,56 @@ quoteprefix(Line *t)
 static Line *
 quoteblock(Paragraph *p)
 {
-    Line *t, *blank, *last = 0;
+    Line *t, *q;
     int qp;
 
-    for ( t = p->text; t ; t = t->next ) {
-	if ( last && blankline(t) ) {
-	    blank = last;
-	    t = skipempty(t);
-
-	    if ( !(t && isquote(t)) ) {
-		blank->next = 0;
-		return t;
-	    }
-	    last = blank;
-	}
-	else 
-	    last = t;
-
+    for ( t = p->text; t ; t = q ) {
 	if ( (qp = quoteprefix(t)) > 0 ) {
 	    CLIP(t->text, 0, qp);
 	    t->dle = mkd_firstnonblank(t);
+	}
+
+	if ( (q = skipempty(t->next)) == 0 ) {
+	    t->next = 0;
+	    return 0;
+	}
+
+	if ( (q != t->next) && !isquote(q) ) {
+	    t->next = 0;
+	    return q;
 	}
     }
     return t;
 }
 
 
+/*
+ * pull in a list block.  A list block starts with a list marker and
+ * runs until the next list marker, the next non-indented paragraph,
+ * or EOF.   You do not have to indent nonblank lines after the list
+ * marker, but multiple paragraphs need to start with a 4-space indent.
+ */
 static Line *
 listblock(Paragraph *p, int trim)
 {
-    Line *t = p->text;
-    Line *last = 0;
+    Line *t, *q;
 
-    do {
-	if ( last ) {
-	    if ( islist(t, &trim) ) {
-		last->next = 0;
-		return t;
-	    }
-	    else if ( blankline(t) ) {
-		last = t;
-		t = skipempty(t);
+    for ( t = p->text; t ; t = q) {
+	CLIP(t->text, 0, trim);
+	t->dle = mkd_firstnonblank(t);
 
-		if ( (t == 0) || (t->dle < 4) ) {
-		    last->next = 0;
-		    return t;
-		}
-	    }
-	    else {
-		last = t;
-		t = t->next;
-	    }
-	}
-	else {
-	    last = t;
-	    t = t->next;
+	if ( (q = skipempty(t->next)) == 0 ) {
+	    t->next = 0;
+	    return 0;
 	}
 
-	CLIP(last->text,0,trim);
-	last->dle = mkd_firstnonblank(last);
+	if ( (q != t->next && q->dle < 4) || islist(q, &trim) ) {
+	    t->next = 0;
+	    return q;
+	}
 
-	if ( t ) trim = (t->dle < 4) ? t->dle : 4;
-    } while ( t );
+	trim = (q->dle < 4) ? q->dle : 4;
+    }
     return t;
 }
 
