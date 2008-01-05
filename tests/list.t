@@ -63,10 +63,10 @@ fi
 
 echo -n '  nested lists (1) ................. '
 
-SUB='A (list)
-1. Sub (list)
-2. Two (items)
-3. Here'
+SUB='>A (list)
+>1. Sub (list)
+>2. Two (items)
+>3. Here'
 
 SEP=' * A (list)
      1. Sub (list)
@@ -85,10 +85,10 @@ else
 fi
 echo -n '  nested lists (2) ................. '
 
-SUB='A (list)
-1. Sub (list)
-2. Two (items)
-3. Here'
+SUB='>A (list)
+>1. Sub (list)
+>2. Two (items)
+>3. Here'
 
 SEP=' * A (list)
      1. Sub (list)
