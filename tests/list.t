@@ -63,5 +63,23 @@ else
     echo "FAILED"
     rc=1
 fi
+echo -n '  nested lists (2) ................. '
+
+SEP=' * A (list)
+     1. Sub (list)
+     2. Two (items)
+     3. Here
+
+     Here
+ * B (list)'
+
+count=`echo "$SEP" | ./markdown | grep -i '<p>' | wc -l`
+
+if [ "$count" -eq 1 ] ; then
+    echo "OK"
+else
+    echo "FAILED"
+    rc=1
+fi
 
 exit $rc

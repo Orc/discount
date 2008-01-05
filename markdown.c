@@ -755,13 +755,20 @@ printhtml(Line *t, MMIOT *f)
 static Paragraph *display(Paragraph*, MMIOT*, int);
 
 
-static void
-emit(Paragraph *p, MMIOT *f)
+static int
+wanttoblock(Paragraph *p)
 {
-    int multiple = p && p->next;
+    return p && (p->typ == MARKUP || p->typ == WHITESPACE);
+}
+
+
+static void
+emit(Paragraph *p, MMIOT *f, int multiple)
+{
+    if ( !multiple ) multiple = p && wanttoblock(p->next);
 
     while (( p = display(p, f, multiple) ))
-	;
+	multiple = 1;
 }
 
 
@@ -774,7 +781,7 @@ listdisplay(Paragraph *p, MMIOT* f)
 
     while ( p && (p->typ == typ) ) {
 	fprintf(f->out, "<li>");
-	emit(p->down, f);
+	emit(p->down, f, 0);
 	fprintf(f->out, "</li>\n");
 
 	p = p->next;
@@ -808,7 +815,7 @@ display(Paragraph *p, MMIOT *f, int multiple)
 	
     case QUOTE:
 	fprintf(f->out, "<blockquote>\n");
-	emit(p->down, f);
+	emit(p->down, f, 0);
 	fprintf(f->out, "</blockquote>\n");
 	break;
 	
@@ -1360,7 +1367,7 @@ markdown(Line *text, FILE *out, int flags)
     paragraph = compile(text, 1, &f);
     qsort(T(f.footnotes), S(f.footnotes), sizeof T(f.footnotes)[0],
 						    (stfu)footsort);
-    emit(paragraph, &f);
+    emit(paragraph, &f, 1);
 
     freefootnotes(&f);
     freeParagraph(paragraph);
