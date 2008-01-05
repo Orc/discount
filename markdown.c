@@ -524,6 +524,8 @@ text(MMIOT *f)
 			    fputc(c, f->out);
 			}
 		    }
+		    else if ( isspace(peek(f,-1)) && isspace(peek(f,1)) )
+			fputc(c, f->out);
 		    else {
 			if (c == em ) {
 			    fprintf(f->out, "</em>");
