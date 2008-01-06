@@ -182,7 +182,7 @@ putsafec(char c, FILE *f)
 	fputs("&lt;", f);
     else if ( c == '"' )
 	fprintf(f, "&#%d;", c);
-    else
+    else if ( c )
 	fputc(c, f);
 }
 
@@ -195,6 +195,8 @@ putsafec(char c, FILE *f)
 static void
 puturlc(char c, FILE *f)
 {
+    if ( !c )
+	return;
     if ( (c == ' ') || (c == '"') || !isprint(c) )
 	fprintf(f, "%%%02x", c);
     else
@@ -328,7 +330,7 @@ linkylinky(int image, MMIOT *f)
 	    }
 	    if ( S(ret->title) ) {
 		fprintf(f->out, " title=\"");
-		putsafe(T(ret->title), S(ret->title), f->out);
+		putsafe(T(ret->title), S(ret->title)-1, f->out);
 		fputc('"', f->out);
 	    }
 
