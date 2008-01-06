@@ -323,12 +323,12 @@ linkylinky(int image, MMIOT *f)
 	if ( ret ) {
 	    if ( S(ret->link) ) {
 		fprintf(f->out, " %s=\"", image ? "src" : "href");
-		puturl(T(ret->link), S(ret->link), f->out);
+		puturl(T(ret->link), S(ret->link)-1, f->out);
 		fputc('"', f->out);
 	    }
 	    if ( S(ret->title) ) {
 		fprintf(f->out, " title=\"");
-		putsafe(T(ret->title), S(ret->title), f->out);
+		putsafe(T(ret->title), S(ret->title)-1, f->out);
 		fputc('"', f->out);
 	    }
 
