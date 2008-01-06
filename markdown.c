@@ -636,6 +636,7 @@ code(int escape, MMIOT *f)
     while ( (c = pull(f)) != EOF ) {
 	switch (c) {
 	case '&':   fprintf(f->out, "&amp;"); break;
+	case '>':   fprintf(f->out, "&gt;"); break;
 	case '<':   fprintf(f->out, "&lt;"); break;
 	case '`':   switch (escape) {
 		    case 2: if ( peek(f,1) == '`' ) {
