@@ -49,6 +49,7 @@ typedef struct mmiot {
 #define DENY_A		0x01
 #define DENY_IMG	0x02
 #define DENY_SMARTY	0x04
+#define EXPAND_QUOTE	0x10
 } MMIOT;
 
 extern int mkd_firstnonblank(Line *);

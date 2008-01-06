@@ -151,14 +151,14 @@ skipblankc(MMIOT *f)
 
 
 static void
-reparse(char *bfr, int size, MMIOT *f)
+reparse(char *bfr, int size, int flags, MMIOT *f)
 {
     MMIOT sub;
 
     bzero(&sub, sizeof sub);
     sub.out = f->out;
     sub.isp = 0;
-    sub.flags = f->flags|DENY_A;
+    sub.flags = f->flags|flags;
 
     CREATE(sub.in);
     push(bfr, size, &sub);
@@ -166,24 +166,6 @@ reparse(char *bfr, int size, MMIOT *f)
     S(sub.in)--;
     text(&sub);
     DELETE(sub.in);
-}
-
-
-/*
- * write a character to output, expanding & to &amp;,
- * < to &lt;, and " to &#34;
- */
-static void
-putsafec(char c, FILE *f)
-{
-    if ( c == '&' )
-	fputs("&amp;", f);
-    else if ( c == '<' )
-	fputs("&lt;", f);
-    else if ( c == '"' )
-	fprintf(f, "&#%d;", c);
-    else if ( c )
-	fputc(c, f);
 }
 
 
@@ -199,8 +181,12 @@ puturlc(char c, FILE *f)
 	return;
     if ( (c == ' ') || (c == '"') || !isprint(c) )
 	fprintf(f, "%%%02x", c);
+    else if ( c == '&' )
+	fputs("&amp;", f);
+    else if ( c == '<' )
+	fputs("&lt;", f);
     else
-	putsafec(c, f);
+	fputc(c, f);
 }
 
 
@@ -212,18 +198,6 @@ puturl(char *s, int size, FILE *f)
 {
     while ( size-- > 0 )
 	puturlc(*s++, f);
-}
-
-
-/*
- * safely write out text inside a tag, expanding
- * problematic characters
- */
-static void
-putsafe(char *s, int size, FILE *f)
-{
-    while ( size-- > 0 )
-	putsafec(*s++, f);
 }
 
 
@@ -291,11 +265,13 @@ linkylinky(int image, MMIOT *f)
 	}
 
 	if ( (qc=peek(f,1)) == '"' || qc == '\'' ) {
+	    for ( size=0; ((c=peek(f,size+2)) != EOF) && (c != qc) ; ++size )
+		;
 	    fprintf(f->out, " title=\"");
-	    pull(f);
-	    while ( ((c=pull(f)) != EOF) && (c != qc) )
-		putsafec(c, f->out);
+	    reparse(cursor(f)+1, size, DENY_A|DENY_IMG|EXPAND_QUOTE, f);
 	    fputc('"', f->out);
+
+	    shift(f, size+2);
 	}
 	if ( peek(f,1) == ')' ) pull(f);
 	break;
@@ -330,7 +306,7 @@ linkylinky(int image, MMIOT *f)
 	    }
 	    if ( S(ret->title) ) {
 		fprintf(f->out, " title=\"");
-		putsafe(T(ret->title), S(ret->title)-1, f->out);
+		reparse(T(ret->title), S(ret->title)-1, DENY_A|DENY_IMG|EXPAND_QUOTE, f);
 		fputc('"', f->out);
 	    }
 
@@ -341,16 +317,9 @@ linkylinky(int image, MMIOT *f)
 	break;
     }
 
-    if ( image ) {
-	fprintf(f->out, " alt=\"");
-	putsafe(label, labelsize-2, f->out);
-	fprintf(f->out, "\">");
-    }
-    else {
-	fputc('>', f->out);
-	reparse(label, labelsize-2, f);
-	fprintf(f->out, "</a>");
-    }
+    fprintf(f->out, image  ? " alt=\"" : ">");
+    reparse(label, labelsize-2, image ? DENY_A|DENY_IMG|EXPAND_QUOTE : 0, f);
+    fprintf(f->out, image ? "\">" : "</a>");
 }
 
 
@@ -503,7 +472,7 @@ smartypants(int c, int *flags, MMIOT *f)
 			    break;
 			else if ( c == '\'' && peek(f, j+1) == '\'' ) {
 			    fprintf(f->out, "&ldquo;");
-			    reparse(cursor(f)+1, j-2, f);
+			    reparse(cursor(f)+1, j-2, 0, f);
 			    fprintf(f->out, "&rdquo;");
 			    shift(f,j+1);
 			    return 1;
@@ -564,9 +533,12 @@ text(MMIOT *f)
 	switch (c) {
 	case 0:     break;
 
-/* Markdown transformations  (additional chrome is done at the end of this
- * switch)
- */
+	case '"':   if ( f->flags & EXPAND_QUOTE )
+			fprintf(f->out, "&#%d;", c);
+		    else
+			fputc(c, f->out);
+		    break;
+			
 	case '!':   if ( (f->flags & DENY_IMG) || (peek(f,1) != '[') )
 			fputc(c, f->out);
 		    else {
@@ -1427,20 +1399,10 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
 {
     MMIOT f;
 
-    bzero(&f, sizeof f);
     f.out = output;
-    CREATE(f.in);
-    f.isp = 0;
-    f.flags = flags;
-
+    
     initmarkdown();
-
-    push(bfr, size, &f);
-    EXPAND(f.in) = 0;
-    S(f.in)--;
-    text(&f);
-
-    DELETE(f.in);
+    reparse(bfr, size, 0, &f);
 }
 
 
