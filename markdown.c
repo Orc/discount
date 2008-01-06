@@ -32,7 +32,6 @@ typedef int (*stfu)(const void*,const void*);
 
 typedef ANCHOR(Paragraph) Document;
 
-
 static void code(int, MMIOT*);
 static void text(MMIOT *f);
 
@@ -170,6 +169,65 @@ reparse(char *bfr, int size, MMIOT *f)
 }
 
 
+/*
+ * write a character to output, expanding & to &amp;,
+ * < to &lt;, and " to &#34;
+ */
+static void
+putsafec(char c, FILE *f)
+{
+    if ( c == '&' )
+	fputs("&amp;", f);
+    else if ( c == '<' )
+	fputs("&lt;", f);
+    else if ( c == '"' )
+	fprintf(f, "&#%d;", c);
+    else
+	fputc(c, f);
+}
+
+
+/*
+ * write a character to output, expanding spaces
+ * and unprintables to %02x format, otherwise
+ * with putsafec
+ */
+static void
+puturlc(char c, FILE *f)
+{
+    if ( (c == ' ') || (c == '"') || !isprint(c) )
+	fprintf(f, "%%%02x", c);
+    else
+	putsafec(c, f);
+}
+
+
+/*
+ * write out a url, escaping problematic characters
+ */
+static void
+puturl(char *s, int size, FILE *f)
+{
+    while ( size-- > 0 )
+	puturlc(*s++, f);
+}
+
+
+/*
+ * safely write out text inside a tag, expanding
+ * problematic characters
+ */
+static void
+putsafe(char *s, int size, FILE *f)
+{
+    while ( size-- > 0 )
+	putsafec(*s++, f);
+}
+
+
+/*
+ * process embedded links and images
+ */
 static void
 linkylinky(int image, MMIOT *f)
 {
@@ -200,7 +258,6 @@ linkylinky(int image, MMIOT *f)
     fprintf(f->out, image ?  "<img" : "<a");
     
     switch (c) {
-	char *link;
 	char *tag;
 	Footnote key, *ret;
     
@@ -208,11 +265,12 @@ linkylinky(int image, MMIOT *f)
 	for ( size =1; (c=peek(f, size)) != ')' && !isspace(c); ++size)
 	    if ( c == EOF )
 		break;
-	    
-	link = cursor(f);
-	shift(f, size-1);
 
-	fprintf(f->out, " %s=\"%.*s\"", image ? "src" : "href", size-1, link);
+	fprintf(f->out, " %s=\"", image ? "src" : "href");
+	puturl(cursor(f), size-1, f->out);
+	fputc('"', f->out);
+	
+	shift(f, size-1);
 	skipblankc(f);
 
 	if ( image && (peek(f,1) == '=') ) {
@@ -234,7 +292,7 @@ linkylinky(int image, MMIOT *f)
 	    fprintf(f->out, " title=\"");
 	    pull(f);
 	    while ( ((c=pull(f)) != EOF) && (c != qc) )
-		fputc(c, f->out);
+		putsafec(c, f->out);
 	    fputc('"', f->out);
 	}
 	if ( peek(f,1) == ')' ) pull(f);
@@ -263,12 +321,16 @@ linkylinky(int image, MMIOT *f)
 	               sizeof key, (stfu)footsort);
 
 	if ( ret ) {
-	    if ( S(ret->link) )
-		fprintf(f->out, " %s=\"%.*s\"", image ? "src" : "href", 
-				S(ret->link), T(ret->link));
-	    if ( S(ret->title) )
-		fprintf(f->out, " title=\"%.*s\"",
-				S(ret->title), T(ret->title));
+	    if ( S(ret->link) ) {
+		fprintf(f->out, " %s=\"", image ? "src" : "href");
+		puturl(T(ret->link), S(ret->link), f->out);
+		fputc('"', f->out);
+	    }
+	    if ( S(ret->title) ) {
+		fprintf(f->out, " title=\"");
+		putsafe(T(ret->title), S(ret->title), f->out);
+		fputc('"', f->out);
+	    }
 
 	    if ( image && ret->height && ret->width )
 		fprintf(f->out, " height=%d width=%d",
@@ -277,8 +339,11 @@ linkylinky(int image, MMIOT *f)
 	break;
     }
 
-    if ( image )
-	fprintf(f->out, " alt=\"%.*s\">", labelsize-2, label);
+    if ( image ) {
+	fprintf(f->out, " alt=\"");
+	putsafe(label, labelsize-2, f->out);
+	fprintf(f->out, "\">");
+    }
     else {
 	fputc('>', f->out);
 	reparse(label, labelsize-2, f);
@@ -287,6 +352,9 @@ linkylinky(int image, MMIOT *f)
 }
 
 
+/*
+ * convert an email address to a string of nonsense
+ */
 static void
 mangle(unsigned char *s, int len, MMIOT *f)
 {
@@ -311,6 +379,7 @@ forbidden_tag(MMIOT *f)
 	return 1;
     return 0;
 }
+
 
 
 /* a < may be just a regular character, the start of an embedded html
