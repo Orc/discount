@@ -47,4 +47,18 @@ else
     rc=1
 fi
 
+echo -n '  footnote urls formed properly .... '
+
+TEST='[hehehe]: hohoho "ha ha"
+
+[hehehe][]
+'
+
+if echo "$TEST" | ./markdown | grep -i '&#00;' >/dev/null; then
+    echo "FAILED"
+    rc=1
+else
+    echo "ok"
+fi
+
 exit $rc
