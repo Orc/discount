@@ -18,25 +18,20 @@ The
 utility reads the
 .Xr markdown 7 -formatted
 .Pa textfile
-.Pq or stdin if no textfile was specified ,
+.Pq or stdin if not specified,
 compiles it, and writes the html output
-to stdio (or 
-.Pa file ,
-if 
-.Ar o
-was specified.)
+to stdout.
 .Pp
 The options are as follows:
-.Bl -tag -width Fl o Pa file
+.Bl -tag -width "-o file"
 .It Fl d
 Instead of writing the html file, dump a parse
 tree to stdout.
 .It Fl V
 Show the version#
 .It Fl o Pa file
-Write the html to 
-.Pa file
-instead of to stdout.
+Write the generated html to 
+.Pa file .
 .El
 .Sh RETURN VALUES
 The

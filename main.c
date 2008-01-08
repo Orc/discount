@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <mkdio.h>
+#include <errno.h>
+
+#include "config.h"
 
 #if HAVE_LIBGEN_H
 #include <libgen.h>
@@ -25,6 +28,7 @@ float
 main(int argc, char **argv)
 {
     int opt;
+    int rc;
     int debug = 0;
     char *ofile = 0;
     extern char version[];
@@ -58,8 +62,9 @@ main(int argc, char **argv)
 	exit(1);
     }
     if ( debug )
-	mkd_dump(mkd_in(stdin), stdout, 0, argc ? basename(argv[0]) : "stdin");
+	rc = mkd_dump(mkd_in(stdin), stdout, 0,
+		      argc ? basename(argv[0]) : "stdin");
     else
-	markdown(mkd_in(stdin), stdout, 0);
-    exit(0);
+	rc = markdown(mkd_in(stdin), stdout, 0);
+    exit( (rc == 0) ? 0 : errno );
 }
