@@ -7,7 +7,7 @@
  */
 int mkd_text(char *, int, FILE*, int);	/* mark up a line of text */
 int markdown(void*, FILE*, int);	/* mark it on down */
-int mkd_dump(void*, FILE*, int);	/* (debug) dump a parse tree */
+int mkd_dump(void*, FILE*, int, char*);	/* (debug) dump a parse tree */
 
 /* line builder for markdown()
  */

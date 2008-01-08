@@ -1478,31 +1478,39 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
  * the guts of the markdown() function, ripped out so I can do
  * debugging.
  */
-typedef void (*emitter)(Paragraph *, MMIOT*);
- 
-int
-__mkd_internal_markdown(Line *text, FILE *out, int flags, emitter emit)
+
+/*
+ * prepare and compile `text`, returning a Paragraph tree.
+ */
+Paragraph *
+__mkd_compile(Line *text, FILE *out, int flags, MMIOT *ctx)
 {
     Paragraph *paragraph;
-    MMIOT f;
 
-    bzero(&f, sizeof f);
-    f.out = out;
-    f.flags = flags;
-    CREATE(f.in);
-    CREATE(f.footnotes);
+    bzero(ctx, sizeof *ctx);
+    ctx->out = out;
+    ctx->flags = flags;
+    CREATE(ctx->in);
+    CREATE(ctx->footnotes);
 
     initmarkdown();
 
-    paragraph = compile(text, 1, &f);
-    qsort(T(f.footnotes), S(f.footnotes), sizeof T(f.footnotes)[0],
-						    (stfu)footsort);
-    (*emit)(paragraph, &f);
+    paragraph = compile(text, 1, ctx);
+    qsort(T(ctx->footnotes), S(ctx->footnotes), sizeof T(ctx->footnotes)[0],
+							     (stfu)footsort);
 
-    freefootnotes(&f);
-    if ( paragraph ) freeParagraph(paragraph);
-    DELETE(f.in);
-    return 0;
+    return paragraph;
+}
+
+
+/* clean up everything allocated in __mkd_compile()
+ */
+void
+__mkd_cleanup(Paragraph *tree, MMIOT *ctx)
+{
+    freefootnotes(ctx);
+    if ( tree ) freeParagraph(tree);
+    DELETE(ctx->in);
 }
 
 
@@ -1511,6 +1519,14 @@ __mkd_internal_markdown(Line *text, FILE *out, int flags, emitter emit)
 int
 markdown(Line *text, FILE *out, int flags)
 {
-    return __mkd_internal_markdown(text,out,flags,emit);
-}
+    MMIOT f;
+    Paragraph *pp;
 
+
+    if (( pp = __mkd_compile(text, out, flags, &f) )) {
+	emit(pp, &f);
+	__mkd_cleanup(pp, &f);
+	return 0;
+    }
+    return -1;
+}

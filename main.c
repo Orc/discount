@@ -41,7 +41,7 @@ main(int argc, char **argv)
 	exit(1);
     }
     if ( debug )
-	mkd_dump(mkd_in(stdin), stdout, 0);
+	mkd_dump(mkd_in(stdin), stdout, 0, argc ? basename(argv[0]) : "stdin");
     else
 	markdown(mkd_in(stdin), stdout, 0);
     exit(0);

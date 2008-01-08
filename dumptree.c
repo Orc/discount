@@ -7,8 +7,8 @@ struct frame {
     char c;
 };
 
-static STRING(struct frame) stack;
-    
+typedef STRING(struct frame) Stack;
+
 static char *
 Pptype(int typ)
 {
@@ -29,9 +29,9 @@ Pptype(int typ)
 }
 
 static void
-pushpfx(int indent, char c)
+pushpfx(int indent, char c, Stack *sp)
 {
-    struct frame *q = &EXPAND(stack);
+    struct frame *q = &EXPAND(*sp);
 
     q->indent = indent;
     q->c = c;
@@ -39,54 +39,54 @@ pushpfx(int indent, char c)
 
 
 static void
-poppfx()
+poppfx(Stack *sp)
 {
-    S(stack)--;
+    S(*sp)--;
 }
 
 
 static void
-changepfx(char c)
+changepfx(Stack *sp, char c)
 {
     char ch;
 
-    if ( !S(stack) ) return;
+    if ( !S(*sp) ) return;
 
-    ch = T(stack)[S(stack)-1].c;
+    ch = T(*sp)[S(*sp)-1].c;
 
     if ( ch == '+' || ch == '|' )
-	T(stack)[S(stack)-1].c = c;
+	T(*sp)[S(*sp)-1].c = c;
 }
 
 
 static void
-printpfx()
+printpfx(Stack *sp)
 {
     int i;
     char c;
 
-    if ( !S(stack) ) return;
+    if ( !S(*sp) ) return;
 
-    c = T(stack)[S(stack)-1].c;
+    c = T(*sp)[S(*sp)-1].c;
 
     if ( c == '+' || c == '-' ) {
 	printf("--%c", c);
-	T(stack)[S(stack)-1].c = (c == '-') ? ' ' : '|';
+	T(*sp)[S(*sp)-1].c = (c == '-') ? ' ' : '|';
     }
     else
-	for ( i=0; i < S(stack); i++ ) {
+	for ( i=0; i < S(*sp); i++ ) {
 	    if ( i )
 		printf("  ");
-	    printf("%*s%c", T(stack)[i].indent + 2, " ", T(stack)[i].c);
-	    if ( T(stack)[i].c == '`' )
-		T(stack)[i].c = ' ';
+	    printf("%*s%c", T(*sp)[i].indent + 2, " ", T(*sp)[i].c);
+	    if ( T(*sp)[i].c == '`' )
+		T(*sp)[i].c = ' ';
 	}
     printf("--");
 }
 
 
 static void
-dumptree(Paragraph *pp, void *context)
+dumptree(Paragraph *pp, Stack *sp)
 {
     int count;
     Line *p;
@@ -95,8 +95,8 @@ dumptree(Paragraph *pp, void *context)
 
     while ( pp ) {
 	if ( !pp->next )
-	    changepfx('`');
-	printpfx();
+	    changepfx(sp, '`');
+	printpfx(sp);
 
 	d = printf("[%s", Pptype(pp->typ));
 	if ( pp->align )
@@ -111,9 +111,9 @@ dumptree(Paragraph *pp, void *context)
 	d += printf("]");
 
 	if ( pp->down ) {
-	    pushpfx(d, pp->down->next ? '+' : '-');
-	    dumptree(pp->down, context);
-	    poppfx();
+	    pushpfx(d, pp->down->next ? '+' : '-', sp);
+	    dumptree(pp->down, sp);
+	    poppfx(sp);
 	}
 	else putchar('\n');
 	pp = pp->next;
@@ -121,13 +121,26 @@ dumptree(Paragraph *pp, void *context)
 }
 
 
-int
-mkd_dump(Line *input, FILE *output, int flags)
-{
-    typedef void (*emitter)(Paragraph*,void*);
-    extern int __mkd_internal_markdown(Line*, FILE*, int, emitter);
+extern Paragraph *__mkd_compile(Line*, FILE*, int, MMIOT*);
+extern void __mkd_cleanup(Paragraph *, MMIOT*);
 
-    CREATE(stack);
-    return __mkd_internal_markdown(input,output,flags,dumptree);
-    DELETE(stack);
+
+int
+mkd_dump(Line *input, FILE *output, int flags, char *title)
+{
+    Stack stack;
+    MMIOT frame;
+    Paragraph *tree;
+    
+    if (( tree = __mkd_compile(input,output,flags,&frame) )) {
+
+	CREATE(stack);
+	pushpfx(printf("%s", title), tree->next ? '+' : '-', &stack);
+	dumptree(tree, &stack);
+	DELETE(stack);
+
+	__mkd_cleanup(tree, &frame);
+	return 0;
+    }
+    return -1;
 }
