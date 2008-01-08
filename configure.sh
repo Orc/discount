@@ -7,6 +7,7 @@
 
 # load in the configuration file
 #
+ac_help='--with-dl-tag		Use the DL tag extension'
 TARGET=markdown
 . ./configure.inc
 
@@ -31,5 +32,7 @@ AC_CHECK_FUNCS basename
 AC_CHECK_HEADERS libgen.h
 
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
+
+[ "$WITH_DL_TAG" ] && AC_DEFINE 'DL_TAG_EXTENSION' '1'
 
 AC_OUTPUT Makefile

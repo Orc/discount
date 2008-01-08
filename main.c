@@ -39,7 +39,11 @@ main(int argc, char **argv)
 	switch (opt) {
 	case 'd':   debug = 1;
 		    break;
-	case 'V':   printf("markdown %s\n", version);
+	case 'V':   printf("markdown %s", version);
+#if DL_TAG_EXTENSION
+		    printf(" DL_TAG");
+#endif
+		    putchar('\n');
 		    exit(0);
 	case 'o':   if ( ofile ) {
 			fprintf(stderr, "Too many -o options\n");

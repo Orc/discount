@@ -11,6 +11,8 @@
 #include <time.h>
 #include <ctype.h>
 
+#include "config.h"
+
 #include "cstring.h"
 #include "markdown.h"
 
@@ -101,10 +103,9 @@ reparse(char *bfr, int size, int flags, MMIOT *f)
 {
     MMIOT sub;
 
-    bzero(&sub, sizeof sub);
-    sub.out = f->out;
+    memcpy(&sub, f, sizeof sub);
     sub.isp = 0;
-    sub.flags = f->flags|flags;
+    sub.flags |= flags;
 
     CREATE(sub.in);
     push(bfr, size, &sub);
@@ -240,6 +241,7 @@ linkylinky(int image, MMIOT *f)
 	    tag[labelsize] = 0;
 	    pull(f);	/* discard the ']' from [] */
 	}
+
 	T(key.tag) = tag;
 	ret = bsearch(&key, T(f->footnotes), S(f->footnotes),
 	               sizeof key, (stfu)__mkd_footsort);
@@ -654,7 +656,10 @@ printcode(Line *t, MMIOT *f)
 	    push("\n", 1, f);
 	}
 	else blanks++;
+
+    fprintf(f->out, "<pre><code>\n");
     code(0, f);
+    fprintf(f->out, "</code></pre>\n");
 }
 
 
@@ -677,11 +682,39 @@ printhtml(Line *t, MMIOT *f)
 
 
 static void
-emit(Paragraph *p, MMIOT *f)
+emit(Paragraph *p, char *block, MMIOT *f)
 {
+    if ( block ) fprintf(f->out, "<%s>", block);
+
     while (( p = display(p, f) ))
 	;
+
+    if ( block ) fprintf(f->out, "</%s>\n", block);
 }
+
+
+#if DL_TAG_EXTENSION
+static void
+definitionlist(Paragraph *p, MMIOT *f)
+{
+    Line *tag;
+
+    if ( p ) {
+	fprintf(f->out, "<dl>\n");
+
+	for ( ; p ; p = p->next) {
+	    fprintf(f->out, "<dt>");
+	    if (( tag = p->text ))
+		reparse(T(tag->text), S(tag->text), 0, f);
+	    fprintf(f->out, "</dt>\n");
+
+	    emit(p->down, "dd", f);
+	}
+
+	fprintf(f->out, "</dl>\n");
+    }
+}
+#endif
 
 
 static void
@@ -690,12 +723,8 @@ listdisplay(int typ, Paragraph *p, MMIOT* f)
     if ( p ) {
 	fprintf(f->out, "<%cl>\n", (typ==UL)?'u':'o');
 
-	while ( p ) {
-	    fprintf(f->out, "<li>");
-	    emit(p->down, f);
-	    fprintf(f->out, "</li>\n");
-
-	    p = p->next;
+	for ( ; p ; p = p->next ) {
+	    emit(p->down, "li", f);
 	}
 
 	fprintf(f->out, "</%cl>\n", (typ==UL)?'u':'o');
@@ -719,21 +748,23 @@ display(Paragraph *p, MMIOT *f)
 	break;
 	
     case CODE:
-	fprintf(f->out, "<pre><code>\n");
 	printcode(p->text, f);
-	fprintf(f->out, "</code></pre>\n");
 	break;
 	
     case QUOTE:
-	fprintf(f->out, "<blockquote>\n");
-	emit(p->down, f);
-	fprintf(f->out, "</blockquote>\n");
+	emit(p->down, "blockquote", f);
 	break;
 	
     case UL:
     case OL:
 	listdisplay(p->typ, p->down, f);
 	break;
+
+#if DL_TAG_EXTENSION
+    case DL:
+	definitionlist(p->down, f);
+	break;
+#endif
 
     case HR:
 	fprintf(f->out, "<HR />\n");
@@ -756,7 +787,7 @@ display(Paragraph *p, MMIOT *f)
 void
 __mkd_generatehtml(Paragraph *p, MMIOT *f)
 {
-    emit(p, f);
+    emit(p, 0, f);
 }
 
 

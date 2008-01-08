@@ -11,6 +11,8 @@
 #include <time.h>
 #include <ctype.h>
 
+#include "config.h"
+
 #include "cstring.h"
 #include "markdown.h"
 
@@ -344,6 +346,19 @@ ishdr(Line *t, int *htyp)
 }
 
 
+#if DL_TAG_EXTENSION
+static int
+isdefinition(Line *t)
+{
+    return t && t->next && (S(t->text) > 2)
+			&& (t->dle == 0)
+			&& (t->next->dle >= 4)
+			&& (T(t->text)[0] == '=')
+			&& (T(t->text)[S(t->text)-1] == '=');
+}
+#endif
+
+
 static int
 islist(Line *t, int *trim)
 {
@@ -353,6 +368,13 @@ islist(Line *t, int *trim)
     if ( iscode(t) || blankline(t) || ishdr(t,&i) || ishr(t) )
 	return 0;
 
+#if DL_TAG_EXTENSION
+    if ( isdefinition(t) ) {
+	*trim = 4;
+	return DL;
+    }
+#endif
+    
     if ( islabel(T(t->text) + t->dle) ) {
 	i = nextnonblank(t, t->dle+1);
 	*trim = i;
@@ -549,14 +571,29 @@ listblock(Paragraph *top, int trim, MMIOT *f)
     Document d = { 0, 0 };
     Paragraph *p;
     Line *q = top->text, *text;
+    Line *label;
     int para = 0;
 
     while (( text = q )) {
+	if ( top->typ == DL ) {
+	    label = text;
+	    text = text->next;
+	    label->next = 0;
+	}
 	p = Pp(&d, text, LISTITEM);
 	    
 	text = listitem(p, trim);
 	p->down = compile(p->text, 0, f);
-	p->text = 0;
+
+	if ( top->typ == DL ) {
+	    /* trim off leading > and trailing <
+	     */
+	    CLIP(label->text, 0, 1);
+	    S(label->text)--;
+	    p->text = label;
+	}
+	else
+	    p->text = 0;
 
 	if ( para ) p->down->align = PARA;
 
