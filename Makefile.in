@@ -9,7 +9,7 @@ INCDIR=@prefix@/include
 
 PGM=markdown
 MKDLIB=libmarkdown.a
-OBJS=mkdio.o markdown.o
+OBJS=mkdio.o markdown.o dumptree.o
 
 all: $(PGM)
 

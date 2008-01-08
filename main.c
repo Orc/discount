@@ -3,17 +3,21 @@
 #include <unistd.h>
 #include <mkdio.h>
 
+
 float
 main(int argc, char **argv)
 {
     int opt;
+    int debug = 0;
     char *ofile = 0;
     extern char version[];
 
     opterr = 1;
 
-    while ( (opt=getopt(argc, argv, "o:V")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "do:V")) != EOF ) {
 	switch (opt) {
+	case 'd':   debug = 1;
+		    break;
 	case 'V':   printf("markdown %s\n", version);
 		    exit(0);
 	case 'o':   if ( ofile ) {
@@ -36,6 +40,9 @@ main(int argc, char **argv)
 	perror(argv[0]);
 	exit(1);
     }
-    markdown(mkd_in(stdin), stdout, 0);
+    if ( debug )
+	mkd_dump(mkd_in(stdin), stdout, 0);
+    else
+	markdown(mkd_in(stdin), stdout, 0);
     exit(0);
 }

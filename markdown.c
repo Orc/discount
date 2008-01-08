@@ -55,20 +55,31 @@ footsort(Footnote *a, Footnote *b)
 
 
 static void
-freeLine(Line *p)
+freeLine(Line *ptr)
 {
-    if (p->next) freeLine(p->next);
-    DELETE(p->text);
-    free(p);
+    DELETE(ptr->text);
+    free(ptr);
+}
+
+
+static void
+freeLines(Line *p)
+{
+    if (p->next)
+	 freeLines(p->next);
+    freeLine(p);
 }
 
 
 static void
 freeParagraph(Paragraph *p)
 {
-    if (p->next) freeParagraph(p->next);
-    if (p->down) freeParagraph(p->down);
-    else if (p->text) freeLine(p->text);
+    if (p->next)
+	freeParagraph(p->next);
+    if (p->down)
+	freeParagraph(p->down);
+    if (p->text)
+	freeLines(p->text);
     free(p);
 }
 
@@ -96,7 +107,7 @@ freeLineRange(Line *anchor, Line *stop)
 	while ( r && (r->next != stop) )
 	    r = r->next;
 	r->next = 0;
-	freeLine(anchor->next);
+	freeLines(anchor->next);
     }
     anchor->next = 0;
 }
@@ -790,16 +801,12 @@ emit(Paragraph *p, MMIOT *f)
 
 
 static void
-listdisplay(Paragraph *p, MMIOT* f)
+listdisplay(int typ, Paragraph *p, MMIOT* f)
 {
-    int typ;
-    
     if ( p ) {
-	typ = p->typ;
-
 	fprintf(f->out, "<%cl>\n", (typ==UL)?'u':'o');
 
-	while ( p && (p->typ == typ) ) {
+	while ( p ) {
 	    fprintf(f->out, "<li>");
 	    emit(p->down, f);
 	    fprintf(f->out, "</li>\n");
@@ -841,7 +848,7 @@ display(Paragraph *p, MMIOT *f)
 	
     case UL:
     case OL:
-	listdisplay(p->down, f);
+	listdisplay(p->typ, p->down, f);
 	break;
 
     case HR:
@@ -1091,8 +1098,10 @@ headerblock(Paragraph *pp, int htyp)
 	    /* p->text is header, p->next->text is -'s or ='s
 	     */
 	    pp->hnumber = (T(p->next->text)[0] == '=') ? 1 : 2;
+	    
 	    ret = p->next->next;
-	    p->next->next = 0;
+	    freeLine(p->next);
+	    p->next = 0;
 	    break;
 
     case ETX:
@@ -1256,10 +1265,11 @@ listblock(Paragraph *top, int trim, MMIOT *f)
     int para = 0;
 
     while (( text = q )) {
-	p = Pp(&d, text, top->typ);
+	p = Pp(&d, text, LISTITEM);
 	    
 	text = listitem(p, trim);
 	p->down = compile(p->text, 0, f);
+	p->text = 0;
 
 	if ( para ) p->down->align = PARA;
 
@@ -1270,6 +1280,7 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 
 	if ( para ) p->down->align = PARA;
     }
+    top->text = 0;
     top->down = T(d);
     return text;
 }
@@ -1363,8 +1374,7 @@ consume(Line *ptr, int *eaten)
 
     for ( ; ptr && blankline(ptr); ptr = next, *eaten = 1 ) {
 	next = ptr->next;
-	DELETE(ptr->text);
-	free(ptr);
+	freeLine(ptr);
     }
     return ptr;
 }
@@ -1411,6 +1421,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p = Pp(&d, ptr, QUOTE);
 	    ptr = quoteblock(p);
 	    p->down = compile(p->text, 0, f);
+	    p->text = 0;
 	}
 	else if ( toplevel && (isfootnote(ptr)) ) {
 	    ptr = consume(addfootnote(ptr, f), &para);
@@ -1462,10 +1473,14 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
 }
 
 
-/* convert some markdown text to html
+/*
+ * the guts of the markdown() function, ripped out so I can do
+ * debugging.
  */
+typedef void (*emitter)(Paragraph *, MMIOT*);
+ 
 int
-markdown(Line *text, FILE *out, int flags)
+__mkd_internal_markdown(Line *text, FILE *out, int flags, emitter emit)
 {
     Paragraph *paragraph;
     MMIOT f;
@@ -1481,10 +1496,20 @@ markdown(Line *text, FILE *out, int flags)
     paragraph = compile(text, 1, &f);
     qsort(T(f.footnotes), S(f.footnotes), sizeof T(f.footnotes)[0],
 						    (stfu)footsort);
-    emit(paragraph, &f);
+    (*emit)(paragraph, &f);
 
     freefootnotes(&f);
     if ( paragraph ) freeParagraph(paragraph);
     DELETE(f.in);
     return 0;
 }
+
+
+/* convert some markdown text to html
+ */
+int
+markdown(Line *text, FILE *out, int flags)
+{
+    return __mkd_internal_markdown(text,out,flags,emit);
+}
+
