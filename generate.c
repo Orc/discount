@@ -719,9 +719,9 @@ display(Paragraph *p, MMIOT *f)
 	break;
 	
     case CODE:
-	fprintf(f->out, "<code><pre>\n");
+	fprintf(f->out, "<pre><code>\n");
 	printcode(p->text, f);
-	fprintf(f->out, "</pre></code>\n");
+	fprintf(f->out, "</code></pre>\n");
 	break;
 	
     case QUOTE:
