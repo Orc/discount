@@ -1,3 +1,9 @@
+/* markdown: a C implementation of John Gruber's Markdown markup language.
+ *
+ * Copyright (C) 2007 David L Parsons.
+ * The redistribution terms are provided in the COPYRIGHT file that must
+ * be distributed with this source code.
+ */
 #include <stdio.h>
 #include "markdown.h"
 #include "cstring.h"
