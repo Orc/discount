@@ -32,9 +32,12 @@ typedef struct paragraph {
     struct paragraph *next;	/* next paragraph */
     struct paragraph *down;	/* recompiled contents of this paragraph */
     struct line *text;		/* all the text in this paragraph */
-    enum { WHITESPACE, CODE=1, QUOTE, MARKUP, HTML, DL, UL, OL, HR } typ;
+    enum { WHITESPACE=0, CODE, QUOTE, MARKUP, HTML, DL, UL, OL, HDR, HR } typ;
     enum { IMPLICIT=0, PARA, CENTER} align;
+    int hnumber;		/* <Hn> for typ == HDR */
 } Paragraph;
+
+enum { ETX, SETEXT };	/* header types */
 
 
 /* a magic markdown io thing holds all the data structures needed to

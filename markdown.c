@@ -54,6 +54,54 @@ footsort(Footnote *a, Footnote *b)
 }
 
 
+static void
+freeLine(Line *p)
+{
+    if (p->next) freeLine(p->next);
+    DELETE(p->text);
+    free(p);
+}
+
+
+static void
+freeParagraph(Paragraph *p)
+{
+    if (p->next) freeParagraph(p->next);
+    if (p->down) freeParagraph(p->down);
+    else if (p->text) freeLine(p->text);
+    free(p);
+}
+
+
+static void
+freefootnotes(MMIOT *f)
+{
+    int i;
+
+    for (i=0; i < S(f->footnotes); i++) {
+	DELETE(T(f->footnotes)[i].tag);
+	DELETE(T(f->footnotes)[i].link);
+	DELETE(T(f->footnotes)[i].title);
+    }
+    DELETE(f->footnotes);
+}
+
+
+static void
+freeLineRange(Line *anchor, Line *stop)
+{
+    Line *r = anchor->next;
+
+    if ( r != stop ) {
+	while ( r && (r->next != stop) )
+	    r = r->next;
+	r->next = 0;
+	freeLine(anchor->next);
+    }
+    anchor->next = 0;
+}
+
+
 /* see if a <tag> is one of the block tags that frames a html
  * paragraph.
  */
@@ -383,6 +431,8 @@ maybe_tag_or_link(MMIOT *f)
 	return 1;
     }
 
+    if ( f->flags & DENY_A ) return 0;
+
     text = cursor(f);
     shift(f, size);
 
@@ -603,7 +653,8 @@ text(MMIOT *f)
 			fputc( c ? c : '\\', f->out);
 		    break;
 
-	case '<':   maybe_tag_or_link(f) || fprintf(f->out, "&lt;");
+	case '<':   if ( !maybe_tag_or_link(f) )
+			fprintf(f->out, "&lt;");
 		    break;
 
 	case '&':   j = (peek(f,1) == '#' ) ? 2 : 1;
@@ -650,100 +701,25 @@ code(int escape, MMIOT *f)
 } /* code */
 
 
-static char*
-align(Paragraph *pp)
-{
-    if ( pp->align == CENTER )
-	return "center";
-    if ( pp->align == PARA )
-	return "p";
-    return 0;
-}
-
-
-/* print a header block (called by setext() or etx() [below])
+/* print a header block
  */
 static void
-header(char *p, int size, MMIOT *f, char *align, int depth)
+printheader(Paragraph *pp, MMIOT *f)
 {
-    if ( align )
-	 fprintf(f->out, "<%s>\n", align);
-    fprintf(f->out, "<H%d>", depth);
-    push(p, size, f); text(f);
-    fprintf(f->out, "</H%d>\n", depth);
-    if ( align )
-	 fprintf(f->out, "</%s>\n", align);
-}
-
-
-/* setext header;  2 lines, second is ==== or -----
- */
-static int
-setext(Paragraph *pp, MMIOT *f)
-{
-    Line *p = pp->text;
-    char *q;
-    int i, H;
-
-    if ( (p->next == 0) || p->next->next ) return 0;
-
-    q = T(p->next->text);
-    if ( (*q == '=') || (*q == '-') ) {
-	for (i=1; i < S(p->next->text); i++)
-	    if ( *q != T(p->next->text)[i] )
-		return 0;
-
-	H = (*q == '=') ? 1 : 2;
-
-	header(T(p->text), S(p->text), f, align(pp), H);
-	return 1;
-    }
-    return 0;
-}
-
-
-/* etx header;  # of #'s in front is the H level
- */
-static int
-etx(Paragraph *pp, MMIOT *f)
-{
-    Line *p = pp->text;
-    int H = 0;
-    int i, j;
-
-    if ( p->next ) return 0;
-
-    for ( i=0; T(p->text)[i] == '#'; ++i, ++H)
-	;
-
-    if ( !H ) return 0;
-
-    i = nextnonblank(p, i);
-
-    j = S(p->text)-1;
-
-    while ( (j > i) && (T(p->text)[j] == '#') )
-	--j;
-    
-    while ( (j > 1) && isspace(T(p->text)[j]) )
-	--j;
-
-    if ( j < i ) return 0;
-
-    header(T(p->text)+i, 1+(j-i), f, align(pp), H);
-    return 1;
+    fprintf(f->out, "<H%d>", pp->hnumber);
+    push(T(pp->text->text), S(pp->text->text), f);
+    text(f);
+    fprintf(f->out, "</H%d>\n", pp->hnumber);
 }
 
 
 static int
-printblock(Paragraph *pp, MMIOT *f, int multiple)
+printblock(Paragraph *pp, MMIOT *f)
 {
     Line *t = pp->text;
-    char *blocking = align(pp);
+    static char *Begin[] = { "", "<p>",   "<center>"   };
+    static char *End[]   = { "", "</p>\n","</center>\n"};
 
-    if ( (blocking == 0) && multiple )
-	blocking = "p";
-    
     while (t) {
 	if ( S(t->text) ) {
 	    if ( S(t->text) > 2 && T(t->text)[S(t->text)-2] == ' '
@@ -758,9 +734,9 @@ printblock(Paragraph *pp, MMIOT *f, int multiple)
 	}
 	t = t->next;
     }
-    if ( blocking ) fprintf(f->out, "<%s>\n", blocking);
+    fputs(Begin[pp->align], f->out);
     text(f);
-    if ( blocking ) fprintf(f->out, "</%s>\n", blocking);
+    fputs(End[pp->align], f->out);
     return 1;
 }
 
@@ -802,15 +778,13 @@ printhtml(Line *t, MMIOT *f)
 }
 
 
-static Paragraph *display(Paragraph*, MMIOT*, int);
+static Paragraph *display(Paragraph*, MMIOT*);
 
 
 static void
-emit(Paragraph *p, MMIOT *f, int multiple)
+emit(Paragraph *p, MMIOT *f)
 {
-    if ( !multiple ) multiple = p && p->next;
-
-    while (( p = display(p, f, multiple) ))
+    while (( p = display(p, f) ))
 	;
 }
 
@@ -827,7 +801,7 @@ listdisplay(Paragraph *p, MMIOT* f)
 
 	while ( p && (p->typ == typ) ) {
 	    fprintf(f->out, "<li>");
-	    emit(p->down, f, 0);
+	    emit(p->down, f);
 	    fprintf(f->out, "</li>\n");
 
 	    p = p->next;
@@ -841,7 +815,7 @@ listdisplay(Paragraph *p, MMIOT* f)
 /* dump out a Paragraph in the desired manner
  */
 static Paragraph*
-display(Paragraph *p, MMIOT *f, int multiple)
+display(Paragraph *p, MMIOT *f)
 {
     if ( !p ) return 0;
     
@@ -861,7 +835,7 @@ display(Paragraph *p, MMIOT *f, int multiple)
 	
     case QUOTE:
 	fprintf(f->out, "<blockquote>\n");
-	emit(p->down, f, 0);
+	emit(p->down, f);
 	fprintf(f->out, "</blockquote>\n");
 	break;
 	
@@ -871,11 +845,15 @@ display(Paragraph *p, MMIOT *f, int multiple)
 	break;
 
     case HR:
-	fprintf(f->out, "<HR>\n");
+	fprintf(f->out, "<HR />\n");
+	break;
+
+    case HDR:
+	printheader(p, f);
 	break;
 
     default:
-	setext(p, f) || etx(p, f) || printblock(p, f, multiple);
+	printblock(p, f);
 	break;
     }
     return p->next;
@@ -886,6 +864,15 @@ static int
 blankline(Line *p)
 {
     return ! (p && (S(p->text) > p->dle) );
+}
+
+
+static Line *
+skipempty(Line *p)
+{
+    while ( p && (p->dle == S(p->text)) )
+	p = p->next;
+    return p;
 }
 
 
@@ -978,12 +965,98 @@ isquote(Line *t)
 
 
 static int
+dashchar(char c)
+{
+    return (c == '*') || (c == '-') || (c == '_');
+}
+
+
+static int
+iscode(Line *t)
+{
+    return (t->dle >= 4);
+}
+
+
+static int
+ishr(Line *t)
+{
+    int i, count=0;
+    char dash = 0;
+    char c;
+
+    if ( iscode(t) ) return 0;
+
+    for ( i = 0; i < S(t->text); i++) {
+	c = T(t->text)[i];
+	if ( (dash == 0) && dashchar(c) )
+	    dash = c;
+
+	if ( c == dash ) ++count;
+	else if ( !isspace(c) )
+	    return 0;
+    }
+    return (count >= 3);
+}
+
+
+static int
+ishdr(Line *t, int *htyp)
+{
+    int i, j;
+
+
+    /* first check for etx-style ###HEADER###
+     */
+
+    /* leading run of `#`'s ?
+     */
+    for ( i=0; T(t->text)[i] == '#'; ++i)
+	;
+
+    if ( i ) {
+	i = nextnonblank(t, i);
+
+	j = S(t->text)-1;
+
+	while ( (j > i) && (T(t->text)[j] == '#') )
+	    --j;
+	
+	while ( (j > 1) && isspace(T(t->text)[j]) )
+	    --j;
+
+	if ( i < j ) {
+	    *htyp = ETX;
+	    return 1;
+	}
+    }
+
+    /* then check for setext-style HEADER
+     *                             ======
+     */
+
+    if ( t->next ) {
+	char *q = T(t->next->text);
+
+	if ( (*q == '=') || (*q == '-') ) {
+	    for (i=1; i < S(t->next->text); i++)
+		if ( q[0] != q[i] )
+		    return 0;
+	    *htyp = SETEXT;
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+
+static int
 islist(Line *t, int *trim)
 {
     int i, j;
     char *q;
     
-    if ( blankline(t) || (t->dle > 3) )
+    if ( iscode(t) || blankline(t) || ishdr(t,&i) || ishr(t) )
 	return 0;
 
     if ( islabel(T(t->text) + t->dle) ) {
@@ -1006,50 +1079,51 @@ islist(Line *t, int *trim)
 }
 
 
-static int
-dashchar(char c)
+static Line *
+headerblock(Paragraph *pp, int htyp)
 {
-    return (c == '*') || (c == '-') || (c == '_');
-}
+    Line *ret = 0;
+    Line *p = pp->text;
+    int i, j;
 
+    switch (htyp) {
+    case SETEXT:
+	    /* p->text is header, p->next->text is -'s or ='s
+	     */
+	    pp->hnumber = (T(p->next->text)[0] == '=') ? 1 : 2;
+	    ret = p->next->next;
+	    p->next->next = 0;
+	    break;
 
-static int
-ishr(Line *t)
-{
-    int i, count;
-    char dash = 0;
-    char c;
+    case ETX:
+	    /* p->text is ###header###, so we need to trim off
+	     * the leading and trailing `#`'s
+	     */
 
-    for ( i = 0, count = 1; i < S(t->text); i++) {
-	c = T(t->text)[i];
-	if ( dashchar(c) ) {
-	    if ( dash == c )
-		++count;
-	    else if ( dash == 0 )
-		dash = c;
-	    else
-		return 0;
-	}
-	else if ( !isspace(c) )
-	    return 0;
+	    for (i=0; T(p->text)[i] == T(p->text)[0]; i++)
+		;
+
+	    pp->hnumber = i;
+	    CLIP(p->text, 0, i);
+
+	    for (j=S(p->text); j && (T(p->text)[j-1] == '#'); --j)
+		;
+
+	    CLIP(p->text,j, S(p->text)-j);
+	    ret = p->next;
+	    p->next = 0;
+	    break;
     }
-    return (count >= 3);
-}
-
-
-static int
-iscode(Line *t)
-{
-    return (t->dle >= 4);
+    return ret;
 }
 
 
 static int
 fancy(Line *t)
 {
-    int trim;
+    int z;
 
-    return isquote(t) || iscode(t) || islist(t, &trim);
+    return isquote(t) || iscode(t) || islist(t,&z) || ishdr(t,&z) || ishr(t);
 }
 
 
@@ -1063,7 +1137,7 @@ codeblock(Paragraph *p)
 	t->dle = mkd_firstnonblank(t);
 
 	r = t->next;
-	if ( r && S(r->text) && !iscode(r) ) {
+	if ( r && !iscode(r) ) {
 	    ret = t->next;
 	    t->next = 0;
 	    return ret;
@@ -1094,24 +1168,15 @@ centered(Line *first, Line *last)
 static Line *
 textblock(Paragraph *p)
 {
-    Line *t, *r;
+    Line *t, *next;
 
-    for ( t = p->text; t ; t = t->next )
-	if ( ((r = t->next) == 0) || fancy(r) || blankline(r) ) {
+    for ( t = p->text; t ; t = next )
+	if ( ((next = t->next) == 0) || fancy(next) || blankline(next) ) {
 	    p->align = centered(p->text, t);
 	    t->next = 0;
-	    return r;
+	    return next;
 	}
     return t;
-}
-
-
-static Line *
-skipempty(Line *p, Line **q)
-{
-    for ( *q = 0;  p && (p->dle == S(p->text)); *q = p, p = p->next )
-	;
-    return p;
 }
 
 
@@ -1128,7 +1193,7 @@ quoteprefix(Line *t)
 static Line *
 quoteblock(Paragraph *p)
 {
-    Line *t, *q, *rest;
+    Line *t, *q;
     int qp;
 
     for ( t = p->text; t ; t = q ) {
@@ -1137,14 +1202,9 @@ quoteblock(Paragraph *p)
 	    t->dle = mkd_firstnonblank(t);
 	}
 
-	if ( (q = skipempty(t->next, &rest)) == 0 ) {
-	    t->next = 0;
-	    return rest;
-	}
-
-	if ( (q != t->next) && !isquote(q) ) {
-	    t->next = 0;
-	    return rest;
+	if ( !(q = skipempty(t->next)) || ((q != t->next) && !isquote(q)) ) {
+	    freeLineRange(t, q);
+	    return q;
 	}
     }
     return t;
@@ -1164,16 +1224,18 @@ static Paragraph *compile(Line *, int, MMIOT *);
 static Line *
 listitem(Paragraph *p, int trim)
 {
-    Line *t, *q, *rest;
+    Line *t, *q;
 
     for ( t = p->text; t ; t = q) {
 	CLIP(t->text, 0, trim);
 	t->dle = mkd_firstnonblank(t);
 
-	if ( (q = skipempty(t->next, &rest)) == 0 )
+	if ( (q = skipempty(t->next)) == 0 ) {
+	    freeLineRange(t,q);
 	    return 0;
+	}
 
-	if ( islist(q, &trim) || (rest && (q->dle < 4)) ) {
+	if ( islist(q, &trim) || ishr(q) || ((q != t->next) && (q->dle < 4)) ) {
 	    q = t->next;
 	    t->next = 0;
 	    return q;
@@ -1190,25 +1252,26 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 {
     Document d = { 0, 0 };
     Paragraph *p;
-    Line *rest = 0, *text = top->text;
+    Line *q = top->text, *text;
+    int para = 0;
 
-    while (1) {
+    while (( text = q )) {
 	p = Pp(&d, text, top->typ);
 	    
 	text = listitem(p, trim);
 	p->down = compile(p->text, 0, f);
 
-	if ( rest ) p->down->align = PARA;
-	
-	text = skipempty(text, &rest);
+	if ( para ) p->down->align = PARA;
 
-	if ( !(text && (islist(text, &trim) == top->typ)) )
+	if ( !(q = skipempty(text)) || (islist(q,&trim) != top->typ) )
 	    break;
 
-	if ( rest ) p->down->align = PARA;
+	para = (q != text);
+
+	if ( para ) p->down->align = PARA;
     }
     top->down = T(d);
-    return top->text = rest ? rest : text;
+    return text;
 }
 
 
@@ -1292,6 +1355,21 @@ Pp(Document *d, Line *ptr, int typ)
 }
 
 
+
+static Line*
+consume(Line *ptr, int *eaten)
+{
+    Line *next;
+
+    for ( ; ptr && blankline(ptr); ptr = next, *eaten = 1 ) {
+	next = ptr->next;
+	DELETE(ptr->text);
+	free(ptr);
+    }
+    return ptr;
+}
+
+
 /*
  * break a collection of markdown input into
  * blocks of lists, code, html, and text to
@@ -1301,19 +1379,15 @@ static Paragraph *
 compile(Line *ptr, int toplevel, MMIOT *f)
 {
     Document d = { 0, 0 };
-    Paragraph *p;
+    Paragraph *p = 0;
     char *key;
-    Line *rest;
-    int list_type, indent;
+    int para = toplevel;
+    int hdr_type, list_type, indent;
+
+    ptr = consume(ptr, &para);
 
     while ( ptr ) {
-
-	if ( skipempty(ptr, &rest) != ptr ) {
-	    p = Pp(&d, ptr, WHITESPACE);
-	    ptr = rest->next;
-	    rest->next = 0;
-	}
-	else if ( toplevel && (key = isopentag(ptr)) ) {
+	if ( toplevel && (key = isopentag(ptr)) ) {
 	    p = Pp(&d, ptr, HTML);
 	    ptr = htmlblock(p, key);
 	}
@@ -1325,6 +1399,10 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p = Pp(&d, 0, HR);
 	    ptr = ptr->next;
 	}
+	else if ( ishdr(ptr, &hdr_type) ) {
+	    p = Pp(&d, ptr, HDR);
+	    ptr = headerblock(p, hdr_type);
+	}
 	else if (( list_type = islist(ptr, &indent) )) {
 	    p = Pp(&d, ptr, list_type);
 	    ptr = listblock(p, indent, f);
@@ -1335,48 +1413,25 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p->down = compile(p->text, 0, f);
 	}
 	else if ( toplevel && (isfootnote(ptr)) ) {
-	    ptr = addfootnote(ptr, f);
+	    ptr = consume(addfootnote(ptr, f), &para);
 	    continue;
 	}
 	else {
 	    p = Pp(&d, ptr, MARKUP);
 	    ptr = textblock(p);
 	}
+
+	if ( para && !p->align )
+	    p->align = PARA;
+
+	para = toplevel;
+	ptr = consume(ptr, &para);
+
+	if ( para && !p->align )
+	    p->align = PARA;
+
     }
     return T(d);
-}
-
-
-static void
-freeLine(Line *p)
-{
-    if (p->next) freeLine(p->next);
-    DELETE(p->text);
-    free(p);
-}
-
-
-static void
-freeParagraph(Paragraph *p)
-{
-    if (p->next) freeParagraph(p->next);
-    if (p->down) freeParagraph(p->down);
-    else if (p->text) freeLine(p->text);
-    free(p);
-}
-
-
-static void
-freefootnotes(MMIOT *f)
-{
-    int i;
-
-    for (i=0; i < S(f->footnotes); i++) {
-	DELETE(T(f->footnotes)[i].tag);
-	DELETE(T(f->footnotes)[i].link);
-	DELETE(T(f->footnotes)[i].title);
-    }
-    DELETE(f->footnotes);
 }
 
 
@@ -1426,7 +1481,7 @@ markdown(Line *text, FILE *out, int flags)
     paragraph = compile(text, 1, &f);
     qsort(T(f.footnotes), S(f.footnotes), sizeof T(f.footnotes)[0],
 						    (stfu)footsort);
-    emit(paragraph, &f, 1);
+    emit(paragraph, &f);
 
     freefootnotes(&f);
     if ( paragraph ) freeParagraph(paragraph);
