@@ -3,6 +3,23 @@
 #include <unistd.h>
 #include <mkdio.h>
 
+#if HAVE_LIBGEN_H
+#include <libgen.h>
+#endif
+
+
+#ifndef HAVE_BASENAME
+#include <string.h>
+
+char*
+basename(char *p)
+{
+    char *ret = strrchr(p, '/');
+
+    return ret ? (1+ret) : p;
+}
+#endif
+
 
 float
 main(int argc, char **argv)

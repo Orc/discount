@@ -27,6 +27,9 @@ AC_C_CONST
 AC_SCALAR_TYPES
 AC_CHECK_ALLOCA || AC_FAIL "$TARGET requires alloca()"
 
+AC_CHECK_FUNCS basename
+AC_CHECK_HEADERS libgen.h
+
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
 
 AC_OUTPUT Makefile
