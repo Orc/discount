@@ -56,6 +56,7 @@ clean:
 distclean spotless: clean
 	rm -f @GENERATED_FILES@ @CONFIGURE_FILES@
 
-
-markdown.o: markdown.c config.h cstring.h
+markdown.o: markdown.c config.h cstring.h markdown.h
+generate.o: generate.c config.h cstring.h markdown.h
+dumptree.o: dumptree.c cstring.h markdown.h
 mkdio.o: mkdio.c mkdio.h cstring.h config.h
