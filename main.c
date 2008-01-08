@@ -29,7 +29,7 @@ main(int argc, char **argv)
 			exit(1);
 		    }
 		    break;
-	default:    fprintf(stderr, "usage: markdown [-V] [-o file] [file]\n");
+	default:    fprintf(stderr, "usage: markdown [-dV] [-o file] [file]\n");
 		    exit(1);
 	}
     }
