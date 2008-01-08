@@ -810,6 +810,8 @@ markdown(Line *text, FILE *out, int flags)
     MMIOT f;
     Paragraph *pp;
 
+    if ( !text ) return 0;
+
     if (( pp = __mkd_compile(text, out, flags, &f) )) {
 	__mkd_generatehtml(pp, &f);
 	__mkd_cleanup(pp, &f);
