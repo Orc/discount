@@ -5,8 +5,9 @@
 
 /* markup functions
  */
-void mkd_text(char *, int, FILE*, int);	/* mark up a line of text */
-void markdown(void*, FILE*, int);	/* mark it on down */
+int mkd_text(char *, int, FILE*, int);	/* mark up a line of text */
+int markdown(void*, FILE*, int);	/* mark it on down */
+int mkd_dump(void*, FILE*, int);	/* (debug) dump a parse tree */
 
 /* line builder for markdown()
  */

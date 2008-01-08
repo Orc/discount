@@ -1,0 +1,50 @@
+.\"     %A%
+.\"
+.Dd January 7, 2008
+.Dt MARKDOWN 1
+.Os MASTODON
+.Sh NAME
+.Nm markdown
+.Nd text to html conversion tool
+.Sh SYNOPSIS
+.Nm
+.Op Fl d
+.Op Fl V
+.Op Fl o Pa file
+.Op Pa textfile
+.Sh DESCRIPTION
+The
+.Nm
+utility reads the
+.Xr markdown 7 -formatted
+.Pa textfile
+.Pq or stdin if no textfile was specified ,
+compiles it, and writes the html output
+to stdion (or 
+.Pa file ,
+if 
+.Ar o
+was specified.)
+.Pp
+The options are as follows:
+.Bl -tag -width Fl o Pa file
+.It Fl d
+Instead of writing the html file, dump a parse
+tree to stdout.
+.It Fl V
+Show the version#
+.It Fl o Pa file
+Write the html to 
+.Pa file
+instead of to stdout.
+.El
+.Sh RETURN VALUES
+The
+.Nm
+utility exits 0 on success, and >0 if an error occurs.
+.Sh SEE ALSO
+.Xr markdown 3 ,
+.Xr markdown 7 .
+.Sh AUTHOR
+.An David Parsons
+.Pq Li orc@pell.chi.il.us

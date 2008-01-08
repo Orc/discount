@@ -1461,7 +1461,7 @@ initmarkdown()
 
 /* 
  */
-void
+int
 mkd_text(char *bfr, int size, FILE *output, int flags)
 {
     MMIOT f;
@@ -1470,6 +1470,7 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
     
     initmarkdown();
     reparse(bfr, size, 0, &f);
+    return 0;
 }
 
 

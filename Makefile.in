@@ -26,6 +26,8 @@ install.man:
 	done
 	@INSTALL_DIR@ $(MANDIR)/man7
 	@INSTALL_DATA@ markdown.7 $(MANDIR)/man7
+	@INSTALL_DIR@ $(MANDIR)/man1
+	@INSTALL_DATA@ markdown.1 $(MANDIR)/man1
 
 install.everything: install install.man
 
