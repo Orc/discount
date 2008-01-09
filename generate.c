@@ -657,7 +657,7 @@ printcode(Line *t, MMIOT *f)
 	}
 	else blanks++;
 
-    fprintf(f->out, "<pre><code>\n");
+    fprintf(f->out, "<pre><code>");
     code(0, f);
     fprintf(f->out, "</code></pre>\n");
 }
