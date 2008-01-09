@@ -595,14 +595,14 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 	else
 	    p->text = 0;
 
-	if ( para ) p->down->align = PARA;
+	if ( para && (top->typ != DL) ) p->down->align = PARA;
 
 	if ( !(q = skipempty(text)) || (islist(q,&trim) != top->typ) )
 	    break;
 
 	para = (q != text);
 
-	if ( para ) p->down->align = PARA;
+	if ( para && (top->typ != DL) ) p->down->align = PARA;
     }
     top->text = 0;
     top->down = T(d);
