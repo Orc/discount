@@ -498,16 +498,17 @@ textblock(Paragraph *p)
 }
 
 
-static int
-quoteprefix(Line *t)
-{
-    if ( T(t->text)[0] != '>' )
-	return 0;
-
-    return ( T(t->text)[1] == ' ' ) ? 2 : 1;
-}
-
-
+/*
+ * accumulate a blockquote.
+ *
+ * one sick horrible thing about blockquotes is that even though
+ * it just takes ^> to start a quote, following lines, if quoted,
+ * assume that the prefix is ``>''.   This means that code needs
+ * to be indented *5* spaces from the leading '>', but *4* spaces
+ * from the start of the line.   This does not appear to be 
+ * documented in the reference implementation, but it's the
+ * way the markdown sample web form at Daring Fireball works.
+ */
 static Line *
 quoteblock(Paragraph *p)
 {
@@ -515,7 +516,8 @@ quoteblock(Paragraph *p)
     int qp;
 
     for ( t = p->text; t ; t = q ) {
-	if ( (qp = quoteprefix(t)) > 0 ) {
+	if ( isquote(t) ) {
+	    qp = (T(t->text)[1] == ' ') ? 2 : 1;
 	    CLIP(t->text, 0, qp);
 	    t->dle = mkd_firstnonblank(t);
 	}
@@ -578,22 +580,18 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 	if ( top->typ == DL ) {
 	    label = text;
 	    text = text->next;
-	    label->next = 0;
-	}
-	p = Pp(&d, text, LISTITEM);
-	    
-	text = listitem(p, trim);
-	p->down = compile(p->text, 0, f);
 
-	if ( top->typ == DL ) {
-	    /* trim off leading > and trailing <
-	     */
 	    CLIP(label->text, 0, 1);
 	    S(label->text)--;
-	    p->text = label;
+	    label->next = 0;
 	}
-	else
-	    p->text = 0;
+	else label = 0;
+
+	p = Pp(&d, text, LISTITEM);
+	text = listitem(p, trim);
+
+	p->down = compile(p->text, 0, f);
+	p->text = label;
 
 	if ( para && (top->typ != DL) ) p->down->align = PARA;
 
