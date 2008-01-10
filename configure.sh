@@ -31,8 +31,6 @@ locals() {
 TARGET=markdown
 . ./configure.inc
 
-set >log
-
 AC_INIT $TARGET
 
 AC_PROG_CC
