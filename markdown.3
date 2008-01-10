@@ -3,22 +3,21 @@
 .Dt MARKDOWN 3
 .Os Mastodon
 .Sh NAME
-.Nm markdown,
-.Nm mkd_text
+.Nm markdown
 .Nd process Markdown documents
 .Sh LIBRARY
 Markdown 
 .Pq libmarkdown , -lmarkdown
 .Sh SYNOPSIS
 .Fd #include <mkdio.h>
-.Ft int
-.Fn markdown "void *blob" "FILE *output" "int flags"
-.Ft int
-.Fn mkd_text "char *string" "int size" "FILE *output" "int flags"
 .Ft void*
 .Fn mkd_in "FILE *input"
 .Ft void*
 .Fn mkd_string "char *string" "int size"
+.Ft int
+.Fn markdown "void *blob" "FILE *output" "int flags"
+.Ft int
+.Fn mkd_text "char *string" "int size" "FILE *output" "int flags"
 .Sh DESCRIPTION
 These functions
 convert
@@ -69,8 +68,8 @@ tags from the output.
 Do not process `[]' and remove
 .Em \<a\>
 tags from the output.
-.It Ar MKD_NOFANCY
-Do not do Fancypants-style mangling of quotes, dashes, or ellipses.
+.It Ar MKD_NOSMARTY
+Do not do Smartypants-style mangling of quotes, dashes, or ellipses.
 .El
 .Sh RETURN VALUES
 The functions
@@ -90,10 +89,14 @@ functions return a compiled object blob on success, null on failure.
 .Pp
 http://daringfireball.net/projects/markdown/syntax
 .Sh BUGS
-None of the 
-.Fn markdown
-or
-.Fn mkd_text
-flags are supported.
-.Pp
 Error handling is minimal at best.
+.Pp
+The
+descriptor returned by
+.Fn mkd_text
+and
+.Fn mkd_string
+will be destroyed upon return from the
+.Nm
+function.
+

@@ -451,11 +451,18 @@ maybe_tag_or_link(MMIOT *f)
 
 
 static int
-isthisblank(MMIOT *f, int i)
+isthisspace(MMIOT *f, int i)
 {
     int c = peek(f, i);
 
-    return (c == EOF) || isspace(c) || ispunct(c);
+    return isspace(c) || (c == EOF);
+}
+
+
+static int
+isthisnonword(MMIOT *f, int i)
+{
+    return isthisspace(f, i) || ispunct(peek(f,i));
 }
 
 
@@ -467,13 +474,13 @@ smartyquote(int *flags, char typeofquote, MMIOT *f)
     int bit = (typeofquote == 's') ? 0x01 : 0x02;
 
     if ( bit & (*flags) ) {
-	if ( isthisblank(f,1) ) {
+	if ( isthisnonword(f,1) ) {
 	    fprintf(f->out, "&r%cquo;", typeofquote);
 	    (*flags) &= ~bit;
 	    return 1;
 	}
     }
-    else if ( isthisblank(f,-1) && peek(f,1) != EOF ) {
+    else if ( isthisnonword(f,-1) && peek(f,1) != EOF ) {
 	fprintf(f->out, "&l%cquo;", typeofquote);
 	(*flags) |= bit;
 	return 1;
@@ -492,7 +499,7 @@ smartypants(int c, int *flags, MMIOT *f)
 
     switch (c) {
     case '\'':  if ( (c=toupper(peek(f,1)) == 'S' || c == 'T' )
-					 && isthisblank(f, 2) ) {
+					 && isthisnonword(f, 2) ) {
 		    /* 's or 't -> contraction or possessive ess.  Not
 		     * smart enough
 		     */
@@ -538,7 +545,7 @@ smartypants(int c, int *flags, MMIOT *f)
 		    pull(f);
 		    return 1;
 		}
-		else if ( isspace(peek(f,-1)) && isspace(peek(f,1)) ) {
+		else if ( isthisspace(f,-1) && isthisspace(f,1) ) {
 		    fprintf(f->out, "&ndash;");
 		    return 1;
 		}
@@ -611,7 +618,7 @@ text(MMIOT *f)
 			    fputc(c, f->out);
 			}
 		    }
-		    else if ( isspace(peek(f,-1)) && isspace(peek(f,1)) )
+		    else if ( isthisspace(f,-1) && isthisspace(f,1) )
 			fputc(c, f->out);
 		    else {
 			if (c == em ) {

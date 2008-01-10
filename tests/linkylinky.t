@@ -38,9 +38,18 @@ else
     rc=1
 fi
 
-echo -n '  label contains " ................. '
+echo -n '  label contains < ................. '
 
-if echo '![he"hehe](url)' | ./markdown | grep -i '&quot;' >/dev/null; then
+if echo '![he<he<he](url)' | ./markdown | grep -i '&lt;' >/dev/null; then
+    echo "ok"
+else
+    echo "FAILED"
+    rc=1
+fi
+
+echo -n '  sloppy context link .............. '
+
+if echo '[heh]( url "how about it?" )' | ./markdown | grep -i '</a>' >/dev/null; then
     echo "ok"
 else
     echo "FAILED"
