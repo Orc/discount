@@ -71,6 +71,9 @@ populate(getc_func getc, void* ctx)
     Cstring line;
     Document *a = new_Document();
     int c;
+#ifdef PANDOC_HEADER
+    int pandoc = 0;
+#endif
 
     if ( !a ) return 0;
 
@@ -78,6 +81,14 @@ populate(getc_func getc, void* ctx)
 
     while ( (c = (*getc)(ctx)) != EOF ) {
 	if ( c == '\n' ) {
+#ifdef PANDOC_HEADER
+	    if ( pandoc != EOF && pandoc < 3 ) {
+		if ( T(line)[0] == '%' )
+		    pandoc++;
+		else
+		    pandoc = EOF;
+	    }
+#endif
 	    queue(a, &line);
 	    S(line) = 0;
 	}
@@ -89,6 +100,18 @@ populate(getc_func getc, void* ctx)
 	queue(a, &line);
 
     DELETE(line);
+
+#ifdef PANDOC_HEADER
+    if ( pandoc == 3 ) {
+	/* the first three lines started with %, so we have a header.
+	 * clip the first three lines out of content and hang them
+	 * off header.
+	 */
+	a->headers = T(a->content);
+	T(a->content) = a->headers->next->next->next;
+	a->headers->next->next->next = 0;
+    }
+#endif
 
     return a;
 }
