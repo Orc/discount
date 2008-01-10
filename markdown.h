@@ -72,10 +72,13 @@ typedef struct mmiot {
 } MMIOT;
 
 extern int    mkd_firstnonblank(Line *);
-extern void   mkd_generatehtml(Document *, MMIOT *);
 extern int    mkd_compile(Document *, FILE *, int, MMIOT *);
+extern void   mkd_generatehtml(Document *, MMIOT *);
 extern void   mkd_cleanup(Document *, MMIOT *);
+extern int    mkd_text(char *, int, FILE*, int);
+
 extern Document *mkd_in(FILE *);
+extern Document *mkd_string(char*,int);
 
 
 #endif/*_MARKDOWN_D*/
