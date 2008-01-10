@@ -648,10 +648,6 @@ text(MMIOT *f)
 			fprintf(f->out, "&amp;");
 		    else if ( c == '<' )
 			fprintf(f->out, "&lt;");
-#if 0
-		    else if ( c == '>' )
-			fprintf(f->out, "&gt;");
-#endif
 		    else
 			fputc( c ? c : '\\', f->out);
 		    break;
