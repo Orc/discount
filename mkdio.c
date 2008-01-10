@@ -17,26 +17,24 @@ typedef ANCHOR(Line) LineAnchor;
 
 /* set up a line anchor for mkd_add()
  */
-static LineAnchor*
+static Document*
 mkd_open()
 {
-    LineAnchor* p;
-
-    return calloc(sizeof *p, 1);
+    return calloc(sizeof(Document), 1);
 }
 
 
 /* add a line to the markdown input chain
  */
 static void
-mkd_write(LineAnchor* a, char *s, int len)
+mkd_write(Document* a, char *s, int len)
 {
     Line *p = calloc(sizeof *p, 1);
     unsigned char c;
     int i, xp;
 
     CREATE(p->text);
-    ATTACH(*a, p);
+    ATTACH(a->content, p);
 
     for (i=xp=0; i < len; i++) {
 	if ( (c = s[i]) == '\t' ) {
@@ -61,31 +59,17 @@ mkd_write(LineAnchor* a, char *s, int len)
 }
 
 
-/* finish attaching input, return the
- * input chain.
- */
-static Line*
-mkd_close(LineAnchor *p)
-{
-    Line *ret = T(*p);
-
-    free(p);
-
-    return ret;
-}
-
-
 /* read in the markdown source document, assemble into a linked
  * list.
  */
-Line *
+Document *
 mkd_in(FILE *input)
 {
     int c;
     Cstring line;
-    LineAnchor *a = mkd_open();
+    Document *a = mkd_open();
 
-    if ( !a ) return 0;
+    if ( ! a ) return 0;
 
     CREATE(line);
     for (; (c = getc(input)) != EOF; ) {
@@ -93,25 +77,24 @@ mkd_in(FILE *input)
 	    mkd_write(a, T(line), S(line));
 	    S(line) = 0;
 	}
-	else {
+	else
 	    EXPAND(line) = c;
-	}
     }
     if ( S(line) )
 	mkd_write(a, T(line), S(line));
 
     DELETE(line);
-    return mkd_close(a);
+    return a;
 }
 
 
 /* convert a block of text into a linked list
  */
-Line *
+Document *
 mkd_string(char *buf, int len)
 {
     Cstring line;
-    LineAnchor *a = mkd_open();
+    Document *a = mkd_open();
 
     if ( !a ) return 0;
 
@@ -128,5 +111,5 @@ mkd_string(char *buf, int len)
 	mkd_write(a, T(line), S(line));
 
     DELETE(line);
-    return mkd_close(a);
+    return a;
 }

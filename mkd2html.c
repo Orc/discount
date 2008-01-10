@@ -22,13 +22,7 @@
 #include "markdown.h"
 #include "cstring.h"
 
-extern Paragraph *__mkd_compile(Line*, FILE*, int, MMIOT*);
-extern void __mkd_cleanup(Paragraph *, MMIOT*);
-extern void __mkd_generatehtml(Paragraph *, MMIOT *);
-extern Line *mkd_in(FILE *);
-extern int mkd_text(char *,int, FILE*, int);
 extern char version[];
-
 
 Cstring *
 findh1(Paragraph *p)
@@ -60,19 +54,21 @@ void
 main(argc, argv)
 char **argv;
 {
-    Paragraph *tree;
     Cstring *h;
     MMIOT frame;
     int i;
-    Line *input = mkd_in(stdin);
+    Document *input;
 
-    if ( !input ) fail("can't read input");
+    if ( (input = mkd_in(stdin)) == 0 )
+	fail("can't read input");
 
-    tree = __mkd_compile(input, stdout, 0, &frame);
+    if ( !mkd_compile(input, stdout, 0, &frame) )
+	fail("couldn't compile input");
 
-    if ( !tree ) fail("couldn't compile input");
-
-    h = findh1(tree);
+    if ( input->headers )
+	h = &(input->headers->text);
+    else
+	h = findh1(input->code);
 
     /* print a header */
 
@@ -94,9 +90,8 @@ char **argv;
 
     /* print the compiled body */
 
-    __mkd_generatehtml(tree, &frame);
-
-    __mkd_cleanup(tree, &frame);
+    mkd_generatehtml(input, &frame);
+    mkd_cleanup(input, &frame);
 
     i++;
 

@@ -893,20 +893,28 @@ display(Paragraph *p, MMIOT *f)
 }
 
 
-/* external interface to emit() for markdown.c to use
+/* public interface for emit()
  */
 void
-__mkd_generatehtml(Paragraph *p, MMIOT *f)
+mkd_generatehtml(Document *p, MMIOT *f)
 {
-    emit(p, 0, f);
+    emit(p->code, 0, f);
     putc('\n', f->out);
 }
 
 
-/* external interface to reparse() for markdown.c to use
+/*  public interface for reparse()
  */
-void
-__mkd_reparse(char *bfr, int size, int flags, MMIOT *f)
+int
+mkd_text(char *bfr, int size, FILE *output, int flags)
 {
-    reparse(bfr,size,flags,f);
+    MMIOT f;
+
+    f.out = output;
+    f.flags = flags;
+    
+    reparse(bfr, size, 0, &f);
+    return 0;
 }
+
+

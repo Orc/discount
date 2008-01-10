@@ -127,25 +127,20 @@ dumptree(Paragraph *pp, Stack *sp)
 }
 
 
-extern Paragraph *__mkd_compile(Line*, FILE*, int, MMIOT*);
-extern void __mkd_cleanup(Paragraph *, MMIOT*);
-
-
 int
-mkd_dump(Line *input, FILE *output, int flags, char *title)
+mkd_dump(Document *doc, FILE *output, int flags, char *title)
 {
     Stack stack;
     MMIOT frame;
-    Paragraph *tree;
     
-    if (( tree = __mkd_compile(input,output,flags,&frame) )) {
+    if (mkd_compile(doc, output, flags, &frame) ) {
 
 	CREATE(stack);
-	pushpfx(printf("%s", title), tree->next ? '+' : '-', &stack);
-	dumptree(tree, &stack);
+	pushpfx(printf("%s", title), doc->code->next ? '+' : '-', &stack);
+	dumptree(doc->code, &stack);
 	DELETE(stack);
 
-	__mkd_cleanup(tree, &frame);
+	mkd_cleanup(doc, &frame);
 	return 0;
     }
     return -1;

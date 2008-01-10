@@ -28,13 +28,7 @@ static char *blocktags[] = { "!--",
 
 typedef int (*stfu)(const void*,const void*);
 
-typedef ANCHOR(Paragraph) Document;
-
-
-
-/* externals from generate.c */
-void __mkd_generatehtml(Paragraph *, MMIOT *);
-void __mkd_reparse(char *, int, int, MMIOT *);
+typedef ANCHOR(Paragraph) ParagraphRoot;
 
 
 /* case insensitive string sort (for qsort() and bsearch() of block tags)
@@ -583,7 +577,7 @@ quoteblock(Paragraph *p)
 }
 
 
-static Paragraph *Pp(Document *, Line *, int);
+static Paragraph *Pp(ParagraphRoot *, Line *, int);
 static Paragraph *compile(Line *, int, MMIOT *);
 
 
@@ -622,7 +616,7 @@ listitem(Paragraph *p, int trim)
 static Line *
 listblock(Paragraph *top, int trim, MMIOT *f)
 {
-    Document d = { 0, 0 };
+    ParagraphRoot d = { 0, 0 };
     Paragraph *p;
     Line *q = top->text, *text;
     Line *label;
@@ -741,7 +735,7 @@ addfootnote(Line *p, MMIOT* f)
  * tail of the current document
  */
 static Paragraph *
-Pp(Document *d, Line *ptr, int typ)
+Pp(ParagraphRoot *d, Line *ptr, int typ)
 {
     Paragraph *ret = calloc(sizeof *ret, 1);
 
@@ -776,7 +770,7 @@ consume(Line *ptr, int *eaten)
 static Paragraph *
 compile(Line *ptr, int toplevel, MMIOT *f)
 {
-    Document d = { 0, 0 };
+    ParagraphRoot d = { 0, 0 };
     Paragraph *p = 0;
     char *key;
     int para = toplevel;
@@ -838,7 +832,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 
 
 static void
-initmarkdown()
+initialize()
 {
     static int first = 1;
 
@@ -850,22 +844,6 @@ initmarkdown()
 }
 
 
-/* 
- */
-int
-mkd_text(char *bfr, int size, FILE *output, int flags)
-{
-    MMIOT f;
-
-    f.out = output;
-    f.flags = flags;
-    
-    initmarkdown();
-    __mkd_reparse(bfr, size, 0, &f);
-    return 0;
-}
-
-
 /*
  * the guts of the markdown() function, ripped out so I can do
  * debugging.
@@ -874,51 +852,60 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
 /*
  * prepare and compile `text`, returning a Paragraph tree.
  */
-Paragraph *
-__mkd_compile(Line *text, FILE *out, int flags, MMIOT *ctx)
+int
+mkd_compile(Document *doc, FILE *out, int flags, MMIOT *ctx)
 {
-    Paragraph *paragraph;
 
+    if ( !doc )
+	return 0;
+
+    if ( doc->compiled )
+	return 1;
+
+    doc->compiled = 1;
     bzero(ctx, sizeof *ctx);
     ctx->out = out;
     ctx->flags = flags;
     CREATE(ctx->in);
     CREATE(ctx->footnotes);
 
-    initmarkdown();
+    initialize();
 
-    paragraph = compile(text, 1, ctx);
+    doc->code = compile(T(doc->content), 1, ctx);
     qsort(T(ctx->footnotes), S(ctx->footnotes), sizeof T(ctx->footnotes)[0],
 						       (stfu)__mkd_footsort);
-
-    return paragraph;
+    bzero( &doc->content, sizeof doc->content);
+    return 1;
 }
 
 
 /* clean up everything allocated in __mkd_compile()
  */
 void
-__mkd_cleanup(Paragraph *tree, MMIOT *ctx)
+mkd_cleanup(Document *doc, MMIOT *ctx)
 {
     freefootnotes(ctx);
-    if ( tree ) freeParagraph(tree);
     DELETE(ctx->in);
+
+    if ( doc ) {
+	if ( doc->code) freeParagraph(doc->code);
+	if ( doc->headers ) freeLines(doc->headers);
+	if ( T(doc->content) ) freeLines(T(doc->content));
+	free(doc);
+    }
 }
 
 
 /* convert some markdown text to html
  */
 int
-markdown(Line *text, FILE *out, int flags)
+markdown(Document *document, FILE *out, int flags)
 {
     MMIOT f;
-    Paragraph *pp;
 
-    if ( !text ) return 0;
-
-    if (( pp = __mkd_compile(text, out, flags, &f) )) {
-	__mkd_generatehtml(pp, &f);
-	__mkd_cleanup(pp, &f);
+    if ( mkd_compile(document, out, flags, &f) ) {
+	mkd_generatehtml(document, &f);
+	mkd_cleanup(document, &f);
 	return 0;
     }
     return -1;

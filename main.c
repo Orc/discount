@@ -11,7 +11,6 @@
 #include <libgen.h>
 #endif
 
-
 #ifndef HAVE_BASENAME
 #include <string.h>
 

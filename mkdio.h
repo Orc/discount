@@ -3,16 +3,21 @@
 
 #include <stdio.h>
 
-/* markup functions
- */
-int mkd_text(char *, int, FILE*, int);	/* mark up a line of text */
-int markdown(void*, FILE*, int);	/* mark it on down */
-int mkd_dump(void*, FILE*, int, char*);	/* (debug) dump a parse tree */
-
 /* line builder for markdown()
  */
 void *mkd_in(FILE*);			/* assemble input from a file */
 void *mkd_string(char*,int);		/* assemble input from a buffer */
+
+/* compilation, debugging, cleanup
+ */
+int mkd_compile(void*, FILE*, int, void*);
+int mkd_dump(void*, FILE*, int, char*);
+int mkd_cleanup(void*, void*);
+
+/* markup functions
+ */
+int mkd_text(char *, int, FILE*, int);
+int markdown(void*, FILE*, int);
 
 /* special flags for markdown() and mkd_text()
  */

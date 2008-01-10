@@ -17,3 +17,5 @@ else
     echo "FAILED"
     rc=1
 fi
+
+exit $rc
