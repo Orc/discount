@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <unistd.h>
 #include <mkdio.h>
 #include <errno.h>
@@ -29,9 +30,14 @@ main(int argc, char **argv)
 {
     int opt;
     int rc;
+    int flags = 0;
     int debug = 0;
     char *ofile = 0;
     extern char version[];
+    char *q = getenv("MARKDOWN_FLAGS");
+
+
+    if ( q ) flags = strtol(q, 0, 0);
 
     opterr = 1;
 
@@ -69,6 +75,6 @@ main(int argc, char **argv)
 	rc = mkd_dump(mkd_in(stdin), stdout, 0,
 		      argc ? basename(argv[0]) : "stdin");
     else
-	rc = markdown(mkd_in(stdin), stdout, 0);
+	rc = markdown(mkd_in(stdin), stdout, flags);
     exit( (rc == 0) ? 0 : errno );
 }

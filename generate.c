@@ -76,6 +76,17 @@ cursor(MMIOT *f)
 }
 
 
+/* return/set the current cursor position
+ */
+unsigned
+mmseek(MMIOT *f, int i)
+{
+    if ( i >= 0 && i < S(f->in) )
+	f->isp = i;
+    return f->isp;
+}
+
+
 /* move n characters forward ( or -n characters backward) in the input buffer.
  */
 static void
@@ -117,34 +128,51 @@ reparse(char *bfr, int size, int flags, MMIOT *f)
 
 
 /*
- * write a character to output, expanding spaces
- * and unprintables to %02x format, otherwise
- * with putsafec
- */
-static void
-puturlc(char c, FILE *f)
-{
-    if ( !c )
-	return;
-    if ( (c == ' ') || (c == '"') || !isprint(c) )
-	fprintf(f, "%%%02x", c);
-    else if ( c == '&' )
-	fputs("&amp;", f);
-    else if ( c == '<' )
-	fputs("&lt;", f);
-    else
-	fputc(c, f);
-}
-
-
-/*
  * write out a url, escaping problematic characters
  */
 static void
 puturl(char *s, int size, FILE *f)
 {
-    while ( size-- > 0 )
-	puturlc(*s++, f);
+    unsigned char c;
+
+    for ( ; size ; --size, ++s ) {
+	switch (c = *s) {
+	case '<':   fputs("&lt;", f); break;
+	case '>':   fputs("&gt;", f); break;
+	case '&':   fputs("&amp;", f); break;
+#if 0
+	case '&':   if ( (size < 5) || strncmp(s, "&amp;", 5) != 0 ) {
+			fputs("&amp;", f);
+			break;
+		    }
+		    /*else fall into... */
+#endif
+	default:    if ( c == '"' || c == ' ' || !isprint(c) )
+			fprintf(f, "%%%02x", c);
+		    else
+			fputc(c, f);
+		    break;
+	}
+    }
+}
+
+
+
+static int
+broketmatch(MMIOT *f, int i)
+{
+    int c = peek(f, 1+i);
+
+    return (c == '>') || (c == EOF);
+}
+
+
+static int
+spacematch(MMIOT *f, int i)
+{
+    int c = peek(f, i);
+
+    return (c == EOF) || (c == ')') || isspace(c);
 }
 
 
@@ -178,22 +206,28 @@ linkylinky(int image, MMIOT *f)
     }
     shift(f, j);
 
-    fprintf(f->out, image ?  "<img" : "<a");
-    
     switch (c) {
 	char *tag;
 	Footnote key, *ret;
+	int (*matched)(MMIOT*,int);
     
     case '(':
-	for ( size =1; (c=peek(f, size)) != ')' && !isspace(c); ++size)
-	    if ( c == EOF )
-		break;
+	matched = (peek(f,1) == '<') ? broketmatch : spacematch;
 
-	fprintf(f->out, " %s=\"", image ? "src" : "href");
-	puturl(cursor(f), size-1, f->out);
+	for ( size = 0; !(*matched)(f, size+1); ++size)
+	    ;
+
+	fprintf(f->out, "<%s %s=\"", image ? "img" : "a",
+				     image ? "src" : "href");
+	if ( peek(f,1) == '<' ) {
+	    puturl(cursor(f)+1, size, f->out);
+	    shift(f,3);	/* shift past '(', '<' && '>' */
+	}
+	else
+	    puturl(cursor(f), size, f->out);
 	fputc('"', f->out);
 	
-	shift(f, size-1);
+	shift(f, size);
 	skipblankc(f);
 
 	if ( image && (peek(f,1) == '=') ) {
@@ -212,8 +246,15 @@ linkylinky(int image, MMIOT *f)
 	}
 
 	if ( (qc=peek(f,1)) == '"' || qc == '\'' ) {
-	    for ( size=0; ((c=peek(f,size+2)) != EOF) && (c != qc) ; ++size )
+	    /* title;  now run up to the end of the () block, then
+	     * back down to the last quote character we found.
+	     * This allows evil things like "this "is" a "title"")
+	     */
+	    for ( size=0; ((c=peek(f,size+2)) != EOF) && (c != ')') ; ++size )
 		;
+	    while ( size && (peek(f,size+2) != qc) )
+		--size;
+
 	    fprintf(f->out, " title=\"");
 	    reparse(cursor(f)+1, size, DENY_A|DENY_IMG|EXPAND_QUOTE, f);
 	    fputc('"', f->out);
@@ -245,6 +286,8 @@ linkylinky(int image, MMIOT *f)
 	T(key.tag) = tag;
 	ret = bsearch(&key, T(f->footnotes), S(f->footnotes),
 	               sizeof key, (stfu)__mkd_footsort);
+
+	fprintf(f->out, image ?  "<img" : "<a");
 
 	if ( ret ) {
 	    if ( S(ret->link) ) {
@@ -326,7 +369,7 @@ maybe_tag_or_link(MMIOT *f)
     if ( size == 0 )
 	return 0;
 
-    if ( maybetag ) {
+    if ( maybetag  || (size >= 3 && strncmp(cursor(f), "!--", 3) == 0) ) {
 	fprintf(f->out, forbidden_tag(f) ? "&lt;" : "<");
 	return 1;
     }
@@ -334,16 +377,19 @@ maybe_tag_or_link(MMIOT *f)
     if ( f->flags & DENY_A ) return 0;
 
     text = cursor(f);
-    shift(f, size);
+    shift(f, size+1);
 
     for ( i=0; i < SZAUTOPREFIX; i++ )
 	if ( strncasecmp(text, autoprefix[i], strlen(autoprefix[i])) == 0 ) {
-	    fprintf(f->out, "&lt;<a href=\"%.*s\">%.*s</a>",
-			    size, text, size, text);
+	    fprintf(f->out, "<a href=\"");
+	    puturl(text,size,f->out);
+	    fprintf(f->out, "\">");
+	    reparse(text, size, 0, f);
+	    fprintf(f->out, "</a>");
 	    return 1;
 	}
     if ( maybeaddress ) {
-	fprintf(f->out, "&lt;<a href=\"");
+	fprintf(f->out, "<a href=\"");
 	mangle("mailto:", 7, f);
 	mangle(text, size, f);
 	fprintf(f->out,"\">");
@@ -352,7 +398,7 @@ maybe_tag_or_link(MMIOT *f)
 	return 1;
     }
 
-    shift(f, -size);
+    shift(f, -(size+1));
     return 0;
 } /* maybe_tag_or_link */
 
@@ -399,7 +445,7 @@ smartypants(int c, int *flags, MMIOT *f)
 
     switch (c) {
     case '\'':  if ( (c=toupper(peek(f,1)) == 'S' || c == 'T' )
-		     && isthisblank(f, 2) ) {
+					 && isthisblank(f, 2) ) {
 		    /* 's or 't -> contraction or possessive ess.  Not
 		     * smart enough
 		     */
@@ -484,7 +530,7 @@ text(MMIOT *f)
 	case 0:     break;
 
 	case '"':   if ( f->flags & EXPAND_QUOTE )
-			fprintf(f->out, "&#%d;", c);
+			fprintf(f->out, "&quot;", c);
 		    else
 			fputc(c, f->out);
 		    break;
@@ -547,8 +593,10 @@ text(MMIOT *f)
 			fprintf(f->out, "&amp;");
 		    else if ( c == '<' )
 			fprintf(f->out, "&lt;");
+#if 0
 		    else if ( c == '>' )
 			fprintf(f->out, "&gt;");
+#endif
 		    else
 			fputc( c ? c : '\\', f->out);
 		    break;
@@ -587,15 +635,26 @@ code(int escape, MMIOT *f)
     while ( (c = pull(f)) != EOF ) {
 	switch (c) {
 	case '&':   fprintf(f->out, "&amp;"); break;
+
 	case '>':   fprintf(f->out, "&gt;"); break;
+
 	case '<':   fprintf(f->out, "&lt;"); break;
+
 	case '`':   switch (escape) {
 		    case 2: if ( peek(f,1) == '`' ) {
 				shift(f,1);
 		    case 1:     return;
 		            }
 		    }
+		    fputc(c, f->out); break;
+
 	default:    fputc(c, f->out); break;
+
+	case '\\':  fputc(c, f->out);
+		    if ( peek(f,1) == '>' || (c = pull(f)) == EOF )
+			break;
+		    fputc(c, f->out);
+		    break;
 	}
     }
 } /* code */
@@ -606,10 +665,10 @@ code(int escape, MMIOT *f)
 static void
 printheader(Paragraph *pp, MMIOT *f)
 {
-    fprintf(f->out, "<H%d>", pp->hnumber);
+    fprintf(f->out, "<h%d>", pp->hnumber);
     push(T(pp->text->text), S(pp->text->text), f);
     text(f);
-    fprintf(f->out, "</H%d>\n", pp->hnumber);
+    fprintf(f->out, "</h%d>", pp->hnumber);
 }
 
 
@@ -618,7 +677,7 @@ printblock(Paragraph *pp, MMIOT *f)
 {
     Line *t = pp->text;
     static char *Begin[] = { "", "<p>",   "<center>"   };
-    static char *End[]   = { "", "</p>\n","</center>\n"};
+    static char *End[]   = { "", "</p>","</center>"};
 
     while (t) {
 	if ( S(t->text) ) {
@@ -629,7 +688,8 @@ printblock(Paragraph *pp, MMIOT *f)
 	    }
 	    else {
 		push(T(t->text), S(t->text), f);
-		push("\n", 1, f);
+		if ( t->next )
+		    push("\n", 1, f);
 	    }
 	}
 	t = t->next;
@@ -647,7 +707,7 @@ printcode(Line *t, MMIOT *f)
     int blanks;
 
     for ( blanks = 0; t ; t = t->next )
-	if ( S(t->text) ) {
+	if ( S(t->text) > t->dle ) {
 	    while ( blanks ) {
 		push("\n", 1, f);
 		--blanks;
@@ -659,7 +719,7 @@ printcode(Line *t, MMIOT *f)
 
     fprintf(f->out, "<pre><code>");
     code(0, f);
-    fprintf(f->out, "</code></pre>\n");
+    fprintf(f->out, "</code></pre>");
 }
 
 
@@ -684,12 +744,14 @@ printhtml(Line *t, MMIOT *f)
 static void
 emit(Paragraph *p, char *block, MMIOT *f)
 {
-    if ( block ) fprintf(f->out, "<%s>", block);
+    if ( block )
+	fprintf(f->out, "<%s>", block);
 
     while (( p = display(p, f) ))
-	;
+	fputs("\n\n", f->out);
 
-    if ( block ) fprintf(f->out, "</%s>\n", block);
+    if ( block )
+	fprintf(f->out, "</%s>", block);
 }
 
 
@@ -711,7 +773,7 @@ definitionlist(Paragraph *p, MMIOT *f)
 	    emit(p->down, "dd", f);
 	}
 
-	fprintf(f->out, "</dl>\n");
+	fprintf(f->out, "</dl>");
     }
 }
 #endif
@@ -725,9 +787,10 @@ listdisplay(int typ, Paragraph *p, MMIOT* f)
 
 	for ( ; p ; p = p->next ) {
 	    emit(p->down, "li", f);
+	    putc('\n', f->out);
 	}
 
-	fprintf(f->out, "</%cl>\n", (typ==UL)?'u':'o');
+	fprintf(f->out, "</%cl>", (typ==UL)?'u':'o');
     }
 }
 
@@ -767,7 +830,7 @@ display(Paragraph *p, MMIOT *f)
 #endif
 
     case HR:
-	fprintf(f->out, "<HR />\n");
+	fprintf(f->out, "<hr />");
 	break;
 
     case HDR:
@@ -788,6 +851,7 @@ void
 __mkd_generatehtml(Paragraph *p, MMIOT *f)
 {
     emit(p, 0, f);
+    putc('\n', f->out);
 }
 
 

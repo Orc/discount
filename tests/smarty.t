@@ -2,6 +2,8 @@ echo "smarty pants"
 
 rc=0
 
+MARKDOWN_FLAGS=0x0; export MARKDOWN_FLAGS
+
 echo -n '  (c) -> &copy; .................... '
 
 if  echo '(c)' | ./markdown | grep '&copy;' >/dev/null; then

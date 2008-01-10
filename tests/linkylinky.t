@@ -40,7 +40,7 @@ fi
 
 echo -n '  label contains " ................. '
 
-if echo '![he"hehe](url)' | ./markdown | grep -i '&#34;' >/dev/null; then
+if echo '![he"hehe](url)' | ./markdown | grep -i '&quot;' >/dev/null; then
     echo "ok"
 else
     echo "FAILED"

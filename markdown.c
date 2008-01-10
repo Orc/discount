@@ -18,11 +18,12 @@
 
 /* block-level tags for passing html blocks through the blender
  */
-static char *blocktags[] = { "ADDRESS", "BDO", "BLOCKQUOTE", "CENTER",
-                      "DFN", "DIV", "H1", "H2", "H3", "H4",
-		      "H5", "H6", "LISTING", "NOBR", "UL",
-		      "P", "OL", "DL", "PLAINTEXT", "PRE",
-		       "WBR", "XMP" };
+static char *blocktags[] = { "!--", 
+			     "ADDRESS", "BDO", "BLOCKQUOTE", "CENTER",
+			     "DFN", "DIV", "H1", "H2", "H3", "H4",
+			     "H5", "H6", "LISTING", "NOBR", "UL",
+			     "P", "OL", "DL", "PLAINTEXT", "PRE",
+			     "WBR", "XMP", "HR", "BR" };
 #define SZTAGS	(sizeof blocktags / sizeof blocktags[0])
 
 typedef int (*stfu)(const void*,const void*);
@@ -185,8 +186,13 @@ isopentag(Line *p)
     if ( len < 3 || T(p->text)[0] != '<' )
 	return 0;
 
-    for (i=1; (i < len) && isalnum(T(p->text)[i]); ++i)
-	/* skip over tag (don't care about arguments or '>' yet) */ ;
+    /* find how long the tag is so we can check to see if
+     * it's a block-level tag
+     */
+    for ( i=1; i < len && T(p->text)[i] != '>' 
+		       && T(p->text)[i] != '/'
+		       && !isspace(T(p->text)[i]); ++i )
+	;
 
     key = alloca(i);
     memcpy(key, T(p->text)+1, i-1);
@@ -197,35 +203,68 @@ isopentag(Line *p)
 
 
 static int
-isclosetag(Line *p, char *key, int siz)
+selfclose(Line *t, char *tag)
 {
-    int eol;
-    
-    if ( !p ) return 0;
+    char *q = T(t->text);
+    int siz = strlen(tag);
+    int i;
 
-    eol = S(p->text)-1;
+    if ( strcasecmp(tag, "HR") == 0 || strcasecmp(tag, "BR") == 0 )
+	/* <HR> and <BR> are self-closing block-level tags,
+	 */
+	return 1;
 
-    if ( T(p->text)[eol] != '>' ) return 0;
-    if ( strncasecmp(T(p->text)+(eol-siz), key, siz) != 0 ) return 0;
-    if ( T(p->text)[eol-(siz+1)] != '/' ) return 0;
-    if ( T(p->text)[eol-(siz+2)] != '<' ) return 0;
-    return 1;
+    i = S(t->text) - (siz + 3);
+
+    /* we specialcase start and end tags on the same line.
+     */
+    return ( i > 0 ) && (q[i] == '<') && (q[i+1] == '/')
+		     && (q[i+2+siz] == '>')
+		     && (strncasecmp(&q[i+2], tag, siz) == 0);
 }
 
 
 static Line *
-htmlblock(Paragraph *p, char *key)
+htmlblock(Paragraph *p, char *tag)
 {
-    Line *t, *ret;
-    int keysize = strlen(key);
+    Line *t = p->text, *ret;
+    int closesize;
+    char *close = alloca(strlen(tag)+4);
 
-    for ( t = p->text; t ; t = t->next)
-	if ( isclosetag(t, key, keysize) && blankline(t->next) ) {
+    sprintf(close, "</%s>", tag);
+    closesize = strlen(close);
+
+    if ( selfclose(t, tag) ) {
+	ret = t->next;
+	t->next = 0;
+	return ret;
+    }
+
+    for ( ; t ; t = t->next) {
+	if ( strncasecmp(T(t->text), close, closesize) == 0 ) {
 	    ret = t->next;
 	    t->next = 0;
 	    return ret;
 	}
+    }
     return t;
+}
+
+
+static Line *
+comment(Paragraph *p, char *key)
+{
+    Line *t, *ret;
+
+    for ( t = p->text; t ; t = t->next) {
+	if ( strstr(T(t->text), "-->") ) {
+	    ret = t->next;
+	    t->next = 0;
+	    return ret;
+	}
+    }
+    return t;
+
 }
 
 
@@ -415,19 +454,27 @@ headerblock(Paragraph *pp, int htyp)
 
     case ETX:
 	    /* p->text is ###header###, so we need to trim off
-	     * the leading and trailing `#`'s
+	     * the leading and trailing `#`'s, plus any framing
+	     * whitespace.
 	     */
 
 	    for (i=0; T(p->text)[i] == T(p->text)[0]; i++)
 		;
 
 	    pp->hnumber = i;
+
+	    while ( isspace(T(p->text)[i]) )
+		i++;
 	    CLIP(p->text, 0, i);
 
 	    for (j=S(p->text); j && (T(p->text)[j-1] == '#'); --j)
 		;
 
-	    CLIP(p->text,j, S(p->text)-j);
+	    while ( j && isspace(T(p->text)[j-1]) )
+		--j;
+
+	    S(p->text) = j;
+
 	    ret = p->next;
 	    p->next = 0;
 	    break;
@@ -448,17 +495,20 @@ fancy(Line *t)
 static Line *
 codeblock(Paragraph *p)
 {
-    Line *t, *r, *ret;
+    Line *t, *r;
+    int i;
 
     for ( t = p->text; t; t = r ) {
 	CLIP(t->text,0,4);
 	t->dle = mkd_firstnonblank(t);
 
-	r = t->next;
-	if ( r && !iscode(r) ) {
-	    ret = t->next;
+	for (i=S(t->text); i && isspace(T(t->text)[i-1]); --i)
+	    ;
+	S(t->text) = i;
+
+	if ( !( (r = skipempty(t->next)) && iscode(r)) ) {
 	    t->next = 0;
-	    return ret;
+	    return r;
 	}
     }
     return t;
@@ -663,8 +713,19 @@ addfootnote(Line *p, MMIOT* f)
     }
 
     if ( (c = tgood(T(p->text)[j])) ) {
-	while ( (j < S(p->text)-1) && (T(p->text)[++j] != c) )
-	    EXPAND(foot->title) = T(p->text)[j];
+	/* Try to take the rest of the line as a comment; read to
+	 * EOL, then shrink the string back to before the final
+	 * quote.
+	 */
+	++j;	/* skip leading quote */
+
+	while ( j < S(p->text) )
+	    EXPAND(foot->title) = T(p->text)[j++];
+
+	while ( S(foot->title) && T(foot->title)[S(foot->title)-1] != c )
+	    --S(foot->title);
+	if ( S(foot->title) )	/* skip trailing quote */
+	    --S(foot->title);
 	EXPAND(foot->title) = 0;
     }
 
@@ -693,11 +754,13 @@ static Line*
 consume(Line *ptr, int *eaten)
 {
     Line *next;
+    int blanks=0;
 
-    for ( ; ptr && blankline(ptr); ptr = next, *eaten = 1 ) {
+    for (; ptr && blankline(ptr); ptr = next, blanks++ ) {
 	next = ptr->next;
 	freeLine(ptr);
     }
+    if ( ptr ) *eaten = blanks;
     return ptr;
 }
 
@@ -721,7 +784,10 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     while ( ptr ) {
 	if ( toplevel && (key = isopentag(ptr)) ) {
 	    p = Pp(&d, ptr, HTML);
-	    ptr = htmlblock(p, key);
+	    if ( strcmp(key, "!--") == 0 )
+		ptr = comment(p, key);
+	    else
+		ptr = htmlblock(p, key);
 	}
 	else if ( iscode(ptr) ) {
 	    p = Pp(&d, ptr, CODE);
@@ -742,7 +808,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	else if ( isquote(ptr) ) {
 	    p = Pp(&d, ptr, QUOTE);
 	    ptr = quoteblock(p);
-	    p->down = compile(p->text, 0, f);
+	    p->down = compile(p->text, 1, f);
 	    p->text = 0;
 	}
 	else if ( toplevel && (isfootnote(ptr)) ) {
