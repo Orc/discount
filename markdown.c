@@ -492,15 +492,10 @@ static Line *
 codeblock(Paragraph *p)
 {
     Line *t, *r;
-    int i;
 
     for ( t = p->text; t; t = r ) {
 	CLIP(t->text,0,4);
 	t->dle = mkd_firstnonblank(t);
-
-	for (i=S(t->text); i && isspace(T(t->text)[i-1]); --i)
-	    ;
-	S(t->text) = i;
 
 	if ( !( (r = skipempty(t->next)) && iscode(r)) ) {
 	    t->next = 0;
