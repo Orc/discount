@@ -18,7 +18,7 @@ typedef ANCHOR(Line) LineAnchor;
 /* set up a line anchor for mkd_add()
  */
 static Document*
-mkd_open()
+new_Document()
 {
     return calloc(sizeof(Document), 1);
 }
@@ -27,17 +27,19 @@ mkd_open()
 /* add a line to the markdown input chain
  */
 static void
-mkd_write(Document* a, char *s, int len)
+queue(Document* a, Cstring *line)
 {
     Line *p = calloc(sizeof *p, 1);
     unsigned char c;
-    int i, xp;
+    int xp = 0;
+    int           size = S(*line);
+    unsigned char *str = T(*line);
 
     CREATE(p->text);
     ATTACH(a->content, p);
 
-    for (i=xp=0; i < len; i++) {
-	if ( (c = s[i]) == '\t' ) {
+    while ( size-- ) {
+	if ( (c = *str++) == '\t' ) {
 	    /* expand tabs into 1..4 spaces.  This is not
 	     * the traditional tab spacing, but the language
 	     * definition /really really/ wants tabs to be
@@ -59,32 +61,64 @@ mkd_write(Document* a, char *s, int len)
 }
 
 
-/* read in the markdown source document, assemble into a linked
- * list.
+/* build a Document from any old input.
  */
-Document *
-mkd_in(FILE *input)
-{
-    int c;
-    Cstring line;
-    Document *a = mkd_open();
+typedef unsigned int (*getc_func)(void*);
 
-    if ( ! a ) return 0;
+Document *
+populate(getc_func getc, void* ctx)
+{
+    Cstring line;
+    Document *a = new_Document();
+    int c;
+
+    if ( !a ) return 0;
 
     CREATE(line);
-    for (; (c = getc(input)) != EOF; ) {
-	if (c == '\n') {
-	    mkd_write(a, T(line), S(line));
+
+    while ( (c = (*getc)(ctx)) != EOF ) {
+	if ( c == '\n' ) {
+	    queue(a, &line);
 	    S(line) = 0;
 	}
 	else
 	    EXPAND(line) = c;
     }
+
     if ( S(line) )
-	mkd_write(a, T(line), S(line));
+	queue(a, &line);
 
     DELETE(line);
+
     return a;
+}
+
+
+/* convert a file into a linked list
+ */
+Document *
+mkd_in(FILE *f)
+{
+    return populate((getc_func)fgetc, f);
+}
+
+
+/* return a single character out of a buffer
+ */
+struct string_ctx {
+    char *data;		/* the unread data */
+    int   size;		/* and how much is there? */
+} ;
+
+
+static char
+strget(struct string_ctx *in)
+{
+    if ( !in->size ) return EOF;
+
+    --(in->size);
+
+    return *(in->data)++;
 }
 
 
@@ -93,23 +127,10 @@ mkd_in(FILE *input)
 Document *
 mkd_string(char *buf, int len)
 {
-    Cstring line;
-    Document *a = mkd_open();
+    struct string_ctx about;
 
-    if ( !a ) return 0;
+    about.data = buf;
+    about.size = len;
 
-    CREATE(line);
-    for ( ; len-- > 0; ++buf ) {
-	if ( *buf == '\n' ) {
-	    mkd_write(a, T(line), S(line));
-	    S(line) = 0;
-	}
-	else
-	    EXPAND(line) = *buf;
-    }
-    if ( S(line) )
-	mkd_write(a, T(line), S(line));
-
-    DELETE(line);
-    return a;
+    return populate((getc_func)strget, &about);
 }

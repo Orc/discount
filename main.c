@@ -48,6 +48,9 @@ main(int argc, char **argv)
 #if DL_TAG_EXTENSION
 		    printf(" DL_TAG");
 #endif
+#if PANDOC_HEADER
+		    printf(" HEADER");
+#endif
 		    putchar('\n');
 		    exit(0);
 	case 'o':   if ( ofile ) {
