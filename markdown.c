@@ -23,7 +23,7 @@ static char *blocktags[] = { "!--",
 			     "DFN", "DIV", "H1", "H2", "H3", "H4",
 			     "H5", "H6", "LISTING", "NOBR", "UL",
 			     "P", "OL", "DL", "PLAINTEXT", "PRE",
-			     "WBR", "XMP", "HR", "BR" };
+			     "TABLE", "WBR", "XMP", "HR", "BR" };
 #define SZTAGS	(sizeof blocktags / sizeof blocktags[0])
 
 typedef int (*stfu)(const void*,const void*);

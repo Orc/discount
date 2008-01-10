@@ -32,7 +32,7 @@ static void
 mkd_write(LineAnchor* a, char *s, int len)
 {
     Line *p = calloc(sizeof *p, 1);
-    char c;
+    unsigned char c;
     int i, xp;
 
     CREATE(p->text);

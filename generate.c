@@ -577,7 +577,7 @@ text(MMIOT *f)
 	case 0:     break;
 
 	case '"':   if ( f->flags & EXPAND_QUOTE )
-			fprintf(f->out, "&quot;", c);
+			fprintf(f->out, "&quot;");
 		    else
 			fputc(c, f->out);
 		    break;
@@ -663,7 +663,7 @@ text(MMIOT *f)
 			fputc(c, f->out);
 		    break;
 
-	default:    fputc(c, f->out);
+	default:    putc(c, f->out);
 		    break;
 	}
     }
@@ -696,13 +696,13 @@ code(int escape, MMIOT *f)
 		    }
 		    fputc(c, f->out); break;
 
-	default:    fputc(c, f->out); break;
-
 	case '\\':  fputc(c, f->out);
 		    if ( peek(f,1) == '>' || (c = pull(f)) == EOF )
 			break;
 		    fputc(c, f->out);
 		    break;
+
+	default:    fputc(c, f->out); break;
 	}
     }
 } /* code */
@@ -724,8 +724,8 @@ static int
 printblock(Paragraph *pp, MMIOT *f)
 {
     Line *t = pp->text;
-    static char *Begin[] = { "", "<p>",   "<center>"   };
-    static char *End[]   = { "", "</p>","</center>"};
+    static char *Begin[] = { "", "<p>", "<center>"  };
+    static char *End[]   = { "", "</p>","</center>" };
 
     while (t) {
 	if ( S(t->text) ) {
