@@ -51,7 +51,9 @@ casort(char **a, char **b)
 int
 __mkd_footsort(Footnote *a, Footnote *b)
 {
-    return strcasecmp(T(a->tag), T(b->tag));
+    if ( S(a->tag) != S(b->tag) )
+	return S(a->tag) - S(b->tag);
+    return strncasecmp(T(a->tag), T(b->tag), S(a->tag));
 }
 
 
@@ -687,16 +689,17 @@ addfootnote(Line *p, MMIOT* f)
     CREATE(foot->title);
     foot->height = foot->width = 0;
 
-    for (j=i=p->dle; T(p->text)[j] != ']'; j++)
+    for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
 	EXPAND(foot->tag) = T(p->text)[j];
 
-    EXPAND(foot->tag) = T(p->text)[j++];
     EXPAND(foot->tag) = 0;
-    j = nextnonblank(p, j+1);
+    S(foot->tag)--;
+    j = nextnonblank(p, j+2);
 
     while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
 	EXPAND(foot->link) = T(p->text)[j++];
     EXPAND(foot->link) = 0;
+    S(foot->link)--;
     j = nextnonblank(p,j);
 
     if ( T(p->text)[j] == '=' ) {

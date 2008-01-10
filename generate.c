@@ -97,16 +97,6 @@ shift(MMIOT *f, int i)
 }
 
 
-/* skip past space characters
- */
-static void
-skipblankc(MMIOT *f)
-{
-    while ( isspace(peek(f,1)) )
-	pull(f);
-}
-
-
 /* generate html from a markup fragment
  */
 static void
@@ -140,13 +130,6 @@ puturl(char *s, int size, FILE *f)
 	case '<':   fputs("&lt;", f); break;
 	case '>':   fputs("&gt;", f); break;
 	case '&':   fputs("&amp;", f); break;
-#if 0
-	case '&':   if ( (size < 5) || strncmp(s, "&amp;", 5) != 0 ) {
-			fputs("&amp;", f);
-			break;
-		    }
-		    /*else fall into... */
-#endif
 	default:    if ( c == '"' || c == ' ' || !isprint(c) )
 			fprintf(f, "%%%02x", c);
 		    else
@@ -157,160 +140,224 @@ puturl(char *s, int size, FILE *f)
 }
 
 
-
+/* advance forward until the next character is not whitespace
+ */
 static int
-broketmatch(MMIOT *f, int i)
+eatspace(MMIOT *f)
 {
-    int c = peek(f, 1+i);
+    int c;
 
-    return (c == '>') || (c == EOF);
+    for ( ; ((c=peek(f, 1)) != EOF) && isspace(c); pull(f) )
+	;
+    return c;
 }
 
 
-static int
-spacematch(MMIOT *f, int i)
+/* extract a []-delimited label from the input stream.
+ */
+static char *
+linkylabel(MMIOT *f, int *sizep)
 {
-    int c = peek(f, i);
+    int c, size, indent;
+    char *ptr = cursor(f);
 
-    return (c == EOF) || (c == ')') || isspace(c);
+    for ( indent=1,size=0; indent > 0; size++ ) {
+	if ( (c = pull(f)) == EOF )
+	    return 0;
+	else if ( c == '[' )
+	    ++indent;
+	else if ( c == ']' )
+	    --indent;
+    }
+    *sizep = size-1;
+    return ptr;
+}
+
+
+/* extract a (-prefixed url from the input stream.
+ * the label is either of the format `<link>`, where I
+ * extract until I find a >, or it is of the format
+ * `text`, where I extract until I reach a ')' or
+ * whitespace.
+ */
+static char*
+linkyurl(MMIOT *f, int *sizep)
+{
+    int size = 0;
+    char *ptr;
+    int c;
+
+    if ( (c = eatspace(f)) == EOF )
+	return 0;
+
+    ptr = cursor(f);
+
+    if ( c == '<' ) {
+	ptr++;
+	for ( pull(f);  (c=pull(f)) != '>'; size++)
+	    if ( c == EOF ) return 0;
+    }
+    else {
+	for ( ; ((c=pull(f)) != ')') && !isspace(c); size++)
+	    if ( c == EOF ) return 0;
+    }
+    if ( c == ')' ) shift(f, -1);
+    *sizep = size;
+    return ptr;
+}
+
+
+/* extract a =HHHxWWW size from the input stream
+ */
+static int
+linkysize(MMIOT *f, int *heightp, int *widthp)
+{
+    int height=0, width=0;
+    int c;
+
+    *heightp = 0;
+    *widthp = 0;
+
+    if ( (c = eatspace(f)) != '=' ) 
+	return (c != EOF);
+    pull(f);	/* eat '=' */
+
+    for ( c = pull(f); isdigit(c); c = pull(f))
+	height = (height*10) + (c - '0');
+
+    if ( c == 'x' ) {
+	for ( c = pull(f); isdigit(c); c = pull(f))
+	    width = (width * 10) + (c - '0');
+
+	if ( c != EOF ) {
+	    if ( !isspace(c) ) shift(f, -1);
+	    *heightp = height;
+	    *widthp = width;
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+
+/* extract a )-terminated title from the input stream.
+ */
+static char*
+linkytitle(MMIOT *f, int *sizep)
+{
+    int qc, c, size;
+    char *ret, *lastqc = 0;
+
+    eatspace(f);
+    if ( (qc=pull(f)) != '"' && qc != '\'' )
+	return 0;
+
+    for ( ret = cursor(f); (c = pull(f)) != EOF;  ) {
+	if ( c == qc )
+	    lastqc = cursor(f);
+	else if (c == ')' ) {
+	    size = (lastqc ? lastqc : cursor(f)) - ret;
+	    *sizep = size-1;
+	    return ret;
+	}
+    }
+    return 0;
+}
+
+
+/* look up (or construct) a footnote from the [xxx] link
+ * at the head of the stream.
+ */
+static int
+linkykey(int image, Footnote *val, MMIOT *f)
+{
+    Footnote *ret;
+    Cstring mylabel;
+
+    bzero(val, sizeof *val);
+
+    if ( (T(val->tag) = linkylabel(f, &S(val->tag))) == 0 )
+	return 0;
+
+    eatspace(f);
+    switch ( pull(f) ) {
+    case '(':
+	/* embedded link */
+	if ( (T(val->link) = linkyurl(f,&S(val->link))) == 0 )
+	    return 0;
+
+	if ( image && !linkysize(f, &val->height, &val->width) )
+	    return 0;
+
+	T(val->title) = linkytitle(f, &S(val->title));
+
+	return peek(f,0) == ')';
+
+    case '[':
+	/* footnote link */
+	mylabel = val->tag;
+	if ( (T(val->tag) = linkylabel(f, &S(val->tag))) == 0 )
+	    return 0;
+
+	if ( !S(val->tag) ) {
+	    val->tag = mylabel;
+	}
+
+	ret = bsearch(val, T(f->footnotes), S(f->footnotes),
+	               sizeof *val, (stfu)__mkd_footsort);
+
+	if ( ret ) {
+	    val->tag = mylabel;
+	    val->link = ret->link;
+	    val->title = ret->title;
+	    val->height = ret->height;
+	    val->width = ret->width;
+	    return 1;
+	}
+    }
+    return 0;
 }
 
 
 /*
  * process embedded links and images
  */
-static void
+static int
 linkylinky(int image, MMIOT *f)
 {
-    char *label;
-    int labelsize, size;
-    int qc, c, i, j, indent;
-    
-    for ( indent = labelsize = 1; indent > 0; ++labelsize) {
-	if ( (c=peek(f, labelsize)) == EOF )
-	    return;
-	else if ( c == '[' )
-	    ++indent;
-	else if ( c == ']' )
-	    --indent;
+    int start = mmseek(f, -1);
+    Footnote link;
+
+    if ( !(linkykey(image, &link, f) && S(link.tag))  ) {
+	mmseek(f, start);
+	return 0;
     }
-    
-    label = cursor(f);
 
-    for (j=labelsize; isspace(c = peek(f,j)); j++)
-	;
+    fprintf(f->out, "<%s", image ? "img" : "a");
 
-    if ( (c != '[') && (c != '(') ) {
-	fputc('[', f->out);
-	return;
-    }
-    shift(f, j);
+    fprintf(f->out, " %s=\"", image ? "src" : "href");
+    puturl(T(link.link), S(link.link), f->out);
+    fputc('"', f->out);
 
-    switch (c) {
-	char *tag;
-	Footnote key, *ret;
-	int (*matched)(MMIOT*,int);
-    
-    case '(':
-	matched = (peek(f,1) == '<') ? broketmatch : spacematch;
+    if ( image && link.height && link.width )
+	fprintf(f->out, " height=%d width=%d", link.height, link.width);
 
-	for ( size = 0; !(*matched)(f, size+1); ++size)
-	    ;
-
-	fprintf(f->out, "<%s %s=\"", image ? "img" : "a",
-				     image ? "src" : "href");
-	if ( peek(f,1) == '<' ) {
-	    puturl(cursor(f)+1, size, f->out);
-	    shift(f,3);	/* shift past '(', '<' && '>' */
-	}
-	else
-	    puturl(cursor(f), size, f->out);
+    if ( S(link.title) ) {
+	fprintf(f->out, " title=\"");
+	reparse(T(link.title), S(link.title), DENY_A|DENY_IMG|EXPAND_QUOTE, f);
 	fputc('"', f->out);
-	
-	shift(f, size);
-	skipblankc(f);
-
-	if ( image && (peek(f,1) == '=') ) {
-	    int width, height;
-
-	    pull(f);
-	    for (i=0; isdigit(c=peek(f,i+1)) || (c == 'x'); i++)
-		;
-
-	    if ( i ) {
-		if ( sscanf(cursor(f), "%dx%d", &width, &height) == 2 )
-		    fprintf(f->out, " width=%d height=%d", width, height);
-		shift(f, i);
-	    }
-	    skipblankc(f);
-	}
-
-	if ( (qc=peek(f,1)) == '"' || qc == '\'' ) {
-	    /* title;  now run up to the end of the () block, then
-	     * back down to the last quote character we found.
-	     * This allows evil things like "this "is" a "title"")
-	     */
-	    for ( size=0; ((c=peek(f,size+2)) != EOF) && (c != ')') ; ++size )
-		;
-	    while ( size && (peek(f,size+2) != qc) )
-		--size;
-
-	    fprintf(f->out, " title=\"");
-	    reparse(cursor(f)+1, size, DENY_A|DENY_IMG|EXPAND_QUOTE, f);
-	    fputc('"', f->out);
-
-	    shift(f, size+2);
-	}
-	if ( peek(f,1) == ')' ) pull(f);
-	break;
-
-    case '[':
-	for ( size = 0; (c=peek(f, size+1)) != ']'; ++size)
-	    if ( c == EOF )
-		break;
-
-	tag = alloca ( 2 + (size ? size : labelsize) );
-	tag[0] = '[';
-
-	if ( size ) {
-	    memcpy(tag+1, cursor(f), size+1);
-	    tag[size+2] = 0;
-	    shift(f,size+1);
-	}
-	else  {
-	    memcpy(tag+1, label, labelsize);
-	    tag[labelsize] = 0;
-	    pull(f);	/* discard the ']' from [] */
-	}
-
-	T(key.tag) = tag;
-	ret = bsearch(&key, T(f->footnotes), S(f->footnotes),
-	               sizeof key, (stfu)__mkd_footsort);
-
-	fprintf(f->out, image ?  "<img" : "<a");
-
-	if ( ret ) {
-	    if ( S(ret->link) ) {
-		fprintf(f->out, " %s=\"", image ? "src" : "href");
-		puturl(T(ret->link), S(ret->link)-1, f->out);
-		fputc('"', f->out);
-	    }
-	    if ( S(ret->title) ) {
-		fprintf(f->out, " title=\"");
-		reparse(T(ret->title), S(ret->title)-1, DENY_A|DENY_IMG|EXPAND_QUOTE, f);
-		fputc('"', f->out);
-	    }
-
-	    if ( image && ret->height && ret->width )
-		fprintf(f->out, " height=%d width=%d",
-				ret->height, ret->width);
-	}
-	break;
     }
-
-    fprintf(f->out, image  ? " alt=\"" : ">");
-    reparse(label, labelsize-2, image ? DENY_A|DENY_IMG|EXPAND_QUOTE : 0, f);
-    fprintf(f->out, image ? "\">" : "</a>");
+    if (image) {
+	fprintf(f->out, " alt=\"");
+	reparse(T(link.tag), S(link.tag), DENY_A|DENY_IMG|EXPAND_QUOTE, f);
+	fputs("\">", f->out);
+    }
+    else {
+	fputc('>', f->out);
+	reparse(T(link.tag), S(link.tag), DENY_A, f);
+	fprintf(f->out, "</a>");
+    }
+    return 1;
 }
 
 
@@ -539,13 +586,14 @@ text(MMIOT *f)
 			fputc(c, f->out);
 		    else {
 			pull(f);
-			linkylinky(1, f);
+			if ( !linkylinky(1, f) ) {
+			    shift(f,-1);
+			    fputc(c, f->out);
+			}
 		    }
 		    break;
-	case '[':   if ( f->flags & DENY_A )
+	case '[':   if ( (f->flags & DENY_A) || !linkylinky(0,f) )
 			fputc(c, f->out);
-		    else
-			linkylinky(0, f);
 		    break;
 	case '*':
 	case '_':   if (peek(f,1) == c) {
