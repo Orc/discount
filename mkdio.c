@@ -15,12 +15,19 @@
 
 typedef ANCHOR(Line) LineAnchor;
 
-/* set up a line anchor for mkd_add()
+/* create a new blank Document
  */
 static Document*
 new_Document()
 {
-    return calloc(sizeof(Document), 1);
+    Document *ret = calloc(sizeof(Document), 1);
+
+    if ( ret ) {
+	if (( ret->ctx = calloc(sizeof(MMIOT), 1) ))
+	    return ret;
+	free(ret);
+    }
+    return 0;
 }
 
 
@@ -156,4 +163,18 @@ mkd_string(char *buf, int len, int flags)
     about.size = len;
 
     return populate((getc_func)strget, &about, flags & INPUT_MASK);
+}
+
+
+/* convert some markdown text to html
+ */
+int
+markdown(Document *document, FILE *out, int flags)
+{
+    if ( mkd_compile(document, flags) ) {
+	mkd_generatehtml(document, out);
+	mkd_cleanup(document);
+	return 0;
+    }
+    return -1;
 }

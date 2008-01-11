@@ -1,6 +1,5 @@
 /*
  * mkd2html:  parse a markdown input file and generate a web page.
- *            the first h1 found will be the title of the web page.
  *
  * usage:  mkd2html [header-fields] / [signature fields] < markdown > html
  *
@@ -19,28 +18,10 @@
 
 #include "config.h"
 
-#include "markdown.h"
+#include "mkdio.h"
 #include "cstring.h"
 
 extern char version[];
-
-Cstring *
-findh1(Paragraph *p)
-{
-    Cstring *ret;
-
-    if ( p->typ == HDR && p->hnumber == 1 ) 
-	return &(p->text->text);
-
-    if ( p->next && (ret = findh1(p->next)) )
-	return ret;
-
-    if ( p->down && (ret = findh1(p->down)) )
-	return ret;
-
-    return 0;
-}
-
 
 void
 fail(char *why)
@@ -54,21 +35,18 @@ void
 main(argc, argv)
 char **argv;
 {
-    Cstring *h;
-    MMIOT frame;
+    char *h;
     int i;
-    Document *input;
+    void *input;
 
-    if ( (input = mkd_in(stdin)) == 0 )
+    if ( (input = mkd_in(stdin, 0)) == 0 )
 	fail("can't read input");
 
-    if ( !mkd_compile(input, stdout, 0, &frame) )
+    if ( !mkd_compile(input, 0) )
 	fail("couldn't compile input");
 
-    if ( input->headers )
-	h = &(input->headers->text);
-    else
-	h = findh1(input->code);
+
+    h = mkd_doc_title(input);
 
     /* print a header */
 
@@ -80,7 +58,7 @@ char **argv;
     puts("        content=\"text/html; charset-us-ascii\">");
     if ( h ) {
 	printf("  <title>");
-	mkd_text(T(*h), S(*h), stdout, 0);
+	mkd_text(h, strlen(h), stdout, 0);
 	puts("</title>");
     }
     for (i=1; (i < argc) && (strcmp(argv[i], "/") != 0); i++)
@@ -90,8 +68,8 @@ char **argv;
 
     /* print the compiled body */
 
-    mkd_generatehtml(input, &frame);
-    mkd_cleanup(input, &frame);
+    mkd_generatehtml(input, stdout);
+    mkd_cleanup(input);
 
     i++;
 

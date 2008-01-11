@@ -844,7 +844,7 @@ initialize()
  * prepare and compile `text`, returning a Paragraph tree.
  */
 int
-mkd_compile(Document *doc, FILE *out, int flags, MMIOT *ctx)
+mkd_compile(Document *doc, int flags)
 {
 
     if ( !doc )
@@ -854,17 +854,17 @@ mkd_compile(Document *doc, FILE *out, int flags, MMIOT *ctx)
 	return 1;
 
     doc->compiled = 1;
-    bzero(ctx, sizeof *ctx);
-    ctx->out = out;
-    ctx->flags = flags & DENY_MASK;
-    CREATE(ctx->in);
-    CREATE(ctx->footnotes);
+    bzero(doc->ctx, sizeof(MMIOT) );
+    doc->ctx->flags = flags & DENY_MASK;
+    CREATE(doc->ctx->in);
+    CREATE(doc->ctx->footnotes);
 
     initialize();
 
-    doc->code = compile(T(doc->content), 1, ctx);
-    qsort(T(ctx->footnotes), S(ctx->footnotes), sizeof T(ctx->footnotes)[0],
-						       (stfu)__mkd_footsort);
+    doc->code = compile(T(doc->content), 1, doc->ctx);
+    qsort(T(doc->ctx->footnotes), S(doc->ctx->footnotes),
+		        sizeof T(doc->ctx->footnotes)[0],
+			           (stfu)__mkd_footsort);
     bzero( &doc->content, sizeof doc->content);
     return 1;
 }
@@ -873,31 +873,16 @@ mkd_compile(Document *doc, FILE *out, int flags, MMIOT *ctx)
 /* clean up everything allocated in __mkd_compile()
  */
 void
-mkd_cleanup(Document *doc, MMIOT *ctx)
+mkd_cleanup(Document *doc)
 {
-    freefootnotes(ctx);
-    DELETE(ctx->in);
-
     if ( doc ) {
+	freefootnotes(doc->ctx);
+	DELETE(doc->ctx->in);
+	free(doc->ctx);
+
 	if ( doc->code) freeParagraph(doc->code);
 	if ( doc->headers ) freeLines(doc->headers);
 	if ( T(doc->content) ) freeLines(T(doc->content));
 	free(doc);
     }
-}
-
-
-/* convert some markdown text to html
- */
-int
-markdown(Document *document, FILE *out, int flags)
-{
-    MMIOT f;
-
-    if ( mkd_compile(document, out, flags, &f) ) {
-	mkd_generatehtml(document, &f);
-	mkd_cleanup(document, &f);
-	return 0;
-    }
-    return -1;
 }

@@ -10,13 +10,14 @@ void *mkd_string(char*,int,int);	/* assemble input from a buffer */
 
 /* compilation, debugging, cleanup
  */
-int mkd_compile(void*, FILE*, int, void*);
-int mkd_dump(void*, FILE*, int, char*);
-int mkd_cleanup(void*, void*);
+int mkd_compile(void*, int);
+int mkd_generatehtml(void*,FILE*);
+int mkd_cleanup(void*);
 
 /* markup functions
  */
 int mkd_text(char *, int, FILE*, int);
+int mkd_dump(void*, FILE*, int, char*);
 int markdown(void*, FILE*, int);
 
 /* header block access

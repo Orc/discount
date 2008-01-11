@@ -131,16 +131,15 @@ int
 mkd_dump(Document *doc, FILE *output, int flags, char *title)
 {
     Stack stack;
-    MMIOT frame;
-    
-    if (mkd_compile(doc, output, flags, &frame) ) {
+
+    if (mkd_compile(doc, flags) ) {
 
 	CREATE(stack);
 	pushpfx(printf("%s", title), doc->code->next ? '+' : '-', &stack);
 	dumptree(doc->code, &stack);
 	DELETE(stack);
 
-	mkd_cleanup(doc, &frame);
+	mkd_cleanup(doc);
 	return 0;
     }
     return -1;

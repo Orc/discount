@@ -564,6 +564,16 @@ smartypants(int c, int *flags, MMIOT *f)
 		    return 1;
 		}
 		break;
+    case '3':
+    case '1':	if ( isthisspace(f,-1) && peek(f,1) == '/'
+				       && isthisspace(f,3) ) {
+		    if ( (c == '1' && peek(f, 2) == '2')
+				  || peek(f, 2) == '4' ) {
+			fprintf(f->out, "&frac%c%c;", c, peek(f,2) );
+			shift(f,2);
+			return 1;
+		    }
+		}
     }
     return 0;
 } /* smartypants */
@@ -917,11 +927,16 @@ display(Paragraph *p, MMIOT *f)
 
 /* public interface for emit()
  */
-void
-mkd_generatehtml(Document *p, MMIOT *f)
+int
+mkd_generatehtml(Document *p, FILE *f)
 {
-    emit(p->code, 0, f);
-    putc('\n', f->out);
+    if ( p->compiled ) {
+	p->ctx->out = f;
+	emit(p->code, 0, p->ctx);
+	putc('\n', f);
+	return 0;
+    }
+    return -1;
 }
 
 
@@ -932,11 +947,10 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
 {
     MMIOT f;
 
+    bzero(&f, sizeof f);
     f.out = output;
     f.flags = flags;
     
     reparse(bfr, size, 0, &f);
     return 0;
 }
-
-
