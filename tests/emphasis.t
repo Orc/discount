@@ -1,6 +1,7 @@
 echo "emphasis"
 
 rc=0
+MARKDOWN_FLAGS=
 
 echo -n '  *hi* -> <em>hi</em> .............. '
 

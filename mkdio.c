@@ -66,7 +66,7 @@ queue(Document* a, Cstring *line)
 typedef unsigned int (*getc_func)(void*);
 
 Document *
-populate(getc_func getc, void* ctx)
+populate(getc_func getc, void* ctx, int flags)
 {
     Cstring line;
     Document *a = new_Document();
@@ -102,7 +102,7 @@ populate(getc_func getc, void* ctx)
     DELETE(line);
 
 #ifdef PANDOC_HEADER
-    if ( pandoc == 3 ) {
+    if ( (pandoc == 3) && !(flags & NO_HEADER) ) {
 	/* the first three lines started with %, so we have a header.
 	 * clip the first three lines out of content and hang them
 	 * off header.
@@ -120,9 +120,9 @@ populate(getc_func getc, void* ctx)
 /* convert a file into a linked list
  */
 Document *
-mkd_in(FILE *f)
+mkd_in(FILE *f, int flags)
 {
-    return populate((getc_func)fgetc, f);
+    return populate((getc_func)fgetc, f, flags & INPUT_MASK);
 }
 
 
@@ -148,12 +148,12 @@ strget(struct string_ctx *in)
 /* convert a block of text into a linked list
  */
 Document *
-mkd_string(char *buf, int len)
+mkd_string(char *buf, int len, int flags)
 {
     struct string_ctx about;
 
     about.data = buf;
     about.size = len;
 
-    return populate((getc_func)strget, &about);
+    return populate((getc_func)strget, &about, flags & INPUT_MASK);
 }

@@ -1,6 +1,7 @@
 echo "code blocks"
 
 rc=0
+MARKDOWN_FLAGS=
 
 echo -n '  format for code block html ....... '
 

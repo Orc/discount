@@ -1,6 +1,7 @@
 echo "pandoc headers"
 
 rc=0
+MARKDOWN_FLAGS=
 
 if ./markdown -V | grep HEADER > /dev/null; then
 
@@ -12,6 +13,20 @@ if ./markdown -V | grep HEADER > /dev/null; then
     count=`echo "$TEXT" | ./markdown | grep title | wc -l`
 
     if [ "$count" -eq 0 ]; then
+	echo "ok"
+    else
+	echo "FAILED"
+	rc=1
+    fi
+
+    echo -n '  valid header with -F0x0100........ '
+    TEXT='% title
+% author(s)
+% date
+'
+    count=`echo "$TEXT" | ./markdown -F0x0100 | grep title | wc -l`
+
+    if [ "$count" -gt 0 ]; then
 	echo "ok"
     else
 	echo "FAILED"

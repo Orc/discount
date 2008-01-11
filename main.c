@@ -40,7 +40,7 @@ main(int argc, char **argv)
 
     opterr = 1;
 
-    while ( (opt=getopt(argc, argv, "do:V")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "dF:o:V")) != EOF ) {
 	switch (opt) {
 	case 'd':   debug = 1;
 		    break;
@@ -53,6 +53,8 @@ main(int argc, char **argv)
 #endif
 		    putchar('\n');
 		    exit(0);
+	case 'F':   flags = strtol(optarg, 0, 0);
+		    break;
 	case 'o':   if ( ofile ) {
 			fprintf(stderr, "Too many -o options\n");
 			exit(1);
@@ -74,9 +76,9 @@ main(int argc, char **argv)
 	exit(1);
     }
     if ( debug )
-	rc = mkd_dump(mkd_in(stdin), stdout, 0,
+	rc = mkd_dump(mkd_in(stdin, flags), stdout, 0,
 		      argc ? basename(argv[0]) : "stdin");
     else
-	rc = markdown(mkd_in(stdin), stdout, flags);
+	rc = markdown(mkd_in(stdin, flags), stdout, flags);
     exit( (rc == 0) ? 0 : errno );
 }

@@ -1,6 +1,7 @@
 echo "lists"
 
 rc=0
+MARKDOWN_FLAGS=
 
 echo -n '  two separated items (1) .......... '
 

@@ -1,6 +1,7 @@
 echo "html blocks"
 
 rc=0
+MARKDOWN_FLAGS=
 
 echo -n '  self-closing block tags (hr) ..... '
 

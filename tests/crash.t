@@ -1,6 +1,7 @@
 echo "crashes"
 
 rc=0
+MARKDOWN_FLAGS=
 
 echo -n '  zero-length input ................ '
 

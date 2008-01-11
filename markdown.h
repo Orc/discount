@@ -65,11 +65,13 @@ typedef struct mmiot {
     int isp;
     STRING(Footnote) footnotes;
     int flags;
-#define DENY_A		0x01
-#define DENY_IMG	0x02
-#define DENY_SMARTY	0x04
-#define EXPAND_QUOTE	0x10
+#define DENY_A		0x0001
+#define DENY_IMG	0x0002
+#define DENY_SMARTY	0x0004
+#define DENY_MASK	(DENY_A|DENY_IMG|DENY_SMARTY)
+#define EXPAND_QUOTE	0x0010
 } MMIOT;
+
 
 extern int    mkd_firstnonblank(Line *);
 extern int    mkd_compile(Document *, FILE *, int, MMIOT *);
@@ -77,8 +79,11 @@ extern void   mkd_generatehtml(Document *, MMIOT *);
 extern void   mkd_cleanup(Document *, MMIOT *);
 extern int    mkd_text(char *, int, FILE*, int);
 
-extern Document *mkd_in(FILE *);
-extern Document *mkd_string(char*,int);
+extern Document *mkd_in(FILE *, int);
+extern Document *mkd_string(char*,int, int);
+
+#define NO_HEADER	0x0100
+#define INPUT_MASK	(NO_HEADER)
 
 
 #endif/*_MARKDOWN_D*/

@@ -860,7 +860,7 @@ mkd_compile(Document *doc, FILE *out, int flags, MMIOT *ctx)
     doc->compiled = 1;
     bzero(ctx, sizeof *ctx);
     ctx->out = out;
-    ctx->flags = flags;
+    ctx->flags = flags & DENY_MASK;
     CREATE(ctx->in);
     CREATE(ctx->footnotes);
 

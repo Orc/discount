@@ -1,6 +1,7 @@
 echo "misc"
 
 rc=0
+MARKDOWN_FLAGS=
 
 echo -n '  single paragraph ................. '
 

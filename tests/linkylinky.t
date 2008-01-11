@@ -1,6 +1,7 @@
 echo "embedded links"
 
 rc=0
+MARKDOWN_FLAGS=
 
 echo -n '  url contains & ................... '
 

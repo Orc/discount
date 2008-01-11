@@ -1,6 +1,7 @@
 echo "smarty pants"
 
 rc=0
+MARKDOWN_FLAGS=
 
 MARKDOWN_FLAGS=0x0; export MARKDOWN_FLAGS
 

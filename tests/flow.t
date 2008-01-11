@@ -1,6 +1,7 @@
 echo "paragraph flow"
 
 rc=0
+MARKDOWN_FLAGS=
 
 echo -n '  header followed by paragraph ..... '
 

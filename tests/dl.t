@@ -1,6 +1,7 @@
 echo "definition lists"
 
 rc=0
+MARKDOWN_FLAGS=
 
 SEP='
 =this=
