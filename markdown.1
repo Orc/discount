@@ -10,6 +10,7 @@
 .Nm
 .Op Fl d
 .Op Fl V
+.Op Fl F Pa bitmap
 .Op Fl o Pa file
 .Op Pa textfile
 .Sh DESCRIPTION
@@ -28,7 +29,23 @@ The options are as follows:
 Instead of writing the html file, dump a parse
 tree to stdout.
 .It Fl V
-Show the version#
+Show the version# and configuration data.
+.Pp
+If the version includes the string
+.Em DL_TAG ,
+.Nm
+was configured with definition list support.
+.Pp
+If the version includes the string
+.Em HEADER ,
+.Nm
+was configured to support pandoc header blocks.
+.It Fl F Ar bitmap
+Pass the flags contained in
+.Ar bitmap
+to the markdown compiler.  The valid flags are
+described in 
+.Xr markdown 3 .
 .It Fl o Pa file
 Write the generated html to 
 .Pa file .
