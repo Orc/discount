@@ -95,15 +95,6 @@ else
     rc=1
 fi
 
-echo -n '  `` ` `` -> <code> ` </code> ...... '
-
-if  echo '`` ` ``' | ./markdown | grep '<code> ` </code>' >/dev/null; then
-    echo "ok"
-else
-    echo "FAILED"
-    rc=1
-fi
-
 echo -n "  it's -> it&rsquo;s ............... "
 
 if  echo "it's" | ./markdown | grep 'it&rsquo;s' >/dev/null; then
@@ -112,6 +103,5 @@ else
     echo "FAILED"
     rc=1
 fi
-
 
 exit $rc

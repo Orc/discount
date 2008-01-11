@@ -34,4 +34,13 @@ else
     rc=1
 fi
 
+echo -n '  `` ` `` -> <code>`</code> ........ '
+
+if  echo '`` ` ``' | ./markdown | grep '<code>`</code>' >/dev/null; then
+    echo "ok"
+else
+    echo "FAILED"
+    rc=1
+fi
+
 exit $rc
