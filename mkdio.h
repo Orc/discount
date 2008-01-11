@@ -19,6 +19,12 @@ int mkd_cleanup(void*, void*);
 int mkd_text(char *, int, FILE*, int);
 int markdown(void*, FILE*, int);
 
+/* header block access
+ */
+char* mkd_doc_title(void*);
+char* mkd_doc_author(void*);
+char* mkd_doc_date(void*);
+
 /* special flags for markdown() and mkd_text()
  */
 #define MKD_NOLINKS	0x0001	/* don't do link processing, block <a> tags  */
