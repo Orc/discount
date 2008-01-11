@@ -949,7 +949,7 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
 
     bzero(&f, sizeof f);
     f.out = output;
-    f.flags = flags;
+    f.flags = flags & DENY_MASK;
     
     reparse(bfr, size, 0, &f);
     return 0;
