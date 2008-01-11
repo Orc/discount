@@ -675,6 +675,20 @@ text(MMIOT *f)
 } /* text */
 
 
+static int
+endofcode(int escape, int offset, MMIOT *f)
+{
+    switch (escape) {
+    case 2: if ( peek(f, offset+1) == '`' ) {
+		shift(f,1);
+    case 1:     shift(f,offset);
+		return 1;
+	    }
+    default:return 0;
+    }
+}
+
+
 /* the only characters that have special meaning in a code block are
  * `<' and `&' , which are /always/ expanded to &lt; and &amp;
  */
@@ -682,6 +696,9 @@ static void
 code(int escape, MMIOT *f)
 {
     int c;
+
+    if ( escape && (peek(f,1) == ' ') )
+	shift(f,1);
 
     while ( (c = pull(f)) != EOF ) {
 	switch (c) {
@@ -691,13 +708,15 @@ code(int escape, MMIOT *f)
 
 	case '<':   fprintf(f->out, "&lt;"); break;
 
-	case '`':   switch (escape) {
-		    case 2: if ( peek(f,1) == '`' ) {
-				shift(f,1);
-		    case 1:     return;
-		            }
-		    }
-		    fputc(c, f->out); break;
+	case ' ':   if ( peek(f,1) == '`' && endofcode(escape,1, f) )
+			return;
+		    fputc(c, f->out);
+		    break;
+
+	case '`':   if ( endofcode(escape,0, f) )
+			return;
+		    fputc(c, f->out);
+		    break;
 
 	case '\\':  fputc(c, f->out);
 		    if ( peek(f,1) == '>' || (c = pull(f)) == EOF )

@@ -450,8 +450,7 @@ headerblock(Paragraph *pp, int htyp)
 
     case ETX:
 	    /* p->text is ###header###, so we need to trim off
-	     * the leading and trailing `#`'s, plus any framing
-	     * whitespace.
+	     * the leading and trailing `#`'s
 	     */
 
 	    for (i=0; T(p->text)[i] == T(p->text)[0]; i++)
@@ -459,15 +458,10 @@ headerblock(Paragraph *pp, int htyp)
 
 	    pp->hnumber = i;
 
-	    while ( isspace(T(p->text)[i]) )
-		i++;
 	    CLIP(p->text, 0, i);
 
 	    for (j=S(p->text); j && (T(p->text)[j-1] == '#'); --j)
 		;
-
-	    while ( j && isspace(T(p->text)[j-1]) )
-		--j;
 
 	    S(p->text) = j;
 
@@ -774,6 +768,8 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     ptr = consume(ptr, &para);
 
     while ( ptr ) {
+	while ( S(ptr->text) && isspace(T(ptr->text)[S(ptr->text)-1]) )
+	    --S(ptr->text);
 	if ( toplevel && (key = isopentag(ptr)) ) {
 	    p = Pp(&d, ptr, HTML);
 	    if ( strcmp(key, "!--") == 0 )
