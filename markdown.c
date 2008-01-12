@@ -807,7 +807,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	else if ( isquote(ptr) ) {
 	    p = Pp(&d, ptr, QUOTE);
 	    ptr = quoteblock(p);
-	    p->down = compile(p->text, 1, f);
+	    p->down = compile(p->text, 0, f);
 	    p->text = 0;
 	}
 	else if ( toplevel && (isfootnote(ptr)) ) {
