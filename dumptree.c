@@ -66,7 +66,7 @@ changepfx(Stack *sp, char c)
 
 
 static void
-printpfx(Stack *sp)
+printpfx(Stack *sp, FILE *f)
 {
     int i;
     char c;
@@ -76,23 +76,23 @@ printpfx(Stack *sp)
     c = T(*sp)[S(*sp)-1].c;
 
     if ( c == '+' || c == '-' ) {
-	printf("--%c", c);
+	fprintf(f, "--%c", c);
 	T(*sp)[S(*sp)-1].c = (c == '-') ? ' ' : '|';
     }
     else
 	for ( i=0; i < S(*sp); i++ ) {
 	    if ( i )
-		printf("  ");
-	    printf("%*s%c", T(*sp)[i].indent + 2, " ", T(*sp)[i].c);
+		fprintf(f, "  ");
+	    fprintf(f, "%*s%c", T(*sp)[i].indent + 2, " ", T(*sp)[i].c);
 	    if ( T(*sp)[i].c == '`' )
 		T(*sp)[i].c = ' ';
 	}
-    printf("--");
+    fprintf(f, "--");
 }
 
 
 static void
-dumptree(Paragraph *pp, Stack *sp)
+dumptree(Paragraph *pp, Stack *sp, FILE *f)
 {
     int count;
     Line *p;
@@ -102,41 +102,41 @@ dumptree(Paragraph *pp, Stack *sp)
     while ( pp ) {
 	if ( !pp->next )
 	    changepfx(sp, '`');
-	printpfx(sp);
+	printpfx(sp, f);
 
-	d = printf("[%s", Pptype(pp->typ));
+	d = fprintf(f, "[%s", Pptype(pp->typ));
 	if ( pp->align )
-	    d += printf(", <%s>", Begin[pp->align]);
+	    d += fprintf(f, ", <%s>", Begin[pp->align]);
 
 	for (count=0, p=pp->text; p; ++count, (p = p->next) )
 	    ;
 
 	if ( count )
-	    d += printf(", %d line%s", count, (count==1)?"":"s");
+	    d += fprintf(f, ", %d line%s", count, (count==1)?"":"s");
 
-	d += printf("]");
+	d += fprintf(f, "]");
 
 	if ( pp->down ) {
 	    pushpfx(d, pp->down->next ? '+' : '-', sp);
-	    dumptree(pp->down, sp);
+	    dumptree(pp->down, sp, f);
 	    poppfx(sp);
 	}
-	else putchar('\n');
+	else fputc('\n', f);
 	pp = pp->next;
     }
 }
 
 
 int
-mkd_dump(Document *doc, FILE *output, int flags, char *title)
+mkd_dump(Document *doc, FILE *out, int flags, char *title)
 {
     Stack stack;
 
     if (mkd_compile(doc, flags) ) {
 
 	CREATE(stack);
-	pushpfx(printf("%s", title), doc->code->next ? '+' : '-', &stack);
-	dumptree(doc->code, &stack);
+	pushpfx(fprintf(out, "%s", title), doc->code->next ? '+' : '-', &stack);
+	dumptree(doc->code, &stack, out);
 	DELETE(stack);
 
 	mkd_cleanup(doc);
