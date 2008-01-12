@@ -53,8 +53,8 @@ typedef struct mmiot {
 #define DENY_A		0x0001
 #define DENY_IMG	0x0002
 #define DENY_SMARTY	0x0004
-#define DENY_MASK	(DENY_A|DENY_IMG|DENY_SMARTY)
 #define EXPAND_QUOTE	0x0010
+#define DENY_MASK	(DENY_A|DENY_IMG|DENY_SMARTY|EXPAND_QUOTE)
 } MMIOT;
 
 
