@@ -436,6 +436,18 @@ maybe_tag_or_link(MMIOT *f)
 	    return 1;
 	}
     if ( maybeaddress ) {
+
+	if ( (size > 7) && strncasecmp(text, "mailto:", 7) == 0 ) {
+	    /* if the address is in the form mailto:<foo>, strip
+	     * off the mailto: part of the address so that it
+	     * won't display funnily.
+	     *
+	     * the magic number '7' is the length of the word "mailto:"
+	     */
+	    text += 7;
+	    size -= 7;
+	}
+
 	fprintf(f->out, "<a href=\"");
 	mangle("mailto:", 7, f);
 	mangle(text, size, f);
