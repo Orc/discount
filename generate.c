@@ -529,20 +529,42 @@ islike(MMIOT *f, char *s)
 }
 
 
+static struct smarties {
+    char c;
+    char *pat;
+    char *entity;
+    int shift;
+} smarties[] = {
+    { '\'', "'s>",      "rsquo",  0 },
+    { '\'', "'t>",      "rsquo",  0 },
+    { '-',  "--",       "mdash",  1 },
+    { '-',  "<->",      "ndash",  0 },
+    { '.',  "...",      "hellip", 2 },
+    { '(',  "(c)",      "copy",   2 },
+    { '(',  "(r)",      "reg",    2 },
+    { '(',  "(tm)",     "trade",  3 },
+    { '3',  "<3/4>",    "frac34", 2 },
+    { '3',  "<3/4ths>", "frac34", 2 },
+    { '1',  "<1/2>",    "frac12", 2 },
+    { '1',  "<1/4>",    "frac14", 2 },
+    { '1',  "<1/4th>",  "frac14", 2 },
+} ;
+#define NRSMART ( sizeof smarties / sizeof smarties[0] )
+
+
 /* Smarty-pants-style chrome for quotes, -, ellipses, and (r)(c)(tm)
  */
 static int
 smartypants(int c, int *flags, MMIOT *f)
 {
+    int i;
+
     if ( f->flags & DENY_SMARTY )
 	return 0;
 
     switch (c) {
-    case '\'':  if ( islike(f, "'s>") || islike(f, "'t>")  ) {
-		    fprintf(f->out, "&rsquo;");
-		    return 1;
-		}
-		if ( smartyquote(flags, 's', f) ) return 1;
+    case '<' :  return 0;
+    case '\'':  if ( smartyquote(flags, 's', f) ) return 1;
 		break;
 
     case '"':	if ( smartyquote(flags, 'd', f) ) return 1;
@@ -568,51 +590,13 @@ smartypants(int c, int *flags, MMIOT *f)
 
 		}
 		break;
-		
-    case '.':   if ( islike(f, "...") ) {
-		    fprintf(f->out, "&hellip;");
-		    shift(f,2);
-		    return 1;
-		}
-		break;
-
-    case '-':   if ( peek(f, 1) == '-' ) {
-		    fprintf(f->out, "&mdash;");
-		    pull(f);
-		    return 1;
-		}
-		else if ( isthisspace(f,-1) && isthisspace(f,1) ) {
-		    fprintf(f->out, "&ndash;");
-		    return 1;
-		}
-		break;
-
-    case '(':   c = toupper(peek(f,1));
-		if ( islike(f, "(c)") || islike(f, "(r)") ) {
-		    fprintf(f->out, "&%s;", (c=='C') ? "copy" : "reg" );
-		    shift(f,2);
-		    return 1;
-		}
-		else if ( islike(f, "(tm)") ) {
-		    fprintf(f->out, "&trade;");
-		    shift(f,3);
-		    return 1;
-		}
-		break;
-    case '3':   if ( islike(f, "<3/4>") || islike(f, "<3/4ths>") ) {
-		    fprintf(f->out, "&frac34;");
-		    shift(f,2);
-		    return 1;
-		}
-		break;
-    case '1':   if ( islike(f, "<1/2>") || islike(f, "<1/4>")
-				        || islike(f, "<3/4th>") ) {
-		    fprintf(f->out, "&frac1%c;", peek(f,2));
-		    shift(f,2);
-		    return 1;
-		}
-		break;
     }
+    for ( i=0; i < NRSMART; i++)
+	if ( (c == smarties[i].c) && islike(f, smarties[i].pat) ) {
+	    fprintf(f->out, "&%s;", smarties[i].entity);
+	    shift(f, smarties[i].shift);
+	    return 1;
+	}
     return 0;
 } /* smartypants */
 
