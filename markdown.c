@@ -473,15 +473,6 @@ headerblock(Paragraph *pp, int htyp)
 }
 
 
-static int
-fancy(Line *t)
-{
-    int z;
-
-    return isquote(t) || iscode(t) || islist(t,&z) || ishdr(t,&z) || ishr(t);
-}
-
-
 static Line *
 codeblock(Paragraph *p)
 {
@@ -518,13 +509,28 @@ centered(Line *first, Line *last)
 }
 
 
+static int
+endoftextblock(Line *t, int toplevelblock)
+{
+    int z;
+
+    if ( blankline(t)||isquote(t)||iscode(t)||ishdr(t,&z)||ishr(t) )
+	return 1;
+
+    /* HORRIBLE STANDARDS KLUDGE: Toplevel paragraphs eat absorb adjacent
+     * list items, but sublevel blocks behave properly.
+     */
+    return toplevelblock ? 0 : islist(t,&z);
+}
+
+
 static Line *
-textblock(Paragraph *p)
+textblock(Paragraph *p, int toplevel)
 {
     Line *t, *next;
 
     for ( t = p->text; t ; t = next )
-	if ( ((next = t->next) == 0) || fancy(next) || blankline(next) ) {
+	if ( ((next = t->next) == 0) || endoftextblock(next, toplevel) ) {
 	    p->align = centered(p->text, t);
 	    t->next = 0;
 	    return next;
@@ -768,8 +774,13 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     ptr = consume(ptr, &para);
 
     while ( ptr ) {
+
+	/* HORRIBLE STANDARDS KLUDGE: the first line of every block
+	 * has trailing whitespace trimmed off.
+	 */
 	while ( S(ptr->text) && isspace(T(ptr->text)[S(ptr->text)-1]) )
 	    --S(ptr->text);
+
 	if ( toplevel && (key = isopentag(ptr)) ) {
 	    p = Pp(&d, ptr, HTML);
 	    if ( strcmp(key, "!--") == 0 )
@@ -805,7 +816,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	}
 	else {
 	    p = Pp(&d, ptr, MARKUP);
-	    ptr = textblock(p);
+	    ptr = textblock(p, toplevel);
 	}
 
 	if ( para && !p->align )
