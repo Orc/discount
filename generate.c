@@ -223,11 +223,11 @@ linkysize(MMIOT *f, int *heightp, int *widthp)
     pull(f);	/* eat '=' */
 
     for ( c = pull(f); isdigit(c); c = pull(f))
-	height = (height*10) + (c - '0');
+	width = (width * 10) + (c - '0');
 
     if ( c == 'x' ) {
 	for ( c = pull(f); isdigit(c); c = pull(f))
-	    width = (width * 10) + (c - '0');
+	    height = (height*10) + (c - '0');
 
 	if ( c != EOF ) {
 	    if ( !isspace(c) ) shift(f, -1);
