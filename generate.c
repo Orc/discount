@@ -565,8 +565,8 @@ smartypants(int c, int *flags, MMIOT *f)
 		}
 		break;
     case '3':
-    case '1':	if ( isthisspace(f,-1) && peek(f,1) == '/'
-				       && isthisspace(f,3) ) {
+    case '1':	if ( isthisnonword(f,-1) && peek(f,1) == '/'
+				         && isthisnonword(f,3) ) {
 		    if ( (c == '1' && peek(f, 2) == '2')
 				  || peek(f, 2) == '4' ) {
 			fprintf(f->out, "&frac%c%c;", c, peek(f,2) );
