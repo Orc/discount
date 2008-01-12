@@ -86,9 +86,9 @@ else
     rc=1
 fi
 
-echo -n "  don't -> don't ................... "
+echo -n "  don't -> don&rsquo;t ............. "
 
-if  echo "don't" | ./markdown | grep "don't" >/dev/null; then
+if  echo "don't" | ./markdown | grep 'don&rsquo;t' >/dev/null; then
     echo "ok"
 else
     echo "FAILED"

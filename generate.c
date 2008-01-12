@@ -501,6 +501,34 @@ smartyquote(int *flags, char typeofquote, MMIOT *f)
 }
 
 
+static int
+islike(MMIOT *f, char *s)
+{
+    int len;
+    int i;
+
+    if ( s[0] == '<' ) {
+	if ( !isthisnonword(f, -1) )
+	    return 0;
+       ++s;
+    }
+
+    if ( !(len = strlen(s)) )
+	return 0;
+
+    if ( s[len-1] == '>' ) {
+	if ( !isthisnonword(f,len-1) )
+	    return 0;
+	len--;
+    }
+
+    for (i=1; i < len; i++)
+	if (tolower(peek(f,i)) != s[i])
+	    return 0;
+    return 1;
+}
+
+
 /* Smarty-pants-style chrome for quotes, -, ellipses, and (r)(c)(tm)
  */
 static int
@@ -510,11 +538,7 @@ smartypants(int c, int *flags, MMIOT *f)
 	return 0;
 
     switch (c) {
-    case '\'':  if ( (c=toupper(peek(f,1)) == 'S' || c == 'T' )
-					 && isthisnonword(f, 2) ) {
-		    /* 's or 't -> contraction or possessive ess.  Not
-		     * smart enough
-		     */
+    case '\'':  if ( islike(f, "'s>") || islike(f, "'t>")  ) {
 		    fprintf(f->out, "&rsquo;");
 		    return 1;
 		}
@@ -545,7 +569,7 @@ smartypants(int c, int *flags, MMIOT *f)
 		}
 		break;
 		
-    case '.':   if ( peek(f, 1) == '.' && peek(f, 2) == '.' ) {
+    case '.':   if ( islike(f, "...") ) {
 		    fprintf(f->out, "&hellip;");
 		    shift(f,2);
 		    return 1;
@@ -564,28 +588,30 @@ smartypants(int c, int *flags, MMIOT *f)
 		break;
 
     case '(':   c = toupper(peek(f,1));
-		if ( (c == 'C' || c == 'R') && (peek(f,2) == ')') ) {
+		if ( islike(f, "(c)") || islike(f, "(r)") ) {
 		    fprintf(f->out, "&%s;", (c=='C') ? "copy" : "reg" );
 		    shift(f,2);
 		    return 1;
 		}
-		else if ( (c == 'T') && (toupper(peek(f,2)) == 'M')
-		                     && (peek(f,3) == ')') ) {
+		else if ( islike(f, "(tm)") ) {
 		    fprintf(f->out, "&trade;");
 		    shift(f,3);
 		    return 1;
 		}
 		break;
-    case '3':
-    case '1':	if ( isthisnonword(f,-1) && peek(f,1) == '/'
-				         && isthisnonword(f,3) ) {
-		    if ( (c == '1' && peek(f, 2) == '2')
-				  || peek(f, 2) == '4' ) {
-			fprintf(f->out, "&frac%c%c;", c, peek(f,2) );
-			shift(f,2);
-			return 1;
-		    }
+    case '3':   if ( islike(f, "<3/4>") || islike(f, "<3/4ths>") ) {
+		    fprintf(f->out, "&frac34;");
+		    shift(f,2);
+		    return 1;
 		}
+		break;
+    case '1':   if ( islike(f, "<1/2>") || islike(f, "<1/4>")
+				        || islike(f, "<3/4th>") ) {
+		    fprintf(f->out, "&frac1%c;", peek(f,2));
+		    shift(f,2);
+		    return 1;
+		}
+		break;
     }
     return 0;
 } /* smartypants */
