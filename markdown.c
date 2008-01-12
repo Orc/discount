@@ -45,9 +45,22 @@ casort(char **a, char **b)
 int
 __mkd_footsort(Footnote *a, Footnote *b)
 {
+    int i;
+    char ac, bc;
+
     if ( S(a->tag) != S(b->tag) )
 	return S(a->tag) - S(b->tag);
-    return strncasecmp(T(a->tag), T(b->tag), S(a->tag));
+
+    for ( i=0; i < S(a->tag); i++) {
+	ac = tolower(T(a->tag)[i]);
+	bc = tolower(T(b->tag)[i]);
+
+	if ( isspace(ac) && isspace(bc) )
+	    continue;
+	if ( ac != bc )
+	    return ac - bc;
+    }
+    return 0;
 }
 
 
