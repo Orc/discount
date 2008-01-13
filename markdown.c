@@ -489,9 +489,15 @@ headerblock(Paragraph *pp, int htyp)
 static Line *
 codeblock(Paragraph *p)
 {
-    Line *t, *r;
+    Line *t = p->text, *r;
 
-    for ( t = p->text; t; t = r ) {
+    /* HORRIBLE STANDARDS KLUDGE: the first line of every block
+     * has trailing whitespace trimmed off.
+     */
+    while ( S(t->text) && isspace(T(t->text)[S(t->text)-1]) )
+	--S(t->text);
+
+    for ( ; t; t = r ) {
 	CLIP(t->text,0,4);
 	t->dle = mkd_firstnonblank(t);
 
@@ -787,13 +793,6 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     ptr = consume(ptr, &para);
 
     while ( ptr ) {
-
-	/* HORRIBLE STANDARDS KLUDGE: the first line of every block
-	 * has trailing whitespace trimmed off.
-	 */
-	while ( S(ptr->text) && isspace(T(ptr->text)[S(ptr->text)-1]) )
-	    --S(ptr->text);
-
 	if ( toplevel && (key = isopentag(ptr)) ) {
 	    p = Pp(&d, ptr, HTML);
 	    if ( strcmp(key, "!--") == 0 )

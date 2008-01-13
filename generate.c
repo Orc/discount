@@ -530,7 +530,7 @@ islike(MMIOT *f, char *s)
 
 
 static struct smarties {
-    char c;
+    char c0;
     char *pat;
     char *entity;
     int shift;
@@ -592,7 +592,7 @@ smartypants(int c, int *flags, MMIOT *f)
 		break;
     }
     for ( i=0; i < NRSMART; i++)
-	if ( (c == smarties[i].c) && islike(f, smarties[i].pat) ) {
+	if ( (c == smarties[i].c0) && islike(f, smarties[i].pat) ) {
 	    fprintf(f->out, "&%s;", smarties[i].entity);
 	    shift(f, smarties[i].shift);
 	    return 1;
