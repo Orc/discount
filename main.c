@@ -51,6 +51,9 @@ main(int argc, char **argv)
 #if PANDOC_HEADER
 		    printf(" HEADER");
 #endif
+#if TABSTOP != 4
+		    printf(" TAB=%d", TABSTOP);
+#endif
 		    putchar('\n');
 		    exit(0);
 	case 'F':   flags = strtol(optarg, 0, 0);

@@ -3,9 +3,9 @@ unset MARKDOWN_FLAGS
 unset MKD_TABSTOP
 
 
-TS=`grep TABSTOP config.h | tr -dc '0-9'`
+eval `./markdown -V | tr ' ' '\n' | grep TAB`
 
-if [ "$TS" -eq 8 ]; then
+if [ "$TAB" -eq 8 ]; then
     echo "dealing with tabstop derangement"
 
     LIST='
@@ -14,7 +14,7 @@ if [ "$TS" -eq 8 ]; then
 	 *  C'
 
     count1=`echo "$LIST" | ./markdown | grep -i '<ul>' | wc -l`
-    count2=`echo "$LIST" | MKD_TABSTOP=Yuk ./markdown | grep -i '<ul>' | wc -l`
+    count2=`echo "$LIST" | MKD_TABSTOP=T ./markdown | grep -i '<ul>' | wc -l`
 
     echo -n '  using MKD_TABSTOP to break tabs .. '
 
