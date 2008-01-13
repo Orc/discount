@@ -64,16 +64,15 @@ fi
 
 echo -n '  nested lists (1) ................. '
 
-SUB='>A (list)
->1. Sub (list)
->2. Two (items)
->3. Here'
+SUB='
+ 1. Sub (list)
+ 2. Two (items)
+ 3. Here'
 
-SEP=' * A (list)
-     1. Sub (list)
+SEP='
+ *   1. Sub (list)
      2. Two (items)
-     3. Here
- * B (list)'
+     3. Here'
 
 count1=`echo "$SUB" | ./markdown | grep -i '<p>' | wc -l`
 count=`echo "$SEP" | ./markdown | grep -i '<p>' | wc -l`
@@ -86,12 +85,16 @@ else
 fi
 echo -n '  nested lists (2) ................. '
 
-SUB='>A (list)
+SUB='
+>A (list)
+>
 >1. Sub (list)
 >2. Two (items)
 >3. Here'
 
-SEP=' * A (list)
+SEP='
+ * A (list)
+
      1. Sub (list)
      2. Two (items)
      3. Here
