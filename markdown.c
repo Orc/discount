@@ -296,12 +296,6 @@ isfootnote(Line *t)
 
 
 static int
-islabel(char *line)
-{
-    return strchr("*-+", line[0]) && isspace(line[1]);
-}
-
-static int
 isquote(Line *t)
 {
     return ( T(t->text)[0] == '>' );
@@ -423,9 +417,9 @@ islist(Line *t, int *trim)
     }
 #endif
     
-    if ( islabel(T(t->text) + t->dle) ) {
+    if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
 	i = nextnonblank(t, t->dle+1);
-	*trim = i;
+	*trim = 2+t->dle;
 	return UL;
     }
 
@@ -602,12 +596,14 @@ static Paragraph *compile(Line *, int, MMIOT *);
  * marker, but multiple paragraphs need to start with a 4-space indent.
  */
 static Line *
-listitem(Paragraph *p, int trim)
+listitem(Paragraph *p, int indent)
 {
     Line *t, *q;
+    int clip = indent;
+    int z;
 
     for ( t = p->text; t ; t = q) {
-	CLIP(t->text, 0, trim);
+	CLIP(t->text, 0, clip);
 	t->dle = mkd_firstnonblank(t);
 
 	if ( (q = skipempty(t->next)) == 0 ) {
@@ -615,13 +611,22 @@ listitem(Paragraph *p, int trim)
 	    return 0;
 	}
 
-	if ( islist(q, &trim) || ishr(q) || ((q != t->next) && (q->dle < 4)) ) {
+	/* after a blank line, the next block needs to start with a line
+	 * that's indented 4 spaces, but after that the line doesn't
+	 * need any indentation
+	 */
+	if ( (q != t->next) && ( q->dle < 4) ) {
+	    q = t->next;
+	    t->next = 0;
+	    return q;
+	}
+	if ( (q->dle < indent) && (ishr(q) || ishdr(q,&z) || islist(q,&z)) ) {
 	    q = t->next;
 	    t->next = 0;
 	    return q;
 	}
 
-	trim = (q->dle < 4) ? q->dle : 4;
+	clip = (q->dle > indent) ? indent : q->dle;
     }
     return t;
 }
