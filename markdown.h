@@ -85,7 +85,8 @@ extern Document *mkd_in(FILE *, int);
 extern Document *mkd_string(char*,int, int);
 
 #define NO_HEADER	0x0100
-#define INPUT_MASK	(NO_HEADER)
+#define STD_TABSTOP	0x0200
+#define INPUT_MASK	(NO_HEADER|STD_TABSTOP)
 
 
 #endif/*_MARKDOWN_D*/

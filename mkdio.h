@@ -38,5 +38,6 @@ char* mkd_doc_date(MMIOT);
 /* special flags for mkd_in() and mkd_string()
  */
 #define MKD_NOHEADER	0x0100	/* don't process header blocks */
+#define MKD_TABSTOP	0x0200	/* expand tabs to 4 spaces */
 
 #endif/*_MKDIO_D*/

@@ -70,6 +70,18 @@ Do not process `[]' and remove
 tags from the output.
 .It Ar MKD_NOPANTS
 Do not do Smartypants-style mangling of quotes, dashes, or ellipses.
+.It Ar MKD_QUOT
+Expand
+.Ar \&"
+to \&&quot;.
+.It Ar MKD_NOHEADER
+Do not attempt to parse any Pandoc-style headers.
+.It Ar MKD_TABSTOP
+When reading documents, expand tabs to 
+.Em 4
+spaces instead of whatever
+.Nm
+was originally configured for.
 .El
 .Sh RETURN VALUES
 The functions

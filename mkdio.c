@@ -23,7 +23,6 @@ new_Document()
     Document *ret = calloc(sizeof(Document), 1);
 
     if ( ret ) {
-	ret->tabstop = getenv("MKD_TABSTOP") ? 4 : TABSTOP;
 	if (( ret->ctx = calloc(sizeof(MMIOT), 1) ))
 	    return ret;
 	free(ret);
@@ -93,6 +92,8 @@ populate(getc_func getc, void* ctx, int flags)
 #endif
 
     if ( !a ) return 0;
+
+    a->tabstop = (flags & STD_TABSTOP) ? 4 : TABSTOP;
 
     CREATE(line);
 
