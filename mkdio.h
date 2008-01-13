@@ -3,28 +3,30 @@
 
 #include <stdio.h>
 
+typedef void *MMIOT;
+
 /* line builder for markdown()
  */
-void *mkd_in(FILE*,int);		/* assemble input from a file */
-void *mkd_string(char*,int,int);	/* assemble input from a buffer */
+MMIOT mkd_in(FILE*,int);		/* assemble input from a file */
+MMIOT mkd_string(char*,int,int);	/* assemble input from a buffer */
 
 /* compilation, debugging, cleanup
  */
-int mkd_compile(void*, int);
-int mkd_generatehtml(void*,FILE*);
-int mkd_cleanup(void*);
+int mkd_compile(MMIOT, int);
+int mkd_generatehtml(MMIOT,FILE*);
+int mkd_cleanup(MMIOT);
 
 /* markup functions
  */
 int mkd_text(char *, int, FILE*, int);
-int mkd_dump(void*, FILE*, int, char*);
-int markdown(void*, FILE*, int);
+int mkd_dump(MMIOT, FILE*, int, char*);
+int markdown(MMIOT, FILE*, int);
 
 /* header block access
  */
-char* mkd_doc_title(void*);
-char* mkd_doc_author(void*);
-char* mkd_doc_date(void*);
+char* mkd_doc_title(MMIOT);
+char* mkd_doc_author(MMIOT);
+char* mkd_doc_date(MMIOT);
 
 /* special flags for markdown() and mkd_text()
  */

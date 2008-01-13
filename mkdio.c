@@ -23,6 +23,7 @@ new_Document()
     Document *ret = calloc(sizeof(Document), 1);
 
     if ( ret ) {
+	ret->tabstop = getenv("MKD_TABSTOP") ? 4 : TABSTOP;
 	if (( ret->ctx = calloc(sizeof(MMIOT), 1) ))
 	    return ret;
 	free(ret);
@@ -47,15 +48,14 @@ queue(Document* a, Cstring *line)
 
     while ( size-- ) {
 	if ( (c = *str++) == '\t' ) {
-	    /* expand tabs into 1..4 spaces.  This is not
-	     * the traditional tab spacing, but the language
-	     * definition /really really/ wants tabs to be
-	     * 4 spaces wide (indents are in terms of tabs
-	     * *or* 4 spaces.
+	    /* expand tabs into ->tabstop spaces.  We use ->tabstop
+	     * because the ENTIRE FREAKING COMPUTER WORLD uses editors
+	     * that don't do ^T/^D, but instead use tabs for intentation,
+	     * and, of course, set their tabs down to 4 spaces 
 	     */
 	    do {
 		EXPAND(p->text) = ' ';
-	    } while ( ++xp & 03 );
+	    } while ( ++xp % a->tabstop );
 	}
 	else if ( c >= ' ' ) {
 	    EXPAND(p->text) = c;

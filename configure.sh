@@ -8,7 +8,8 @@
 # load in the configuration file
 #
 ac_help='--enable-dl-tag	Use the DL tag extension
---enable-pandoc-header	Use pandoc-style header blocks'
+--enable-pandoc-header	Use pandoc-style header blocks
+--with-tabstops=N	Set tabstops to N characters (default is 4)'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
@@ -50,6 +51,14 @@ AC_CHECK_ALLOCA || AC_FAIL "$TARGET requires alloca()"
 
 AC_CHECK_FUNCS basename
 AC_CHECK_HEADERS libgen.h
+
+if [ -z "$WITH_TABSTOPS" ]; then
+    AC_DEFINE 'TABSTOP' 4
+elif [ "$WITH_TABSTOPS" -eq 1 ]; then
+    AC_DEFINE 'TABSTOP'	8
+else
+    AC_DEFINE 'TABSTOP'	$WITH_TABSTOPS
+fi
 
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
 
