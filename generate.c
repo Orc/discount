@@ -340,7 +340,7 @@ linkylinky(int image, MMIOT *f)
     fputc('"', f->out);
 
     if ( image && link.height && link.width )
-	fprintf(f->out, " height=%d width=%d", link.height, link.width);
+	fprintf(f->out, " height=\"%d\" width=\"%d\"", link.height, link.width);
 
     if ( S(link.title) ) {
 	fprintf(f->out, " title=\"");
@@ -350,7 +350,7 @@ linkylinky(int image, MMIOT *f)
     if (image) {
 	fprintf(f->out, " alt=\"");
 	reparse(T(link.tag), S(link.tag), DENY_A|DENY_IMG|EXPAND_QUOTE, f);
-	fputs("\">", f->out);
+	fputs("\" />", f->out);
     }
     else {
 	fputc('>', f->out);
@@ -540,6 +540,7 @@ static struct smarties {
     { '-',  "--",       "mdash",  1 },
     { '-',  "<->",      "ndash",  0 },
     { '.',  "...",      "hellip", 2 },
+    { '.',  ". . .",    "hellip", 4 },
     { '(',  "(c)",      "copy",   2 },
     { '(',  "(r)",      "reg",    2 },
     { '(',  "(tm)",     "trade",  3 },
