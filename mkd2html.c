@@ -14,13 +14,19 @@
  * The redistribution terms are provided in the COPYRIGHT file that must
  * be distributed with this source code.
  */
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libgen.h>
+#ifdef HAVE_BASENAME
+# ifdef HAVE_LIBGEN_H
+#  include <libgen.h>
+# else
+#  include <unistd.h>
+# endif
+#endif
 #include <stdarg.h>
-
-#include "config.h"
 
 #include "mkdio.h"
 #include "cstring.h"
@@ -28,6 +34,18 @@
 extern char version[];
 
 char *pgm = "mkd2html";
+
+#ifndef HAVE_BASENAME
+char *
+basename(char *path)
+{
+    char *p;
+
+    if (( p = strrchr(path, '/') ))
+	return 1+p;
+    return path;
+}
+#endif
 
 void
 fail(char *why, ...)
