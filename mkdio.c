@@ -68,6 +68,16 @@ queue(Document* a, Cstring *line)
 }
 
 
+/* trim leading blanks from a header line
+ */
+static void
+snip(Line *p)
+{
+    CLIP(p->text, 0, 1);
+    p->dle = mkd_firstnonblank(p);
+}
+
+
 /* build a Document from any old input.
  */
 typedef unsigned int (*getc_func)(void*);
@@ -117,6 +127,9 @@ populate(getc_func getc, void* ctx, int flags)
 	a->headers = T(a->content);
 	T(a->content) = a->headers->next->next->next;
 	a->headers->next->next->next = 0;
+	snip(a->headers);
+	snip(a->headers->next);
+	snip(a->headers->next->next);
     }
 #endif
 

@@ -8,6 +8,7 @@
 #define _CSTRING_D
 
 #include <stdlib.h>
+#include <string.h>
 
 /* expandable Pascal-style string.
  */

@@ -15,6 +15,10 @@
  * be distributed with this source code.
  */
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <libgen.h>
+#include <stdarg.h>
 
 #include "config.h"
 
@@ -23,10 +27,18 @@
 
 extern char version[];
 
+char *pgm = "mkd2html";
+
 void
-fail(char *why)
+fail(char *why, ...)
 {
-    fprintf(stderr, "md2html: %s\n", why);
+    va_list ptr;
+
+    va_start(ptr,why);
+    fprintf(stderr, "%s: ", pgm);
+    vfprintf(stderr, why, ptr);
+    fputc('\n', stderr);
+    va_end(ptr);
     exit(1);
 }
 
@@ -36,47 +48,113 @@ main(argc, argv)
 char **argv;
 {
     char *h;
+    char *source = 0, *dest = 0;
+    void *mmiot;
     int i;
-    void *input;
+    FILE *input, *output; 
+    STRING(char*) css, headers, footers;
 
-    if ( (input = mkd_in(stdin, 0)) == 0 )
-	fail("can't read input");
 
-    if ( !mkd_compile(input, 0) )
+    CREATE(css);
+    CREATE(headers);
+    CREATE(footers);
+    pgm = basename(argv[0]);
+
+    while ( argc > 2 ) {
+	if ( strcmp(argv[1], "-css") == 0 ) {
+	    EXPAND(css) = argv[2];
+	    argc -= 2;
+	    argv += 2;
+	}
+	else if ( strcmp(argv[1], "-header") == 0 ) {
+	    EXPAND(headers) = argv[2];
+	    argc -= 2;
+	    argv += 2;
+	}
+	else if ( strcmp(argv[1], "-footer") == 0 ) {
+	    EXPAND(footers) = argv[2];
+	    argc -= 2;
+	    argv += 2;
+	}
+    }
+
+
+    if ( argc > 1 ) {
+	char *p, *dot;
+	
+	source = alloca(strlen(argv[1]) + 6);
+	dest   = alloca(strlen(argv[1]) + 6);
+
+	strcpy(source, argv[1]);
+	if (( p = strrchr(source, '/') ))
+	    p = source;
+	else
+	    ++p;
+
+	if ( (input = fopen(source, "r")) == 0 ) {
+	    strcat(source, ".text");
+	    if ( (input = fopen(source, "r")) == 0 )
+		fail("can't open either %s or %s", argv[1], source);
+	}
+	strcpy(dest, source);
+
+	if (( dot = strrchr(dest, '.') ))
+	    *dot = 0;
+	strcat(dest, ".html");
+
+	if ( (output = fopen(dest, "w")) == 0 )
+	    fail("can't write to %s", dest);
+    }
+    else {
+	input = stdin;
+	output = stdout;
+    }
+
+    if ( (mmiot = mkd_in(input, 0)) == 0 )
+	fail("can't read %s", source ? source : "stdin");
+
+    if ( !mkd_compile(mmiot, 0) )
 	fail("couldn't compile input");
 
 
-    h = mkd_doc_title(input);
+    h = mkd_doc_title(mmiot);
 
     /* print a header */
 
-    puts("<!doctype html public \"-//W3C//DTD HTML 4.0 Transitional //EN\">");
-    puts("<HTML>");
-    puts("<HEAD>");
-    printf("  <meta name=\"GENERATOR\" content=\"md2html\" %s>\n", version);
-    puts("  <meta http-equiv=\"Content-Type\"");
-    puts("        content=\"text/html; charset-us-ascii\">");
+    fprintf(output,
+	"<!doctype html public \"-//W3C//DTD HTML 4.0 Transitional //EN\">\n"
+	"<HTML>\n"
+	"<HEAD>\n"
+	"  <meta name=\"GENERATOR\" content=\"mkd2html %s\">\n", version);
+
+    fprintf(output,"  <meta http-equiv=\"Content-Type\"\n"
+		   "        content=\"text/html; charset-us-ascii\">");
+
+    for ( i=0; i < S(css); i++ )
+	fprintf(output, "  <link rel=\"stylesheet\"\n"
+			"        type=\"text/css\"\n"
+			"        href=\"%s\" />\n", T(css)[i]);
+
     if ( h ) {
-	printf("  <title>");
-	mkd_text(h, strlen(h), stdout, 0);
-	puts("</title>");
+	fprintf(output,"  <title>");
+	mkd_text(h, strlen(h), output, 0);
+	fprintf(output, "</title>\n");
     }
-    for (i=1; (i < argc) && (strcmp(argv[i], "/") != 0); i++)
-	printf("  %s\n", argv[i]);
-    puts("</HEAD>");
-    puts("<BODY>");
+    for ( i=0; i < S(headers); i++ )
+	fprintf(output, "  %s\n", T(headers)[i]);
+    fprintf(output, "</HEAD>\n"
+		    "<BODY>\n");
 
     /* print the compiled body */
 
-    mkd_generatehtml(input, stdout);
-    mkd_cleanup(input);
+    mkd_generatehtml(mmiot, output);
 
-    i++;
-
-    while ( i < argc )
-	puts(argv[i++]);
-
-    puts("</BODY>");
-    puts("</HTML>");
+    for ( i=0; i < S(footers); i++ )
+	fprintf(output, "%s\n", T(footers)[i]);
+    
+    fprintf(output, "</BODY>\n"
+		    "</HTML>\n");
+    
+    mkd_cleanup(mmiot);
     exit(0);
 }

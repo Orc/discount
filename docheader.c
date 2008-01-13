@@ -13,12 +13,13 @@
 #include "cstring.h"
 #include "markdown.h"
 
+#define afterdle(t)	(T((t)->text) + (t)->dle)
 
 char *
 mkd_doc_title(Document *doc)
 {
     if ( doc && doc->headers )
-	return T(doc->headers->text);
+	return afterdle(doc->headers);
     return 0;
 }
 
@@ -27,7 +28,7 @@ char *
 mkd_doc_author(Document *doc)
 {
     if ( doc && doc->headers && doc->headers->next )
-	return T(doc->headers->next->text);
+	return afterdle(doc->headers->next);
     return 0;
 }
 
@@ -36,6 +37,6 @@ char *
 mkd_doc_date(Document *doc)
 {
     if ( doc && doc->headers && doc->headers->next && doc->headers->next->next )
-	return T(doc->headers->next->next->text);
+	return afterdle(doc->headers->next->next);
     return 0;
 }
