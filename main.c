@@ -1,9 +1,18 @@
+/*
+ * markdown: convert a single markdown document into html
+ */
+/*
+ * Copyright (C) 2007 David L Parsons.
+ * The redistribution terms are provided in the COPYRIGHT file that must
+ * be distributed with this source code.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <unistd.h>
 #include <mkdio.h>
 #include <errno.h>
+#include <string.h>
 
 #include "config.h"
 
@@ -24,6 +33,43 @@ basename(char *p)
 #endif
 
 
+char *pgm = "markdown";
+
+void
+set(int *flags, char *optionstring)
+{
+    char wtd;
+    int opt;
+    char *arg;
+
+
+    for ( arg = strtok(optionstring, ","); arg; arg = strtok(NULL, ",") ) {
+	wtd = '-';
+	if ( *arg == '+' || *arg == '-' )
+	    wtd = *arg++;
+
+	if ( strcasecmp(arg, "tabstop") == 0 )
+	    opt = MKD_TABSTOP;
+	else if ( strcasecmp(arg, "noimage") == 0 )
+	    opt = MKD_NOIMAGE;
+	else if ( strcasecmp(arg, "nolinks") == 0 )
+	    opt = MKD_NOLINKS;
+	else if ( strcasecmp(arg, "noheader") == 0 )
+	    opt = MKD_NOHEADER;
+	else if ( strcasecmp(arg, "quot") == 0 )
+	    opt = MKD_QUOT;
+	else {
+	    fprintf(stderr, "%s: unknown option <%s>\n", pgm, arg);
+	    continue;
+	}
+
+	if ( wtd == '+' )
+	    *flags |= opt;
+	else
+	    *flags &= ~opt;
+    }
+}
+
 float
 main(int argc, char **argv)
 {
@@ -32,31 +78,23 @@ main(int argc, char **argv)
     int flags = 0;
     int debug = 0;
     char *ofile = 0;
-    extern char version[];
     char *q = getenv("MARKDOWN_FLAGS");
 
 
     if ( q ) flags = strtol(q, 0, 0);
 
+    pgm = basename(argv[0]);
     opterr = 1;
 
-    while ( (opt=getopt(argc, argv, "dF:o:V")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "d:f:F:o:V")) != EOF ) {
 	switch (opt) {
 	case 'd':   debug = 1;
 		    break;
-	case 'V':   printf("markdown %s", version);
-#if DL_TAG_EXTENSION
-		    printf(" DL_TAG");
-#endif
-#if PANDOC_HEADER
-		    printf(" HEADER");
-#endif
-#if TABSTOP != 4
-		    printf(" TAB=%d", TABSTOP);
-#endif
-		    putchar('\n');
+	case 'V':   printf("markdown %s\n", version);
 		    exit(0);
 	case 'F':   flags = strtol(optarg, 0, 0);
+		    break;
+	case 'f':   set(&flags, optarg);
 		    break;
 	case 'o':   if ( ofile ) {
 			fprintf(stderr, "Too many -o options\n");
@@ -67,7 +105,9 @@ main(int argc, char **argv)
 			exit(1);
 		    }
 		    break;
-	default:    fprintf(stderr, "usage: markdown [-dV] [-o file] [file]\n");
+	default:    fprintf(stderr, "usage: markdown [-dV]"
+				    " [-F flags] [-f{+-}setting"
+				    " [-o file] [file]\n");
 		    exit(1);
 	}
     }

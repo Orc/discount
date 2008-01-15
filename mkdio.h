@@ -28,6 +28,10 @@ char* mkd_doc_title(MMIOT);
 char* mkd_doc_author(MMIOT);
 char* mkd_doc_date(MMIOT);
 
+/* version#.
+ */
+extern char version[];
+
 /* special flags for markdown() and mkd_text()
  */
 #define MKD_NOLINKS	0x0001	/* don't do link processing, block <a> tags  */
