@@ -30,7 +30,10 @@ The options are as follows:
 Instead of writing the html file, dump a parse
 tree to stdout.
 .It Fl f options
-Set or clear various translation flags
+Set or clear various translation flags.   The flags
+are in a comma-delimited list, with an optional
+.Ar +
+(set) prefix on each flag.
 .Bl -tag -width "NOHEADER"
 .It Ar noimage
 Don't allow image tags.
@@ -43,6 +46,13 @@ Do not process pandoc headers.
 .It Ar tabstops
 Use markdown-standard 4-space tabstops.
 .El
+.Pp
+As an example, the option
+.Fl f Ar nolinks,quot
+tells
+.Nm
+to not allow \<a tags, and to expand
+double-quotes.
 .It Fl F Ar bitmap
 Set translation flags.
 .Ar Bitmap
