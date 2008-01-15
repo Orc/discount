@@ -173,6 +173,7 @@ thesame(int *p, char *pat)
  *   <?theme date?>	-- the document date (from header)
  *   <?theme title?>	-- the document title (from header)
  *   <?theme author?>	-- the document author (from header)
+ *   <?theme version?>  -- the version#
  *   <?theme body?>	-- the document body
  */
 void
@@ -216,8 +217,12 @@ spin(FILE *template, MMIOT doc, FILE *output)
 		    if (( h = mkd_doc_author(doc) ))
 			mkd_text(h, strlen(h), stdout, 0);
 		}
-		else if ( thesame(p, "body?>") )
+		else if ( thesame(p, "version?>") ) {
+		    mkd_text(version, strlen(version), stdout, 0);
+		}
+		else if ( thesame(p, "body?>") ) {
 		    mkd_generatehtml(doc,stdout);
+		}
 
 		while ( (c = pull()) != EOF && (c != '?' && peek(1) != '>') )
 		    ;

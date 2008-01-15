@@ -7,7 +7,7 @@ MANDIR=@mandir@
 LIBDIR=@libdir@
 INCDIR=@prefix@/include
 
-PGMS=markdown mkd2html
+PGMS=markdown mkd2html theme
 MKDLIB=libmarkdown.a
 OBJS=mkdio.o markdown.o dumptree.o generate.o docheader.o
 
@@ -37,7 +37,10 @@ version.o: version.c VERSION
 markdown: main.o version.o $(MKDLIB)
 	$(CC) -L. -o markdown main.o version.o -lmarkdown @LIBS@
 
-# example program
+# example programs
+theme:  theme.o version.o $(MKDLIB)
+	$(CC) -L. -o theme theme.o version.o -lmarkdown @LIBS@
+
 mkd2html:  mkd2html.o version.o $(MKDLIB)
 	$(CC) -L. -o mkd2html mkd2html.o version.o -lmarkdown @LIBS@
 
