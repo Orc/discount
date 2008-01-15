@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <pwd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -33,6 +34,7 @@ char *output = 0;
 char *source = 0;
 char *root = 0;
 struct passwd *me = 0;
+struct stat *infop = 0;
 
 #ifndef HAVE_BASENAME
 char *
@@ -184,11 +186,13 @@ istag(int *p, char *pat)
 /* spin() - run through the theme template, looking for <?theme expansions
  *
  * theme expansions we love:
- *   <?theme date?>	-- the document date (from header)
- *   <?theme title?>	-- the document title (from header)
- *   <?theme author?>	-- the document author (from header)
+ *   <?theme date?>	-- the document date (file or header date)
+ *   <?theme title?>	-- the document title (header title or document name)
+ *   <?theme author?>	-- the document author (header author or document owner)
  *   <?theme version?>  -- the version#
  *   <?theme body?>	-- the document body
+ *   <?theme source?>	-- the document name
+ *   <?theme html?>	-- the html file name
  */
 void
 spin(FILE *template, MMIOT doc, FILE *output)
@@ -234,7 +238,12 @@ spin(FILE *template, MMIOT doc, FILE *output)
 			mkd_text(h, strlen(h), output, flags);
 		}
 		else if ( thesame(p, "date?>") ) {
-		    if (( h = mkd_doc_date(doc) ))
+		    if ( infop )
+			h = ctime(&infop->st_mtime);
+		    else 
+			h = mkd_doc_date(doc);
+
+		    if ( h )
 			mkd_text(h, strlen(h), output, flags);
 		}
 		else if ( thesame(p, "author?>") ) {
@@ -249,7 +258,11 @@ spin(FILE *template, MMIOT doc, FILE *output)
 		}
 		else if ( thesame(p, "body?>") ) {
 		    if ( !(inhead||intag) )
-		    mkd_generatehtml(doc,output);
+			mkd_generatehtml(doc,output);
+		}
+		else if ( thesame(p, "source?>") ) {
+		    if ( source )
+			fwrite(source, strlen(source), 1, output);
 		}
 
 		while ( (c = pull()) != EOF && (c != '?' && peek(1) != '>') )
@@ -281,19 +294,17 @@ char **argv;
     char *template = "page.theme";
     FILE *tmplfile;
     int opt;
+    int force = 0;
     MMIOT doc;
-
-    if (( me = getpwuid(getuid()) )) {
-	root = strdup(me->pw_dir);
-	if ( !root )
-	    fail("out of memory");
-    }
+    struct stat sourceinfo;
 
     opterr=1;
 
-    while ( (opt=getopt(argc, argv, "d:t:o:")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "fd:t:o:")) != EOF ) {
 	switch (opt) {
 	case 'd':   root = optarg;
+		    break;
+	case 'f':   force = 1;
 		    break;
 	case 't':   template = optarg;
 		    break;
@@ -344,6 +355,7 @@ char **argv;
 		strcat(q, ".html");
 	    }
 	}
+	if ( force ) unlink(output);
 	if ( !freopen(output, "w", stdout) )
 	    fail("can't write to %s", output);
     }
@@ -351,6 +363,16 @@ char **argv;
 
     if ( (doc = mkd_in(stdin, 0)) == 0 )
 	fail("can't read %s", source ? source : "stdin");
+
+    if ( fstat(fileno(stdin), &sourceinfo) == 0 ) {
+	infop = &sourceinfo;
+	me = getpwuid(infop->st_uid);
+    }
+    else
+	me = getpwuid(getuid());
+
+    if ( (root = strdup(me->pw_dir)) == 0 )
+	fail("out of memory");
 
     if ( !mkd_compile(doc, 0) )
 	fail("couldn't compile input");
