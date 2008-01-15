@@ -11,6 +11,7 @@
 .Op Fl d
 .Op Fl V
 .Op Fl F Pa bitmap
+.Op Fl f Ar options
 .Op Fl o Pa file
 .Op Pa textfile
 .Sh DESCRIPTION
@@ -28,6 +29,26 @@ The options are as follows:
 .It Fl d
 Instead of writing the html file, dump a parse
 tree to stdout.
+.It Fl f options
+Set or clear various translation flags
+.Bl -tag -width "NOHEADER"
+.It Ar noimage
+Don't allow image tags.
+.It Ar nolinks
+Don't allow links.
+.It Ar quot
+Expand double-quotes to \&&quot;
+.It Ar noheader
+Do not process pandoc headers.
+.It Ar tabstops
+Use markdown-standard 4-space tabstops.
+.El
+.It Fl F Ar bitmap
+Set translation flags.
+.Ar Bitmap
+is a bit map of the various configuration options
+described in
+.Xr markdown 3 .
 .It Fl V
 Show the version# and configuration data.
 .Pp

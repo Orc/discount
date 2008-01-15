@@ -31,9 +31,8 @@ install.man:
 
 install.everything: install install.man
 
-version.o: VERSION config.h
-	echo 'char version[] = VERSION;' > version.c && \
-	    $(CC) -DVERSION=\"`cat VERSION`\" -c version.c
+version.o: version.c VERSION
+	$(CC) -DVERSION=\"`cat VERSION`\" -c version.c
 
 markdown: main.o version.o $(MKDLIB)
 	$(CC) -L. -o markdown main.o version.o -lmarkdown @LIBS@

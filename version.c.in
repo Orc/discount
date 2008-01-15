@@ -1,0 +1,13 @@
+#include "config.h"
+
+char version[] = VERSION
+#if DL_TAG_EXTENSION
+		" DL_TAG"
+#endif
+#if PANDOC_HEADER
+		" HEADER"
+#endif
+#if @TABSTOP@ != 4
+		" TAB=@TABSTOP@"
+#endif
+		;

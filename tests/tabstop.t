@@ -14,9 +14,9 @@ if [ "$TAB" -eq 8 ]; then
 	 *  C'
 
     count1=`echo "$LIST" | ./markdown | grep -i '<ul>' | wc -l`
-    count2=`echo "$LIST" | MKD_TABSTOP=T ./markdown | grep -i '<ul>' | wc -l`
+    count2=`echo "$LIST" | MARKDOWN_FLAGS=0x0200 ./markdown | grep -i '<ul>' | wc -l`
 
-    echo -n '  using MKD_TABSTOP to break tabs .. '
+    echo -n '  MARKDOWN_FLAGS breaks tabstops ... '
 
     if [ "$count1" -ne "$count2" ]; then
 	echo "ok"
