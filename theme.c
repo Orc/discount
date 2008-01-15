@@ -32,6 +32,7 @@ char *pgm = "theme";
 char *output = 0;
 char *source = 0;
 char *root = 0;
+struct passwd *me = 0;
 
 #ifndef HAVE_BASENAME
 char *
@@ -216,9 +217,11 @@ spin(FILE *template, MMIOT doc, FILE *output)
 		else if ( thesame(p, "author?>") ) {
 		    if (( h = mkd_doc_author(doc) ))
 			mkd_text(h, strlen(h), stdout, 0);
+		    else if ( me )
+			mkd_text(me->pw_gecos, strlen(me->pw_gecos), stdout, 0);
 		}
 		else if ( thesame(p, "version?>") ) {
-		    mkd_text(version, strlen(version), stdout, 0);
+		    fwrite(version, strlen(version), 1, stdout);
 		}
 		else if ( thesame(p, "body?>") ) {
 		    mkd_generatehtml(doc,stdout);
@@ -241,7 +244,6 @@ void
 main(argc, argv)
 char **argv;
 {
-    struct passwd *me;
     char *template = "page.theme";
     FILE *tmplfile;
     int opt;
