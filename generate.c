@@ -431,7 +431,7 @@ maybe_tag_or_link(MMIOT *f)
 	    fprintf(f->out, "<a href=\"");
 	    puturl(text,size,f->out);
 	    fprintf(f->out, "\">");
-	    reparse(text, size, 0, f);
+	    reparse(text, size, DENY_A, f);
 	    fprintf(f->out, "</a>");
 	    return 1;
 	}
