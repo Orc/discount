@@ -168,6 +168,19 @@ thesame(int *p, char *pat)
 }
 
 
+static int
+istag(int *p, char *pat)
+{
+    int c;
+
+    if ( thesame(p, pat) ) {
+	c = peek(strlen(pat)+1);
+	return (c == '>' || isspace(c));
+    }
+    return 0;
+}
+
+
 /* spin() - run through the theme template, looking for <?theme expansions
  *
  * theme expansions we love:
@@ -183,16 +196,18 @@ spin(FILE *template, MMIOT doc, FILE *output)
     int c;
     int *p;
     char *h;
+    int flags;
+    int intag=0, inhead=0;
 
     prepare(template);
 
     while ( (c = pull()) != EOF ) {
 	if ( c == '<' ) {
 	    if ( peek(1) == '!' && peek(2) == '-' && peek(3) == '-' ) {
-		fputs("<!--", stdout);
+		fputs("<!--", output);
 		shift(3);
 		do {
-		    putchar(c);
+		    putc(c, output);
 		} while ( ! (c == '-' && peek(1) == '-' && peek(2) == '>') );
 	    }
 	    else if ( (peek(1) == '?') && thesame(cursor(), "?theme ") ) {
@@ -204,27 +219,37 @@ spin(FILE *template, MMIOT doc, FILE *output)
 		shift(-1);
 		p = cursor();
 
+		if ( intag ) 
+		    flags = MKD_EMBED;
+		else if ( inhead )
+		    flags = MKD_NOIMAGE|MKD_NOLINKS;
+		else
+		    flags = 0;
+
 		if ( thesame(p, "title?>") ) {
-		    if (( h = mkd_doc_title(doc) ))
-			mkd_text(h, strlen(h), stdout, 0);
-		    else if ( source )
-			mkd_text(source, strlen(source), stdout, 0);
+		    if ( (h = mkd_doc_title(doc)) == 0 && source )
+			h = source;
+
+		    if ( h )
+			mkd_text(h, strlen(h), output, flags);
 		}
 		else if ( thesame(p, "date?>") ) {
 		    if (( h = mkd_doc_date(doc) ))
-			mkd_text(h, strlen(h), stdout, 0);
+			mkd_text(h, strlen(h), output, flags);
 		}
 		else if ( thesame(p, "author?>") ) {
-		    if (( h = mkd_doc_author(doc) ))
-			mkd_text(h, strlen(h), stdout, 0);
-		    else if ( me )
-			mkd_text(me->pw_gecos, strlen(me->pw_gecos), stdout, 0);
+		    if ( (h = mkd_doc_author(doc)) == 0 && me )
+			h = me->pw_gecos;
+
+		    if ( h )
+			mkd_text(h, strlen(h), output, flags);
 		}
 		else if ( thesame(p, "version?>") ) {
-		    fwrite(version, strlen(version), 1, stdout);
+		    fwrite(version, strlen(version), 1, output);
 		}
 		else if ( thesame(p, "body?>") ) {
-		    mkd_generatehtml(doc,stdout);
+		    if ( !(inhead||intag) )
+		    mkd_generatehtml(doc,output);
 		}
 
 		while ( (c = pull()) != EOF && (c != '?' && peek(1) != '>') )
@@ -232,10 +257,19 @@ spin(FILE *template, MMIOT doc, FILE *output)
 		shift(1);
 	    }
 	    else
-		putchar(c);
+		putc(c, output);
+
+	    if ( istag(cursor(), "head") )
+		inhead=1;
+	    else if ( istag(cursor(), "body") )
+		inhead=0;
+	    intag=1;
+	    continue;
 	}
-	else
-	    putchar(c);
+	else if ( c == '>' )
+	    intag=0;
+
+	putc(c, output);
     }
 } /* spin */
 
@@ -248,7 +282,6 @@ char **argv;
     FILE *tmplfile;
     int opt;
     MMIOT doc;
-
 
     if (( me = getpwuid(getuid()) )) {
 	root = strdup(me->pw_dir);
@@ -278,11 +311,14 @@ char **argv;
 
 
     if ( argc > 0 ) {
+	int added_text=0;
+
 	source = alloca(strlen(argv[0]) + strlen(".text") + 1);
 	strcpy(source,argv[0]);
 
 	if ( !freopen(source, "r", stdin) ) {
 	    strcat(source, ".text");
+	    added_text = 1;
 	    if ( !freopen(source, "r", stdin) )
 		fail("can't open either %s or %s", argv[0], source);
 	}
@@ -290,20 +326,23 @@ char **argv;
 	if ( !output ) {
 	    char *p, *q;
 	    output = alloca(strlen(source) + strlen(".html") + 1);
-	    strcpy(output,source);
 
-	    if ( strcmp(source, argv[0]) == 0 ) {
+	    if ( added_text ) {
+		strcpy(output, argv[0]);
+		strcat(output, ".html");
+	    }
+	    else {
+		strcpy(output, source);
+
 		if (( p = strchr(output, '/') ))
 		    q = strrchr(p+1, '.');
 		else
 		    q = strrchr(output, '.');
-	    }
-	    else q = 0;
 
-	    if ( q )
-		strcpy(q, ".html");
-	    else
-		strcat(output, ".html");
+		if ( q )
+		    *q = 0;
+		strcat(q, ".html");
+	    }
 	}
 	if ( !freopen(output, "w", stdout) )
 	    fail("can't write to %s", output);

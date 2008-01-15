@@ -344,12 +344,12 @@ linkylinky(int image, MMIOT *f)
 
     if ( S(link.title) ) {
 	fprintf(f->out, " title=\"");
-	reparse(T(link.title), S(link.title), DENY_A|DENY_IMG|EXPAND_QUOTE, f);
+	reparse(T(link.title), S(link.title), EMBEDDED, f);
 	fputc('"', f->out);
     }
     if (image) {
 	fprintf(f->out, " alt=\"");
-	reparse(T(link.tag), S(link.tag), DENY_A|DENY_IMG|EXPAND_QUOTE, f);
+	reparse(T(link.tag), S(link.tag), EMBEDDED, f);
 	fputs("\" />", f->out);
     }
     else {
@@ -403,6 +403,9 @@ maybe_tag_or_link(MMIOT *f)
     char *text;
     int c, size, i;
     int maybetag=1, maybeaddress=0;
+
+    if ( f->flags & EXPAND_BROKET )
+	return 0;
 
     for ( size=0; ((c = peek(f,size+1)) != '>') && !isspace(c); size++ ) {
 	if ( ! (c == '/' || isalnum(c) || c == '~') )
@@ -616,6 +619,11 @@ text(MMIOT *f)
 	switch (c) {
 	case 0:     break;
 
+	case '>':   if ( f->flags & EXPAND_BROKET )
+			fprintf(f->out, "&gt;");
+		    else
+			fputc(c, f->out);
+		    break;
 	case '"':   if ( f->flags & EXPAND_QUOTE )
 			fprintf(f->out, "&quot;");
 		    else
