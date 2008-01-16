@@ -62,7 +62,7 @@ pull(MMIOT *f)
 {
     if ( f->isp < S(f->in) ) return T(f->in)[f->isp++];
 
-    S(f->in) = f->isp = 0;
+    /*S(f->in) = f->isp = 0;*/
     return EOF;
 }
 
@@ -78,13 +78,8 @@ cursor(MMIOT *f)
 
 /* return/set the current cursor position
  */
-unsigned
-mmseek(MMIOT *f, int i)
-{
-    if ( i >= 0 && i < S(f->in) )
-	f->isp = i;
-    return f->isp;
-}
+#define mmiotseek(f,x)	(f->isp = x)
+#define mmiottell(f)	(f->isp)
 
 
 /* move n characters forward ( or -n characters backward) in the input buffer.
@@ -325,11 +320,11 @@ linkykey(int image, Footnote *val, MMIOT *f)
 static int
 linkylinky(int image, MMIOT *f)
 {
-    int start = mmseek(f, -1);
+    int start = mmiottell(f);
     Footnote link;
 
     if ( !(linkykey(image, &link, f) && S(link.tag))  ) {
-	mmseek(f, start);
+	mmiotseek(f, start);
 	return 0;
     }
 
