@@ -71,4 +71,31 @@ else
     echo "ok"
 fi
 
+echo -n '  linky-like []s work .............. '
+
+if echo '[foo]' | ./markdown | fgrep '[foo]' >/dev/null; then
+    echo "ok"
+else
+    echo "FAILED"
+    rc=1
+fi
+
+echo -n '  pseudo-protocol "id:" ............ '
+
+if echo '[foo](id:bar)' | ./markdown | fgrep 'a id' >/dev/null; then
+    echo "ok"
+else
+    echo "FAILED"
+    rc=1
+fi
+
+echo -n '  pseudo-protocol "class:" ......... '
+
+if echo '[foo](class:bar)' | ./markdown | fgrep 'span class' >/dev/null; then
+    echo "ok"
+else
+    echo "FAILED"
+    rc=1
+fi
+
 exit $rc

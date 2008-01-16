@@ -112,4 +112,21 @@ else
     rc=1
 fi
 
+echo -n '  blockquote inside list ........... '
+
+SEP='
+ *  A (list)
+   
+    > quote
+    > me
+
+    dont quote me'
+
+if echo "$SEP" | ./markdown | grep 'blockquote' >/dev/null; then
+    echo "ok"
+else
+    echo "FAILED"
+    rc=1
+fi
+
 exit $rc
