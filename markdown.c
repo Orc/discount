@@ -604,7 +604,6 @@ listitem(Paragraph *p, int indent)
 
     for ( t = p->text; t ; t = q) {
 	CLIP(t->text, 0, clip);
-printf("[%d]%*s|%.*s\n", clip, clip, "", S(t->text), T(t->text));
 	t->dle = mkd_firstnonblank(t);
 
 	if ( (q = skipempty(t->next)) == 0 ) {
