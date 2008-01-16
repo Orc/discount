@@ -604,6 +604,7 @@ listitem(Paragraph *p, int indent)
 
     for ( t = p->text; t ; t = q) {
 	CLIP(t->text, 0, clip);
+printf("[%d]%*s|%.*s\n", clip, clip, "", S(t->text), T(t->text));
 	t->dle = mkd_firstnonblank(t);
 
 	if ( (q = skipempty(t->next)) == 0 ) {
@@ -615,10 +616,13 @@ listitem(Paragraph *p, int indent)
 	 * that's indented 4 spaces, but after that the line doesn't
 	 * need any indentation
 	 */
-	if ( (q != t->next) && (q->dle < 4) ) {
-	    q = t->next;
-	    t->next = 0;
-	    return q;
+	if ( q != t->next ) {
+	    if (q->dle < 4) {
+		q = t->next;
+		t->next = 0;
+		return q;
+	    }
+	    indent = 4;
 	}
 
 	if ( (q->dle < indent) && (ishr(q) || ishdr(q,&z) || islist(q,&z)) ) {
