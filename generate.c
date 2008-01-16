@@ -315,6 +315,58 @@ linkykey(int image, Footnote *val, MMIOT *f)
 
 
 /*
+ * all the tag types that linkylinky can produce are
+ * defined by this structure. 
+ */
+typedef struct linkytype {
+    char      *pat;
+    int      szpat;
+    char *link_pfx;	/* tag prefix and link pointer  (eg: "<a href="\"" */
+    char *link_sfx;	/* link suffix			(eg: "\""          */
+    int        WxH;	/* this tag allows width x height arguments */
+    char *text_pfx;	/* text prefix                  (eg: ">"           */
+    char *text_sfx;	/* text suffix			(eg: "</a>"        */
+    int      flags;	/* reparse flags */
+} linkytype;
+
+static linkytype imaget = { 0, 0, "<img src=\"", "\"",
+			     1, "alt=\"", "\" />", EMBEDDED };
+static linkytype linkt  = { 0, 0, "<a href=\"", "\"",
+                             0, ">", "</a>", DENY_A };
+
+/*
+ * pseudo-protocols for [][];
+ *
+ * id: generates <a id="link">tag</a>
+ * class: generates <span class="link">tag</span>
+ * raw: just dump the link without any processing
+ */
+static linkytype specials[] = {
+    { "id:", 3, "<a id=\"", "\"", 0, ">", "</a>", 0 },
+    { "class:", 6, "<span class=\"", "\"", 0, ">", "</span>", 0 },
+    { "raw:", 4, 0, 0, 0, 0, 0, 0 },
+} ;
+
+#define NR(x)	(sizeof x / sizeof x[0])
+
+/* see if t contains one of our pseudo-protocols.
+ */
+static linkytype *
+extratag(Cstring t)
+{
+    int i;
+    linkytype *r;
+
+    for ( i=0; i < NR(specials); i++ ) {
+	r = &specials[i];
+	if ( (S(t) > r->szpat) && (strncasecmp(T(t), r->pat, r->szpat) == 0) )
+	    return r;
+    }
+    return 0;
+}
+
+
+/*
  * process embedded links and images
  */
 static int
@@ -322,36 +374,40 @@ linkylinky(int image, MMIOT *f)
 {
     int start = mmiottell(f);
     Footnote link;
+    linkytype *tag;
 
     if ( !(linkykey(image, &link, f) && S(link.tag))  ) {
 	mmiotseek(f, start);
 	return 0;
     }
 
-    fprintf(f->out, "<%s", image ? "img" : "a");
+    if ( image )
+	tag = &imaget;
+    else if ( (tag = extratag(link.link)) == 0 )
+	tag = &linkt;
 
-    fprintf(f->out, " %s=\"", image ? "src" : "href");
-    puturl(T(link.link), S(link.link), f->out);
-    fputc('"', f->out);
+    if ( tag->link_pfx ) {
+	fputs(tag->link_pfx, f->out);
+	puturl(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f->out);
+	fputs(tag->link_sfx, f->out);
 
-    if ( image && link.height && link.width )
-	fprintf(f->out, " height=\"%d\" width=\"%d\"", link.height, link.width);
+	if ( tag->WxH && link.height && link.width )
+	    fprintf(f->out, " height=\"%d\" width=\"%d\"",
+				link.height, link.width);
 
-    if ( S(link.title) ) {
-	fprintf(f->out, " title=\"");
-	reparse(T(link.title), S(link.title), EMBEDDED, f);
-	fputc('"', f->out);
+	if ( S(link.title) ) {
+	    fprintf(f->out, " title=\"");
+	    reparse(T(link.title), S(link.title), EMBEDDED, f);
+	    fputc('"', f->out);
+	}
+
+	fputs(tag->text_pfx, f->out);
+	reparse(T(link.tag), S(link.tag), tag->flags, f);
+	fputs(tag->text_sfx, f->out);
     }
-    if (image) {
-	fprintf(f->out, " alt=\"");
-	reparse(T(link.tag), S(link.tag), EMBEDDED, f);
-	fputs("\" />", f->out);
-    }
-    else {
-	fputc('>', f->out);
-	reparse(T(link.tag), S(link.tag), DENY_A, f);
-	fprintf(f->out, "</a>");
-    }
+    else
+	fwrite(T(link.link) + tag->szpat, S(link.link) - tag->szpat, 1, f->out);
+
     return 1;
 }
 
