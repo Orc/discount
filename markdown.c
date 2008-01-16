@@ -419,7 +419,7 @@ islist(Line *t, int *trim)
     
     if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
 	i = nextnonblank(t, t->dle+1);
-	*trim = 2+t->dle;
+	*trim = (i > 4) ? 4 : i;
 	return UL;
     }
 
@@ -615,11 +615,12 @@ listitem(Paragraph *p, int indent)
 	 * that's indented 4 spaces, but after that the line doesn't
 	 * need any indentation
 	 */
-	if ( (q != t->next) && ( q->dle < 4) ) {
+	if ( (q != t->next) && (q->dle < 4) ) {
 	    q = t->next;
 	    t->next = 0;
 	    return q;
 	}
+
 	if ( (q->dle < indent) && (ishr(q) || ishdr(q,&z) || islist(q,&z)) ) {
 	    q = t->next;
 	    t->next = 0;
