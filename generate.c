@@ -398,7 +398,7 @@ linkylinky(int image, MMIOT *f)
 
     if ( image )
 	tag = &imaget;
-    else if ( (tag = extratag(link.link)) == 0 )
+    else if ( (f->flags & NO_PSEUDO_PROTO) || (tag = extratag(link.link)) == 0 )
 	tag = &linkt;
 
     if ( tag->link_pfx ) {
