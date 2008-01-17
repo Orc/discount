@@ -345,7 +345,7 @@ typedef struct linkytype {
 } linkytype;
 
 static linkytype imaget = { 0, 0, "<img src=\"", "\"",
-			     1, "alt=\"", "\" />", EMBEDDED };
+			     1, " alt=\"", "\" />", EMBEDDED };
 static linkytype linkt  = { 0, 0, "<a href=\"", "\"",
                              0, ">", "</a>", DENY_A };
 
