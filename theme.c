@@ -193,6 +193,7 @@ istag(int *p, char *pat)
  *   <?theme body?>	-- the document body
  *   <?theme source?>	-- the document name
  *   <?theme html?>	-- the html file name
+ *   <?theme style?>	-- document-supplied style blocks
  */
 void
 spin(FILE *template, MMIOT doc, FILE *output)
@@ -263,6 +264,10 @@ spin(FILE *template, MMIOT doc, FILE *output)
 		else if ( thesame(p, "source?>") ) {
 		    if ( pagename )
 			fwrite(pagename, strlen(pagename), 1, output);
+		}
+		else if ( thesame(p, "style?>") ) {
+		    if ( inhead )
+			mkd_style(doc,output);
 		}
 
 		while ( (c = pull()) != EOF && (c != '?' && peek(1) != '>') )

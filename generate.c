@@ -980,6 +980,7 @@ display(Paragraph *p, MMIOT *f)
     if ( !p ) return 0;
     
     switch ( p->typ ) {
+    case STYLE:
     case WHITESPACE:
 	break;
 
@@ -1022,6 +1023,27 @@ display(Paragraph *p, MMIOT *f)
 }
 
 
+/*
+ * dump out stylesheet sections.
+ */
+static int
+stylesheets(Paragraph *p, FILE *f)
+{
+    Line* q;
+
+    for ( ; p ; p = p->next ) {
+	if ( p->typ == STYLE ) {
+	    for ( q = p->text; q ; q = q->next )
+		if ( fwrite(T(q->text), S(q->text), 1, f) != 1 )
+		    return EOF;
+	}
+	if ( p->down && (stylesheets(p->down, f) == EOF) )
+	    return EOF;
+    }
+    return 0;
+}
+
+
 /* public interface for emit()
  */
 int
@@ -1051,3 +1073,15 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
     reparse(bfr, size, 0, &f);
     return 0;
 }
+
+
+/* dump any embedded styles
+ */
+int
+mkd_style(Document *d, FILE *f)
+{
+    if ( d && d->compiled )
+	return stylesheets(d->code, f);
+    return EOF;
+}
+

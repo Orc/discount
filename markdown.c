@@ -18,7 +18,7 @@
 
 /* block-level tags for passing html blocks through the blender
  */
-static char *blocktags[] = { "!--", 
+static char *blocktags[] = { "!--", "STYLE", "SCRIPT",
 			     "ADDRESS", "BDO", "BLOCKQUOTE", "CENTER",
 			     "DFN", "DIV", "H1", "H2", "H3", "H4",
 			     "H5", "H6", "LISTING", "NOBR", "UL",
@@ -123,18 +123,6 @@ freeLineRange(Line *anchor, Line *stop)
 }
 
 
-/* see if a <tag> is one of the block tags that frames a html
- * paragraph.
- */
-static char *
-isblocktag(char *tag)
-{
-    char **r=bsearch(&tag, blocktags, SZTAGS, sizeof blocktags[0], (stfu)casort);
-
-    return r ? (*r) : 0;
-}
-
-
 /* find the first blank character after position <i>
  */
 static int
@@ -187,6 +175,7 @@ isopentag(Line *p)
 {
     int i=0, len;
     char *key;
+    char **look;
 
     if ( !p ) return 0;
 
@@ -207,7 +196,9 @@ isopentag(Line *p)
     memcpy(key, T(p->text)+1, i-1);
     key[i-1] = 0;
 
-    return isblocktag(key);
+    look=bsearch(&key, blocktags, SZTAGS, sizeof blocktags[0], (stfu)casort);
+
+    return look ? (*look) : 0;
 }
 
 
@@ -803,7 +794,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 
     while ( ptr ) {
 	if ( toplevel && (key = isopentag(ptr)) ) {
-	    p = Pp(&d, ptr, HTML);
+	    p = Pp(&d, ptr, strcmp(key, "STYLE") == 0 ? STYLE : HTML);
 	    if ( strcmp(key, "!--") == 0 )
 		ptr = comment(p, key);
 	    else
