@@ -1,7 +1,7 @@
 /*
  * theme:  use a template to create a webpage (markdown-style)
  *
- * usage:  theme [-d root] [-t template] [-o html] [source]
+ * usage:  theme [-d root] [-p pagename] [-t template] [-o html] [source]
  *
  */
 /*
@@ -31,7 +31,7 @@
 
 char *pgm = "theme";
 char *output = 0;
-char *source = 0;
+char *pagename = 0;
 char *root = 0;
 struct passwd *me = 0;
 struct stat *infop = 0;
@@ -231,8 +231,8 @@ spin(FILE *template, MMIOT doc, FILE *output)
 		    flags = 0;
 
 		if ( thesame(p, "title?>") ) {
-		    if ( (h = mkd_doc_title(doc)) == 0 && source )
-			h = source;
+		    if ( (h = mkd_doc_title(doc)) == 0 && pagename )
+			h = pagename;
 
 		    if ( h )
 			mkd_text(h, strlen(h), output, flags);
@@ -261,8 +261,8 @@ spin(FILE *template, MMIOT doc, FILE *output)
 			mkd_generatehtml(doc,output);
 		}
 		else if ( thesame(p, "source?>") ) {
-		    if ( source )
-			fwrite(source, strlen(source), 1, output);
+		    if ( pagename )
+			fwrite(pagename, strlen(pagename), 1, output);
 		}
 
 		while ( (c = pull()) != EOF && (c != '?' && peek(1) != '>') )
@@ -292,6 +292,7 @@ main(argc, argv)
 char **argv;
 {
     char *template = "page.theme";
+    char *source = 0;
     FILE *tmplfile;
     int opt;
     int force = 0;
@@ -300,9 +301,11 @@ char **argv;
 
     opterr=1;
 
-    while ( (opt=getopt(argc, argv, "fd:t:o:")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "fd:t:p:o:")) != EOF ) {
 	switch (opt) {
 	case 'd':   root = optarg;
+		    break;
+	case 'p':   pagename = optarg;
 		    break;
 	case 'f':   force = 1;
 		    break;
@@ -310,7 +313,7 @@ char **argv;
 		    break;
 	case 'o':   output = optarg;
 		    break;
-	default:    fprintf(stderr, "usage: %s [-d dir] [-t tempplate] [-o html] [file]\n", pgm);
+	default:    fprintf(stderr, "usage: %s [-d dir] [-p pagename] [-t tempplate] [-o html] [file]\n", pgm);
 		    exit(1);
 	}
     }
@@ -355,11 +358,16 @@ char **argv;
 		strcat(q, ".html");
 	    }
 	}
-	if ( force ) unlink(output);
+    }
+    if ( output ) {
+	if ( force )
+	    unlink(output);
 	if ( !freopen(output, "w", stdout) )
 	    fail("can't write to %s", output);
     }
 
+    if ( !pagename )
+	pagename = source;
 
     if ( (doc = mkd_in(stdin, 0)) == 0 )
 	fail("can't read %s", source ? source : "stdin");

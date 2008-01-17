@@ -240,7 +240,7 @@ linkysize(MMIOT *f, int *heightp, int *widthp)
 static char*
 linkytitle(MMIOT *f, int *sizep)
 {
-    int qc, c, size;
+    int countq=0, qc, c, size;
     char *ret, *lastqc = 0;
 
     eatspace(f);
@@ -248,9 +248,11 @@ linkytitle(MMIOT *f, int *sizep)
 	return 0;
 
     for ( ret = cursor(f); (c = pull(f)) != EOF;  ) {
-	if ( c == qc )
+	if ( c == qc ) {
 	    lastqc = cursor(f);
-	else if (c == ')' ) {
+	    countq++;
+	}
+	else if ( (c == ')') && countq ) {
 	    size = (lastqc ? lastqc : cursor(f)) - ret;
 	    *sizep = size-1;
 	    return ret;
