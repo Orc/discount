@@ -148,24 +148,35 @@ eatspace(MMIOT *f)
 }
 
 
+/* (match (a (nested (parenthetical (string.)))))
+ */
+static int
+parenthetical(int in, int out, MMIOT *f)
+{
+    int size, indent, c;
+
+    for ( indent=1,size=0; indent; size++ ) {
+	if ( (c = pull(f)) == EOF )
+	    return EOF;
+	else if ( c == in )
+	    ++indent;
+	else if ( c == out )
+	    --indent;
+    }
+    return size-1;
+}
+
+
 /* extract a []-delimited label from the input stream.
  */
 static char *
 linkylabel(MMIOT *f, int *sizep)
 {
-    int c, size, indent;
     char *ptr = cursor(f);
 
-    for ( indent=1,size=0; indent > 0; size++ ) {
-	if ( (c = pull(f)) == EOF )
-	    return 0;
-	else if ( c == '[' )
-	    ++indent;
-	else if ( c == ']' )
-	    --indent;
-    }
-    *sizep = size-1;
-    return ptr;
+    if ( (*sizep = parenthetical('[',']',f)) != EOF )
+	return ptr;
+    return 0;
 }
 
 
@@ -188,15 +199,17 @@ linkyurl(MMIOT *f, int *sizep)
     ptr = cursor(f);
 
     if ( c == '<' ) {
+	pull(f);
 	ptr++;
-	for ( pull(f);  (c=pull(f)) != '>'; size++)
-	    if ( c == EOF ) return 0;
+	if ( (size = parenthetical('<', '>', f)) == EOF )
+	    return 0;
     }
     else {
 	for ( ; ((c=pull(f)) != ')') && !isspace(c); size++)
 	    if ( c == EOF ) return 0;
+	if ( c == ')' )
+	    shift(f, -1);
     }
-    if ( c == ')' ) shift(f, -1);
     *sizep = size;
     return ptr;
 }
