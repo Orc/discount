@@ -48,6 +48,8 @@ basename(char *path)
 }
 #endif
 
+typedef STRING(int) Istring;
+
 void
 fail(char *why, ...)
 {
@@ -102,7 +104,7 @@ open_template(char *template)
 } /* open_template */
 
 
-static STRING(int) pattern;
+static Istring inbuf;
 static int psp;
 
 static int
@@ -110,10 +112,10 @@ prepare(FILE *input)
 {
     int c;
 
-    CREATE(pattern);
+    CREATE(inbuf);
     psp = 0;
     while ( (c = getc(input)) != EOF )
-	EXPAND(pattern) = c;
+	EXPAND(inbuf) = c;
     fclose(input);
     return 1;
 }
@@ -121,9 +123,7 @@ prepare(FILE *input)
 static int
 pull()
 {
-    if ( psp < S(pattern) )
-	return T(pattern)[psp++];
-    return EOF;
+    return psp < S(inbuf) ? T(inbuf)[psp++] : EOF;
 }
 
 static int
@@ -131,8 +131,8 @@ peek(int offset)
 {
     int pos = (psp + offset)-1;
 
-    if ( pos >= 0 && pos < S(pattern) )
-	return T(pattern)[pos];
+    if ( pos >= 0 && pos < S(inbuf) )
+	return T(inbuf)[pos];
 
     return EOF;
 }
@@ -147,7 +147,7 @@ shift(int shiftwidth)
 static int*
 cursor()
 {
-    return T(pattern) + psp;
+    return T(inbuf) + psp;
 }
 
 
@@ -184,16 +184,15 @@ istag(int *p, char *pat)
 
 
 static void
-includefile(int *pat, FILE *out)
+includefile(FILE *out)
 {
     int c;
-    int i;
     Cstring include;
     FILE *f;
 
     CREATE(include);
 
-    for (i=0; pat[i] && (pull() == pat[i]); i++)
+    while ( (c = pull()) != '(' )
 	;
 
     while ( (c=pull()) != ')' && c != EOF )
@@ -301,7 +300,7 @@ spin(FILE *template, MMIOT doc, FILE *output)
 			mkd_style(doc,output);
 		}
 		else if ( thesame(p, "include(") )
-		    includefile(p,output);
+		    includefile(output);
 
 		while ( (c = pull()) != EOF && (c != '?' && peek(1) != '>') )
 		    ;

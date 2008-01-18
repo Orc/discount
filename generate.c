@@ -634,6 +634,13 @@ smartypants(int c, int *flags, MMIOT *f)
     if ( f->flags & DENY_SMARTY )
 	return 0;
 
+    for ( i=0; i < NRSMART; i++)
+	if ( (c == smarties[i].c0) && islike(f, smarties[i].pat) ) {
+	    fprintf(f->out, "&%s;", smarties[i].entity);
+	    shift(f, smarties[i].shift);
+	    return 1;
+	}
+
     switch (c) {
     case '<' :  return 0;
     case '\'':  if ( smartyquote(flags, 's', f) ) return 1;
@@ -663,12 +670,6 @@ smartypants(int c, int *flags, MMIOT *f)
 		}
 		break;
     }
-    for ( i=0; i < NRSMART; i++)
-	if ( (c == smarties[i].c0) && islike(f, smarties[i].pat) ) {
-	    fprintf(f->out, "&%s;", smarties[i].entity);
-	    shift(f, smarties[i].shift);
-	    return 1;
-	}
     return 0;
 } /* smartypants */
 
