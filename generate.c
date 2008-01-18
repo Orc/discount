@@ -1034,7 +1034,9 @@ stylesheets(Paragraph *p, FILE *f)
     for ( ; p ; p = p->next ) {
 	if ( p->typ == STYLE ) {
 	    for ( q = p->text; q ; q = q->next )
-		if ( fwrite(T(q->text), S(q->text), 1, f) != 1 )
+		if ( fwrite(T(q->text), S(q->text), 1, f) == 1 )
+		    putc('\n', f);
+		else
 		    return EOF;
 	}
 	if ( p->down && (stylesheets(p->down, f) == EOF) )
