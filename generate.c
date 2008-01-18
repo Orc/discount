@@ -60,10 +60,7 @@ peek(MMIOT *f, int i)
 static int
 pull(MMIOT *f)
 {
-    if ( f->isp < S(f->in) ) return T(f->in)[f->isp++];
-
-    /*S(f->in) = f->isp = 0;*/
-    return EOF;
+    return ( f->isp < S(f->in) ) ? T(f->in)[f->isp++] : EOF;
 }
 
 
@@ -345,7 +342,7 @@ typedef struct linkytype {
 } linkytype;
 
 static linkytype imaget = { 0, 0, "<img src=\"", "\"",
-			     1, " alt=\"", "\" />", EMBEDDED };
+			     1, " alt=\"", "\" />", DENY_A|DENY_IMG };
 static linkytype linkt  = { 0, 0, "<a href=\"", "\"",
                              0, ">", "</a>", DENY_A };
 
@@ -401,6 +398,11 @@ linkylinky(int image, MMIOT *f)
     else if ( (f->flags & NO_PSEUDO_PROTO) || (tag = extratag(link.link)) == 0 )
 	tag = &linkt;
 
+    if ( f->flags & tag->flags ) {
+	mmiotseek(f, start);
+	return 0;
+    }
+
     if ( tag->link_pfx ) {
 	fputs(tag->link_pfx, f->out);
 	puturl(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f->out);
@@ -412,7 +414,7 @@ linkylinky(int image, MMIOT *f)
 
 	if ( S(link.title) ) {
 	    fprintf(f->out, " title=\"");
-	    reparse(T(link.title), S(link.title), EMBEDDED, f);
+	    reparse(T(link.title), S(link.title), INSIDE_TAG, f);
 	    fputc('"', f->out);
 	}
 
@@ -470,7 +472,7 @@ maybe_tag_or_link(MMIOT *f)
     int c, size, i;
     int maybetag=1, maybeaddress=0;
 
-    if ( f->flags & EXPAND_BROKET )
+    if ( f->flags & INSIDE_TAG )
 	return 0;
 
     for ( size=0; ((c = peek(f,size+1)) != '>') && !isspace(c); size++ ) {
@@ -671,6 +673,9 @@ smartypants(int c, int *flags, MMIOT *f)
 } /* smartypants */
 
 
+#define tag_text(f)	(f->flags & INSIDE_TAG)
+
+
 static void
 text(MMIOT *f)
 {
@@ -680,37 +685,38 @@ text(MMIOT *f)
     int smartyflags = 0;
 
     while ( (c = pull(f)) != EOF ) {
-	if (smartypants(c, &smartyflags, f))
+	if ( smartypants(c, &smartyflags, f) )
 	    continue;
 	switch (c) {
 	case 0:     break;
 
-	case '>':   if ( f->flags & EXPAND_BROKET )
+	case '>':   if ( tag_text(f) )
 			fprintf(f->out, "&gt;");
 		    else
 			fputc(c, f->out);
 		    break;
-	case '"':   if ( f->flags & EXPAND_QUOTE )
-			fprintf(f->out, "&quot;");
+
+	case '"':   if ( tag_text(f) )
+			fputs("&quot;", f->out);
 		    else
 			fputc(c, f->out);
 		    break;
 			
-	case '!':   if ( (f->flags & DENY_IMG) || (peek(f,1) != '[') )
-			fputc(c, f->out);
-		    else {
+	case '!':   if ( peek(f,1) == '[' ) {
 			pull(f);
-			if ( !linkylinky(1, f) ) {
-			    shift(f,-1);
-			    fputc(c, f->out);
-			}
+			if ( tag_text(f) || !linkylinky(1, f) )
+			    fputs("![", f->out);
 		    }
+		    else
+			fputc(c, f->out);
 		    break;
-	case '[':   if ( (f->flags & DENY_A) || !linkylinky(0,f) )
+	case '[':   if ( tag_text(f) || !linkylinky(0, f) )
 			fputc(c, f->out);
 		    break;
 	case '*':
-	case '_':   if (peek(f,1) == c) {
+	case '_':   if ( tag_text(f) )
+			putc(c, f->out);
+		    else if (peek(f,1) == c) {
 			pull(f);
 			if ( c == strong ) {
 			    fprintf(f->out, "</strong>");
@@ -741,14 +747,18 @@ text(MMIOT *f)
 		    }
 		    break;
 	
-	case '`':   fprintf(f->out, "<code>");
-		    if ( peek(f, 1) == '`' ) {
-			pull(f);
-			code(2, f);
+	case '`':   if ( tag_text(f) )
+			putc(c, f->out);
+		    else {
+			fprintf(f->out, "<code>");
+			if ( peek(f, 1) == '`' ) {
+			    pull(f);
+			    code(2, f);
+			}
+			else
+			    code(1, f);
+			fprintf(f->out, "</code>");
 		    }
-		    else
-			code(1, f);
-		    fprintf(f->out, "</code>");
 		    break;
 
 	case '\\':  if ( (c = pull(f)) == '&' )

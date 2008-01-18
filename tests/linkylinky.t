@@ -98,4 +98,15 @@ else
     rc=1
 fi
 
+echo -n '  nested [][]s ..................... '
+
+count=`echo '[[z](y)](x)' | ./markdown | tr '>' '\n' | grep -i '<a href' | wc -l`
+
+if [ "$count" -eq 1 ]; then
+    echo "ok"
+else
+    echo "FAILED"
+    rc=1
+fi
+
 exit $rc

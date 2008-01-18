@@ -38,10 +38,9 @@ extern char version[];
 #define MKD_NOLINKS	0x0001	/* don't do link processing, block <a> tags  */
 #define MKD_NOIMAGE	0x0002	/* don't do image processing, block <img> */
 #define MKD_NOPANTS	0x0004	/* don't run smartypants() */
-#define MKD_QUOT	0x0010	/* expand " to &quot; */
-#define MKD_BROKET	0x0020	/* expand < & > */
+#define MKD_TAGTEXT	0x0020	/* don't expand `_` and `*` */
 #define MKD_NO_EXT	0x0040	/* don't allow pseudo-protocols */
-#define MKD_EMBED	MKD_NOLINKS|MKD_NOIMAGE|MKD_QUOT|MKD_BROKET
+#define MKD_EMBED	MKD_NOLINKS|MKD_NOIMAGE|MKD_NO_EMPH
 
 /* special flags for mkd_in() and mkd_string()
  */

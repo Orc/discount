@@ -56,8 +56,8 @@ set(int *flags, char *optionstring)
 	    opt = MKD_NOLINKS;
 	else if ( strcasecmp(arg, "noheader") == 0 )
 	    opt = MKD_NOHEADER;
-	else if ( strcasecmp(arg, "quot") == 0 )
-	    opt = MKD_QUOT;
+	else if ( strcasecmp(arg, "tag") == 0 )
+	    opt = MKD_TAGTEXT;
 	else {
 	    fprintf(stderr, "%s: unknown option <%s>\n", pgm, arg);
 	    continue;

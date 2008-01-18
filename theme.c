@@ -225,7 +225,7 @@ spin(FILE *template, MMIOT doc, FILE *output)
 		p = cursor();
 
 		if ( intag ) 
-		    flags = MKD_EMBED;
+		    flags = MKD_TAGTEXT;
 		else if ( inhead )
 		    flags = MKD_NOIMAGE|MKD_NOLINKS;
 		else
