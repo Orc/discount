@@ -183,6 +183,36 @@ istag(int *p, char *pat)
 }
 
 
+static void
+includefile(int *pat, FILE *out)
+{
+    int c;
+    int i;
+    Cstring include;
+    FILE *f;
+
+    CREATE(include);
+
+    for (i=0; pat[i] && (pull() == pat[i]); i++)
+	;
+
+    while ( (c=pull()) != ')' && c != EOF )
+	EXPAND(include) = c;
+
+    if ( c != EOF ) {
+	EXPAND(include) = 0;
+	S(include)--;
+
+	if (( f = fopen(T(include), "r") )) {
+	    while ( (c = getc(f)) != EOF )
+		putc(c, out);
+	    fclose(f);
+	}
+    }
+    DELETE(include);
+}
+
+
 /* spin() - run through the theme template, looking for <?theme expansions
  *
  * theme expansions we love:
@@ -194,6 +224,7 @@ istag(int *p, char *pat)
  *   <?theme source?>	-- the document name
  *   <?theme html?>	-- the html file name
  *   <?theme style?>	-- document-supplied style blocks
+ *   <?theme include(file)?> -- include a file.
  */
 void
 spin(FILE *template, MMIOT doc, FILE *output)
@@ -269,6 +300,8 @@ spin(FILE *template, MMIOT doc, FILE *output)
 		    if ( inhead )
 			mkd_style(doc,output);
 		}
+		else if ( thesame(p, "include(") )
+		    includefile(p,output);
 
 		while ( (c = pull()) != EOF && (c != '?' && peek(1) != '>') )
 		    ;
