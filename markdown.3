@@ -10,9 +10,9 @@ Markdown
 .Pq libmarkdown , -lmarkdown
 .Sh SYNOPSIS
 .Fd #include <mkdio.h>
-.Ft void*
+.Ft MMIOT
 .Fn mkd_in "FILE *input"
-.Ft void*
+.Ft MMIOT
 .Fn mkd_string "char *string" "int size"
 .Ft int
 .Fn markdown "MMIOT" "FILE *output" "int flags"
@@ -96,7 +96,9 @@ and
 functions return a MMIOT on success, null on failure.
 .Sh SEE ALSO
 .Xr markdown 1 ,
+.Xr mkd-functions 3 ,
 .Xr markdown 7 ,
+.Xr mkd-extensions 7 ,
 .Xr mmap 2 .
 .Pp
 http://daringfireball.net/projects/markdown/syntax
@@ -104,7 +106,8 @@ http://daringfireball.net/projects/markdown/syntax
 Error handling is minimal at best.
 .Pp
 The
-descriptor returned by
+.Ar MMIOT
+created by
 .Fn mkd_text
 and
 .Fn mkd_string

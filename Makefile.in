@@ -7,25 +7,34 @@ MANDIR=@mandir@
 LIBDIR=@libdir@
 INCDIR=@prefix@/include
 
-PGMS=markdown mkd2html theme
+PGMS=markdown
+SAMPLE_PGMS=mkd2html theme
 MKDLIB=libmarkdown.a
-OBJS=mkdio.o markdown.o dumptree.o generate.o docheader.o
+OBJS=mkdio.o markdown.o dumptree.o generate.o docheader.o version.o
 
-all: $(PGMS)
+all: $(PGMS) $(SAMPLE_PGMS)
 
 install: $(PGMS)
 	@INSTALL_PROGRAM@ $(PGMS) $(BINDIR)
 	@INSTALL_DATA@ $(MKDLIB) $(LIBDIR)
 	@INSTALL_DATA@ mkdio.h $(INCDIR)
 
+install.everything: install install.samples install.man
+
+install.samples: $(SAMPLE_PGMS) install
+	@INSTALL_PROGRAM@ $(SAMPLE_PGMS) $(BINDIR)
+
 install.man:
 	@INSTALL_DIR@ $(MANDIR)/man3
-	@INSTALL_DATA@ markdown.3 $(MANDIR)/man3
+	@INSTALL_DATA@ mkd_functions.3 markdown.3 $(MANDIR)/man3
 	for x in mkd_text mkd_in mkd_string; do \
 	    ( echo '.\"' ; echo ".so man3/markdown.3" ) > $(MANDIR)/man3/$$x.3;\
 	done
+	for x in mkd_compile mkd_style mkd_generatehtml mkd_cleanup mkd_doc_title mkd_doc_author mkd_doc_date; do \
+	    ( echo '.\"' ; echo ".so man3/mkd_functions.3" ) > $(MANDIR)/man3/$$x.3; \
+	done
 	@INSTALL_DIR@ $(MANDIR)/man7
-	@INSTALL_DATA@ markdown.7 $(MANDIR)/man7
+	@INSTALL_DATA@ markdown.7 mkd_extensions.7 $(MANDIR)/man7
 	@INSTALL_DIR@ $(MANDIR)/man1
 	@INSTALL_DATA@ markdown.1 $(MANDIR)/man1
 
@@ -34,15 +43,15 @@ install.everything: install install.man
 version.o: version.c VERSION
 	$(CC) -DVERSION=\"`cat VERSION`\" -c version.c
 
-markdown: main.o version.o $(MKDLIB)
-	$(CC) -L. -o markdown main.o version.o -lmarkdown @LIBS@
+markdown: main.o $(MKDLIB)
+	$(CC) -L. -o markdown main.o -lmarkdown @LIBS@
 
 # example programs
-theme:  theme.o version.o $(MKDLIB)
-	$(CC) -L. -o theme theme.o version.o -lmarkdown @LIBS@
+theme:  theme.o $(MKDLIB)
+	$(CC) -L. -o theme theme.o -lmarkdown @LIBS@
 
-mkd2html:  mkd2html.o version.o $(MKDLIB)
-	$(CC) -L. -o mkd2html mkd2html.o version.o -lmarkdown @LIBS@
+mkd2html:  mkd2html.o $(MKDLIB)
+	$(CC) -L. -o mkd2html mkd2html.o -lmarkdown @LIBS@
 
 main.o: main.c mkdio.h config.h
 	$(CC) -I. -c main.c
