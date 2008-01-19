@@ -338,7 +338,7 @@ char **argv;
 
     opterr=1;
 
-    while ( (opt=getopt(argc, argv, "fd:t:p:o:")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "fd:t:p:o:V")) != EOF ) {
 	switch (opt) {
 	case 'd':   root = optarg;
 		    break;
@@ -350,7 +350,9 @@ char **argv;
 		    break;
 	case 'o':   output = optarg;
 		    break;
-	default:    fprintf(stderr, "usage: %s [-d dir] [-p pagename] [-t tempplate] [-o html] [file]\n", pgm);
+	case 'V':   printf("theme+markdown %s\n", version);
+		    exit(0);
+	default:    fprintf(stderr, "usage: %s [-V] [-d dir] [-p pagename] [-t tempplate] [-o html] [file]\n", pgm);
 		    exit(1);
 	}
     }
