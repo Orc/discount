@@ -342,7 +342,7 @@ typedef struct linkytype {
 } linkytype;
 
 static linkytype imaget = { 0, 0, "<img src=\"", "\"",
-			     1, " alt=\"", "\" />", DENY_A|DENY_IMG };
+			     1, " alt=\"", "\" />", DENY_IMG|INSIDE_TAG };
 static linkytype linkt  = { 0, 0, "<a href=\"", "\"",
                              0, ">", "</a>", DENY_A };
 
@@ -398,7 +398,7 @@ linkylinky(int image, MMIOT *f)
     else if ( (f->flags & NO_PSEUDO_PROTO) || (tag = extratag(link.link)) == 0 )
 	tag = &linkt;
 
-    if ( f->flags & tag->flags ) {
+    if ( f->flags & tag-> flags ) {
 	mmiotseek(f, start);
 	return 0;
     }

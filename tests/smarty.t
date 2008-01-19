@@ -86,6 +86,15 @@ else
     rc=1
 fi
 
+echo -n "  don<b>'t -> don<b>&rsquo;t ....... "
+
+if  echo "don<b>'t" | ./markdown | grep 'don<b>&rsquo;t' >/dev/null; then
+    echo "ok"
+else
+    echo "FAILED"
+    rc=1
+fi
+
 echo -n "  don't -> don&rsquo;t ............. "
 
 if  echo "don't" | ./markdown | grep 'don&rsquo;t' >/dev/null; then
