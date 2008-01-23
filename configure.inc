@@ -320,7 +320,7 @@ AC_CHECK_HEADERS () {
     done
     echo "main() { }" >> /tmp/ngc$$.c
 
-    LOGN "checking for header $hdr"
+    LOGN "looking for header $hdr"
 
     if __MAKEDOTO /tmp/ngc$$.c; then
 	AC_DEFINE 'HAVE_'`echo $hdr | tr 'a-z' 'A-Z' | tr './' '_'` 1
@@ -356,7 +356,7 @@ main()
 }
 EOF
 
-    LOGN "checking for the $F function"
+    LOGN "looking for the $F function"
 
     if $AC_CC -o /tmp/ngc$$ /tmp/ngc$$.c $LIBS; then
 	AC_DEFINE `echo ${2:-HAVE_$F} | tr 'a-z' 'A-Z'` 1
@@ -396,7 +396,7 @@ main()
 }
 EOF
 
-    LOGN "checking for struct $struct"
+    LOGN "looking for struct $struct"
 
     if __MAKEDOTO /tmp/ngc$$.c; then
 	AC_DEFINE HAVE_STRUCT_`echo ${struct} | tr 'a-z' 'A-Z'`
@@ -431,7 +431,7 @@ main()
 }
 EOF
 
-    LOGN "checking for $type type"
+    LOGN "looking for $type type"
 
     if __MAKEDOTO /tmp/ngc$$.c; then
 	AC_DEFINE HAVE_TYPE_`echo ${type} | tr 'a-z' 'A-Z'`
@@ -1096,18 +1096,18 @@ main()
 }
 EOF
 
-    LOGN "checking for flock()"
+    LOGN "checking flock() sanity"
     HAS_FLOCK=0
     if $AC_CC -o flock $$.c ; then
 	if ./flock ; then
-	    LOG " (found)"
+	    LOG " (good)"
 	    HAS_FLOCK=1
 	    AC_DEFINE HAS_FLOCK
 	else
 	    LOG " (bad)"
 	fi
     else
-	LOG " (no)"
+	LOG " (not found)"
     fi
 
     rm -f flock $$.c
@@ -1126,7 +1126,7 @@ EOF
 AC_CHECK_RESOLVER () {
     AC_PROG_CC
 
-    TLOGN "checking for the Berkeley resolver library"
+    TLOGN "looking for the Berkeley resolver library"
 
     __ACR_rc=0
 
@@ -1185,7 +1185,7 @@ main()
 }
 EOF
 
-    LOGN "checking for the alloca function"
+    LOGN "looking for the alloca function"
     if $AC_CC -DT /tmp/ngc$$.c -o /tmp/ngc$$; then
 	AC_DEFINE 'HAVE_ALLOCA_H' 1
 	status=0
@@ -1204,6 +1204,41 @@ EOF
 
 
 #
+# AC_CHECK_BASENAME looks for a copy of basename that does NOT use
+# a local static buffer to hold results in.
+#
+AC_CHECK_BASENAME() {
+    TLOGN "looking for a sane basename "
+
+    cat > /tmp/ngc$$.c << EOF
+#include <string.h>
+
+main()
+{
+    char *a = basename("/a/test");
+    char *b = basename("/a/nother");
+
+    return (strcmp(a,b) != 0) ? 0 : 1;
+
+}
+EOF
+
+    if $AC_CC -o /tmp/ngc$$ /tmp/ngc$$.c $LIBS; then
+	if /tmp/ngc$$; then
+	    TLOG "(found)"
+	    AC_DEFINE 'HAVE_BASENAME' 1
+	    AC_CHECK_HEADERS libgen.h
+	else
+	    TLOG "(broken)"
+	fi
+    else
+	TLOG "(not found)"
+    fi
+    rm -f /tmp/ngc$$ /tmp/ngc$$.c
+}
+
+
+#
 # AC_PROG_INSTALL finds the install program and guesses whether it's a 
 # Berkeley or GNU install program
 #
@@ -1211,7 +1246,7 @@ AC_PROG_INSTALL () {
 
     DEST=`acLookFor install`
 
-    LOGN "checking for install"
+    LOGN "looking for install"
     unset IS_BSD
     if [ "$DEST" ]; then
 	# BSD install or GNU install?  Let's find out...

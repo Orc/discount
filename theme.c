@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <pwd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -184,7 +185,7 @@ istag(int *p, char *pat)
 
 
 static void
-includefile(FILE *out)
+finclude(MMIOT *doc, FILE *out, int flags)
 {
     int c;
     Cstring include;
@@ -212,6 +213,135 @@ includefile(FILE *out)
 }
 
 
+/*
+ * fdirname() prints out the directory part of a path
+ */
+static void
+fdirname(MMIOT *doc, FILE *output, int flags)
+{
+    char *p;
+
+    if ( pagename && (p = basename(pagename)) )
+	fwrite(pagename, strlen(pagename)-strlen(p), 1, output);
+}
+
+
+/*
+ * fbasename() prints out the file name part of a path
+ */
+static void
+fbasename(MMIOT *doc, FILE *output, int flags)
+{
+    char *p;
+
+    if ( pagename ) {
+	p = basename(pagename);
+
+	if ( !p )
+	    p = pagename;
+
+	if ( p )
+	    fwrite(p, strlen(p), 1, output);
+    }
+}
+
+
+/*
+ * ftitle() prints out the document title
+ */
+static void
+ftitle(MMIOT *doc, FILE* output, int flags)
+{
+    char *h;
+    if ( (h = mkd_doc_title(doc)) == 0 && pagename )
+	h = pagename;
+
+    if ( h )
+	mkd_text(h, strlen(h), output, flags);
+}
+
+
+/*
+ * fdate() prints out the document date
+ */
+static void
+fdate(MMIOT *doc, FILE *output, int flags)
+{
+    char *h = infop ? ctime(&infop->st_mtime) : mkd_doc_date(doc);
+
+    if ( h )
+	mkd_text(h, strlen(h), output, flags|MKD_TAGTEXT);
+}
+
+
+/*
+ * fauthor() prints out the document author
+ */
+static void
+fauthor(MMIOT *doc, FILE *output, int flags)
+{
+    char *h;
+
+    if ( (h = mkd_doc_author(doc)) == 0 && me )
+	h = me->pw_gecos;
+
+    if ( h )
+	mkd_text(h, strlen(h), output, flags);
+}
+
+
+/*
+ * fversion() prints out the document version
+ */
+static void
+fversion(MMIOT *doc, FILE *output, int flags)
+{
+    fwrite(version, strlen(version), 1, output);
+}
+
+
+/*
+ * fbody() prints out the document
+ */
+static void
+fbody(MMIOT *doc, FILE *output, int flags)
+{
+    mkd_generatehtml(doc, output);
+}
+
+
+/*
+ * fstyle() prints out the document's style section
+ */
+static void
+fstyle(MMIOT *doc, FILE *output, int flags)
+{
+    mkd_style(doc, output);
+}
+
+
+#define INTAG 0x01
+#define INHEAD 0x02
+#define INBODY 0x04
+
+static struct _keyword {
+    char *kw;
+    int where;
+    void (*what)(MMIOT*,FILE*,int);
+} keyword[] = { 
+    { "title?>",   0xffff, ftitle },
+    { "date?>",    0xffff, fdate },
+    { "author?>",  0xffff, fauthor },
+    { "version?>", 0xffff, fversion },
+    { "body?>",    INBODY, fbody },
+    { "path?>",    0xffff, fdirname },
+    { "source?>",  0xffff, fbasename },
+    { "style?>",   INHEAD, fstyle },
+    { "include(",  0xffff, finclude },
+};
+#define NR(x)	(sizeof x / sizeof x[0])
+
+
 /* spin() - run through the theme template, looking for <?theme expansions
  *
  * theme expansions we love:
@@ -220,19 +350,20 @@ includefile(FILE *out)
  *   <?theme author?>	-- the document author (header author or document owner)
  *   <?theme version?>  -- the version#
  *   <?theme body?>	-- the document body
- *   <?theme source?>	-- the document name
+ *   <?theme source?>	-- the filename part of the document name
+ *   <?theme dir?>	-- the directory part of the document name
  *   <?theme html?>	-- the html file name
  *   <?theme style?>	-- document-supplied style blocks
  *   <?theme include(file)?> -- include a file.
  */
 void
-spin(FILE *template, MMIOT doc, FILE *output)
+spin(FILE *template, MMIOT *doc, FILE *output)
 {
     int c;
     int *p;
-    char *h;
     int flags;
-    int intag=0, inhead=0;
+    int where = 0x0;
+    int i;
 
     prepare(template);
 
@@ -254,53 +385,19 @@ spin(FILE *template, MMIOT doc, FILE *output)
 		shift(-1);
 		p = cursor();
 
-		if ( intag ) 
+		if ( where & INTAG ) 
 		    flags = MKD_TAGTEXT;
-		else if ( inhead )
+		else if ( where & INHEAD )
 		    flags = MKD_NOIMAGE|MKD_NOLINKS;
 		else
 		    flags = 0;
 
-		if ( thesame(p, "title?>") ) {
-		    if ( (h = mkd_doc_title(doc)) == 0 && pagename )
-			h = pagename;
-
-		    if ( h )
-			mkd_text(h, strlen(h), output, flags);
-		}
-		else if ( thesame(p, "date?>") ) {
-		    if ( infop )
-			h = ctime(&infop->st_mtime);
-		    else 
-			h = mkd_doc_date(doc);
-
-		    if ( h )
-			mkd_text(h, strlen(h), output, flags);
-		}
-		else if ( thesame(p, "author?>") ) {
-		    if ( (h = mkd_doc_author(doc)) == 0 && me )
-			h = me->pw_gecos;
-
-		    if ( h )
-			mkd_text(h, strlen(h), output, flags);
-		}
-		else if ( thesame(p, "version?>") ) {
-		    fwrite(version, strlen(version), 1, output);
-		}
-		else if ( thesame(p, "body?>") ) {
-		    if ( !(inhead||intag) )
-			mkd_generatehtml(doc,output);
-		}
-		else if ( thesame(p, "source?>") ) {
-		    if ( pagename )
-			fwrite(pagename, strlen(pagename), 1, output);
-		}
-		else if ( thesame(p, "style?>") ) {
-		    if ( inhead )
-			mkd_style(doc,output);
-		}
-		else if ( thesame(p, "include(") )
-		    includefile(output);
+		for (i=0; i < NR(keyword); i++)
+		    if ( thesame(p, keyword[i].kw) ) {
+			if ( keyword[i].where & where )
+			    (*keyword[i].what)(doc,output,flags);
+			break;
+		    }
 
 		while ( (c = pull()) != EOF && (c != '?' && peek(1) != '>') )
 		    ;
@@ -309,15 +406,19 @@ spin(FILE *template, MMIOT doc, FILE *output)
 	    else
 		putc(c, output);
 
-	    if ( istag(cursor(), "head") )
-		inhead=1;
-	    else if ( istag(cursor(), "body") )
-		inhead=0;
-	    intag=1;
+	    if ( istag(cursor(), "head") ) {
+		where |= INHEAD;
+		where &= ~INBODY;
+	    }
+	    else if ( istag(cursor(), "body") ) {
+		where &= ~INHEAD;
+		where |= INBODY;
+	    }
+	    where |= INTAG;
 	    continue;
 	}
 	else if ( c == '>' )
-	    intag=0;
+	    where &= ~INTAG;
 
 	putc(c, output);
     }
@@ -329,14 +430,15 @@ main(argc, argv)
 char **argv;
 {
     char *template = "page.theme";
-    char *source = 0;
+    char *source = "stdin";
     FILE *tmplfile;
     int opt;
     int force = 0;
-    MMIOT doc;
+    MMIOT *doc;
     struct stat sourceinfo;
 
     opterr=1;
+    pgm = basename(argv[0]);
 
     while ( (opt=getopt(argc, argv, "fd:t:p:o:V")) != EOF ) {
 	switch (opt) {
@@ -350,7 +452,7 @@ char **argv;
 		    break;
 	case 'o':   output = optarg;
 		    break;
-	case 'V':   printf("theme+markdown %s\n", version);
+	case 'V':   printf("theme+discount %s\n", version);
 		    exit(0);
 	default:    fprintf(stderr, "usage: %s [-V] [-d dir] [-p pagename] [-t tempplate] [-o html] [file]\n", pgm);
 		    exit(1);

@@ -90,7 +90,7 @@ main(int argc, char **argv)
 	switch (opt) {
 	case 'd':   debug = 1;
 		    break;
-	case 'V':   printf("markdown %s\n", version);
+	case 'V':   printf("%s: discount %s\n", pgm, version);
 		    exit(0);
 	case 'F':   flags = strtol(optarg, 0, 0);
 		    break;
@@ -105,9 +105,9 @@ main(int argc, char **argv)
 			exit(1);
 		    }
 		    break;
-	default:    fprintf(stderr, "usage: markdown [-dV]"
+	default:    fprintf(stderr, "usage: %s [-dV]"
 				    " [-F flags] [-f{+-}setting"
-				    " [-o file] [file]\n");
+				    " [-o file] [file]\n", pgm);
 		    exit(1);
 	}
     }

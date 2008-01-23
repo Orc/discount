@@ -72,7 +72,7 @@ char **argv;
 {
     char *h;
     char *source = 0, *dest = 0;
-    void *mmiot;
+    MMIOT *mmiot;
     int i;
     FILE *input, *output; 
     STRING(char*) css, headers, footers;
