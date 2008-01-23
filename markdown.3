@@ -11,11 +11,11 @@ Markdown
 .Sh SYNOPSIS
 .Fd #include <mkdio.h>
 .Ft MMIOT
-.Fn mkd_in "FILE *input"
+.Fn *mkd_in "FILE *input"
 .Ft MMIOT
-.Fn mkd_string "char *string" "int size"
+.Fn *mkd_string "char *string" "int size"
 .Ft int
-.Fn markdown "MMIOT" "FILE *output" "int flags"
+.Fn markdown "MMIOT *doc" "FILE *output" "int flags"
 .Ft int
 .Fn mkd_text "char *string" "int size" "FILE *output" "int flags"
 .Sh DESCRIPTION
@@ -93,7 +93,7 @@ The
 .Fn mkd_in
 and
 .Fn mkd_string
-functions return a MMIOT on success, null on failure.
+functions return a MMIOT* on success, null on failure.
 .Sh SEE ALSO
 .Xr markdown 1 ,
 .Xr mkd-functions 3 ,
@@ -111,7 +111,7 @@ created by
 .Fn mkd_text
 and
 .Fn mkd_string
-will be destroyed upon return from the
+is deleted by the
 .Nm
 function.
 
