@@ -23,6 +23,8 @@ install.everything: install install.samples install.man
 
 install.samples: $(SAMPLE_PGMS) install
 	@INSTALL_PROGRAM@ $(SAMPLE_PGMS) $(BINDIR)
+	@INSTALL_DIR@ $(MANDIR)/man1
+	@INSTALL_DATA@ theme.1 $(MANDIR)/man1
 
 install.man:
 	@INSTALL_DIR@ $(MANDIR)/man3
@@ -49,6 +51,7 @@ markdown: main.o $(MKDLIB)
 # example programs
 theme:  theme.o $(MKDLIB)
 	$(CC) -L. -o theme theme.o -lmarkdown @LIBS@
+
 
 mkd2html:  mkd2html.o $(MKDLIB)
 	$(CC) -L. -o mkd2html mkd2html.o -lmarkdown @LIBS@

@@ -184,6 +184,8 @@ istag(int *p, char *pat)
 }
 
 
+/* finclude() includes some (unformatted) source
+ */
 static void
 finclude(MMIOT *doc, FILE *out, int flags)
 {
@@ -213,8 +215,7 @@ finclude(MMIOT *doc, FILE *out, int flags)
 }
 
 
-/*
- * fdirname() prints out the directory part of a path
+/* fdirname() prints out the directory part of a path
  */
 static void
 fdirname(MMIOT *doc, FILE *output, int flags)
@@ -226,8 +227,7 @@ fdirname(MMIOT *doc, FILE *output, int flags)
 }
 
 
-/*
- * fbasename() prints out the file name part of a path
+/* fbasename() prints out the file name part of a path
  */
 static void
 fbasename(MMIOT *doc, FILE *output, int flags)
@@ -246,8 +246,7 @@ fbasename(MMIOT *doc, FILE *output, int flags)
 }
 
 
-/*
- * ftitle() prints out the document title
+/* ftitle() prints out the document title
  */
 static void
 ftitle(MMIOT *doc, FILE* output, int flags)
@@ -261,8 +260,7 @@ ftitle(MMIOT *doc, FILE* output, int flags)
 }
 
 
-/*
- * fdate() prints out the document date
+/* fdate() prints out the document date
  */
 static void
 fdate(MMIOT *doc, FILE *output, int flags)
@@ -274,8 +272,7 @@ fdate(MMIOT *doc, FILE *output, int flags)
 }
 
 
-/*
- * fauthor() prints out the document author
+/* fauthor() prints out the document author
  */
 static void
 fauthor(MMIOT *doc, FILE *output, int flags)
@@ -290,8 +287,7 @@ fauthor(MMIOT *doc, FILE *output, int flags)
 }
 
 
-/*
- * fversion() prints out the document version
+/* fversion() prints out the document version
  */
 static void
 fversion(MMIOT *doc, FILE *output, int flags)
@@ -300,8 +296,7 @@ fversion(MMIOT *doc, FILE *output, int flags)
 }
 
 
-/*
- * fbody() prints out the document
+/* fbody() prints out the document
  */
 static void
 fbody(MMIOT *doc, FILE *output, int flags)
@@ -310,8 +305,7 @@ fbody(MMIOT *doc, FILE *output, int flags)
 }
 
 
-/*
- * fstyle() prints out the document's style section
+/* fstyle() prints out the document's style section
  */
 static void
 fstyle(MMIOT *doc, FILE *output, int flags)
@@ -324,26 +318,7 @@ fstyle(MMIOT *doc, FILE *output, int flags)
 #define INHEAD 0x02
 #define INBODY 0x04
 
-static struct _keyword {
-    char *kw;
-    int where;
-    void (*what)(MMIOT*,FILE*,int);
-} keyword[] = { 
-    { "title?>",   0xffff, ftitle },
-    { "date?>",    0xffff, fdate },
-    { "author?>",  0xffff, fauthor },
-    { "version?>", 0xffff, fversion },
-    { "body?>",    INBODY, fbody },
-    { "path?>",    0xffff, fdirname },
-    { "source?>",  0xffff, fbasename },
-    { "style?>",   INHEAD, fstyle },
-    { "include(",  0xffff, finclude },
-};
-#define NR(x)	(sizeof x / sizeof x[0])
-
-
-/* spin() - run through the theme template, looking for <?theme expansions
- *
+/*
  * theme expansions we love:
  *   <?theme date?>	-- the document date (file or header date)
  *   <?theme title?>	-- the document title (header title or document name)
@@ -355,6 +330,26 @@ static struct _keyword {
  *   <?theme html?>	-- the html file name
  *   <?theme style?>	-- document-supplied style blocks
  *   <?theme include(file)?> -- include a file.
+ */
+static struct _keyword {
+    char *kw;
+    int where;
+    void (*what)(MMIOT*,FILE*,int);
+} keyword[] = { 
+    { "author?>",  0xffff, fauthor },
+    { "body?>",    INBODY, fbody },
+    { "date?>",    0xffff, fdate },
+    { "dir?>",     0xffff, fdirname },
+    { "include(",  0xffff, finclude },
+    { "source?>",  0xffff, fbasename },
+    { "style?>",   INHEAD, fstyle },
+    { "title?>",   0xffff, ftitle },
+    { "version?>", 0xffff, fversion },
+};
+#define NR(x)	(sizeof x / sizeof x[0])
+
+
+/* spin() - run through the theme template, looking for <?theme expansions
  */
 void
 spin(FILE *template, MMIOT *doc, FILE *output)
