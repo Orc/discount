@@ -89,6 +89,51 @@ shift(MMIOT *f, int i)
 }
 
 
+
+/* write a character, possibly with xml escaping
+ */
+static void
+oputc(unsigned char c, MMIOT *f)
+{
+    if ( f->flags & CDATA_OUTPUT ) {
+	if ( c == '<' )
+	    fputs("&lt;", f->out);
+	else if ( c == '>' )
+	    fputs("&gt;", f->out);
+	else if ( c == '&' )
+	    fputs("&amp;", f->out);
+	else if ( c == '"' )
+	    fputs("&quot;", f->out);
+	else if ( c == '\'' )
+	    fputs("&apos;", f->out);
+	else if ( isascii(c) )
+	    fputc(c, f->out);
+    }
+    else
+	fputc(c, f->out);
+}
+
+
+/* write a string with oputc()
+ */
+static void
+oputs(char *s, MMIOT *f)
+{
+    while ( *s )
+	oputc(*s++, f);
+}
+
+
+/* write a block with oputc()
+ */
+static void
+oputblk(char *s, int len, MMIOT *f)
+{
+    while ( len-- > 0 )
+	oputc(*s++, f);
+}
+
+
 /* generate html from a markup fragment
  */
 static void
@@ -113,21 +158,17 @@ reparse(char *bfr, int size, int flags, MMIOT *f)
  * write out a url, escaping problematic characters
  */
 static void
-puturl(char *s, int size, FILE *f)
+puturl(char *s, int size, MMIOT *f)
 {
     unsigned char c;
 
-    for ( ; size ; --size, ++s ) {
-	switch (c = *s) {
-	case '<':   fputs("&lt;", f); break;
-	case '>':   fputs("&gt;", f); break;
-	case '&':   fputs("&amp;", f); break;
-	default:    if ( c == '"' || c == ' ' || !isprint(c) )
-			fprintf(f, "%%%02x", c);
-		    else
-			fputc(c, f);
-		    break;
-	}
+    while ( size-- > 0 ) {
+	c = *s++;
+
+	if ( isalnum(c) || c == '.' || c == '-' || c == '_' || c == '/' )
+	    oputc(c, f);
+	else
+	    fprintf(f->out, "%%%02X", c);
     }
 }
 
@@ -404,26 +445,30 @@ linkylinky(int image, MMIOT *f)
     }
 
     if ( tag->link_pfx ) {
-	fputs(tag->link_pfx, f->out);
-	puturl(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f->out);
-	fputs(tag->link_sfx, f->out);
+	oputs(tag->link_pfx, f);
+	puturl(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
+	oputs(tag->link_sfx, f);
 
-	if ( tag->WxH && link.height && link.width )
-	    fprintf(f->out, " height=\"%d\" width=\"%d\"",
-				link.height, link.width);
-
-	if ( S(link.title) ) {
-	    fprintf(f->out, " title=\"");
-	    reparse(T(link.title), S(link.title), INSIDE_TAG, f);
-	    fputc('"', f->out);
+	if ( tag->WxH && link.height && link.width ) {
+	    oputs(" height=\"", f);
+	    fprintf(f->out, "%d", link.height);
+	    oputs("\" width=\"", f);
+	    fprintf(f->out, "%d", link.width);
+	    oputc('"', f);
 	}
 
-	fputs(tag->text_pfx, f->out);
+	if ( S(link.title) ) {
+	    oputs(" title=\"", f);
+	    reparse(T(link.title), S(link.title), INSIDE_TAG, f);
+	    oputc('"', f);
+	}
+
+	oputs(tag->text_pfx, f);
 	reparse(T(link.tag), S(link.tag), tag->flags, f);
-	fputs(tag->text_sfx, f->out);
+	oputs(tag->text_sfx, f);
     }
     else
-	fwrite(T(link.link) + tag->szpat, S(link.link) - tag->szpat, 1, f->out);
+	oputblk(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
 
     return 1;
 }
@@ -435,8 +480,10 @@ linkylinky(int image, MMIOT *f)
 static void
 mangle(unsigned char *s, int len, MMIOT *f)
 {
-    while ( len-- > 0 )
-	fprintf(f->out, (random()&1) ? "&#x%02x;" : "&#%02d;", *s++);
+    while ( len-- > 0 ) {
+	oputs("&#", f);
+	fprintf(f->out, (random()&1) ? "x%02x;" : "%02d;", *s++);
+    }
 }
 
 
@@ -488,7 +535,7 @@ maybe_tag_or_link(MMIOT *f)
 	return 0;
 
     if ( maybetag  || (size >= 3 && strncmp(cursor(f), "!--", 3) == 0) ) {
-	fprintf(f->out, forbidden_tag(f) ? "&lt;" : "<");
+	oputs(forbidden_tag(f) ? "&lt;" : "<", f);
 	return 1;
     }
 
@@ -499,11 +546,11 @@ maybe_tag_or_link(MMIOT *f)
 
     for ( i=0; i < SZAUTOPREFIX; i++ )
 	if ( strncasecmp(text, autoprefix[i], strlen(autoprefix[i])) == 0 ) {
-	    fprintf(f->out, "<a href=\"");
-	    puturl(text,size,f->out);
-	    fprintf(f->out, "\">");
+	    oputs("<a href=\"", f);
+	    puturl(text,size,f);
+	    oputs("\">", f);
 	    reparse(text, size, DENY_A, f);
-	    fprintf(f->out, "</a>");
+	    oputs("</a>", f);
 	    return 1;
 	}
     if ( maybeaddress ) {
@@ -519,12 +566,12 @@ maybe_tag_or_link(MMIOT *f)
 	    size -= 7;
 	}
 
-	fprintf(f->out, "<a href=\"");
+	oputs("<a href=\"", f);
 	mangle("mailto:", 7, f);
 	mangle(text, size, f);
-	fprintf(f->out,"\">");
+	oputs("\">", f);
 	mangle(text, size, f);
-	fprintf(f->out,"</a>");
+	oputs("</a>", f);
 	return 1;
     }
 
@@ -558,13 +605,17 @@ smartyquote(int *flags, char typeofquote, MMIOT *f)
 
     if ( bit & (*flags) ) {
 	if ( isthisnonword(f,1) ) {
-	    fprintf(f->out, "&r%cquo;", typeofquote);
+	    oputs("&r", f);
+	    oputc(typeofquote, f);
+	    oputs("quo;", f);
 	    (*flags) &= ~bit;
 	    return 1;
 	}
     }
     else if ( isthisnonword(f,-1) && peek(f,1) != EOF ) {
-	fprintf(f->out, "&l%cquo;", typeofquote);
+	oputs("&l", f);
+	oputc(typeofquote, f);
+	oputs("quo;", f);
 	(*flags) |= bit;
 	return 1;
     }
@@ -636,7 +687,9 @@ smartypants(int c, int *flags, MMIOT *f)
 
     for ( i=0; i < NRSMART; i++)
 	if ( (c == smarties[i].c0) && islike(f, smarties[i].pat) ) {
-	    fprintf(f->out, "&%s;", smarties[i].entity);
+	    oputc('&', f);
+	    oputs(smarties[i].entity, f);
+	    oputc(';', f);
 	    shift(f, smarties[i].shift);
 	    return 1;
 	}
@@ -658,9 +711,9 @@ smartypants(int c, int *flags, MMIOT *f)
 			else if ( c == '`' )
 			    break;
 			else if ( c == '\'' && peek(f, j+1) == '\'' ) {
-			    fprintf(f->out, "&ldquo;");
+			    oputs("&ldquo;", f);
 			    reparse(cursor(f)+1, j-2, 0, f);
-			    fprintf(f->out, "&rdquo;");
+			    oputs("&rdquo;", f);
 			    shift(f,j+1);
 			    return 1;
 			}
@@ -692,86 +745,86 @@ text(MMIOT *f)
 	case 0:     break;
 
 	case '>':   if ( tag_text(f) )
-			fprintf(f->out, "&gt;");
+			oputs("&gt;", f);
 		    else
-			fputc(c, f->out);
+			oputc(c, f);
 		    break;
 
 	case '"':   if ( tag_text(f) )
-			fputs("&quot;", f->out);
+			oputs("&quot;", f);
 		    else
-			fputc(c, f->out);
+			oputc(c, f);
 		    break;
 			
 	case '!':   if ( peek(f,1) == '[' ) {
 			pull(f);
 			if ( tag_text(f) || !linkylinky(1, f) )
-			    fputs("![", f->out);
+			    oputs("![", f);
 		    }
 		    else
-			fputc(c, f->out);
+			oputc(c, f);
 		    break;
 	case '[':   if ( tag_text(f) || !linkylinky(0, f) )
-			fputc(c, f->out);
+			oputc(c, f);
 		    break;
 	case '*':
 	case '_':   if ( tag_text(f) )
-			putc(c, f->out);
+			oputc(c, f);
 		    else if (peek(f,1) == c) {
 			pull(f);
 			if ( c == strong ) {
-			    fprintf(f->out, "</strong>");
+			    oputs("</strong>", f);
 			    strong = 0;
 			}
 			else if ( strong == 0 ) {
-			    fprintf(f->out, "<strong>");
+			    oputs("<strong>", f);
 			    strong = c;
 			}
 			else {
-			    fputc(c, f->out);
-			    fputc(c, f->out);
+			    oputc(c, f);
+			    oputc(c, f);
 			}
 		    }
 		    else if ( isthisspace(f,-1) && isthisspace(f,1) )
-			fputc(c, f->out);
+			oputc(c, f);
 		    else {
 			if (c == em ) {
-			    fprintf(f->out, "</em>");
+			    oputs("</em>", f);
 			    em = 0;
 			}
 			else if ( em == 0 ) {
-			    fprintf(f->out, "<em>");
+			    oputs("<em>", f);
 			    em = c;
 			}
 			else
-			    fputc(c, f->out);
+			    oputc(c, f);
 		    }
 		    break;
 	
 	case '`':   if ( tag_text(f) )
-			putc(c, f->out);
+			oputc(c, f);
 		    else {
-			fprintf(f->out, "<code>");
+			oputs("<code>", f);
 			if ( peek(f, 1) == '`' ) {
 			    pull(f);
 			    code(2, f);
 			}
 			else
 			    code(1, f);
-			fprintf(f->out, "</code>");
+			oputs("</code>", f);
 		    }
 		    break;
 
 	case '\\':  if ( (c = pull(f)) == '&' )
-			fprintf(f->out, "&amp;");
+			oputs("&amp;", f);
 		    else if ( c == '<' )
-			fprintf(f->out, "&lt;");
+			oputs("&lt;", f);
 		    else
-			fputc( c ? c : '\\', f->out);
+			oputc( c ? c : '\\', f);
 		    break;
 
 	case '<':   if ( !maybe_tag_or_link(f) )
-			fprintf(f->out, "&lt;");
+			oputs("&lt;", f);
 		    break;
 
 	case '&':   j = (peek(f,1) == '#' ) ? 2 : 1;
@@ -779,17 +832,17 @@ text(MMIOT *f)
 			++j;
 
 		    if ( peek(f,j) != ';' )
-			fprintf(f->out, "&amp;");
+			oputs("&amp;", f);
 		    else
-			fputc(c, f->out);
+			oputc(c, f);
 		    break;
 
-	default:    putc(c, f->out);
+	default:    oputc(c, f);
 		    break;
 	}
     }
-    if ( em ) fputs("</em>", f->out);
-    if ( strong ) fputs("</strong>", f->out);
+    if ( em ) oputs("</em>", f);
+    if ( strong ) oputs("</strong>", f);
 } /* text */
 
 
@@ -820,29 +873,29 @@ code(int escape, MMIOT *f)
 
     while ( (c = pull(f)) != EOF ) {
 	switch (c) {
-	case '&':   fprintf(f->out, "&amp;"); break;
+	case '&':   oputs("&amp;", f); break;
 
-	case '>':   fprintf(f->out, "&gt;"); break;
+	case '>':   oputs("&gt;", f); break;
 
-	case '<':   fprintf(f->out, "&lt;"); break;
+	case '<':   oputs("&lt;", f); break;
 
 	case ' ':   if ( peek(f,1) == '`' && endofcode(escape,1, f) )
 			return;
-		    fputc(c, f->out);
+		    oputc(c, f);
 		    break;
 
 	case '`':   if ( endofcode(escape,0, f) )
 			return;
-		    fputc(c, f->out);
+		    oputc(c, f);
 		    break;
 
-	case '\\':  fputc(c, f->out);
+	case '\\':  oputc(c, f);
 		    if ( peek(f,1) == '>' || (c = pull(f)) == EOF )
 			break;
-		    fputc(c, f->out);
+		    oputc(c, f);
 		    break;
 
-	default:    fputc(c, f->out); break;
+	default:    oputc(c, f); break;
 	}
     }
 } /* code */
@@ -853,10 +906,14 @@ code(int escape, MMIOT *f)
 static void
 printheader(Paragraph *pp, MMIOT *f)
 {
-    fprintf(f->out, "<h%d>", pp->hnumber);
+    oputs("<h", f);
+    fprintf(f->out, "%d", pp->hnumber);
+    oputc('>', f);
     push(T(pp->text->text), S(pp->text->text), f);
     text(f);
-    fprintf(f->out, "</h%d>", pp->hnumber);
+    oputs("</h", f);
+    fprintf(f->out, "%d", pp->hnumber);
+    oputc('>', f);
 }
 
 
@@ -882,9 +939,9 @@ printblock(Paragraph *pp, MMIOT *f)
 	}
 	t = t->next;
     }
-    fputs(Begin[pp->align], f->out);
+    oputs(Begin[pp->align], f);
     text(f);
-    fputs(End[pp->align], f->out);
+    oputs(End[pp->align], f);
     return 1;
 }
 
@@ -905,9 +962,9 @@ printcode(Line *t, MMIOT *f)
 	}
 	else blanks++;
 
-    fprintf(f->out, "<pre><code>");
+    oputs("<pre><code>", f);
     code(0, f);
-    fprintf(f->out, "</code></pre>");
+    oputs("</code></pre>", f);
 }
 
 
@@ -919,10 +976,10 @@ printhtml(Line *t, MMIOT *f)
     for ( blanks=0; t ; t = t->next )
 	if ( S(t->text) ) {
 	    for ( ; blanks; --blanks ) 
-		fputc('\n', f->out);
+		oputc('\n', f);
 
-	    fwrite(T(t->text), S(t->text), 1, f->out);
-	    fputc('\n', f->out);
+	    oputblk(T(t->text), S(t->text), f);
+	    oputc('\n', f);
 	}
 	else
 	    blanks++;
@@ -932,14 +989,20 @@ printhtml(Line *t, MMIOT *f)
 static void
 emit(Paragraph *p, char *block, MMIOT *f)
 {
-    if ( block )
-	fprintf(f->out, "<%s>", block);
+    if ( block ) {
+	oputc('<', f);
+	oputs(block, f);
+	oputc('>', f);
+    }
 
     while (( p = display(p, f) ))
-	fputs("\n\n", f->out);
+	oputs("\n\n", f);
 
-    if ( block )
-	fprintf(f->out, "</%s>", block);
+    if ( block ) {
+	oputs("</", f);
+	oputs(block, f);
+	oputc('>', f);
+    }
 }
 
 
@@ -950,18 +1013,18 @@ definitionlist(Paragraph *p, MMIOT *f)
     Line *tag;
 
     if ( p ) {
-	fprintf(f->out, "<dl>\n");
+	oputs("<dl>\n", f);
 
 	for ( ; p ; p = p->next) {
-	    fprintf(f->out, "<dt>");
+	    oputs("<dt>", f);
 	    if (( tag = p->text ))
 		reparse(T(tag->text), S(tag->text), 0, f);
-	    fprintf(f->out, "</dt>\n");
+	    oputs("</dt>\n", f);
 
 	    emit(p->down, "dd", f);
 	}
 
-	fprintf(f->out, "</dl>");
+	oputs("</dl>", f);
     }
 }
 #endif
@@ -971,14 +1034,18 @@ static void
 listdisplay(int typ, Paragraph *p, MMIOT* f)
 {
     if ( p ) {
-	fprintf(f->out, "<%cl>\n", (typ==UL)?'u':'o');
+	oputc('<', f);
+	oputc((typ==UL)?'u':'o', f);
+	oputs("l>\n", f);
 
 	for ( ; p ; p = p->next ) {
 	    emit(p->down, "li", f);
-	    putc('\n', f->out);
+	    oputc('\n', f);
 	}
 
-	fprintf(f->out, "</%cl>", (typ==UL)?'u':'o');
+	oputs("</", f);
+	oputc((typ==UL)?'u':'o', f);
+	oputs("l>", f);
     }
 }
 
@@ -1019,7 +1086,7 @@ display(Paragraph *p, MMIOT *f)
 #endif
 
     case HR:
-	fprintf(f->out, "<hr />");
+	oputs("<hr />", f);
 	break;
 
     case HDR:
