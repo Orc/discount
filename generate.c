@@ -676,6 +676,7 @@ static struct smarties {
     { '1',  "<1/2>",    "frac12", 2 },
     { '1',  "<1/4>",    "frac14", 2 },
     { '1',  "<1/4th>",  "frac14", 2 },
+    { '&',  "&#0;",      0,       3 },
 } ;
 #define NRSMART ( sizeof smarties / sizeof smarties[0] )
 
@@ -692,9 +693,11 @@ smartypants(int c, int *flags, MMIOT *f)
 
     for ( i=0; i < NRSMART; i++)
 	if ( (c == smarties[i].c0) && islike(f, smarties[i].pat) ) {
-	    oputc('&', f);
-	    oputs(smarties[i].entity, f);
-	    oputc(';', f);
+	    if ( smarties[i].entity ) {
+		oputc('&', f);
+		oputs(smarties[i].entity, f);
+		oputc(';', f);
+	    }
 	    shift(f, smarties[i].shift);
 	    return 1;
 	}
@@ -790,7 +793,8 @@ text(MMIOT *f)
 			    oputc(c, f);
 			}
 		    }
-		    else if ( isthisspace(f,-1) && isthisspace(f,1) )
+		    else if ( (isthisspace(f,-1) && isthisspace(f,1))
+			   || (isalnum(peek(f,-1)) && isalnum(peek(f,1))) )
 			oputc(c, f);
 		    else {
 			if (c == em ) {
@@ -820,12 +824,22 @@ text(MMIOT *f)
 		    }
 		    break;
 
-	case '\\':  if ( (c = pull(f)) == '&' )
-			oputs("&amp;", f);
-		    else if ( c == '<' )
-			oputs("&lt;", f);
-		    else
-			oputc( c ? c : '\\', f);
+	case '\\':  switch ( c = pull(f) ) {
+		    case '&':   oputs("&amp;", f);
+				break;
+		    case '<':   oputs("&lt;", f);
+				break;
+		    case '"': case '\'':
+		    case '!': case '[':
+		    case '*': case '_':
+		    case '`':	oputc(c, f);
+				break;
+		    default:
+				oputc('\\', f);
+				if ( c != EOF )
+				    shift(f,-1);
+				break;
+		    }
 		    break;
 
 	case '<':   if ( !maybe_tag_or_link(f) )

@@ -1,6 +1,6 @@
 #include "config.h"
 
-char version[] = VERSION
+char markdown_version[] = VERSION
 #if DL_TAG_EXTENSION
 		" DL_TAG"
 #endif

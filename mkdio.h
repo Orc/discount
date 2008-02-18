@@ -31,7 +31,7 @@ char* mkd_doc_date(MMIOT*);
 
 /* version#.
  */
-extern char version[];
+extern char markdown_version[];
 
 /* special flags for markdown() and mkd_text()
  */

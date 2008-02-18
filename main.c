@@ -90,7 +90,7 @@ main(int argc, char **argv)
 	switch (opt) {
 	case 'd':   debug = 1;
 		    break;
-	case 'V':   printf("%s: discount %s\n", pgm, version);
+	case 'V':   printf("%s: discount %s\n", pgm, markdown_version);
 		    exit(0);
 	case 'F':   flags = strtol(optarg, 0, 0);
 		    break;

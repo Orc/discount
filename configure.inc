@@ -525,7 +525,12 @@ EOF
 
     TLOGN " ($AC_CC)"
     if [ $status -eq 0 ]; then
-	TLOG " ok"
+	if $AC_CC -v 2>&1 | grep 'gcc version' >/dev/null; then
+	    TLOG " oh ick, it looks like gcc"
+	    IS_BROKEN_CC=T
+	else
+	    TLOG " ok"
+	fi
 
 	# check that the CFLAGS and LDFLAGS aren't bogus
 
@@ -1208,7 +1213,7 @@ EOF
 # a local static buffer to hold results in.
 #
 AC_CHECK_BASENAME() {
-    TLOGN "looking for a sane basename "
+    TLOGN "looking for a reentrant basename "
 
     cat > /tmp/ngc$$.c << EOF
 #include <string.h>

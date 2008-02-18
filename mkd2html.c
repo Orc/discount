@@ -36,8 +36,6 @@
 #include "mkdio.h"
 #include "cstring.h"
 
-extern char version[];
-
 char *pgm = "mkd2html";
 
 #ifndef HAVE_BASENAME
@@ -148,7 +146,7 @@ char **argv;
 	"<!doctype html public \"-//W3C//DTD HTML 4.0 Transitional //EN\">\n"
 	"<html>\n"
 	"<head>\n"
-	"  <meta name=\"GENERATOR\" content=\"mkd2html %s\">\n", version);
+	"  <meta name=\"GENERATOR\" content=\"mkd2html %s\">\n", markdown_version);
 
     fprintf(output,"  <meta http-equiv=\"Content-Type\"\n"
 		   "        content=\"text/html; charset-us-ascii\">");
