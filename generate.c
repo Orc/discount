@@ -829,9 +829,11 @@ text(MMIOT *f)
 				break;
 		    case '<':   oputs("&lt;", f);
 				break;
-		    case '"': case '\'':
-		    case '!': case '[':
-		    case '*': case '_':
+		    case '\\':
+		    case '>': case '#': case '.': case '-':
+		    case '+': case '{': case '}': case ']':
+		    case '(': case ')': case '"': case '\'':
+		    case '!': case '[': case '*': case '_':
 		    case '`':	oputc(c, f);
 				break;
 		    default:
