@@ -40,8 +40,7 @@ extern char version[];
 #define MKD_NOPANTS	0x0004	/* don't run smartypants() */
 #define MKD_TAGTEXT	0x0020	/* don't expand `_` and `*` */
 #define MKD_NO_EXT	0x0040	/* don't allow pseudo-protocols */
-#define MKD_CDATA	0x0080	/* generate code for xml ![CDATA[...]] */
-#define MKD_EMBED	MKD_NOLINKS|MKD_NOIMAGE|MKD_TAGTEXT
+#define MKD_EMBED	MKD_NOLINKS|MKD_NOIMAGE|MKD_NO_EMPH
 
 /* special flags for mkd_in() and mkd_string()
  */
