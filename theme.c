@@ -292,7 +292,7 @@ fauthor(MMIOT *doc, FILE *output, int flags)
 static void
 fversion(MMIOT *doc, FILE *output, int flags)
 {
-    fwrite(version, strlen(version), 1, output);
+    fwrite(markdown_version, strlen(markdown_version), 1, output);
 }
 
 
@@ -447,7 +447,7 @@ char **argv;
 		    break;
 	case 'o':   output = optarg;
 		    break;
-	case 'V':   printf("theme+discount %s\n", version);
+	case 'V':   printf("theme+discount %s\n", markdown_version);
 		    exit(0);
 	default:    fprintf(stderr, "usage: %s [-V] [-d dir] [-p pagename] [-t tempplate] [-o html] [file]\n", pgm);
 		    exit(1);

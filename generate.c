@@ -620,6 +620,7 @@ static struct smarties {
     { '1',  "<1/2>",    "frac12", 2 },
     { '1',  "<1/4>",    "frac14", 2 },
     { '1',  "<1/4th>",  "frac14", 2 },
+    { '&',  "&#0;",      0,       3 },
 } ;
 #define NRSMART ( sizeof smarties / sizeof smarties[0] )
 
@@ -636,7 +637,8 @@ smartypants(int c, int *flags, MMIOT *f)
 
     for ( i=0; i < NRSMART; i++)
 	if ( (c == smarties[i].c0) && islike(f, smarties[i].pat) ) {
-	    fprintf(f->out, "&%s;", smarties[i].entity);
+	    if ( smarties[i].entity )
+		fprintf(f->out, "&%s;", smarties[i].entity);
 	    shift(f, smarties[i].shift);
 	    return 1;
 	}
@@ -732,7 +734,8 @@ text(MMIOT *f)
 			    fputc(c, f->out);
 			}
 		    }
-		    else if ( isthisspace(f,-1) && isthisspace(f,1) )
+		    else if ( (isthisspace(f,-1) && isthisspace(f,1))
+			   || (isalnum(peek(f,-1)) && isalnum(peek(f,1))) )
 			fputc(c, f->out);
 		    else {
 			if (c == em ) {
@@ -762,12 +765,22 @@ text(MMIOT *f)
 		    }
 		    break;
 
-	case '\\':  if ( (c = pull(f)) == '&' )
-			fprintf(f->out, "&amp;");
-		    else if ( c == '<' )
-			fprintf(f->out, "&lt;");
-		    else
-			fputc( c ? c : '\\', f->out);
+	case '\\':  switch ( c = pull(f) ) {
+		    case '&':   fprintf(f->out, "&amp;");
+				break;
+		    case '<':   fprintf(f->out, "&lt;");
+				break;
+		    case '"': case '\'':
+		    case '!': case '[':
+		    case '*': case '_':
+		    case '`':	fputc(c, f->out);
+				break;
+		    default:
+				fputc('\\', f->out);
+				if ( c != EOF )
+				    shift(f,-1);
+				break;
+		    }
 		    break;
 
 	case '<':   if ( !maybe_tag_or_link(f) )
