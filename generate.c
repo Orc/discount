@@ -165,7 +165,12 @@ puturl(char *s, int size, MMIOT *f)
     while ( size-- > 0 ) {
 	c = *s++;
 
-	if ( isalnum(c) || c == '.' || c == '-' || c == '_' || c == '/' )
+	if ( c == '&' )
+	    oputs("&amp;", f);
+	else if ( c == '<' )
+	    oputs("&lt;", f);
+	else if ( isalnum(c) || c == '=' || c == '?' || c == ':' || c == '#'
+			     || c == '.' || c == '-' || c == '_' || c == '/' )
 	    oputc(c, f);
 	else
 	    fprintf(f->out, "%%%02X", c);
