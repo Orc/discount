@@ -852,7 +852,7 @@ initialize()
 
     if ( first-- > 0 ) {
 	first = 0;
-	srandom((unsigned int)time(0));
+	INITRNG(time(0));
 	qsort(blocktags, SZTAGS, sizeof blocktags[0], (stfu)casort);
     }
 }

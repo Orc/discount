@@ -52,6 +52,24 @@ AC_CHECK_BASENAME
 
 AC_CHECK_HEADERS sys/types.h pwd.h && AC_CHECK_FUNCS getpwuid
 
+AC_CHECK_FUNCS bzero || AC_DEFINE 'bzero(s,n)'	'memset(s, 0, n)'
+
+if AC_CHECK_FUNCS srandom; then
+    AC_DEFINE 'INITRNG(x)' 'srandom((unsigned int)x)'
+elif AC_CHECK_FUNCS srand; then
+    AC_DEFINE 'INITRND(x)' 'srand((unsigned int)x)'
+else
+    AC_DEFINE 'INITRND(x)' '(void)1'
+fi
+
+if AC_CHECK_FUNCS random; then
+    AC_DEFINE 'COINTOSS()' '(random()&1)'
+elif AC_CHECK_FUNCS rand; then
+    AC_DEFINE 'COINTOSS()' '(rand()&1)'
+else
+    AC_DEFINE 'COINTOSS()' '1'
+fi
+
 if [ -z "$WITH_TABSTOPS" ]; then
     TABSTOP=4
 elif [ "$WITH_TABSTOPS" -eq 1 ]; then

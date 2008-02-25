@@ -487,7 +487,7 @@ mangle(unsigned char *s, int len, MMIOT *f)
 {
     while ( len-- > 0 ) {
 	oputs("&#", f);
-	fprintf(f->out, (random()&1) ? "x%02x;" : "%02d;", *s++);
+	fprintf(f->out, COINTOSS() ? "x%02x;" : "%02d;", *s++);
     }
 }
 
