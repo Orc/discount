@@ -22,7 +22,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <pwd.h>
+#if HAVE_PWD_H
+#  include <pwd.h>
+#endif
 #include <fcntl.h>
 #include <errno.h>
 #include <ctype.h>
@@ -34,7 +36,9 @@ char *pgm = "theme";
 char *output = 0;
 char *pagename = 0;
 char *root = 0;
+#if HAVE_PWD_H
 struct passwd *me = 0;
+#endif
 struct stat *infop = 0;
 
 #ifndef HAVE_BASENAME
@@ -279,8 +283,10 @@ fauthor(MMIOT *doc, FILE *output, int flags)
 {
     char *h;
 
+#if HAVE_PWD_H
     if ( (h = mkd_doc_author(doc)) == 0 && me )
 	h = me->pw_gecos;
+#endif
 
     if ( h )
 	mkd_text(h, strlen(h), output, flags);
@@ -508,15 +514,15 @@ char **argv;
     if ( (doc = mkd_in(stdin, 0)) == 0 )
 	fail("can't read %s", source ? source : "stdin");
 
-    if ( fstat(fileno(stdin), &sourceinfo) == 0 ) {
+    if ( fstat(fileno(stdin), &sourceinfo) == 0 )
 	infop = &sourceinfo;
-	me = getpwuid(infop->st_uid);
-    }
-    else
-	me = getpwuid(getuid());
+
+#if HAVE_GETPWUID
+    me = getpwuid(infop ? infop->st_uid : getuid());
 
     if ( (root = strdup(me->pw_dir)) == 0 )
 	fail("out of memory");
+#endif
 
     if ( !mkd_compile(doc, 0) )
 	fail("couldn't compile input");

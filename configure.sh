@@ -50,6 +50,8 @@ AC_SCALAR_TYPES
 AC_CHECK_ALLOCA || AC_FAIL "$TARGET requires alloca()"
 AC_CHECK_BASENAME
 
+AC_CHECK_HEADERS sys/types.h pwd.h && AC_CHECK_FUNCS getpwuid
+
 if [ -z "$WITH_TABSTOPS" ]; then
     TABSTOP=4
 elif [ "$WITH_TABSTOPS" -eq 1 ]; then
