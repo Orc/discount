@@ -300,18 +300,20 @@ linkytitle(MMIOT *f, int *sizep)
     char *ret, *lastqc = 0;
 
     eatspace(f);
-    if ( (qc=pull(f)) != '"' && qc != '\'' )
+    if ( (qc=pull(f)) != '"' && qc != '\'' && qc != '(' )
 	return 0;
 
+    if ( qc == '(' ) qc = ')';
+
     for ( ret = cursor(f); (c = pull(f)) != EOF;  ) {
-	if ( c == qc ) {
-	    lastqc = cursor(f);
-	    countq++;
-	}
-	else if ( (c == ')') && countq ) {
+	if ( (c == ')') && countq ) {
 	    size = (lastqc ? lastqc : cursor(f)) - ret;
 	    *sizep = size-1;
 	    return ret;
+	}
+	else if ( c == qc ) {
+	    lastqc = cursor(f);
+	    countq++;
 	}
     }
     return 0;
