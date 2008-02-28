@@ -281,10 +281,10 @@ fdate(MMIOT *doc, FILE *output, int flags)
 static void
 fauthor(MMIOT *doc, FILE *output, int flags)
 {
-    char *h;
+    char *h = mkd_doc_author(doc);
 
 #if HAVE_PWD_H
-    if ( (h = mkd_doc_author(doc)) == 0 && me )
+    if ( (h == 0) && me )
 	h = me->pw_gecos;
 #endif
 
