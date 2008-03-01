@@ -877,7 +877,7 @@ mkd_compile(Document *doc, int flags)
 	return 1;
 
     doc->compiled = 1;
-    bzero(doc->ctx, sizeof(MMIOT) );
+    memset(doc->ctx, 0, sizeof(MMIOT) );
     doc->ctx->flags = flags & DENY_MASK;
     CREATE(doc->ctx->in);
     CREATE(doc->ctx->footnotes);
@@ -888,7 +888,7 @@ mkd_compile(Document *doc, int flags)
     qsort(T(doc->ctx->footnotes), S(doc->ctx->footnotes),
 		        sizeof T(doc->ctx->footnotes)[0],
 			           (stfu)__mkd_footsort);
-    bzero( &doc->content, sizeof doc->content);
+    memset(&doc->content, 0, sizeof doc->content);
     return 1;
 }
 

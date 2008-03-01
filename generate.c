@@ -329,7 +329,7 @@ linkykey(int image, Footnote *val, MMIOT *f)
     Footnote *ret;
     Cstring mylabel;
 
-    bzero(val, sizeof *val);
+    memset(val, 0, sizeof *val);
 
     if ( (T(val->tag) = linkylabel(f, &S(val->tag))) == 0 )
 	return 0;
@@ -1169,7 +1169,7 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
 {
     MMIOT f;
 
-    bzero(&f, sizeof f);
+    memset(&f, 0, sizeof f);
     f.out = output;
     f.flags = flags & DENY_MASK;
     

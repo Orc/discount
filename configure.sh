@@ -52,8 +52,6 @@ AC_CHECK_BASENAME
 
 AC_CHECK_HEADERS sys/types.h pwd.h && AC_CHECK_FUNCS getpwuid
 
-AC_CHECK_FUNCS bzero || AC_DEFINE 'bzero(s,n)'	'memset(s, 0, n)'
-
 if AC_CHECK_FUNCS srandom; then
     AC_DEFINE 'INITRNG(x)' 'srandom((unsigned int)x)'
 elif AC_CHECK_FUNCS srand; then
