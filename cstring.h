@@ -7,6 +7,7 @@
 #ifndef _CSTRING_D
 #define _CSTRING_D
 
+#include <string.h>
 #include <stdlib.h>
 
 /* expandable Pascal-style string.
