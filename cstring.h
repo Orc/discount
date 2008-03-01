@@ -8,7 +8,6 @@
 #define _CSTRING_D
 
 #include <stdlib.h>
-#include <string.h>
 
 /* expandable Pascal-style string.
  */
@@ -16,10 +15,10 @@
 
 #define RESERVE(x,c)	(x).text = malloc(sizeof T(x)[0] * (((x).size=0),((x).alloc=(c))) )
 #define CREATE(x)	RESERVE(x,100)
-#define EXPAND(x)	((x).text[((x).size < (x).alloc \
+#define EXPAND(x)	(x).text[((x).size < (x).alloc \
 			    ? 0 \
 			    : !((x).text = realloc((x).text, sizeof T(x)[0] * ((x).alloc += 100)))), \
-			0], (x).text[(x).size++])
+			(x).size++]
 
 #define DELETE(x)	(x).alloc ? (free(T(x)), S(x) = (x).alloc = 0) \
 				  : ( S(x) = 0 )
