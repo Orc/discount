@@ -55,9 +55,9 @@ AC_CHECK_HEADERS sys/types.h pwd.h && AC_CHECK_FUNCS getpwuid
 if AC_CHECK_FUNCS srandom; then
     AC_DEFINE 'INITRNG(x)' 'srandom((unsigned int)x)'
 elif AC_CHECK_FUNCS srand; then
-    AC_DEFINE 'INITRND(x)' 'srand((unsigned int)x)'
+    AC_DEFINE 'INITRNG(x)' 'srand((unsigned int)x)'
 else
-    AC_DEFINE 'INITRND(x)' '(void)1'
+    AC_DEFINE 'INITRNG(x)' '(void)1'
 fi
 
 if AC_CHECK_FUNCS random; then
