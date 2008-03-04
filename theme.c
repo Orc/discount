@@ -53,6 +53,54 @@ basename(char *path)
 }
 #endif
 
+#ifdef HAVE_FCHDIR
+typedef int HERE;
+#define NOT_HERE (-1)
+
+#define pushd(d)	open(d, O_RDONLY)
+
+int
+popd(HERE pwd)
+{
+    rc = fchdir(pwd);
+    close(pwd);
+    return rc;
+}
+
+#else
+
+typedef char* HERE;
+#define NOT_HERE 0
+
+HERE
+pushd(char *d)
+{
+    HERE cwd;
+    int size;
+    
+    if ( chdir(d) == -1 )
+	return NOT_HERE;
+
+    for (cwd = malloc(size=40); cwd; cwd = realloc(cwd, size *= 2))
+	if ( getcwd(cwd, size) )
+	    return cwd;
+
+    return NOT_HERE;
+}
+
+int
+popd(HERE pwd)
+{
+    if ( pwd ) {
+	int rc = chdir(pwd);
+	free(pwd);
+
+	return rc;
+    }
+    return -1;
+}
+#endif
+
 typedef STRING(int) Istring;
 
 void
@@ -78,10 +126,10 @@ open_template(char *template)
 {
     char *cwd;
     int szcwd;
-    int here = open(".", O_RDONLY);
+    HERE here = pushd(".");
     FILE *ret;
 
-    if ( here == -1 )
+    if ( here == NOT_HERE )
 	fail("cannot access the current directory");
 
     szcwd = root ? 1 + strlen(root) : 2;
@@ -103,8 +151,7 @@ open_template(char *template)
     up: if ( chdir("..") == -1 )
 	    break;
     }
-    fchdir(here);
-    close(here);
+    popd(here);
     return ret;
 } /* open_template */
 

@@ -68,6 +68,12 @@ else
     AC_DEFINE 'COINTOSS()' '1'
 fi
 
+if AC_CHECK_FUNCS fchdir || AC_CHECK_FUNCS getcwd ; then
+    AC_SUB 'THEME' ''
+else
+    AC_SUB 'THEME' '#'
+fi
+
 if [ -z "$WITH_TABSTOPS" ]; then
     TABSTOP=4
 elif [ "$WITH_TABSTOPS" -eq 1 ]; then
