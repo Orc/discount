@@ -62,7 +62,7 @@ typedef int HERE;
 int
 popd(HERE pwd)
 {
-    rc = fchdir(pwd);
+    int rc = fchdir(pwd);
     close(pwd);
     return rc;
 }

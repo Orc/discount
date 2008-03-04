@@ -780,7 +780,7 @@ text(MMIOT *f)
 	case '*':
 	case '_':   if ( tag_text(f) )
 			oputc(c, f);
-		    else if (peek(f,1) == c) {
+		    else if (peek(f,1) == c && peek(f,2) != c ) {
 			pull(f);
 			if ( c == strong ) {
 			    oputs("</strong>", f);
