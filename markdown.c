@@ -808,10 +808,6 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p = Pp(&d, 0, HR);
 	    ptr = ptr->next;
 	}
-	else if ( ishdr(ptr, &hdr_type) ) {
-	    p = Pp(&d, ptr, HDR);
-	    ptr = headerblock(p, hdr_type);
-	}
 	else if (( list_type = islist(ptr, &indent) )) {
 	    p = Pp(&d, ptr, list_type);
 	    ptr = listblock(p, indent, f);
@@ -821,6 +817,10 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    ptr = quoteblock(p);
 	    p->down = compile(p->text, 1, f);
 	    p->text = 0;
+	}
+	else if ( ishdr(ptr, &hdr_type) ) {
+	    p = Pp(&d, ptr, HDR);
+	    ptr = headerblock(p, hdr_type);
 	}
 	else if ( toplevel && (isfootnote(ptr)) ) {
 	    ptr = consume(addfootnote(ptr, f), &para);
