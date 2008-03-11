@@ -417,7 +417,7 @@ islist(Line *t, int *trim)
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
 	if ( T(t->text)[j-1] == '.' ) {
 	    strtoul(T(t->text)+t->dle, &q, 10);
-	    if ( q == T(t->text) + (j-1) ) {
+	    if ( (q > T(t->text)+t->dle) && (q == T(t->text) + (j-1)) ) {
 		j = nextnonblank(t,j);
 		*trim = j;
 		return OL;
