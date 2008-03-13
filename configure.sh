@@ -47,7 +47,6 @@ AC_PROG ranlib
 AC_C_VOLATILE
 AC_C_CONST
 AC_SCALAR_TYPES
-AC_CHECK_ALLOCA || AC_FAIL "$TARGET requires alloca()"
 AC_CHECK_BASENAME
 
 AC_CHECK_HEADERS sys/types.h pwd.h && AC_CHECK_FUNCS getpwuid
@@ -66,6 +65,22 @@ elif AC_CHECK_FUNCS rand; then
     AC_DEFINE 'COINTOSS()' '(rand()&1)'
 else
     AC_DEFINE 'COINTOSS()' '1'
+fi
+
+if AC_CHECK_FUNCS strcasecmp; then
+    :
+elif AC_CHECK_FUNCS stricmp; then
+    AC_DEFINE strcasecmp stricmp
+else
+    AC_FAIL "$TARGET requires either strcasecmp() or stricmp()"
+fi
+
+if AC_CHECK_FUNCS strncasecmp; then
+    :
+elif AC_CHECK_FUNCS strnicmp; then
+    AC_DEFINE strncasecmp strnicmp
+else
+    AC_FAIL "$TARGET requires either strncasecmp() or strnicmp()"
 fi
 
 if AC_CHECK_FUNCS fchdir || AC_CHECK_FUNCS getcwd ; then
