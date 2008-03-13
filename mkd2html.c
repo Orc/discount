@@ -103,8 +103,11 @@ char **argv;
     if ( argc > 1 ) {
 	char *p, *dot;
 	
-	source = alloca(strlen(argv[1]) + 6);
-	dest   = alloca(strlen(argv[1]) + 6);
+	source = malloc(strlen(argv[1]) + 6);
+	dest   = malloc(strlen(argv[1]) + 6);
+
+	if ( !(source && dest) )
+	    fail("out of memory allocating name buffers");
 
 	strcpy(source, argv[1]);
 	if (( p = strrchr(source, '/') ))

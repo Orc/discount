@@ -134,7 +134,8 @@ open_template(char *template)
 
     szcwd = root ? 1 + strlen(root) : 2;
 
-    cwd = alloca(szcwd);
+    if ( (cwd = malloc(szcwd)) == 0 )
+	return 0;
 
     while ( !(ret = fopen(template, "r")) ) {
 	if ( getcwd(cwd, szcwd) == 0 ) {
@@ -151,6 +152,7 @@ open_template(char *template)
     up: if ( chdir("..") == -1 )
 	    break;
     }
+    free(cwd);
     popd(here);
     return ret;
 } /* open_template */
@@ -516,7 +518,9 @@ char **argv;
     if ( argc > 0 ) {
 	int added_text=0;
 
-	source = alloca(strlen(argv[0]) + strlen(".text") + 1);
+	if ( (source = malloc(strlen(argv[0]) + strlen(".text") + 1)) == 0 )
+	    fail("out of memory allocating name buffer");
+
 	strcpy(source,argv[0]);
 
 	if ( !freopen(source, "r", stdin) ) {

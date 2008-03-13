@@ -175,7 +175,7 @@ isopentag(Line *p)
 {
     int i=0, len;
     char *key;
-    char **look;
+    char **look = 0;
 
     if ( !p ) return 0;
 
@@ -192,11 +192,13 @@ isopentag(Line *p)
 		       && !isspace(T(p->text)[i]); ++i )
 	;
 
-    key = alloca(i);
-    memcpy(key, T(p->text)+1, i-1);
-    key[i-1] = 0;
+    if ( key = malloc(i) ) {
+	memcpy(key, T(p->text)+1, i-1);
+	key[i-1] = 0;
 
-    look=bsearch(&key, blocktags, SZTAGS, sizeof blocktags[0], (stfu)casort);
+	look=bsearch(&key,blocktags,SZTAGS,sizeof blocktags[0],(stfu)casort);
+	free(key);
+    }
 
     return look ? (*look) : 0;
 }
@@ -229,10 +231,7 @@ htmlblock(Paragraph *p, char *tag)
 {
     Line *t = p->text, *ret;
     int closesize;
-    char *close = alloca(strlen(tag)+4);
-
-    sprintf(close, "</%s>", tag);
-    closesize = strlen(close);
+    char *close;
 
     if ( selfclose(t, tag) ) {
 	ret = t->next;
@@ -240,12 +239,18 @@ htmlblock(Paragraph *p, char *tag)
 	return ret;
     }
 
-    for ( ; t ; t = t->next) {
-	if ( strncasecmp(T(t->text), close, closesize) == 0 ) {
-	    ret = t->next;
-	    t->next = 0;
-	    return ret;
+
+    if ( close = malloc(strlen(tag)+4) ) {
+	sprintf(close, "</%s>", tag);
+	closesize = strlen(close);
+
+	for ( ; t ; t = t->next) {
+	    if ( strncasecmp(T(t->text), close, closesize) == 0 ) {
+		t = t->next;
+		break;
+	    }
 	}
+	free(close);
     }
     return t;
 }
