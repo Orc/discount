@@ -18,12 +18,21 @@
 
 /* block-level tags for passing html blocks through the blender
  */
-static char *blocktags[] = { "!--", "STYLE", "SCRIPT",
-			     "ADDRESS", "BDO", "BLOCKQUOTE", "CENTER",
-			     "DFN", "DIV", "H1", "H2", "H3", "H4",
-			     "H5", "H6", "LISTING", "NOBR", "UL",
-			     "P", "OL", "DL", "PLAINTEXT", "PRE",
-			     "TABLE", "WBR", "XMP", "HR", "BR" };
+struct kw {
+    char *id;
+    int  siz;
+} ;
+
+#define KW(x)	{ x, sizeof(x)-1 }
+
+static struct kw blocktags[] = { KW("!--"), KW("STYLE"), KW("SCRIPT"),
+				 KW("ADDRESS"), KW("BDO"), KW("BLOCKQUOTE"),
+				 KW("CENTER"), KW("DFN"), KW("DIV"), KW("H1"),
+				 KW("H2"), KW("H3"), KW("H4"), KW("H5"),
+				 KW("H6"), KW("LISTING"), KW("NOBR"),
+				 KW("UL"), KW("P"), KW("OL"), KW("DL"),
+				 KW("PLAINTEXT"), KW("PRE"), KW("TABLE"),
+				 KW("WBR"), KW("XMP"), KW("HR"), KW("BR") };
 #define SZTAGS	(sizeof blocktags / sizeof blocktags[0])
 
 typedef int (*stfu)(const void*,const void*);
@@ -34,9 +43,11 @@ typedef ANCHOR(Paragraph) ParagraphRoot;
 /* case insensitive string sort (for qsort() and bsearch() of block tags)
  */
 static int
-casort(char **a, char **b)
+casort(struct kw *a, struct kw *b)
 {
-    return strcasecmp(*a,*b);
+    if ( a->siz != b->siz )
+	return a->siz - b->siz;
+    return strncasecmp(a->id, b->id, b->siz);
 }
 
 
@@ -174,8 +185,7 @@ static char *
 isopentag(Line *p)
 {
     int i=0, len;
-    char *key;
-    char **look = 0;
+    struct kw key, *ret;
 
     if ( !p ) return 0;
 
@@ -192,15 +202,13 @@ isopentag(Line *p)
 		       && !isspace(T(p->text)[i]); ++i )
 	;
 
-    if ( key = malloc(i) ) {
-	memcpy(key, T(p->text)+1, i-1);
-	key[i-1] = 0;
+    key.id = T(p->text)+1;
+    key.siz = i-1;
+    
+    if ( ret = bsearch(&key,blocktags,SZTAGS,sizeof key, (stfu)casort))
+	return ret->id;
 
-	look=bsearch(&key,blocktags,SZTAGS,sizeof blocktags[0],(stfu)casort);
-	free(key);
-    }
-
-    return look ? (*look) : 0;
+    return 0;
 }
 
 
@@ -246,13 +254,15 @@ htmlblock(Paragraph *p, char *tag)
 
 	for ( ; t ; t = t->next) {
 	    if ( strncasecmp(T(t->text), close, closesize) == 0 ) {
-		t = t->next;
+		ret = t->next;
+		t->next = 0;
 		break;
 	    }
 	}
 	free(close);
+	return ret;
     }
-    return t;
+    return 0;
 }
 
 
