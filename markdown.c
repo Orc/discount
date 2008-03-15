@@ -34,6 +34,7 @@ static struct kw blocktags[] = { KW("!--"), KW("STYLE"), KW("SCRIPT"),
 				 KW("PLAINTEXT"), KW("PRE"), KW("TABLE"),
 				 KW("WBR"), KW("XMP"), KW("HR"), KW("BR") };
 #define SZTAGS	(sizeof blocktags / sizeof blocktags[0])
+#define MAXTAG	11 /* sizeof "BLOCKQUOTE" */
 
 typedef int (*stfu)(const void*,const void*);
 
@@ -239,28 +240,22 @@ htmlblock(Paragraph *p, char *tag)
 {
     Line *t = p->text, *ret;
     int closesize;
-    char *close;
+    char close[MAXTAG+4];
 
-    if ( selfclose(t, tag) ) {
+    if ( selfclose(t, tag) || (strlen(tag) >= MAXTAG) ) {
 	ret = t->next;
 	t->next = 0;
 	return ret;
     }
 
+    closesize = sprintf(close, "</%s>", tag);
 
-    if ( close = malloc(strlen(tag)+4) ) {
-	sprintf(close, "</%s>", tag);
-	closesize = strlen(close);
-
-	for ( ; t ; t = t->next) {
-	    if ( strncasecmp(T(t->text), close, closesize) == 0 ) {
-		ret = t->next;
-		t->next = 0;
-		break;
-	    }
+    for ( ; t ; t = t->next) {
+	if ( strncasecmp(T(t->text), close, closesize) == 0 ) {
+	    ret = t->next;
+	    t->next = 0;
+	    return ret;
 	}
-	free(close);
-	return ret;
     }
     return 0;
 }
