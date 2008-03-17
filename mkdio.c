@@ -192,3 +192,11 @@ markdown(Document *document, FILE *out, int flags)
     }
     return -1;
 }
+
+
+void
+mkd_basename(Document *document, char *base)
+{
+    if ( document )
+	document->base = base;
+}

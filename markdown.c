@@ -879,7 +879,6 @@ initialize()
 int
 mkd_compile(Document *doc, int flags)
 {
-
     if ( !doc )
 	return 0;
 
@@ -888,7 +887,8 @@ mkd_compile(Document *doc, int flags)
 
     doc->compiled = 1;
     memset(doc->ctx, 0, sizeof(MMIOT) );
-    doc->ctx->flags = flags & DENY_MASK;
+    doc->ctx->flags = flags & USER_FLAGS;
+    doc->ctx->base = doc->base;
     CREATE(doc->ctx->in);
     CREATE(doc->ctx->footnotes);
 

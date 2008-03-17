@@ -10,6 +10,8 @@ typedef void MMIOT;
 MMIOT *mkd_in(FILE*,int);		/* assemble input from a file */
 MMIOT *mkd_string(char*,int,int);	/* assemble input from a buffer */
 
+void mkd_basename(MMIOT*,char*);
+
 /* compilation, debugging, cleanup
  */
 int mkd_compile(MMIOT*, int);
@@ -22,6 +24,7 @@ int mkd_text(char *, int, FILE*, int);
 int mkd_style(MMIOT*, FILE*);
 int mkd_dump(MMIOT*, FILE*, int, char*);
 int markdown(MMIOT*, FILE*, int);
+void mkd_basename(MMIOT*,char*);
 
 /* header block access
  */

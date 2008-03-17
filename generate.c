@@ -453,6 +453,8 @@ linkylinky(int image, MMIOT *f)
 
     if ( tag->link_pfx ) {
 	oputs(tag->link_pfx, f);
+	if ( f->base && (T(link.link)[tag->szpat] == '/') )
+	    puturl(f->base, strlen(f->base), f);
 	puturl(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
 	oputs(tag->link_sfx, f);
 
@@ -1171,7 +1173,7 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
 
     memset(&f, 0, sizeof f);
     f.out = output;
-    f.flags = flags & DENY_MASK;
+    f.flags = flags & USER_FLAGS;
     
     reparse(bfr, size, 0, &f);
     return 0;

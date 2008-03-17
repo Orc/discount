@@ -58,8 +58,9 @@ typedef struct mmiot {
 #define INSIDE_TAG	0x0020
 #define NO_PSEUDO_PROTO	0x0040
 #define CDATA_OUTPUT	0x0080
-#define DENY_MASK	0x00FF
-#define EMBEDDED	DENY_A|DENY_IMG|NO_PSEUDO_PROTO
+#define USER_FLAGS	0x00FF
+#define EMBEDDED	DENY_A|DENY_IMG|NO_PSEUDO_PROTO|CDATA_OUTPUT
+    char *base;
 } MMIOT;
 
 
@@ -77,6 +78,7 @@ typedef struct document {
     int compiled;		/* set after mkd_compile() */
     int tabstop;		/* for properly expanding tabs (ick) */
     MMIOT *ctx;			/* backend buffers, flags, and structures */
+    char *base;			/* url basename for url fragments */
 } Document;
 
 
@@ -85,6 +87,7 @@ extern int  mkd_compile(Document *, int);
 extern int  mkd_generatehtml(Document *, FILE *);
 extern void mkd_cleanup(Document *);
 extern int  mkd_text(char *, int, FILE*, int);
+extern void mkd_basename(Document*, char *);
 
 extern Document *mkd_in(FILE *, int);
 extern Document *mkd_string(char*,int, int);
