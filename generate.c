@@ -527,6 +527,7 @@ maybe_tag_or_link(MMIOT *f)
     char *text;
     int c, size, i;
     int maybetag=1, maybeaddress=0;
+    int mailto;
 
     if ( f->flags & INSIDE_TAG )
 	return 0;
@@ -564,22 +565,18 @@ maybe_tag_or_link(MMIOT *f)
 	}
     if ( maybeaddress ) {
 
-	if ( (size > 7) && strncasecmp(text, "mailto:", 7) == 0 ) {
-	    /* if the address is in the form mailto:<foo>, strip
-	     * off the mailto: part of the address so that it
-	     * won't display funnily.
-	     *
-	     * the magic number '7' is the length of the word "mailto:"
-	     */
-	    text += 7;
-	    size -= 7;
+	oputs("<a href=\"", f);
+	if ( (size > 7) && strncasecmp(text, "mailto:", 7) == 0 )
+	    mailto = 7;
+	else {
+	    mailto = 0;
+	    /* supply a mailto: protocol if one wasn't attached */
+	    mangle("mailto:", 7, f);
 	}
 
-	oputs("<a href=\"", f);
-	mangle("mailto:", 7, f);
 	mangle(text, size, f);
 	oputs("\">", f);
-	mangle(text, size, f);
+	mangle(text+mailto, size-mailto, f);
 	oputs("</a>", f);
 	return 1;
     }

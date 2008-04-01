@@ -49,7 +49,7 @@ queue(Document* a, Cstring *line)
 	if ( (c = *str++) == '\t' ) {
 	    /* expand tabs into ->tabstop spaces.  We use ->tabstop
 	     * because the ENTIRE FREAKING COMPUTER WORLD uses editors
-	     * that don't do ^T/^D, but instead use tabs for intentation,
+	     * that don't do ^T/^D, but instead use tabs for indentation,
 	     * and, of course, set their tabs down to 4 spaces 
 	     */
 	    do {
