@@ -497,6 +497,7 @@ codeblock(Paragraph *p)
 	t->dle = mkd_firstnonblank(t);
 
 	if ( !( (r = skipempty(t->next)) && iscode(r)) ) {
+	    freeLineRange(t,r);
 	    t->next = 0;
 	    return r;
 	}
