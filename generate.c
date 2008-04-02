@@ -483,6 +483,21 @@ linkylinky(int image, MMIOT *f)
 }
 
 
+/* write a character to output, doing text escapes ( & -> &amp;,
+ *                                          > -> &gt; < -> &lt; )
+ */
+static void
+cputc(int c, MMIOT *f)
+{
+    switch (c) {
+    case '&':   oputs("&amp;", f); break;
+    case '>':   oputs("&gt;", f); break;
+    case '<':   oputs("&lt;", f); break;
+    default :   oputc(c, f); break;
+    }
+}
+
+ 
 /*
  * convert an email address to a string of nonsense
  */
@@ -546,6 +561,8 @@ maybe_tag_or_link(MMIOT *f)
 
     if ( maybetag  || (size >= 3 && strncmp(cursor(f), "!--", 3) == 0) ) {
 	oputs(forbidden_tag(f) ? "&lt;" : "<", f);
+	while ( ((c = peek(f, size+1)) != EOF) && (c != '>') )
+	    cputc(pull(f), f);
 	return 1;
     }
 
@@ -895,29 +912,22 @@ code(int escape, MMIOT *f)
 
     while ( (c = pull(f)) != EOF ) {
 	switch (c) {
-	case '&':   oputs("&amp;", f); break;
-
-	case '>':   oputs("&gt;", f); break;
-
-	case '<':   oputs("&lt;", f); break;
-
-	case ' ':   if ( peek(f,1) == '`' && endofcode(escape,1, f) )
+	case ' ':   if ( peek(f,1) == '`' && endofcode(escape, 1, f) )
 			return;
 		    oputc(c, f);
 		    break;
 
-	case '`':   if ( endofcode(escape,0, f) )
+	case '`':   if ( endofcode(escape, 0, f) )
 			return;
 		    oputc(c, f);
 		    break;
 
-	case '\\':  oputc(c, f);
+	case '\\':  cputc(c, f);
 		    if ( peek(f,1) == '>' || (c = pull(f)) == EOF )
 			break;
-		    oputc(c, f);
+	
+	default:    cputc(c, f);
 		    break;
-
-	default:    oputc(c, f); break;
 	}
     }
 } /* code */
