@@ -71,4 +71,15 @@ else
     rc=1
 fi
 
+echo -n '  no smartypants inside tags ....... '
+
+count=`echo '<img src="linky">' | ./markdown | tr -dc '"' | wc -c`
+
+if [ $count -eq 2 ]; then
+    echo "ok"
+else
+    echo "FAILED"
+    rc=1
+fi
+
 exit $rc
