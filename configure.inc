@@ -710,7 +710,7 @@ EOF
     AC_PROG_INSTALL
 
     ac_os=`uname -s`
-    _os=`echo $ac_os | tr '[a-z]' '[A-Z]'`
+    _os=`echo $ac_os | tr '[a-z]' '[A-Z]' | sed -e 's/[^A-Z0-9_].*$//'`
     AC_DEFINE OS_$_os	1
     eval OS_${_os}=1
     unset _os

@@ -561,7 +561,7 @@ maybe_tag_or_link(MMIOT *f)
 
     if ( maybetag  || (size >= 3 && strncmp(cursor(f), "!--", 3) == 0) ) {
 	oputs(forbidden_tag(f) ? "&lt;" : "<", f);
-	while ( ((c = peek(f, size+1)) != EOF) && (c != '>') )
+	while ( ((c = peek(f, 1)) != EOF) && (c != '>') )
 	    cputc(pull(f), f);
 	return 1;
     }
