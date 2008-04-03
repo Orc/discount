@@ -67,7 +67,7 @@ arealloc(void *ptr, int size)
     if ( p2->magic == MAGIC ) {
 	save.next = p2->next;
 	save.last = p2->last;
-	p2 = realloc(p2, sizeof(p2) + size);
+	p2 = realloc(p2, sizeof(*p2) + size);
 
 	if ( p2 ) {
 	    p2->size = size;
