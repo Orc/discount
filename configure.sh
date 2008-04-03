@@ -9,7 +9,8 @@
 #
 ac_help='--enable-dl-tag	Use the DL tag extension
 --enable-pandoc-header	Use pandoc-style header blocks
---with-tabstops=N	Set tabstops to N characters (default is 4)'
+--with-tabstops=N	Set tabstops to N characters (default is 4)
+--enable-amalloc	Enable memory allocation debugging'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
@@ -98,6 +99,14 @@ else
 fi
 AC_DEFINE 'TABSTOP' $TABSTOP
 AC_SUB    'TABSTOP' $TABSTOP
+
+
+if [ "$WITH_AMALLOC" ]; then
+    AC_DEFINE	'USE_AMALLOC'	1
+    AC_SUB	'AMALLOC'	'amalloc.o'
+else
+    AC_SUB	'AMALLOC'	''
+fi
 
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
 

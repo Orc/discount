@@ -12,6 +12,7 @@
 
 #include "cstring.h"
 #include "markdown.h"
+#include "amalloc.h"
 
 #define afterdle(t)	(T((t)->text) + (t)->dle)
 

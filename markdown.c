@@ -15,6 +15,7 @@
 
 #include "cstring.h"
 #include "markdown.h"
+#include "amalloc.h"
 
 /* block-level tags for passing html blocks through the blender
  */
@@ -669,7 +670,12 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 	if ( !(q = skipempty(text)) || (islist(q,&trim) != top->typ) )
 	    break;
 
-	para = (q != text);
+	if ( para = (q != text) ) {
+	    Line anchor;
+
+	    anchor.next = text;
+	    freeLineRange(&anchor, q);
+	}
 
 	if ( para && (top->typ != DL) ) p->down->align = PARA;
     }
@@ -699,7 +705,7 @@ addfootnote(Line *p, MMIOT* f)
 {
     int j, i;
     int c;
-    Line *p2 = p->next;
+    Line *np = p->next;
 
     Footnote *foot = &EXPAND(f->footnotes);
     
@@ -729,9 +735,11 @@ addfootnote(Line *p, MMIOT* f)
     }
 
 
-    if ( (j >= S(p->text)) && p2 && p2->dle && tgood(T(p2->text)[p2->dle]) ) {
-	j = p2->dle;
-	p = p2;
+    if ( (j >= S(p->text)) && np && np->dle && tgood(T(np->text)[np->dle]) ) {
+	freeLine(p);
+	p = np;
+	np = p->next;
+	j = p->dle;
     }
 
     if ( (c = tgood(T(p->text)[j])) ) {
@@ -751,7 +759,8 @@ addfootnote(Line *p, MMIOT* f)
 	EXPAND(foot->title) = 0;
     }
 
-    return p->next;
+    freeLine(p);
+    return np;
 }
 
 
@@ -798,6 +807,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     ParagraphRoot d = { 0, 0 };
     Paragraph *p = 0;
     char *key;
+    Line *r;
     int para = toplevel;
     int hdr_type, list_type, indent;
 
@@ -817,7 +827,9 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	}
 	else if ( ishr(ptr) ) {
 	    p = Pp(&d, 0, HR);
+	    r = ptr;
 	    ptr = ptr->next;
+	    freeLine(r);
 	}
 	else if (( list_type = islist(ptr, &indent) )) {
 	    p = Pp(&d, ptr, list_type);

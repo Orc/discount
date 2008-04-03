@@ -31,6 +31,7 @@
 
 #include "mkdio.h"
 #include "cstring.h"
+#include "amalloc.h"
 
 char *pgm = "theme";
 char *output = 0;

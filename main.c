@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "config.h"
+#include "amalloc.h"
 
 #if HAVE_LIBGEN_H
 #include <libgen.h>
@@ -137,5 +138,6 @@ main(int argc, char **argv)
 	rc = mkd_dump(doc, stdout, 0, argc ? basename(argv[0]) : "stdin");
     else
 	rc = markdown(doc, stdout, flags);
+    adump();
     exit( (rc == 0) ? 0 : errno );
 }

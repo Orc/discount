@@ -35,6 +35,7 @@
 
 #include "mkdio.h"
 #include "cstring.h"
+#include "amalloc.h"
 
 char *pgm = "mkd2html";
 

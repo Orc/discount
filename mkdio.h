@@ -2,6 +2,7 @@
 #define _MKDIO_D
 
 #include <stdio.h>
+#include "amalloc.h"
 
 typedef void MMIOT;
 

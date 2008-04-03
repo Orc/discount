@@ -2,6 +2,7 @@
 #define _MARKDOWN_D
 
 #include "cstring.h"
+#include "amalloc.h"
 
 /* reference-style links (and images) are stored in an array
  * of footnotes.

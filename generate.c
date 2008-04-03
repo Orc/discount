@@ -15,6 +15,7 @@
 
 #include "cstring.h"
 #include "markdown.h"
+#include "amalloc.h"
 
 /* prefixes for <automatic links>
  */
@@ -1196,4 +1197,3 @@ mkd_style(Document *d, FILE *f)
 	return stylesheets(d->code, f);
     return EOF;
 }
-

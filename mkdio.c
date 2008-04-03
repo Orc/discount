@@ -12,6 +12,7 @@
 
 #include "cstring.h"
 #include "markdown.h"
+#include "amalloc.h"
 
 typedef ANCHOR(Line) LineAnchor;
 

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "markdown.h"
 #include "cstring.h"
+#include "amalloc.h"
 
 struct frame {
     int indent;
