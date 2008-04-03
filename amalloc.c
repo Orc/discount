@@ -43,7 +43,7 @@ amalloc(int size)
 }
 
 
-void *
+void
 afree(void *ptr)
 {
     struct alist *p2 = ((struct alist*)ptr)-1;
