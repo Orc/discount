@@ -11,7 +11,7 @@ PGMS=markdown
 SAMPLE_PGMS=mkd2html
 @THEME@SAMPLE_PGMS+= theme
 MKDLIB=libmarkdown.a
-OBJS=mkdio.o markdown.o dumptree.o generate.o docheader.o version.o @AMALLOC@
+OBJS=mkdio.o markdown.o dumptree.o generate.o resource.o docheader.o version.o @AMALLOC@
 
 all: $(PGMS) $(SAMPLE_PGMS)
 

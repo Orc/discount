@@ -12,6 +12,10 @@ struct alist { int magic, size; struct alist *next, *last; };
 
 static struct alist list =  { 0, 0, 0, 0 };
 
+static int mallocs=0;
+static int reallocs=0;
+static int frees=0;
+
 void *
 acalloc(int size, int count)
 {
@@ -30,6 +34,7 @@ acalloc(int size, int count)
 	    ret->last = ret->next = &list;
 	    list.next = list.last = ret;
 	}
+	++mallocs;
 	return ret+1;
     }
     return 0;
@@ -51,6 +56,7 @@ afree(void *ptr)
     if ( p2->magic == MAGIC ) {
 	p2->last->next = p2->next;
 	p2->next->last = p2->last;
+	++frees;
 	free(p2);
     }
     else
@@ -73,6 +79,7 @@ arealloc(void *ptr, int size)
 	    p2->size = size;
 	    p2->next->last = p2;
 	    p2->last->next = p2;
+	    ++reallocs;
 	    return p2+1;
 	}
 	else {
@@ -94,5 +101,11 @@ adump()
     for ( p = list.next; p && (p != &list); p = p->next ) {
 	fprintf(stderr, "allocated: %d byte%s\n", p->size, (p->size==1) ? "" : "s");
 	fprintf(stderr, "           [%.*s]\n", p->size, p+1);
+    }
+
+    if ( getenv("AMALLOC_STATISTICS") ) {
+	fprintf(stderr, "%d malloc%s\n", mallocs, (mallocs==1)?"":"s");
+	fprintf(stderr, "%d realloc%s\n", reallocs, (reallocs==1)?"":"s");
+	fprintf(stderr, "%d free%s\n", frees, (frees==1)?"":"s");
     }
 }

@@ -90,48 +90,186 @@ shift(MMIOT *f, int i)
 }
 
 
-
-/* write a character, possibly with xml escaping
+/* Qchar()
  */
 static void
-oputc(unsigned char c, MMIOT *f)
+Qchar(char c, MMIOT *f)
 {
-    if ( f->flags & CDATA_OUTPUT ) {
-	if ( c == '<' )
-	    fputs("&lt;", f->out);
-	else if ( c == '>' )
-	    fputs("&gt;", f->out);
-	else if ( c == '&' )
-	    fputs("&amp;", f->out);
-	else if ( c == '"' )
-	    fputs("&quot;", f->out);
-	else if ( c == '\'' )
-	    fputs("&apos;", f->out);
-	else if ( isascii(c) )
-	    fputc(c, f->out);
+    block *cur;
+    
+    if ( S(f->Q) == 0 ) {
+	cur = &EXPAND(f->Q);
+	memset(cur, 0, sizeof *cur);
+	cur->b_type = bTEXT;
     }
     else
-	fputc(c, f->out);
+	cur = &T(f->Q)[S(f->Q)-1];
+
+    EXPAND(cur->b_text) = c;
+    
 }
 
 
-/* write a string with oputc()
+/* Qstring()
  */
 static void
-oputs(char *s, MMIOT *f)
+Qstring(char *s, MMIOT *f)
 {
-    while ( *s )
-	oputc(*s++, f);
+    while (*s)
+	Qchar(*s++, f);
 }
 
 
-/* write a block with oputc()
+/* Qwrite()
  */
 static void
-oputblk(char *s, int len, MMIOT *f)
+Qwrite(char *s, int size, MMIOT *f)
 {
-    while ( len-- > 0 )
-	oputc(*s++, f);
+    while (size-- > 0)
+	Qchar(*s++, f);
+}
+
+
+/* Qprintf()
+ */
+static void
+Qprintf(MMIOT *f, char *fmt, ...)
+{
+    char bfr[80];
+    va_list ptr;
+
+    va_start(ptr,fmt);
+    vsnprintf(bfr, sizeof bfr, fmt, ptr);
+    va_end(ptr);
+    Qstring(bfr, f);
+}
+
+
+/* Qem()
+ */
+static void
+Qem(MMIOT *f, char c, int count)
+{
+    block *p = &EXPAND(f->Q);
+
+    memset(p, 0, sizeof *p);
+    p->b_type = (c == '*') ? bSTAR : bUNDER;
+    p->b_char = c;
+    p->b_count = count;
+
+    memset(&EXPAND(f->Q), 0, sizeof(block));
+}
+
+
+/* empair()
+ */
+static int
+empair(MMIOT *f, int go, int level)
+{
+    
+    int i;
+    block *begin, *p;
+
+    begin = &T(f->Q)[go];
+    for (i=go+1; i < S(f->Q); i++) {
+	p = &T(f->Q)[i];
+
+	if ( (p->b_type != bTEXT) && (p->b_count <= 0) )
+	    break;
+	
+	if ( p->b_type == begin->b_type ) {
+	    if ( p->b_count == level )	/* exact match */
+		return i-go;
+
+	    if ( p->b_count > 2 )	/* fuzzy match */
+		return i-go;
+	}
+    }
+    return EOF;
+}
+
+
+
+static struct emtags {
+    char open[10];
+    char close[10];
+    int size;
+} emtags[] = {  { "<em>" , "</em>", 5 }, { "<strong>", "</strong>", 9 } };
+
+
+static void
+emclose(Cstring *s, int level)
+{
+    PREFIX(*s, emtags[level-1].close, emtags[level-1].size);
+}
+
+
+static void
+emopen(Cstring *s, int level)
+{
+    SUFFIX(*s, emtags[level-1].open, emtags[level-1].size-1);
+}
+
+
+/* emmatch()
+ */
+static void
+emmatch(MMIOT *f, int go)
+{
+    block *start = &T(f->Q)[go], *end;
+    int e, e2, i, match;
+
+    while ( start->b_count ) {
+	switch (start->b_count) {
+	case 2: e = empair(f,go,match=2);
+		if ( e != EOF ) break;
+	case 1: e = empair(f,go,match=1); break;
+	default:
+	    e = empair(f,go,1);
+	    e2= empair(f,go,2);
+
+	    if ( e == EOF || ((e2 != EOF) && (e2 >= e)) ) {
+		e = e2;
+		match = 2;
+	    } 
+	    else
+		match = 1;
+	}
+	if ( e != EOF ) {
+	    end = &T(f->Q)[go+e];
+	    emclose(&end->b_post, match);
+	    emopen(&start->b_text, match);
+	    end->b_count -= match;
+	}
+	else {
+	    for (i=0; i < match; i++)
+		EXPAND(start->b_text) = start->b_char;
+	}
+	
+	start->b_count -= match;
+    }
+}
+
+
+/* emblock()
+ */
+static void
+emblock(MMIOT *f)
+{
+    int i;
+    block *p;
+
+    for (i=0; i < S(f->Q); i++) {
+	p = &T(f->Q)[i];
+	
+	if ( p->b_type != bTEXT ) emmatch(f, i);
+
+	if ( S(p->b_post) ) { SUFFIX(f->out, T(p->b_post), S(p->b_post));
+			      DELETE(p->b_post); }
+	if ( S(p->b_text) ) { SUFFIX(f->out, T(p->b_text), S(p->b_text));
+			      DELETE(p->b_text); }
+    }
+    S(f->Q) = 0;
 }
 
 
@@ -142,16 +280,21 @@ reparse(char *bfr, int size, int flags, MMIOT *f)
 {
     MMIOT sub;
 
-    memcpy(&sub, f, sizeof sub);
-    sub.isp = 0;
-    sub.flags |= flags;
+    ___mkd_initmmiot(&sub);
+    
+    sub.flags = f->flags | flags;
+    sub.base = f->base;
 
-    CREATE(sub.in);
     push(bfr, size, &sub);
     EXPAND(sub.in) = 0;
     S(sub.in)--;
+    
     text(&sub);
-    DELETE(sub.in);
+    emblock(&sub);
+    
+    Qwrite(T(sub.out), S(sub.out), f);
+    
+    ___mkd_freemmiot(&sub);
 }
 
 
@@ -167,14 +310,14 @@ puturl(char *s, int size, MMIOT *f)
 	c = *s++;
 
 	if ( c == '&' )
-	    oputs("&amp;", f);
+	    Qstring("&amp;", f);
 	else if ( c == '<' )
-	    oputs("&lt;", f);
+	    Qstring("&lt;", f);
 	else if ( isalnum(c) || c == '.' || c == '-' || c == '_' || c == '/'
 			     || c == '=' || c == '?' || c == ':' || c == '#' )
-	    oputc(c, f);
+	    Qchar(c, f);
 	else
-	    fprintf(f->out, "%%%02X", c);
+	    Qprintf(f, "%%%02X", c);
     }
 }
 
@@ -453,32 +596,29 @@ linkylinky(int image, MMIOT *f)
     }
 
     if ( tag->link_pfx ) {
-	oputs(tag->link_pfx, f);
+	Qstring(tag->link_pfx, f);
 	if ( f->base && (T(link.link)[tag->szpat] == '/') )
 	    puturl(f->base, strlen(f->base), f);
 	puturl(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
-	oputs(tag->link_sfx, f);
+	Qstring(tag->link_sfx, f);
 
 	if ( tag->WxH && link.height && link.width ) {
-	    oputs(" height=\"", f);
-	    fprintf(f->out, "%d", link.height);
-	    oputs("\" width=\"", f);
-	    fprintf(f->out, "%d", link.width);
-	    oputc('"', f);
+	    Qprintf(f," height=\"%s\"", link.height);
+	    Qprintf(f, " width=\"%d\"", link.width);
 	}
 
 	if ( S(link.title) ) {
-	    oputs(" title=\"", f);
+	    Qstring(" title=\"", f);
 	    reparse(T(link.title), S(link.title), INSIDE_TAG, f);
-	    oputc('"', f);
+	    Qchar('"', f);
 	}
 
-	oputs(tag->text_pfx, f);
+	Qstring(tag->text_pfx, f);
 	reparse(T(link.tag), S(link.tag), tag->flags, f);
-	oputs(tag->text_sfx, f);
+	Qstring(tag->text_sfx, f);
     }
     else
-	oputblk(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
+	Qwrite(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
 
     return 1;
 }
@@ -491,10 +631,10 @@ static void
 cputc(int c, MMIOT *f)
 {
     switch (c) {
-    case '&':   oputs("&amp;", f); break;
-    case '>':   oputs("&gt;", f); break;
-    case '<':   oputs("&lt;", f); break;
-    default :   oputc(c, f); break;
+    case '&':   Qstring("&amp;", f); break;
+    case '>':   Qstring("&gt;", f); break;
+    case '<':   Qstring("&lt;", f); break;
+    default :   Qchar(c, f); break;
     }
 }
 
@@ -506,8 +646,8 @@ static void
 mangle(unsigned char *s, int len, MMIOT *f)
 {
     while ( len-- > 0 ) {
-	oputs("&#", f);
-	fprintf(f->out, COINTOSS() ? "x%02x;" : "%02d;", *s++);
+	Qstring("&#", f);
+	Qprintf(f, COINTOSS() ? "x%02x;" : "%02d;", *s++);
     }
 }
 
@@ -561,8 +701,8 @@ maybe_tag_or_link(MMIOT *f)
 	return 0;
 
     if ( maybetag  || (size >= 3 && strncmp(cursor(f), "!--", 3) == 0) ) {
-	oputs(forbidden_tag(f) ? "&lt;" : "<", f);
-	while ( ((c = peek(f, 1)) != EOF) && (c != '>') )
+	Qstring(forbidden_tag(f) ? "&lt;" : "<", f);
+	while ( ((c = peek(f, size+1)) != EOF) && (c != '>') )
 	    cputc(pull(f), f);
 	return 1;
     }
@@ -574,16 +714,16 @@ maybe_tag_or_link(MMIOT *f)
 
     for ( i=0; i < SZAUTOPREFIX; i++ )
 	if ( strncasecmp(text, autoprefix[i], strlen(autoprefix[i])) == 0 ) {
-	    oputs("<a href=\"", f);
+	    Qstring("<a href=\"", f);
 	    puturl(text,size,f);
-	    oputs("\">", f);
+	    Qstring("\">", f);
 	    reparse(text, size, DENY_A, f);
-	    oputs("</a>", f);
+	    Qstring("</a>", f);
 	    return 1;
 	}
     if ( maybeaddress ) {
 
-	oputs("<a href=\"", f);
+	Qstring("<a href=\"", f);
 	if ( (size > 7) && strncasecmp(text, "mailto:", 7) == 0 )
 	    mailto = 7;
 	else {
@@ -593,9 +733,9 @@ maybe_tag_or_link(MMIOT *f)
 	}
 
 	mangle(text, size, f);
-	oputs("\">", f);
+	Qstring("\">", f);
 	mangle(text+mailto, size-mailto, f);
-	oputs("</a>", f);
+	Qstring("</a>", f);
 	return 1;
     }
 
@@ -629,17 +769,13 @@ smartyquote(int *flags, char typeofquote, MMIOT *f)
 
     if ( bit & (*flags) ) {
 	if ( isthisnonword(f,1) ) {
-	    oputs("&r", f);
-	    oputc(typeofquote, f);
-	    oputs("quo;", f);
+	    Qprintf(f, "&r%cquo;", typeofquote);
 	    (*flags) &= ~bit;
 	    return 1;
 	}
     }
     else if ( isthisnonword(f,-1) && peek(f,1) != EOF ) {
-	oputs("&l", f);
-	oputc(typeofquote, f);
-	oputs("quo;", f);
+	Qprintf(f, "&l%cquo;", typeofquote);
 	(*flags) |= bit;
 	return 1;
     }
@@ -712,11 +848,8 @@ smartypants(int c, int *flags, MMIOT *f)
 
     for ( i=0; i < NRSMART; i++)
 	if ( (c == smarties[i].c0) && islike(f, smarties[i].pat) ) {
-	    if ( smarties[i].entity ) {
-		oputc('&', f);
-		oputs(smarties[i].entity, f);
-		oputc(';', f);
-	    }
+	    if ( smarties[i].entity )
+		Qprintf(f, "&%s;", smarties[i].entity);
 	    shift(f, smarties[i].shift);
 	    return 1;
 	}
@@ -738,9 +871,9 @@ smartypants(int c, int *flags, MMIOT *f)
 			else if ( c == '`' )
 			    break;
 			else if ( c == '\'' && peek(f, j+1) == '\'' ) {
-			    oputs("&ldquo;", f);
+			    Qstring("&ldquo;", f);
 			    reparse(cursor(f)+1, j-2, 0, f);
-			    oputs("&rdquo;", f);
+			    Qstring("&rdquo;", f);
 			    shift(f,j+1);
 			    return 1;
 			}
@@ -761,8 +894,7 @@ static void
 text(MMIOT *f)
 {
     int c, j;
-    int em = 0;
-    int strong = 0;
+    int rep;
     int smartyflags = 0;
 
     while ( (c = pull(f)) != EOF ) {
@@ -772,91 +904,81 @@ text(MMIOT *f)
 	case 0:     break;
 
 	case '>':   if ( tag_text(f) )
-			oputs("&gt;", f);
+			Qstring("&gt;", f);
 		    else
-			oputc(c, f);
+			Qchar(c, f);
 		    break;
 
 	case '"':   if ( tag_text(f) )
-			oputs("&quot;", f);
+			Qstring("&quot;", f);
 		    else
-			oputc(c, f);
+			Qchar(c, f);
 		    break;
 			
 	case '!':   if ( peek(f,1) == '[' ) {
 			pull(f);
 			if ( tag_text(f) || !linkylinky(1, f) )
-			    oputs("![", f);
+			    Qstring("![", f);
 		    }
 		    else
-			oputc(c, f);
+			Qchar(c, f);
 		    break;
 	case '[':   if ( tag_text(f) || !linkylinky(0, f) )
-			oputc(c, f);
+			Qchar(c, f);
 		    break;
 	case '*':
 	case '_':   if ( tag_text(f) )
-			oputc(c, f);
+			Qchar(c, f);
+#if RELAXED_EMPHASIS
 		    else if ( peek(f,1) == c ) {
-			pull(f);
-			if ( c == strong ) {
-			    oputs("</strong>", f);
-			    strong = 0;
-			}
-			else if ( strong == 0 ) {
-			    oputs("<strong>", f);
-			    strong = c;
-			}
-			else {
-			    oputc(c, f);
-			    oputc(c, f);
-			}
+			for ( rep = 1; peek(f,1) == c; pull(f) )
+			    ++rep;
+
+			Qem(f, c, rep);
 		    }
 		    else if ( (isthisspace(f,-1) && isthisspace(f,1))
 			   || (isalnum(peek(f,-1)) && isalnum(peek(f,1))) )
-			oputc(c, f);
+			Qchar(c, f);
 		    else {
-			if (c == em ) {
-			    oputs("</em>", f);
-			    em = 0;
-			}
-			else if ( em == 0 ) {
-			    oputs("<em>", f);
-			    em = c;
-			}
-			else
-			    oputc(c, f);
+			Qem(f, c, 1);
 		    }
+#else
+		    else {
+			for (rep = 1; peek(f,1) == c; pull(f) )
+			    ++rep;
+			Qem(f,c,rep);
+		    }
+#endif
 		    break;
 	
 	case '`':   if ( tag_text(f) )
-			oputc(c, f);
+			Qchar(c, f);
 		    else {
-			oputs("<code>", f);
+			Qstring("<code>", f);
 			if ( peek(f, 1) == '`' ) {
 			    pull(f);
 			    code(2, f);
 			}
 			else
 			    code(1, f);
-			oputs("</code>", f);
+			Qstring("</code>", f);
 		    }
 		    break;
 
 	case '\\':  switch ( c = pull(f) ) {
-		    case '&':   oputs("&amp;", f);
+		    case '&':   Qstring("&amp;", f);
 				break;
-		    case '<':   oputs("&lt;", f);
+		    case '<':   Qstring("&lt;", f);
 				break;
 		    case '\\':
 		    case '>': case '#': case '.': case '-':
 		    case '+': case '{': case '}': case ']':
 		    case '(': case ')': case '"': case '\'':
 		    case '!': case '[': case '*': case '_':
-		    case '`':	oputc(c, f);
+		    case '`':	Qchar(c, f);
 				break;
 		    default:
-				oputc('\\', f);
+				Qchar('\\', f);
 				if ( c != EOF )
 				    shift(f,-1);
 				break;
@@ -864,7 +986,7 @@ text(MMIOT *f)
 		    break;
 
 	case '<':   if ( !maybe_tag_or_link(f) )
-			oputs("&lt;", f);
+			Qstring("&lt;", f);
 		    break;
 
 	case '&':   j = (peek(f,1) == '#' ) ? 2 : 1;
@@ -872,17 +994,15 @@ text(MMIOT *f)
 			++j;
 
 		    if ( peek(f,j) != ';' )
-			oputs("&amp;", f);
+			Qstring("&amp;", f);
 		    else
-			oputc(c, f);
+			Qchar(c, f);
 		    break;
 
-	default:    oputc(c, f);
+	default:    Qchar(c, f);
 		    break;
 	}
     }
-    if ( em ) oputs("</em>", f);
-    if ( strong ) oputs("</strong>", f);
 } /* text */
 
 
@@ -915,12 +1035,12 @@ code(int escape, MMIOT *f)
 	switch (c) {
 	case ' ':   if ( peek(f,1) == '`' && endofcode(escape, 1, f) )
 			return;
-		    oputc(c, f);
+		    Qchar(c, f);
 		    break;
 
 	case '`':   if ( endofcode(escape, 0, f) )
 			return;
-		    oputc(c, f);
+		    Qchar(c, f);
 		    break;
 
 	case '\\':  cputc(c, f);
@@ -939,14 +1059,10 @@ code(int escape, MMIOT *f)
 static void
 printheader(Paragraph *pp, MMIOT *f)
 {
-    oputs("<h", f);
-    fprintf(f->out, "%d", pp->hnumber);
-    oputc('>', f);
+    Qprintf(f, "<h%d>", pp->hnumber);
     push(T(pp->text->text), S(pp->text->text), f);
     text(f);
-    oputs("</h", f);
-    fprintf(f->out, "%d", pp->hnumber);
-    oputc('>', f);
+    Qprintf(f, "</h%d>", pp->hnumber);
 }
 
 
@@ -972,9 +1088,9 @@ printblock(Paragraph *pp, MMIOT *f)
 	}
 	t = t->next;
     }
-    oputs(Begin[pp->align], f);
+    Qstring(Begin[pp->align], f);
     text(f);
-    oputs(End[pp->align], f);
+    Qstring(End[pp->align], f);
     return 1;
 }
 
@@ -995,9 +1111,9 @@ printcode(Line *t, MMIOT *f)
 	}
 	else blanks++;
 
-    oputs("<pre><code>", f);
+    Qstring("<pre><code>", f);
     code(0, f);
-    oputs("</code></pre>", f);
+    Qstring("</code></pre>", f);
 }
 
 
@@ -1009,10 +1125,10 @@ printhtml(Line *t, MMIOT *f)
     for ( blanks=0; t ; t = t->next )
 	if ( S(t->text) ) {
 	    for ( ; blanks; --blanks ) 
-		oputc('\n', f);
+		Qchar('\n', f);
 
-	    oputblk(T(t->text), S(t->text), f);
-	    oputc('\n', f);
+	    Qwrite(T(t->text), S(t->text), f);
+	    Qchar('\n', f);
 	}
 	else
 	    blanks++;
@@ -1020,22 +1136,19 @@ printhtml(Line *t, MMIOT *f)
 
 
 static void
-emit(Paragraph *p, char *block, MMIOT *f)
+htmlify(Paragraph *p, char *block, MMIOT *f)
 {
-    if ( block ) {
-	oputc('<', f);
-	oputs(block, f);
-	oputc('>', f);
+    emblock(f);
+    if ( block ) Qprintf(f, "<%s>", block);
+    emblock(f);
+
+    while (( p = display(p, f) )) {
+	emblock(f);
+	Qstring("\n\n", f);
     }
 
-    while (( p = display(p, f) ))
-	oputs("\n\n", f);
-
-    if ( block ) {
-	oputs("</", f);
-	oputs(block, f);
-	oputc('>', f);
-    }
+    if ( block ) Qprintf(f, "</%s>", block);
+    emblock(f);
 }
 
 
@@ -1046,18 +1159,18 @@ definitionlist(Paragraph *p, MMIOT *f)
     Line *tag;
 
     if ( p ) {
-	oputs("<dl>\n", f);
+	Qstring("<dl>\n", f);
 
 	for ( ; p ; p = p->next) {
-	    oputs("<dt>", f);
+	    Qstring("<dt>", f);
 	    if (( tag = p->text ))
 		reparse(T(tag->text), S(tag->text), 0, f);
-	    oputs("</dt>\n", f);
+	    Qstring("</dt>\n", f);
 
-	    emit(p->down, "dd", f);
+	    htmlify(p->down, "dd", f);
 	}
 
-	oputs("</dl>", f);
+	Qstring("</dl>", f);
     }
 }
 #endif
@@ -1067,18 +1180,14 @@ static void
 listdisplay(int typ, Paragraph *p, MMIOT* f)
 {
     if ( p ) {
-	oputc('<', f);
-	oputc((typ==UL)?'u':'o', f);
-	oputs("l>\n", f);
+	Qprintf(f, "<%cl>\n", (typ==UL)?'u':'o');
 
 	for ( ; p ; p = p->next ) {
-	    emit(p->down, "li", f);
-	    oputc('\n', f);
+	    htmlify(p->down, "li", f);
+	    Qchar('\n', f);
 	}
 
-	oputs("</", f);
-	oputc((typ==UL)?'u':'o', f);
-	oputs("l>", f);
+	Qprintf(f, "</%cl>\n", (typ==UL)?'u':'o');
     }
 }
 
@@ -1104,7 +1213,7 @@ display(Paragraph *p, MMIOT *f)
 	break;
 	
     case QUOTE:
-	emit(p->down, "blockquote", f);
+	htmlify(p->down, "blockquote", f);
 	break;
 	
     case UL:
@@ -1119,7 +1228,7 @@ display(Paragraph *p, MMIOT *f)
 #endif
 
     case HR:
-	oputs("<hr />", f);
+	Qstring("<hr />", f);
 	break;
 
     case HDR:
@@ -1157,18 +1266,22 @@ stylesheets(Paragraph *p, FILE *f)
 }
 
 
-/* public interface for emit()
+/* return a pointer to the compiled markdown
+ * document.
  */
 int
-mkd_generatehtml(Document *p, FILE *f)
+mkd_document(Document *p, char **res)
 {
-    if ( p->compiled ) {
-	p->ctx->out = f;
-	emit(p->code, 0, p->ctx);
-	putc('\n', f);
-	return 0;
+    if ( p && p->compiled ) {
+	if ( ! p->html ) {
+	    htmlify(p->code, 0, p->ctx);
+	    p->html = 1;
+	}
+
+	*res = T(p->ctx->out);
+	return S(p->ctx->out);
     }
-    return -1;
+    return EOF;
 }
 
 
@@ -1179,11 +1292,14 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
 {
     MMIOT f;
 
-    memset(&f, 0, sizeof f);
-    f.out = output;
+    ___mkd_initmmiot(&f);
     f.flags = flags & USER_FLAGS;
     
     reparse(bfr, size, 0, &f);
+    fwrite(T(f.out), S(f.out), 1, output);
+    putc('\n', output);
+
+    ___mkd_freemmiot(&f);
     return 0;
 }
 
@@ -1197,3 +1313,4 @@ mkd_style(Document *d, FILE *f)
 	return stylesheets(d->code, f);
     return EOF;
 }
+

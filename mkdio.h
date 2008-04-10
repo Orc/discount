@@ -33,6 +33,10 @@ char* mkd_doc_title(MMIOT*);
 char* mkd_doc_author(MMIOT*);
 char* mkd_doc_date(MMIOT*);
 
+/* compiled data access
+ */
+int mkd_document(MMIOT*, char**);
+
 /* version#.
  */
 extern char markdown_version[];

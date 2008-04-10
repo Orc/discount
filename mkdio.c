@@ -102,7 +102,7 @@ populate(getc_func getc, void* ctx, int flags)
 	if ( c == '\n' ) {
 #ifdef PANDOC_HEADER
 	    if ( pandoc != EOF && pandoc < 3 ) {
-		if ( T(line)[0] == '%' )
+		if ( S(line) && (T(line)[0] == '%') )
 		    pandoc++;
 		else
 		    pandoc = EOF;
@@ -178,6 +178,40 @@ mkd_string(char *buf, int len, int flags)
     about.size = len;
 
     return populate((getc_func)strget, &about, flags & INPUT_MASK);
+}
+
+
+/* write the html to a file (xmlified if necessary)
+ */
+int
+mkd_generatehtml(Document *p, FILE *output)
+{
+    char *doc;
+    int szdoc;
+
+    if ( (szdoc = mkd_document(p, &doc)) != EOF ) {
+	if ( p->ctx->flags & CDATA_OUTPUT ) {
+	    char c;
+
+	    while ( szdoc-- > 0 ) {
+		if ( !isascii(c = *doc++) )
+		    continue;
+		switch (c) {
+		case '<': fputs("&lt;", output);   break;
+		case '>': fputs("&gt;", output);   break;
+		case '&': fputs("&amp;", output);  break;
+		case '"': fputs("&quot;", output); break;
+		case '\'':fputs("&apos;", output); break;
+		default:  putc(c,output);          break;
+		}
+	    }
+	}
+	else
+	    fwrite(doc, szdoc, 1, output);
+	putc('\n', output);
+	return 0;
+    }
+    return -1;
 }
 
 

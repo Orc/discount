@@ -77,65 +77,6 @@ __mkd_footsort(Footnote *a, Footnote *b)
 }
 
 
-static void
-freeLine(Line *ptr)
-{
-    DELETE(ptr->text);
-    free(ptr);
-}
-
-
-static void
-freeLines(Line *p)
-{
-    if (p->next)
-	 freeLines(p->next);
-    freeLine(p);
-}
-
-
-static void
-freeParagraph(Paragraph *p)
-{
-    if (p->next)
-	freeParagraph(p->next);
-    if (p->down)
-	freeParagraph(p->down);
-    if (p->text)
-	freeLines(p->text);
-    free(p);
-}
-
-
-static void
-freefootnotes(MMIOT *f)
-{
-    int i;
-
-    for (i=0; i < S(f->footnotes); i++) {
-	DELETE(T(f->footnotes)[i].tag);
-	DELETE(T(f->footnotes)[i].link);
-	DELETE(T(f->footnotes)[i].title);
-    }
-    DELETE(f->footnotes);
-}
-
-
-static void
-freeLineRange(Line *anchor, Line *stop)
-{
-    Line *r = anchor->next;
-
-    if ( r != stop ) {
-	while ( r && (r->next != stop) )
-	    r = r->next;
-	r->next = 0;
-	freeLines(anchor->next);
-    }
-    anchor->next = 0;
-}
-
-
 /* find the first blank character after position <i>
  */
 static int
@@ -453,7 +394,7 @@ headerblock(Paragraph *pp, int htyp)
 	    pp->hnumber = (T(p->next->text)[0] == '=') ? 1 : 2;
 	    
 	    ret = p->next->next;
-	    freeLine(p->next);
+	    ___mkd_freeLine(p->next);
 	    p->next = 0;
 	    break;
 
@@ -498,7 +439,7 @@ codeblock(Paragraph *p)
 	t->dle = mkd_firstnonblank(t);
 
 	if ( !( (r = skipempty(t->next)) && iscode(r)) ) {
-	    freeLineRange(t,r);
+	    ___mkd_freeLineRange(t,r);
 	    t->next = 0;
 	    return r;
 	}
@@ -580,7 +521,7 @@ quoteblock(Paragraph *p)
 	}
 
 	if ( !(q = skipempty(t->next)) || ((q != t->next) && !isquote(q)) ) {
-	    freeLineRange(t, q);
+	    ___mkd_freeLineRange(t, q);
 	    return q;
 	}
     }
@@ -610,7 +551,7 @@ listitem(Paragraph *p, int indent)
 	t->dle = mkd_firstnonblank(t);
 
 	if ( (q = skipempty(t->next)) == 0 ) {
-	    freeLineRange(t,q);
+	    ___mkd_freeLineRange(t,q);
 	    return 0;
 	}
 
@@ -674,7 +615,7 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 	    Line anchor;
 
 	    anchor.next = text;
-	    freeLineRange(&anchor, q);
+	    ___mkd_freeLineRange(&anchor, q);
 	}
 
 	if ( para && (top->typ != DL) ) p->down->align = PARA;
@@ -736,7 +677,7 @@ addfootnote(Line *p, MMIOT* f)
 
 
     if ( (j >= S(p->text)) && np && np->dle && tgood(T(np->text)[np->dle]) ) {
-	freeLine(p);
+	___mkd_freeLine(p);
 	p = np;
 	np = p->next;
 	j = p->dle;
@@ -759,7 +700,7 @@ addfootnote(Line *p, MMIOT* f)
 	EXPAND(foot->title) = 0;
     }
 
-    freeLine(p);
+    ___mkd_freeLine(p);
     return np;
 }
 
@@ -789,7 +730,7 @@ consume(Line *ptr, int *eaten)
 
     for (; ptr && blankline(ptr); ptr = next, blanks++ ) {
 	next = ptr->next;
-	freeLine(ptr);
+	___mkd_freeLine(ptr);
     }
     if ( ptr ) *eaten = blanks;
     return ptr;
@@ -829,7 +770,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p = Pp(&d, 0, HR);
 	    r = ptr;
 	    ptr = ptr->next;
-	    freeLine(r);
+	    ___mkd_freeLine(r);
 	}
 	else if (( list_type = islist(ptr, &indent) )) {
 	    p = Pp(&d, ptr, list_type);
@@ -915,20 +856,3 @@ mkd_compile(Document *doc, int flags)
     return 1;
 }
 
-
-/* clean up everything allocated in __mkd_compile()
- */
-void
-mkd_cleanup(Document *doc)
-{
-    if ( doc ) {
-	freefootnotes(doc->ctx);
-	DELETE(doc->ctx->in);
-	free(doc->ctx);
-
-	if ( doc->code) freeParagraph(doc->code);
-	if ( doc->headers ) freeLines(doc->headers);
-	if ( T(doc->content) ) freeLines(T(doc->content));
-	free(doc);
-    }
-}

@@ -93,7 +93,7 @@ main(int argc, char **argv)
     pgm = basename(argv[0]);
     opterr = 1;
 
-    while ( (opt=getopt(argc, argv, "b:d:f:F:o:V")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "b:df:F:o:V")) != EOF ) {
 	switch (opt) {
 	case 'b':   urlbase = optarg;
 		    break;

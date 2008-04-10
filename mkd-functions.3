@@ -15,7 +15,9 @@ Markdown
 .Ft int
 .Fn mkd_style  "MMIOT *document" "FILE *output"
 .Ft int
-.Fn mkd_generatehtml  "MMIOT document" "FILE *output"
+.Fn mkd_document "MMIOT *document" "char **doc"
+.Ft int
+.Fn mkd_generatehtml  "MMIOT *document" "FILE *output"
 .Ft void
 .Fn mkd_cleanup "MMIOT*"
 .Ft char*
@@ -57,6 +59,7 @@ sections.
 Once compiled, the document can be examined and written
 by the
 .Fn mkd_style ,
+.Fn mkd_document ,
 .Fn mkd_generatehtml ,
 .Fn mkd_doc_title ,
 .Fn mkd_doc_author ,
@@ -66,6 +69,11 @@ functions.
 The 
 .Fn mkd_style
 writes any \<style\> sections to the output,
+.Fn mkd_document
+points
+.Ar text
+to the text of the document and returns the
+size of the document,
 .Fn mkd_generatehtml
 writes the rest of the document to the output,
 and 

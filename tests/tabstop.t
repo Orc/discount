@@ -5,7 +5,7 @@ unset MKD_TABSTOP
 
 eval `./markdown -V | tr ' ' '\n' | grep TAB`
 
-if [ "$TAB" -eq 8 ]; then
+if [ "${TAB:-4}" -eq 8 ]; then
     echo "dealing with tabstop derangement"
 
     LIST='
