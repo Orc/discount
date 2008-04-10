@@ -1296,8 +1296,8 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
     f.flags = flags & USER_FLAGS;
     
     reparse(bfr, size, 0, &f);
+    emblock(&f);
     fwrite(T(f.out), S(f.out), 1, output);
-    putc('\n', output);
 
     ___mkd_freemmiot(&f);
     return 0;
