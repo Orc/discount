@@ -603,7 +603,7 @@ linkylinky(int image, MMIOT *f)
 	Qstring(tag->link_sfx, f);
 
 	if ( tag->WxH && link.height && link.width ) {
-	    Qprintf(f," height=\"%s\"", link.height);
+	    Qprintf(f," height=\"%d\"", link.height);
 	    Qprintf(f, " width=\"%d\"", link.width);
 	}
 
