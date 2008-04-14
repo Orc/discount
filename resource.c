@@ -60,26 +60,34 @@ ___mkd_freefootnotes(MMIOT *f)
 {
     int i;
 
-    for (i=0; i < S(f->footnotes); i++) {
-	DELETE(T(f->footnotes)[i].tag);
-	DELETE(T(f->footnotes)[i].link);
-	DELETE(T(f->footnotes)[i].title);
+    if ( f->footnotes ) {
+	for (i=0; i < S(*f->footnotes); i++) {
+	    DELETE(T(*f->footnotes)[i].tag);
+	    DELETE(T(*f->footnotes)[i].link);
+	    DELETE(T(*f->footnotes)[i].title);
+	}
+	DELETE(*f->footnotes);
+	free(f->footnotes);
     }
-    DELETE(f->footnotes);
 }
 
 
 /* initialize a new MMIOT
  */
 void
-___mkd_initmmiot(MMIOT *f)
+___mkd_initmmiot(MMIOT *f, void *footnotes)
 {
     if ( f ) {
 	memset(f, 0, sizeof *f);
 	CREATE(f->in);
 	CREATE(f->out);
 	CREATE(f->Q);
-	CREATE(f->footnotes);
+	if ( footnotes )
+	    f->footnotes = footnotes;
+	else {
+	    f->footnotes = malloc(sizeof f->footnotes[0]);
+	    CREATE(*f->footnotes);
+	}
     }
 }
 
@@ -87,13 +95,14 @@ ___mkd_initmmiot(MMIOT *f)
 /* free the contents of a MMIOT, but leave the object alone.
  */
 void
-___mkd_freemmiot(MMIOT *f)
+___mkd_freemmiot(MMIOT *f, void *footnotes)
 {
     if ( f ) {
 	DELETE(f->in);
 	DELETE(f->out);
 	DELETE(f->Q);
-	___mkd_freefootnotes(f);
+	if ( f->footnotes != footnotes )
+	    ___mkd_freefootnotes(f);
 	memset(f, 0, sizeof *f);
     }
 }
@@ -123,7 +132,7 @@ mkd_cleanup(Document *doc)
 {
     if ( doc ) {
 	if ( doc->ctx ) {
-	    ___mkd_freemmiot(doc->ctx);
+	    ___mkd_freemmiot(doc->ctx, 0);
 	    free(doc->ctx);
 	}
 
