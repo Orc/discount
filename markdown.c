@@ -648,7 +648,7 @@ addfootnote(Line *p, MMIOT* f)
     int c;
     Line *np = p->next;
 
-    Footnote *foot = &EXPAND(f->footnotes);
+    Footnote *foot = &EXPAND(*f->footnotes);
     
     CREATE(foot->tag);
     CREATE(foot->link);
@@ -698,6 +698,7 @@ addfootnote(Line *p, MMIOT* f)
 	if ( S(foot->title) )	/* skip trailing quote */
 	    --S(foot->title);
 	EXPAND(foot->title) = 0;
+	--S(foot->title);
     }
 
     ___mkd_freeLine(p);
@@ -844,13 +845,14 @@ mkd_compile(Document *doc, int flags)
     doc->ctx->flags = flags & USER_FLAGS;
     doc->ctx->base = doc->base;
     CREATE(doc->ctx->in);
-    CREATE(doc->ctx->footnotes);
+    doc->ctx->footnotes = malloc(sizeof doc->ctx->footnotes[0]);
+    CREATE(*doc->ctx->footnotes);
 
     initialize();
 
     doc->code = compile(T(doc->content), 1, doc->ctx);
-    qsort(T(doc->ctx->footnotes), S(doc->ctx->footnotes),
-		        sizeof T(doc->ctx->footnotes)[0],
+    qsort(T(*doc->ctx->footnotes), S(*doc->ctx->footnotes),
+		        sizeof T(*doc->ctx->footnotes)[0],
 			           (stfu)__mkd_footsort);
     memset(&doc->content, 0, sizeof doc->content);
     return 1;
