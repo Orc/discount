@@ -120,5 +120,6 @@ extern void ___mkd_freefootnotes(MMIOT *);
 extern void ___mkd_initmmiot(MMIOT *, void *);
 extern void ___mkd_freemmiot(MMIOT *, void *);
 extern void ___mkd_freeLineRange(Line *, Line *);
+extern void ___mkd_xml(char *, int, FILE *);
 
 #endif/*_MARKDOWN_D*/

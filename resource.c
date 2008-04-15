@@ -143,3 +143,25 @@ mkd_cleanup(Document *doc)
 	free(doc);
     }
 }
+
+
+/* write output in XML format
+ */
+void
+___mkd_xml(char *p, int size, FILE *out)
+{
+    char c;
+
+    while ( size-- > 0 ) {
+	if ( !isascii(c = *p++) )
+	    continue;
+	switch (c) {
+	case '<': fputs("&lt;", out);   break;
+	case '>': fputs("&gt;", out);   break;
+	case '&': fputs("&amp;", out);  break;
+	case '"': fputs("&quot;", out); break;
+	case '\'':fputs("&apos;", out); break;
+	default:  putc(c,out);          break;
+	}
+    }
+}
