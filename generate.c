@@ -280,7 +280,7 @@ reparse(char *bfr, int size, int flags, MMIOT *f)
 {
     MMIOT sub;
 
-    ___mkd_initmmiot(&sub);
+    ___mkd_initmmiot(&sub, f->footnotes);
     
     sub.flags = f->flags | flags;
     sub.base = f->base;
@@ -293,8 +293,8 @@ reparse(char *bfr, int size, int flags, MMIOT *f)
     emblock(&sub);
     
     Qwrite(T(sub.out), S(sub.out), f);
-    
-    ___mkd_freemmiot(&sub);
+
+    ___mkd_freemmiot(&sub, f->footnotes);
 }
 
 
@@ -498,11 +498,10 @@ linkykey(int image, Footnote *val, MMIOT *f)
 	if ( (T(val->tag) = linkylabel(f, &S(val->tag))) == 0 )
 	    return 0;
 
-	if ( !S(val->tag) ) {
+	if ( !S(val->tag) )
 	    val->tag = mylabel;
-	}
 
-	ret = bsearch(val, T(f->footnotes), S(f->footnotes),
+	ret = bsearch(val, T(*f->footnotes), S(*f->footnotes),
 	               sizeof *val, (stfu)__mkd_footsort);
 
 	if ( ret ) {
@@ -580,7 +579,7 @@ linkylinky(int image, MMIOT *f)
     Footnote link;
     linkytype *tag;
 
-    if ( !(linkykey(image, &link, f) && S(link.tag))  ) {
+    if ( !(linkykey(image, &link, f) && S(link.tag)) ) {
 	mmiotseek(f, start);
 	return 0;
     }
@@ -1292,14 +1291,17 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
 {
     MMIOT f;
 
-    ___mkd_initmmiot(&f);
+    ___mkd_initmmiot(&f, 0);
     f.flags = flags & USER_FLAGS;
     
     reparse(bfr, size, 0, &f);
     emblock(&f);
-    fwrite(T(f.out), S(f.out), 1, output);
+    if ( flags & CDATA_OUTPUT )
+	___mkd_xml(T(f.out), S(f.out), output);
+    else
+	fwrite(T(f.out), S(f.out), 1, output);
 
-    ___mkd_freemmiot(&f);
+    ___mkd_freemmiot(&f, 0);
     return 0;
 }
 

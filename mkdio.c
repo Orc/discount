@@ -190,22 +190,8 @@ mkd_generatehtml(Document *p, FILE *output)
     int szdoc;
 
     if ( (szdoc = mkd_document(p, &doc)) != EOF ) {
-	if ( p->ctx->flags & CDATA_OUTPUT ) {
-	    char c;
-
-	    while ( szdoc-- > 0 ) {
-		if ( !isascii(c = *doc++) )
-		    continue;
-		switch (c) {
-		case '<': fputs("&lt;", output);   break;
-		case '>': fputs("&gt;", output);   break;
-		case '&': fputs("&amp;", output);  break;
-		case '"': fputs("&quot;", output); break;
-		case '\'':fputs("&apos;", output); break;
-		default:  putc(c,output);          break;
-		}
-	    }
-	}
+	if ( p->ctx->flags & CDATA_OUTPUT )
+	    ___mkd_xml(doc, szdoc, output);
 	else
 	    fwrite(doc, szdoc, 1, output);
 	putc('\n', output);

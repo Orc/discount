@@ -62,7 +62,7 @@ typedef struct mmiot {
     Cstring in;
     Qblock Q;
     int isp;
-    STRING(Footnote) footnotes;
+    STRING(Footnote) *footnotes;
     int flags;
 #define DENY_A		0x0001
 #define DENY_IMG	0x0002
@@ -117,8 +117,9 @@ extern void ___mkd_freeLine(Line *);
 extern void ___mkd_freeLines(Line *);
 extern void ___mkd_freeParagraph(Paragraph *);
 extern void ___mkd_freefootnotes(MMIOT *);
-extern void ___mkd_initmmiot(MMIOT *);
-extern void ___mkd_freemmiot(MMIOT *);
+extern void ___mkd_initmmiot(MMIOT *, void *);
+extern void ___mkd_freemmiot(MMIOT *, void *);
 extern void ___mkd_freeLineRange(Line *, Line *);
+extern void ___mkd_xml(char *, int, FILE *);
 
 #endif/*_MARKDOWN_D*/
