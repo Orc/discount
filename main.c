@@ -46,8 +46,10 @@ set(int *flags, char *optionstring)
     for ( arg = strtok(optionstring, ","); arg; arg = strtok(NULL, ",") ) {
 	if ( *arg == '+' || *arg == '-' )
 	    wtd = *arg++;
-	else if ( strncasecmp(arg, "no", 2) == 0 )
+	else if ( strncasecmp(arg, "no", 2) == 0 ) {
+	    arg += 2;
 	    wtd = '-';
+	}
 	else
 	    wtd = '+';
 
