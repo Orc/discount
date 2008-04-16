@@ -47,6 +47,25 @@ if ./markdown -V | grep DL_TAG >/dev/null; then
 	rc=1
     fi
 
+    echo -n '  one item with two =tags= ......... '
+
+    SRC="
+=this=
+=is=
+    A test, eh?"
+
+    RES=`echo "$SRC" | ./markdown`
+
+    count1=`echo "$RES" | grep -i '<dt>' | wc -l`
+    count2=`echo "$RES" | grep -i '<dd>' | wc -l`
+
+    if [ \( "${count1:-0}" -eq 2 \) -a \( "${count2:-0}" -eq 1 \) ]; then
+	echo "ok"
+    else
+	echo "FAILED"
+	rc=1
+    fi
+
 else
     echo -n '  =tag= does nothing ............... '
 
