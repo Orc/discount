@@ -505,7 +505,7 @@ char **argv;
 		    break;
 	case 'V':   printf("theme+discount %s\n", markdown_version);
 		    exit(0);
-	default:    fprintf(stderr, "usage: %s [-V] [-d dir] [-p pagename] [-t tempplate] [-o html] [file]\n", pgm);
+	default:    fprintf(stderr, "usage: %s [-V] [-d dir] [-p pagename] [-t template] [-o html] [file]\n", pgm);
 		    exit(1);
 	}
     }

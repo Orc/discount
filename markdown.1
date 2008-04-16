@@ -13,6 +13,7 @@
 .Op Fl F Pa bitmap
 .Op Fl f Ar options
 .Op Fl o Pa file
+.Op Fl t Pa text
 .Op Pa textfile
 .Sh DESCRIPTION
 The
@@ -80,6 +81,14 @@ described in
 .It Fl o Pa file
 Write the generated html to 
 .Pa file .
+.It Fl t Ar text
+Use
+.Xr mkd_text 3
+to format 
+.Ar text
+instead of processing stdin with the
+.Xr markdown 3
+function.
 .El
 .Sh RETURN VALUES
 The

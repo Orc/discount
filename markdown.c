@@ -796,7 +796,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    ptr = textblock(p, toplevel);
 	}
 
-	if ( para && !p->align )
+	if ( (para||toplevel) && !p->align )
 	    p->align = PARA;
 
 	para = toplevel;
