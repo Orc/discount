@@ -1161,10 +1161,11 @@ definitionlist(Paragraph *p, MMIOT *f)
 	Qstring("<dl>\n", f);
 
 	for ( ; p ; p = p->next) {
-	    Qstring("<dt>", f);
-	    if (( tag = p->text ))
+	    for ( tag = p->text; tag; tag = tag->next ) {
+		Qstring("<dt>", f);
 		reparse(T(tag->text), S(tag->text), 0, f);
-	    Qstring("</dt>\n", f);
+		Qstring("</dt>\n", f);
+	    }
 
 	    htmlify(p->down, "dd", f);
 	}
