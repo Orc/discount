@@ -13,6 +13,7 @@
 .Op Fl F Pa bitmap
 .Op Fl f Ar options
 .Op Fl o Pa file
+.Op Fl t Pa text
 .Op Pa textfile
 .Sh DESCRIPTION
 The
@@ -39,8 +40,8 @@ are in a comma-delimited list, with an optional
 Don't allow image tags.
 .It Ar nolinks
 Don't allow links.
-.It Ar quot
-Expand double-quotes to \&&quot;
+.It Ar cdata
+Generate valid XML output.
 .It Ar noheader
 Do not process pandoc headers.
 .It Ar tabstops
@@ -80,6 +81,14 @@ described in
 .It Fl o Pa file
 Write the generated html to 
 .Pa file .
+.It Fl t Ar text
+Use
+.Xr mkd_text 3
+to format 
+.Ar text
+instead of processing stdin with the
+.Xr markdown 3
+function.
 .El
 .Sh RETURN VALUES
 The

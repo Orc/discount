@@ -335,11 +335,12 @@ ishdr(Line *t, int *htyp)
 static int
 isdefinition(Line *t)
 {
-    return t && t->next && (S(t->text) > 2)
-			&& (t->dle == 0)
-			&& (t->next->dle >= 4)
-			&& (T(t->text)[0] == '=')
-			&& (T(t->text)[S(t->text)-1] == '=');
+    return t && t->next
+	     && (S(t->text) > 2)
+	     && (t->dle == 0)
+	     && (T(t->text)[0] == '=')
+	     && (T(t->text)[S(t->text)-1] == '=')
+	     && ( (t->next->dle >= 4) || isdefinition(t->next) );
 }
 #endif
 
@@ -591,12 +592,15 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 
     while (( text = q )) {
 	if ( top->typ == DL ) {
-	    label = text;
-	    text = text->next;
+	    Line *lp;
 
-	    CLIP(label->text, 0, 1);
-	    S(label->text)--;
-	    label->next = 0;
+	    for ( lp = label = text; lp ; lp = lp->next ) {
+		text = lp->next;
+		CLIP(lp->text, 0, 1);
+		S(lp->text)--;
+		if ( !isdefinition(lp->next) )
+		    lp->next = 0;
+	    }
 	}
 	else label = 0;
 
