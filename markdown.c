@@ -331,18 +331,20 @@ ishdr(Line *t, int *htyp)
 }
 
 
-#if DL_TAG_EXTENSION
 static int
 isdefinition(Line *t)
 {
+#if DL_TAG_EXTENSION
     return t && t->next
 	     && (S(t->text) > 2)
 	     && (t->dle == 0)
 	     && (T(t->text)[0] == '=')
 	     && (T(t->text)[S(t->text)-1] == '=')
 	     && ( (t->next->dle >= 4) || isdefinition(t->next) );
-}
+#else
+    return 0;
 #endif
+}
 
 
 static int
@@ -354,12 +356,10 @@ islist(Line *t, int *trim)
     if ( iscode(t) || blankline(t) || ishdr(t,&i) || ishr(t) )
 	return 0;
 
-#if DL_TAG_EXTENSION
     if ( isdefinition(t) ) {
 	*trim = 4;
 	return DL;
     }
-#endif
     
     if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
 	i = nextnonblank(t, t->dle+1);
