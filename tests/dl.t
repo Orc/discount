@@ -71,7 +71,7 @@ else
 
     count=`echo "$RES" | grep -i '<dl>' | wc -l`
 
-    if [ $count -gt 0 ]; then
+    if [ $count -eq 0 ]; then
 	echo "ok"
     else
 	echo "FAILED"
