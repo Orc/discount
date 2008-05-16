@@ -716,7 +716,7 @@ maybe_tag_or_link(MMIOT *f)
 	    Qstring("<a href=\"", f);
 	    puturl(text,size,f);
 	    Qstring("\">", f);
-	    reparse(text, size, DENY_A, f);
+	    puturl(text,size,f);
 	    Qstring("</a>", f);
 	    return 1;
 	}
