@@ -230,7 +230,7 @@ isfootnote(Line *t)
     if ( ( (i = t->dle) > 3) || (T(t->text)[i] != '[') )
 	return 0;
 
-    for ( ; i < S(t->text) ; ++i ) {
+    for ( ++i; i < S(t->text) ; ++i ) {
 	if ( T(t->text)[i] == '[' )
 	    return 0;
 	else if ( T(t->text)[i] == ']' && T(t->text)[i+1] == ':' )
