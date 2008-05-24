@@ -1,9 +1,9 @@
-echo "deeply nested lists"
+./echo "deeply nested lists"
 
 rc=0
 MARKDOWN_FLAGS=
 
-echo -n '  thrice-nested lists .............. '
+./echo -n '  thrice-nested lists .............. '
 
 LIST='
  *  top-level list ( list 1)
@@ -13,12 +13,12 @@ LIST='
         * second item, third-level list, second item.
  *  top-level list again.'
      
-count=`echo "$LIST" | ./markdown | grep -i '<ul>' | wc -l`
+count=`./echo "$LIST" | ./markdown | grep -i '<ul>' | wc -l`
 
 if [ "$count" -eq 4 ]; then
-    echo "ok"
+    ./echo "ok"
 else
-    echo "FAILED"
+    ./echo "FAILED"
     rc=1
 fi
 

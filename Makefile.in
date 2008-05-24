@@ -64,10 +64,13 @@ $(MKDLIB): $(OBJS)
 	$(AR) crv $(MKDLIB) $(OBJS)
 	$(RANLIB) $(MKDLIB)
 
-test:	$(PGMS)
+test:	$(PGMS) echo
 	@for x in tests/*.t; do \
 	    sh $$x || exit 1; \
 	done
+
+echo:   echo.c
+	$(CC) -o echo echo.c
 	
 clean:
 	rm -f $(PGMS) $(SAMPLE_PGMS) *.o $(MKDLIB)

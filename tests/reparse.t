@@ -1,4 +1,4 @@
-echo "footnotes inside reparse sections"
+./echo "footnotes inside reparse sections"
 
 rc=0
 
@@ -6,12 +6,12 @@ RES="[![foo][]](bar)
 
 [foo]: bar2"
 
-echo -n '  footnote inside [] section ....... '
+./echo -n '  footnote inside [] section ....... '
 
-if echo "$RES" | ./markdown | fgrep bar2 >/dev/null; then
-    echo "ok"
+if ./echo "$RES" | ./markdown | fgrep bar2 >/dev/null; then
+    ./echo "ok"
 else
-    echo "FAILED"
+    ./echo "FAILED"
     rc=1
 fi
 

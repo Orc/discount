@@ -1,9 +1,9 @@
-echo "html blocks"
+./echo "html blocks"
 
 rc=0
 MARKDOWN_FLAGS=
 
-echo -n '  self-closing block tags (hr) ..... '
+./echo -n '  self-closing block tags (hr) ..... '
 
 SEP='
 <hr>
@@ -11,16 +11,16 @@ SEP='
 text
 '
 
-count=`echo "$SEP" | ./markdown | grep '<p>' | wc -l`
+count=`./echo "$SEP" | ./markdown | grep '<p>' | wc -l`
 
 if [ $count -eq 1 ]; then
-    echo "ok"
+    ./echo "ok"
 else
-    echo "FAILED"
+    ./echo "FAILED"
     rc=1
 fi
 
-echo -n '  self-closing block tags (hr/) .... '
+./echo -n '  self-closing block tags (hr/) .... '
 
 SEP='
 <hr/>
@@ -28,16 +28,16 @@ SEP='
 text
 '
 
-count=`echo "$SEP" | ./markdown | grep '<p>' | wc -l`
+count=`./echo "$SEP" | ./markdown | grep '<p>' | wc -l`
 
 if [ $count -eq 1 ]; then
-    echo "ok"
+    ./echo "ok"
 else
-    echo "FAILED"
+    ./echo "FAILED"
     rc=1
 fi
 
-echo -n '  self-closing block tags (br) ..... '
+./echo -n '  self-closing block tags (br) ..... '
 
 SEP='
 <br>
@@ -45,16 +45,16 @@ SEP='
 text
 '
 
-count=`echo "$SEP" | ./markdown | grep '<p>' | wc -l`
+count=`./echo "$SEP" | ./markdown | grep '<p>' | wc -l`
 
 if [ $count -eq 1 ]; then
-    echo "ok"
+    ./echo "ok"
 else
-    echo "FAILED"
+    ./echo "FAILED"
     rc=1
 fi
 
-echo -n '  html comments .................... '
+./echo -n '  html comments .................... '
 
 SEP='
 <!--
@@ -62,23 +62,23 @@ SEP='
 -->
 '
 
-count=`echo "$SEP" | ./markdown | grep 'strong' | wc -l`
+count=`./echo "$SEP" | ./markdown | grep 'strong' | wc -l`
 
 if [ $count -eq 0 ]; then
-    echo "ok"
+    ./echo "ok"
 else
-    echo "FAILED"
+    ./echo "FAILED"
     rc=1
 fi
 
-echo -n '  no smartypants inside tags ....... '
+./echo -n '  no smartypants inside tags ....... '
 
-count=`echo '<img src="linky">' | ./markdown | tr -dc '"' | wc -c`
+count=`./echo '<img src="linky">' | ./markdown | tr -dc '"' | wc -c`
 
 if [ $count -eq 2 ]; then
-    echo "ok"
+    ./echo "ok"
 else
-    echo "FAILED"
+    ./echo "FAILED"
     rc=1
 fi
 
