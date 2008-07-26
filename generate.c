@@ -925,6 +925,22 @@ text(MMIOT *f)
 	case '[':   if ( tag_text(f) || !linkylinky(0, f) )
 			Qchar(c, f);
 		    break;
+#if WITH_SUPERSCRIPT
+	case '^':   if ( isthisspace(f,-1) || isthisspace(f,1) )
+			Qchar(c,f);
+		    else {
+			char *sup = cursor(f);
+			int len = 0;
+			Qstring("<sup>",f);
+			while ( !isthisspace(f,1+len) ) {
+			    ++len;
+			}
+			shift(f,len);
+			reparse(sup, len, 0, f);
+			Qstring("</sup>", f);
+		    }
+		    break;
+#endif
 	case '*':
 	case '_':   if ( tag_text(f) )
 			Qchar(c, f);
