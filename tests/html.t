@@ -71,11 +71,22 @@ else
     rc=1
 fi
 
-./echo -n '  no smartypants inside tags ....... '
+./echo -n '  no smartypants inside tags (#1) .. '
 
 count=`./echo '<img src="linky">' | ./markdown | tr -dc '"' | wc -c`
 
 if [ $count -eq 2 ]; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
+./echo -n '  no smartypants inside tags (#2) .. '
+
+count=`./echo '<img src="linky" alt=":)" />' | ./markdown | tr -dc '"' | wc -c`
+
+if [ $count -eq 4 ]; then
     ./echo "ok"
 else
     ./echo "FAILED"
