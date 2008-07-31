@@ -10,6 +10,7 @@
 ac_help='--enable-dl-tag	Use the DL tag extension
 --enable-pandoc-header	Use pandoc-style header blocks
 --with-tabstops=N	Set tabstops to N characters (default is 4)
+--with-superscript	A^B becomes A<sup>B</sup>
 --enable-amalloc	Enable memory allocation debugging'
 
 LOCAL_AC_OPTIONS='
@@ -99,6 +100,9 @@ else
 fi
 AC_DEFINE 'TABSTOP' $TABSTOP
 AC_SUB    'TABSTOP' $TABSTOP
+
+test -z "$WITH_SUPERSCRIPT" || AC_DEFINE 'SUPERSCRIPT'	1
+
 
 
 if [ "$WITH_AMALLOC" ]; then

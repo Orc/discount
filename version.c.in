@@ -10,6 +10,9 @@ char markdown_version[] = VERSION
 #if @TABSTOP@ != 4
 		" TAB=@TABSTOP@"
 #endif
+#if SUPERSCRIPT
+		" SUPERSCRIPT"
+#endif
 #if USE_AMALLOC
 		" DEBUG"
 #endif

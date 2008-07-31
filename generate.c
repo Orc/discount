@@ -925,7 +925,7 @@ text(MMIOT *f)
 	case '[':   if ( tag_text(f) || !linkylinky(0, f) )
 			Qchar(c, f);
 		    break;
-#if WITH_SUPERSCRIPT
+#if SUPERSCRIPT
 	case '^':   if ( isthisspace(f,-1) || isthisspace(f,1) )
 			Qchar(c,f);
 		    else {
