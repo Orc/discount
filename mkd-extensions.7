@@ -12,7 +12,8 @@ and borrowing markup from other markup languages.
 .Ss Image dimensions
 Markdown embedded images have been extended to allow specifying
 the dimensions of the image by adding a new argument
-.Em =/height/x/width/ to the link description.
+.Em =/height/x/width/
+to the link description.
 .Pp
 The new image syntax is
 .nf
@@ -90,6 +91,16 @@ a
 .Pp
 Be warned that style blocks work like footnote links -- no matter
 where you define them they are valid for the entire document.
+.Ss relaxed emphasis
+If markdown was configured with
+.Ar --relaxed_emphasis ,
+the rules for emphasis are changed so that a single
+.Ar _
+will
+.Em not
+count as a emphasis character if it's in the middle of a word.
+This is primarily for documenting code, if you don't wish to
+have to backquote all code references.
 .Sh AUTHOR
 David Parsons
 .%T http://www.pell.portland.or.us/~orc/

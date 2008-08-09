@@ -762,7 +762,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     ptr = consume(ptr, &para);
 
     while ( ptr ) {
-	if ( toplevel && (key = isopentag(ptr)) ) {
+	if ( toplevel && !(f->flags & DENY_HTML) && (key = isopentag(ptr)) ) {
 	    p = Pp(&d, ptr, strcmp(key, "STYLE") == 0 ? STYLE : HTML);
 	    if ( strcmp(key, "!--") == 0 )
 		ptr = comment(p, key);

@@ -659,6 +659,9 @@ forbidden_tag(MMIOT *f)
 {
     int c = toupper(peek(f, 1));
 
+    if ( f->flags & DENY_HTML )
+	return 1;
+
     if ( c == 'A' && (f->flags & DENY_A) && !isalnum(peek(f,2)) )
 	return 1;
     if ( c == 'I' && (f->flags & DENY_IMG)
