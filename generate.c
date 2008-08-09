@@ -941,29 +941,25 @@ text(MMIOT *f)
 		    }
 		    break;
 #endif
-	case '*':
-	case '_':   if ( tag_text(f) )
-			Qchar(c, f);
+	case '_':
 #if RELAXED_EMPHASIS
-		    else if ( peek(f,1) == c ) {
-			for ( rep = 1; peek(f,1) == c; pull(f) )
-			    ++rep;
-
-			Qem(f, c, rep);
-		    }
-		    else if ( (isthisspace(f,-1) && isthisspace(f,1))
-			   || (isalnum(peek(f,-1)) && isalnum(peek(f,1))) )
+		    /* If RELAXED_EMPHASIS, underscores don't count when
+		     * they're in the middle of a word.
+		     */
+		    if ( (isthisspace(f,-1) && isthisspace(f,1))
+			    || (isalnum(peek(f,-1)) && isalnum(peek(f,1))) ) {
 			Qchar(c, f);
-		    else {
-			Qem(f, c, 1);
+			break;
 		    }
-#else
+		    /* else fall into the regular old emphasis case */
+#endif
+	case '*':   if ( tag_text(f) )
+			Qchar(c, f);
 		    else {
 			for (rep = 1; peek(f,1) == c; pull(f) )
 			    ++rep;
 			Qem(f,c,rep);
 		    }
-#endif
 		    break;
 	
 	case '`':   if ( tag_text(f) )
