@@ -642,11 +642,11 @@ cputc(int c, MMIOT *f)
  * convert an email address to a string of nonsense
  */
 static void
-mangle(unsigned char *s, int len, MMIOT *f)
+mangle(char *s, int len, MMIOT *f)
 {
     while ( len-- > 0 ) {
 	Qstring("&#", f);
-	Qprintf(f, COINTOSS() ? "x%02x;" : "%02d;", *s++);
+	Qprintf(f, COINTOSS() ? "x%02x;" : "%02d;", *((unsigned char*)(s++)) );
     }
 }
 
