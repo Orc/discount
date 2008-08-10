@@ -7,7 +7,7 @@
 
 # load in the configuration file
 #
-ac_help='--enable-dl-tag	Use the DL tag extension
+ac_help='--enable-dl-tag		Use the DL tag extension
 --enable-pandoc-header	Use pandoc-style header blocks
 --enable-superscript	A^B becomes A<sup>B</sup>
 --enable-amalloc	Enable memory allocation debugging
