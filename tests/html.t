@@ -93,26 +93,4 @@ else
     rc=1
 fi
 
-./echo -n '  block html with -fnohtml ......... '
-
-RSLT=`./echo "<b>hi!</b>" | ./markdown -fnohtml`
-
-if ./echo "$RSLT" | grep '<b>' >/dev/null; then
-    ./echo "FAILED"
-    rc=1
-else
-    ./echo "ok"
-fi
-
-./echo -n '  allow html with -fhtml ........... '
-
-RSLT=`./echo "<b>hi!</b>" | ./markdown -fhtml`
-
-if ./echo "$RSLT" | grep '<b>' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
 exit $rc

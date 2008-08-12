@@ -2,7 +2,6 @@
 
 rc=0
 MARKDOWN_FLAGS=
-MARKDOWN_VERSION=`./markdown -V`
 
 ./echo -n '  *hi* -> <em>hi</em> .............. '
 
@@ -57,24 +56,5 @@ else
     ./echo "FAILED"
     rc=1
 fi
-
-./echo -n '  A_B .............................. '
-case "$MARKDOWN_VERSION" in
-*RELAXED*)
-    if ./echo '_A_B' | ./markdown | grep -i 'A_B' > /dev/null; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
-    ;;
-*)  if ./echo '_A_B' | ./markdown | grep -i 'A</em>B' > /dev/null; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
-    ;;
-esac
 
 exit $rc

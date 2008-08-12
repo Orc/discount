@@ -642,11 +642,11 @@ cputc(int c, MMIOT *f)
  * convert an email address to a string of nonsense
  */
 static void
-mangle(char *s, int len, MMIOT *f)
+mangle(unsigned char *s, int len, MMIOT *f)
 {
     while ( len-- > 0 ) {
 	Qstring("&#", f);
-	Qprintf(f, COINTOSS() ? "x%02x;" : "%02d;", *((unsigned char*)(s++)) );
+	Qprintf(f, COINTOSS() ? "x%02x;" : "%02d;", *s++);
     }
 }
 
@@ -658,9 +658,6 @@ static int
 forbidden_tag(MMIOT *f)
 {
     int c = toupper(peek(f, 1));
-
-    if ( f->flags & DENY_HTML )
-	return 1;
 
     if ( c == 'A' && (f->flags & DENY_A) && !isalnum(peek(f,2)) )
 	return 1;
@@ -944,25 +941,29 @@ text(MMIOT *f)
 		    }
 		    break;
 #endif
-	case '_':
+	case '*':
+	case '_':   if ( tag_text(f) )
+			Qchar(c, f);
 #if RELAXED_EMPHASIS
-		    /* If RELAXED_EMPHASIS, underscores don't count when
-		     * they're in the middle of a word.
-		     */
-		    if ( (isthisspace(f,-1) && isthisspace(f,1))
-			    || (isalnum(peek(f,-1)) && isalnum(peek(f,1))) ) {
-			Qchar(c, f);
-			break;
+		    else if ( peek(f,1) == c ) {
+			for ( rep = 1; peek(f,1) == c; pull(f) )
+			    ++rep;
+
+			Qem(f, c, rep);
 		    }
-		    /* else fall into the regular old emphasis case */
-#endif
-	case '*':   if ( tag_text(f) )
+		    else if ( (isthisspace(f,-1) && isthisspace(f,1))
+			   || (isalnum(peek(f,-1)) && isalnum(peek(f,1))) )
 			Qchar(c, f);
+		    else {
+			Qem(f, c, 1);
+		    }
+#else
 		    else {
 			for (rep = 1; peek(f,1) == c; pull(f) )
 			    ++rep;
 			Qem(f,c,rep);
 		    }
+#endif
 		    break;
 	
 	case '`':   if ( tag_text(f) )

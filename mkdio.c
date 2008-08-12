@@ -41,7 +41,7 @@ queue(Document* a, Cstring *line)
     unsigned char c;
     int xp = 0;
     int           size = S(*line);
-    unsigned char *str = (unsigned char*)T(*line);
+    unsigned char *str = T(*line);
 
     CREATE(p->text);
     ATTACH(a->content, p);
@@ -68,7 +68,6 @@ queue(Document* a, Cstring *line)
 }
 
 
-#ifdef PANDOC_HEADER
 /* trim leading blanks from a header line
  */
 static void
@@ -77,7 +76,6 @@ snip(Line *p)
     CLIP(p->text, 0, 1);
     p->dle = mkd_firstnonblank(p);
 }
-#endif
 
 
 /* build a Document from any old input.

@@ -411,9 +411,6 @@ headerblock(Paragraph *pp, int htyp)
 
 	    pp->hnumber = i;
 
-	    while ( (i < S(p->text)) && isspace(T(p->text)[i]) )
-		++i;
-
 	    CLIP(p->text, 0, i);
 
 	    for (j=S(p->text); j && (T(p->text)[j-1] == '#'); --j)
@@ -765,7 +762,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     ptr = consume(ptr, &para);
 
     while ( ptr ) {
-	if ( toplevel && !(f->flags & DENY_HTML) && (key = isopentag(ptr)) ) {
+	if ( toplevel && (key = isopentag(ptr)) ) {
 	    p = Pp(&d, ptr, strcmp(key, "STYLE") == 0 ? STYLE : HTML);
 	    if ( strcmp(key, "!--") == 0 )
 		ptr = comment(p, key);

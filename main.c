@@ -36,57 +36,46 @@ basename(char *p)
 
 char *pgm = "markdown";
 
-static struct {
-    char *name;
-    int off;
-    int flag;
-} opts[] = {
-    { "tabstop", 0, MKD_TABSTOP },
-    { "image",   1, MKD_NOIMAGE },
-    { "links",   1, MKD_NOLINKS },
-    { "header",  1, MKD_NOHEADER },
-    { "html",    1, MKD_NOHTML },
-    { "cdata",   0, MKD_CDATA },
-} ;
-
-#define NR(x)	(sizeof x / sizeof x[0])
-    
-
 void
 set(int *flags, char *optionstring)
 {
-    int i;
-    int enable;
+    char wtd;
+    int opt;
     char *arg;
 
     for ( arg = strtok(optionstring, ","); arg; arg = strtok(NULL, ",") ) {
 	if ( *arg == '+' || *arg == '-' )
-	    enable = (*arg++ == '+') ? 1 : 0;
+	    wtd = *arg++;
 	else if ( strncasecmp(arg, "no", 2) == 0 ) {
 	    arg += 2;
-	    enable = 0;
+	    wtd = '-';
 	}
 	else
-	    enable = 1;
+	    wtd = '+';
 
-	for ( i=0; i < NR(opts); i++ )
-	    if ( strcasecmp(arg, opts[i].name) == 0 )
-		break;
-
-	if ( i < NR(opts) ) {
-	    if ( opts[i].off )
-		enable = !enable;
-		
-	    if ( enable )
-		*flags |= opts[i].flag;
-	    else
-		*flags &= ~opts[i].flag;
-	}
-	else
+	if ( strcasecmp(arg, "tabstop") == 0 )
+	    opt = MKD_TABSTOP;
+	else if ( strcasecmp(arg, "noimage") == 0 )
+	    opt = MKD_NOIMAGE;
+	else if ( strcasecmp(arg, "nolinks") == 0 )
+	    opt = MKD_NOLINKS;
+	else if ( strcasecmp(arg, "noheader") == 0 )
+	    opt = MKD_NOHEADER;
+	else if ( strcasecmp(arg, "tag") == 0 )
+	    opt = MKD_TAGTEXT;
+	else if ( strcasecmp(arg, "cdata") == 0 )
+	    opt = MKD_CDATA;
+	else {
 	    fprintf(stderr, "%s: unknown option <%s>\n", pgm, arg);
+	    continue;
+	}
+
+	if ( wtd == '+' )
+	    *flags |= opt;
+	else
+	    *flags &= ~opt;
     }
 }
-
 
 float
 main(int argc, char **argv)

@@ -7,11 +7,10 @@
 
 # load in the configuration file
 #
-ac_help='--enable-dl-tag		Use the DL tag extension
+ac_help='--enable-dl-tag	Use the DL tag extension
 --enable-pandoc-header	Use pandoc-style header blocks
 --enable-superscript	A^B becomes A<sup>B</sup>
 --enable-amalloc	Enable memory allocation debugging
---relaxed-emphasis	underscores aren'\''t special in the middle of words
 --with-tabstops=N	Set tabstops to N characters (default is 4)'
 
 LOCAL_AC_OPTIONS='
@@ -26,9 +25,6 @@ fi'
 locals() {
     K=`echo $1 | tr '[a-z]' '[A-Z]'`
     case "$K" in
-    --RELAXED-EMPHAS*)
-		echo RELAXED_EMPHASIS=T
-		;;
     --ENABLE-*)	enable=`echo $K | sed -e 's/--ENABLE-/WITH-/' | tr '-' '_'`
 		echo ${enable}=T
 		;;
@@ -114,10 +110,6 @@ if [ "$WITH_AMALLOC" ]; then
     AC_SUB	'AMALLOC'	'amalloc.o'
 else
     AC_SUB	'AMALLOC'	''
-fi
-
-if [ "$RELAXED_EMPHASIS" ]; then
-    AC_DEFINE	'RELAXED_EMPHASIS'	1
 fi
 
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
