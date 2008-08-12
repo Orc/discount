@@ -411,6 +411,9 @@ headerblock(Paragraph *pp, int htyp)
 
 	    pp->hnumber = i;
 
+	    while ( (i < S(p->text)) && isspace(T(p->text)[i]) )
+		++i;
+
 	    CLIP(p->text, 0, i);
 
 	    for (j=S(p->text); j && (T(p->text)[j-1] == '#'); --j)
