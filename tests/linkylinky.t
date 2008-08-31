@@ -118,4 +118,23 @@ else
     rc=1
 fi
 
+./echo -n '  empty [][] tags .................. '
+
+V="
+[![][1]][2]
+
+[1]: image1
+[2]: image2"
+
+count=`echo "$V" | ./markdown | fgrep '[]' | wc -l`
+
+if [ "$count" -lt 1 ]; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
+
+
 exit $rc
