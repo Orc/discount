@@ -129,4 +129,19 @@ else
     rc=1
 fi
 
+./echo -n '  empty list ....................... '
+
+SEP='
+- 
+
+- 
+'
+
+if ./echo "$SEP" | ./markdown | grep '<li>' > /dev/null; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
 exit $rc

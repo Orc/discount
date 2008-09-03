@@ -298,8 +298,6 @@ ishdr(Line *t, int *htyp)
 	;
 
     if ( i ) {
-	i = nextnonblank(t, i);
-
 	j = S(t->text)-1;
 
 	while ( (j > i) && (T(t->text)[j] == '#') )
