@@ -615,7 +615,7 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 	p->down = compile(p->text, 0, f);
 	p->text = label;
 
-	if ( para && (top->typ != DL) ) p->down->align = PARA;
+	if ( para && (top->typ != DL) && p->down ) p->down->align = PARA;
 
 	if ( !(q = skipempty(text)) || (islist(q,&trim) != top->typ) )
 	    break;
@@ -627,7 +627,7 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 	    ___mkd_freeLineRange(&anchor, q);
 	}
 
-	if ( para && (top->typ != DL) ) p->down->align = PARA;
+	if ( para && (top->typ != DL) && p->down ) p->down->align = PARA;
     }
     top->text = 0;
     top->down = T(d);
