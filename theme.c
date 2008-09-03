@@ -519,10 +519,12 @@ char **argv;
     if ( argc > 0 ) {
 	int added_text=0;
 
-	if ( (source = malloc(strlen(argv[0]) + strlen(".text") + 1)) == 0 )
+	if ( (source = malloc(strlen(argv[0]) + strlen("/index.text") + 1)) == 0 )
 	    fail("out of memory allocating name buffer");
 
 	strcpy(source,argv[0]);
+	if ( (stat(source, &sourceinfo) == 0) && S_ISDIR(sourceinfo.st_mode) )
+	    strcat(source, "/index");
 
 	if ( !freopen(source, "r", stdin) ) {
 	    strcat(source, ".text");

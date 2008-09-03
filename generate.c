@@ -579,7 +579,7 @@ linkylinky(int image, MMIOT *f)
     Footnote link;
     linkytype *tag;
 
-    if ( !(linkykey(image, &link, f) && S(link.tag)) ) {
+    if ( !linkykey(image, &link, f) ) {
 	mmiotseek(f, start);
 	return 0;
     }
