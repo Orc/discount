@@ -74,6 +74,31 @@ cursor(MMIOT *f)
 }
 
 
+static int
+isthisspace(MMIOT *f, int i)
+{
+    int c = peek(f, i);
+
+    return isspace(c) || (c == EOF);
+}
+
+
+static int
+isthisalnum(MMIOT *f, int i)
+{
+    int c = peek(f, i);
+
+    return (c != EOF) && isalnum(c);
+}
+
+
+static int
+isthisnonword(MMIOT *f, int i)
+{
+    return isthisspace(f, i) || ispunct(peek(f,i));
+}
+
+
 /* return/set the current cursor position
  */
 #define mmiotseek(f,x)	(f->isp = x)
@@ -662,11 +687,11 @@ forbidden_tag(MMIOT *f)
     if ( f->flags & DENY_HTML )
 	return 1;
 
-    if ( c == 'A' && (f->flags & DENY_A) && !isalnum(peek(f,2)) )
+    if ( c == 'A' && (f->flags & DENY_A) && !isthisalnum(f,2) )
 	return 1;
     if ( c == 'I' && (f->flags & DENY_IMG)
 		  && strncasecmp(cursor(f)+1, "MG", 2) == 0
-		  && !isalnum(peek(f,4)) )
+		  && !isthisalnum(f,4) )
 	return 1;
     return 0;
 }
@@ -744,22 +769,6 @@ maybe_tag_or_link(MMIOT *f)
     shift(f, -(size+1));
     return 0;
 } /* maybe_tag_or_link */
-
-
-static int
-isthisspace(MMIOT *f, int i)
-{
-    int c = peek(f, i);
-
-    return isspace(c) || (c == EOF);
-}
-
-
-static int
-isthisnonword(MMIOT *f, int i)
-{
-    return isthisspace(f, i) || ispunct(peek(f,i));
-}
 
 
 /* smartyquote code that's common for single and double quotes
@@ -929,7 +938,8 @@ text(MMIOT *f)
 			Qchar(c, f);
 		    break;
 #if SUPERSCRIPT
-	case '^':   if ( isthisspace(f,-1) || isthisspace(f,1) )
+	/* A^B -> A<sup>B</sup> */
+	case '^':   if ( (f->flags & STRICT) || isthisspace(f,-1) || isthisspace(f,1) )
 			Qchar(c,f);
 		    else {
 			char *sup = cursor(f);
@@ -944,13 +954,12 @@ text(MMIOT *f)
 		    }
 		    break;
 #endif
-	case '_':
 #if RELAXED_EMPHASIS
-		    /* If RELAXED_EMPHASIS, underscores don't count when
-		     * they're in the middle of a word.
-		     */
-		    if ( (isthisspace(f,-1) && isthisspace(f,1))
-			    || (isalnum(peek(f,-1)) && isalnum(peek(f,1))) ) {
+	/* Underscores don't count if they're in the middle of a word */
+	case '_':
+		    if ( (!(f->flags & STRICT))
+			     && ((isthisspace(f,-1) && isthisspace(f,1))
+			      || (isthisalnum(f,-1) && isthisalnum(f,1))) ){
 			Qchar(c, f);
 			break;
 		    }
@@ -1004,7 +1013,7 @@ text(MMIOT *f)
 		    break;
 
 	case '&':   j = (peek(f,1) == '#' ) ? 2 : 1;
-		    while ( isalnum(peek(f,j)) )
+		    while ( isthisalnum(f,j) )
 			++j;
 
 		    if ( peek(f,j) != ';' )
@@ -1017,6 +1026,8 @@ text(MMIOT *f)
 		    break;
 	}
     }
+    /* truncate the input string after we've finished processing it */
+    S(f->in) = f->isp = 0;
 } /* text */
 
 

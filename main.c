@@ -41,12 +41,14 @@ static struct {
     int off;
     int flag;
 } opts[] = {
-    { "tabstop", 0, MKD_TABSTOP },
-    { "image",   1, MKD_NOIMAGE },
-    { "links",   1, MKD_NOLINKS },
+    { "tabstop", 0, MKD_TABSTOP  },
+    { "image",   1, MKD_NOIMAGE  },
+    { "links",   1, MKD_NOLINKS  },
+    { "relax",   1, MKD_STRICT   },
+    { "strict",  0, MKD_STRICT   },
     { "header",  1, MKD_NOHEADER },
-    { "html",    1, MKD_NOHTML },
-    { "cdata",   0, MKD_CDATA },
+    { "html",    1, MKD_NOHTML   },
+    { "cdata",   0, MKD_CDATA    },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])
@@ -137,7 +139,6 @@ main(int argc, char **argv)
     }
     argc -= optind;
     argv += optind;
-
 
     if ( text ) {
 	rc = mkd_text( text, strlen(text), stdout, flags);

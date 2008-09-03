@@ -68,6 +68,7 @@ typedef struct mmiot {
 #define DENY_IMG	0x0002
 #define DENY_SMARTY	0x0004
 #define DENY_HTML	0x0008
+#define STRICT		0x0010
 #define INSIDE_TAG	0x0020
 #define NO_PSEUDO_PROTO	0x0040
 #define CDATA_OUTPUT	0x0080

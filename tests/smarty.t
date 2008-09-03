@@ -114,12 +114,19 @@ else
 fi
 
 if ./markdown -V | grep SUPERSCRIPT >/dev/null; then
-    ./echo -n "  A^B -> A<sup>B</sup> ............. "
-    if ./echo "A^B" | ./markdown | grep '<sup>B</sup>' >/dev/null; then
+    ./echo -n "  A^B -> A<sup>B</sup> (-frelax) ... "
+    if ./echo "A^B" | ./markdown -frelax | grep '<sup>B</sup>' >/dev/null; then
 	./echo "ok"
     else
 	./echo "FAILED"
 	rc=1
+    fi
+    ./echo -n "  A^B != A<sup>B</sup> (-fstrict) .. "
+    if ./echo "A^B" | ./markdown -fstrict | grep '<sup>B</sup>' >/dev/null; then
+	./echo "FAILED"
+	rc=1
+    else
+	./echo "ok"
     fi
 fi
 

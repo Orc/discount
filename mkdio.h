@@ -46,6 +46,7 @@ extern char markdown_version[];
 #define MKD_NOIMAGE	0x0002	/* don't do image processing, block <img> */
 #define MKD_NOPANTS	0x0004	/* don't run smartypants() */
 #define MKD_NOHTML	0x0008	/* don't allow raw html through AT ALL */
+#define MKD_STRICT	0x0010	/* disable SUPERSCRIPT, RELAXED_EMPHASIS */
 #define MKD_TAGTEXT	0x0020	/* don't expand `_` and `*` */
 #define MKD_NO_EXT	0x0040	/* don't allow pseudo-protocols */
 #define MKD_CDATA	0x0080	/* generate code for xml ![CDATA[...]] */
@@ -55,5 +56,6 @@ extern char markdown_version[];
  */
 #define MKD_NOHEADER	0x0100	/* don't process header blocks */
 #define MKD_TABSTOP	0x0200	/* expand tabs to 4 spaces */
+
 
 #endif/*_MKDIO_D*/

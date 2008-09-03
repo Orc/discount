@@ -58,23 +58,24 @@ else
     rc=1
 fi
 
-./echo -n '  A_B .............................. '
-case "$MARKDOWN_VERSION" in
-*RELAXED*)
-    if ./echo '_A_B' | ./markdown | grep -i 'A_B' > /dev/null; then
+if ./markdown -V | grep RELAXED >/dev/null; then
+    ./echo -n '  _A_B with -frelax ................ '
+
+    if ./echo '_A_B' | ./markdown -frelax | grep -i 'A_B' > /dev/null; then
 	./echo "ok"
     else
 	./echo "FAILED"
 	rc=1
     fi
-    ;;
-*)  if ./echo '_A_B' | ./markdown | grep -i 'A</em>B' > /dev/null; then
+    
+    ./echo -n '  _A_B with -fstrict ............... '
+
+    if ./echo '_A_B' | ./markdown -fstrict | grep -i 'A</em>B' > /dev/null; then
 	./echo "ok"
     else
 	./echo "FAILED"
 	rc=1
     fi
-    ;;
-esac
+fi
 
 exit $rc

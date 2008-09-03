@@ -106,7 +106,7 @@ AC_DEFINE 'TABSTOP' $TABSTOP
 AC_SUB    'TABSTOP' $TABSTOP
 
 test -z "$WITH_SUPERSCRIPT" || AC_DEFINE 'SUPERSCRIPT'	1
-
+test -z "$RELAXED_EMPHASIS" || AC_DEFINE 'RELAXED_EMPHASIS'	1
 
 
 if [ "$WITH_AMALLOC" ]; then
@@ -116,13 +116,16 @@ else
     AC_SUB	'AMALLOC'	''
 fi
 
-if [ "$RELAXED_EMPHASIS" ]; then
-    AC_DEFINE	'RELAXED_EMPHASIS'	1
+if [ "$RELAXED_EMPHASIS" -o "$WITH_SUPERSCRIPT" ]; then
+    AC_SUB      'STRICT'	''
+else
+    AC_SUB	'STRICT'	'.\"'
 fi
+
 
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
 
 [ "$WITH_DL_TAG" ] && AC_DEFINE 'DL_TAG_EXTENSION' '1'
 [ "$WITH_PANDOC_HEADER" ] && AC_DEFINE 'PANDOC_HEADER' '1'
 
-AC_OUTPUT Makefile version.c
+AC_OUTPUT Makefile version.c markdown.1

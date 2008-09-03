@@ -50,6 +50,10 @@ Generate valid XML output.
 Do not process pandoc headers.
 .It Ar tabstops
 Use markdown-standard 4-space tabstops.
+@STRICT@.It Ar strict
+@STRICT@Disable superscript and relaxed emphasis.
+@STRICT@.It Ar relax
+@STRICT@Enable superscript and relaxed emphasis (this is the default.)
 .El
 .Pp
 As an example, the option
