@@ -26,6 +26,7 @@ typedef int (*stfu)(const void*,const void*);
 
 
 /* forward declarations */
+static int iscodeblock(MMIOT*);
 static void code(int, MMIOT*);
 static void text(MMIOT *f);
 static Paragraph *display(Paragraph*, MMIOT*);
@@ -974,7 +975,7 @@ text(MMIOT *f)
 		    }
 		    break;
 	
-	case '`':   if ( tag_text(f) )
+	case '`':   if ( tag_text(f) || !iscodeblock(f) )
 			Qchar(c, f);
 		    else {
 			Qstring("<code>", f);
@@ -1030,6 +1031,26 @@ text(MMIOT *f)
     S(f->in) = f->isp = 0;
 } /* text */
 
+
+static int
+iscodeblock(MMIOT *f)
+{
+    int i=1, single = 1, c;
+    
+    if ( peek(f,i) == '`' ) {
+	single=0;
+	i++;
+    }
+    while ( (c=peek(f,i)) != EOF ) {
+	if ( (c == '`') && (single || peek(f,i+1) == '`') )
+	    return 1;
+	else if ( c == '\\' )
+	    i++;
+	i++;
+    }
+    return 0;
+    
+}
 
 static int
 endofcode(int escape, int offset, MMIOT *f)
