@@ -19,4 +19,31 @@ else
     rc=1
 fi
 
+./echo -n '  unclosed single backtick ......... '
+
+if ./echo '`hi there' | ./markdown | grep '`' >/dev/null; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
+./echo -n '  unclosed double backtick ......... '
+
+if ./echo '``hi there' | ./markdown | grep '``' >/dev/null; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
+./echo -n '  remove space around code ......... '
+
+if ./echo '`` hi there ``' | ./markdown | grep '<code>hi there<\/code>' >/dev/null; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
 exit $rc
