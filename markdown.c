@@ -572,7 +572,7 @@ listitem(Paragraph *p, int indent)
 	    indent = 4;
 	}
 
-	if ( (q->dle < indent) && (ishr(q) || ishdr(q,&z) || islist(q,&z)) ) {
+	if ( (q->dle < indent) && !ishdr(q,&z) && (ishr(q) || islist(q,&z)) ) {
 	    q = t->next;
 	    t->next = 0;
 	    return q;
