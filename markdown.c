@@ -572,7 +572,7 @@ listitem(Paragraph *p, int indent)
 	    indent = 4;
 	}
 
-	if ( (q->dle < indent) && !ishdr(q,&z) && (ishr(q) || islist(q,&z)) ) {
+	if ( (q->dle < indent) && (ishr(q) || islist(q,&z)) && !ishdr(q,&z) ) {
 	    q = t->next;
 	    t->next = 0;
 	    return q;
@@ -615,7 +615,7 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 
 	if ( para && (top->typ != DL) && p->down ) p->down->align = PARA;
 
-	if ( !(q = skipempty(text)) || (islist(q,&trim) != top->typ) )
+	if ( !(q = skipempty(text)) || (islist(q, &trim) == 0) )
 	    break;
 
 	if ( para = (q != text) ) {
