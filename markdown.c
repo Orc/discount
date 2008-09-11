@@ -500,6 +500,47 @@ textblock(Paragraph *p, int toplevel)
 }
 
 
+/* length of the id: or class: kind in a special div-not-quote block
+ */
+static int
+szmarkerclass(char *p)
+{
+    if ( strncasecmp(p, "id:", 3) == 0 )
+	return 3;
+    if ( strncasecmp(p, "class:", 6) == 0 )
+	return 6;
+    return 0;
+}
+
+
+/*
+ * check if the first line of a quoted block is the special div-not-quote
+ * marker %[kind:]name%
+ */
+static int
+isdivmarker(Line *p)
+{
+#if DIV_QUOTE
+    char *s = T(p->text);
+    int len = S(p->text);
+    int i;
+
+    if ( !(len && s[0] == '%' && s[len-1] == '%') ) return 0;
+
+    i = szmarkerclass(s+1);
+    --len;
+
+    while ( ++i < len )
+	if ( !isalnum(s[i]) )
+	    return 0;
+
+    return 1;
+#else
+    return 0;
+#endif
+}
+
+
 /*
  * accumulate a blockquote.
  *
@@ -526,8 +567,26 @@ quoteblock(Paragraph *p)
 
 	if ( !(q = skipempty(t->next)) || ((q != t->next) && !isquote(q)) ) {
 	    ___mkd_freeLineRange(t, q);
-	    return q;
+	    t = q;
+	    break;
 	}
+    }
+    if ( isdivmarker(p->text) ) {
+	char *prefix = "class";
+	int i;
+	
+	q = p->text;
+	p->text = p->text->next;
+
+	if ( (i = szmarkerclass(1+T(q->text))) == 3 )
+	    /* and this would be an "%id:" prefix */
+	    prefix="id";
+	    
+	if ( p->ident = malloc(4+i+S(q->text)) )
+	    sprintf(p->ident, "%s=\"%.*s\"", prefix, S(q->text)-(i+2),
+						     T(q->text)+(i+1) );
+
+	___mkd_freeLine(q);
     }
     return t;
 }

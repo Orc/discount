@@ -1182,10 +1182,11 @@ printhtml(Line *t, MMIOT *f)
 
 
 static void
-htmlify(Paragraph *p, char *block, MMIOT *f)
+htmlify(Paragraph *p, char *block, char *arguments, MMIOT *f)
 {
     emblock(f);
-    if ( block ) Qprintf(f, "<%s>", block);
+    if ( block )
+	Qprintf(f, arguments ? "<%s %s>" : "<%s>", block, arguments);
     emblock(f);
 
     while (( p = display(p, f) )) {
@@ -1193,7 +1194,8 @@ htmlify(Paragraph *p, char *block, MMIOT *f)
 	Qstring("\n\n", f);
     }
 
-    if ( block ) Qprintf(f, "</%s>", block);
+    if ( block )
+	 Qprintf(f, "</%s>", block);
     emblock(f);
 }
 
@@ -1214,7 +1216,7 @@ definitionlist(Paragraph *p, MMIOT *f)
 		Qstring("</dt>\n", f);
 	    }
 
-	    htmlify(p->down, "dd", f);
+	    htmlify(p->down, "dd", p->ident, f);
 	}
 
 	Qstring("</dl>", f);
@@ -1230,7 +1232,7 @@ listdisplay(int typ, Paragraph *p, MMIOT* f)
 	Qprintf(f, "<%cl>\n", (typ==UL)?'u':'o');
 
 	for ( ; p ; p = p->next ) {
-	    htmlify(p->down, "li", f);
+	    htmlify(p->down, "li", p->ident, f);
 	    Qchar('\n', f);
 	}
 
@@ -1260,7 +1262,7 @@ display(Paragraph *p, MMIOT *f)
 	break;
 	
     case QUOTE:
-	htmlify(p->down, "blockquote", f);
+	htmlify(p->down, p->ident ? "div" : "blockquote", p->ident, f);
 	break;
 	
     case UL:
@@ -1321,7 +1323,7 @@ mkd_document(Document *p, char **res)
 {
     if ( p && p->compiled ) {
 	if ( ! p->html ) {
-	    htmlify(p->code, 0, p->ctx);
+	    htmlify(p->code, 0, 0, p->ctx);
 	    p->html = 1;
 	}
 

@@ -12,7 +12,9 @@ ac_help='--enable-dl-tag		Use the DL tag extension
 --enable-superscript	A^B becomes A<sup>B</sup>
 --enable-amalloc	Enable memory allocation debugging
 --relaxed-emphasis	underscores aren'\''t special in the middle of words
---with-tabstops=N	Set tabstops to N characters (default is 4)'
+--with-tabstops=N	Set tabstops to N characters (default is 4)
+--enable-div		Enable >%id% divisions
+--enable-all-features	Turn on all optional features'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
@@ -29,9 +31,16 @@ locals() {
     --RELAXED-EMPHAS*)
 		echo RELAXED_EMPHASIS=T
 		;;
-    --ENABLE-*)	enable=`echo $K | sed -e 's/--ENABLE-/WITH-/' | tr '-' '_'`
-		echo ${enable}=T
-		;;
+    --ENABLE-ALL|--ENABLE-ALL-FEATURES)
+		echo WITH_DL_TAG=T
+		echo RELAXED_EMPHASIS=T
+		echo WITH_PANDOC_HEADER=T
+		echo WITH_SUPERSCRIPT=T
+		echo WITH_AMALLOC=T
+		echo WITH_DIV=T
+		echo WITH_TABSTOPS=8 ;;
+    --ENABLE-*)	enable=`echo $K | sed -e 's/--ENABLE-//' | tr '-' '_'`
+		echo WITH_${enable}=T ;;
     esac
 }
 
@@ -107,6 +116,7 @@ AC_SUB    'TABSTOP' $TABSTOP
 
 test -z "$WITH_SUPERSCRIPT" || AC_DEFINE 'SUPERSCRIPT'	1
 test -z "$RELAXED_EMPHASIS" || AC_DEFINE 'RELAXED_EMPHASIS'	1
+test -z "$WITH_DIV"         || AC_DEFINE 'DIV_QUOTE'	1
 
 
 if [ "$WITH_AMALLOC" ]; then

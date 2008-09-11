@@ -33,6 +33,7 @@ typedef struct paragraph {
     struct paragraph *next;	/* next paragraph */
     struct paragraph *down;	/* recompiled contents of this paragraph */
     struct line *text;		/* all the text in this paragraph */
+    char *ident;		/* %id% tag for QUOTE */
     enum { WHITESPACE=0, CODE, QUOTE, MARKUP,
 	   HTML, STYLE, DL, UL, OL, LISTITEM,
 	   HDR, HR } typ;

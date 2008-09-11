@@ -19,4 +19,7 @@ char markdown_version[] = VERSION
 #if RELAXED_EMPHASIS
 		" RELAXED"
 #endif
+#if DIV_QUOTE
+		" DIV"
+#endif
 		;
