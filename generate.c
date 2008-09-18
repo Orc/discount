@@ -955,9 +955,9 @@ text(MMIOT *f)
 		    }
 		    break;
 #endif
+	case '_':
 #if RELAXED_EMPHASIS
 	/* Underscores don't count if they're in the middle of a word */
-	case '_':
 		    if ( (!(f->flags & STRICT))
 			     && ((isthisspace(f,-1) && isthisspace(f,1))
 			      || (isthisalnum(f,-1) && isthisalnum(f,1))) ){
