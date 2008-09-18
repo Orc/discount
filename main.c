@@ -97,6 +97,7 @@ main(int argc, char **argv)
     int rc;
     int flags = 0;
     int debug = 0;
+    int use_mkd_text = 0;
     char *text = 0;
     char *ofile = 0;
     char *urlbase = 0;
@@ -108,7 +109,7 @@ main(int argc, char **argv)
     pgm = basename(argv[0]);
     opterr = 1;
 
-    while ( (opt=getopt(argc, argv, "b:df:F:o:t:V")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "b:df:F:o:s:t:V")) != EOF ) {
 	switch (opt) {
 	case 'b':   urlbase = optarg;
 		    break;
@@ -121,6 +122,9 @@ main(int argc, char **argv)
 	case 'f':   set(&flags, optarg);
 		    break;
 	case 't':   text = optarg;
+		    use_mkd_text = 1;
+		    break;
+	case 's':   text = optarg;
 		    break;
 	case 'o':   if ( ofile ) {
 			fprintf(stderr, "Too many -o options\n");
@@ -140,27 +144,33 @@ main(int argc, char **argv)
     argc -= optind;
     argv += optind;
 
-    if ( text ) {
+    if ( use_mkd_text )
 	rc = mkd_text( text, strlen(text), stdout, flags);
-	adump();
-	exit ( rc ? errno : 0 );
-    }
+    else {
+	if ( text ) {
+	    if ( (doc = mkd_string(text, strlen(text), flags)) == 0 ) {
+		perror(text);
+		exit(1);
+	    }
+	}
+	else {
+	    if ( argc && !freopen(argv[0], "r", stdin) ) {
+		perror(argv[0]);
+		exit(1);
+	    }
+	    if ( (doc = mkd_in(stdin,flags)) == 0 ) {
+		perror(argc ? argv[0] : "stdin");
+		exit(1);
+	    }
+	}
+	if ( urlbase )
+	    mkd_basename(doc, urlbase);
 
-    if ( argc && !freopen(argv[0], "r", stdin) ) {
-	perror(argv[0]);
-	exit(1);
+	if ( debug )
+	    rc = mkd_dump(doc, stdout, 0, argc ? basename(argv[0]) : "stdin");
+	else
+	    rc = markdown(doc, stdout, flags);
     }
-    if ( (doc = mkd_in(stdin,flags)) == 0 ) {
-	perror(argc ? argv[0] : "stdin");
-	exit(1);
-    }
-    if ( urlbase )
-	mkd_basename(doc, urlbase);
-    
-    if ( debug )
-	rc = mkd_dump(doc, stdout, 0, argc ? basename(argv[0]) : "stdin");
-    else
-	rc = markdown(doc, stdout, flags);
     adump();
     exit( (rc == 0) ? 0 : errno );
 }

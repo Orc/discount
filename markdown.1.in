@@ -13,6 +13,7 @@
 .Op Fl F Pa bitmap
 .Op Fl f Ar options
 .Op Fl o Pa file
+.Op Fl s Pa text
 .Op Fl t Pa text
 .Op Pa textfile
 .Sh DESCRIPTION
@@ -97,6 +98,11 @@ to format
 instead of processing stdin with the
 .Xr markdown 3
 function.
+.It Fl s Ar text
+Use the
+.Xr markdown 3
+function to format
+.Ar text .
 .El
 .Sh RETURN VALUES
 The
