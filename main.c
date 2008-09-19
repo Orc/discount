@@ -49,6 +49,8 @@ static struct {
     { "header",  1, MKD_NOHEADER },
     { "html",    1, MKD_NOHTML   },
     { "cdata",   0, MKD_CDATA    },
+    { "pants",   1, MKD_NOPANTS  },
+    { "smarty",  1, MKD_NOPANTS  },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])
