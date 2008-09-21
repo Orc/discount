@@ -940,7 +940,7 @@ text(MMIOT *f)
 		    break;
 #if SUPERSCRIPT
 	/* A^B -> A<sup>B</sup> */
-	case '^':   if ( (f->flags & STRICT) || isthisspace(f,-1) || isthisspace(f,1) )
+	case '^':   if ( (f->flags & (STRICT|INSIDE_TAG)) || isthisspace(f,-1) || isthisspace(f,1) )
 			Qchar(c,f);
 		    else {
 			char *sup = cursor(f);
@@ -1229,7 +1229,10 @@ static void
 listdisplay(int typ, Paragraph *p, MMIOT* f)
 {
     if ( p ) {
-	Qprintf(f, "<%cl>\n", (typ==UL)?'u':'o');
+	Qprintf(f, "<%cl", (typ==UL)?'u':'o');
+	if ( typ == AL )
+	    Qprintf(f, " type=a");
+	Qprintf(f, ">\n");
 
 	for ( ; p ; p = p->next ) {
 	    htmlify(p->down, "li", p->ident, f);
@@ -1267,6 +1270,7 @@ display(Paragraph *p, MMIOT *f)
 	
     case UL:
     case OL:
+    case AL:
 	listdisplay(p->typ, p->down, f);
 	break;
 

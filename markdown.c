@@ -369,6 +369,13 @@ islist(Line *t, int *trim)
 
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
 	if ( T(t->text)[j-1] == '.' ) {
+#if WITH_ALPHA_LIST
+	    if ( isalpha(T(t->text)[t->dle]) && t->dle == j-2 ) {
+		j = nextnonblank(t,j);
+		*trim = j;
+		return AL;
+	    }
+#endif
 	    strtoul(T(t->text)+t->dle, &q, 10);
 	    if ( (q > T(t->text)+t->dle) && (q == T(t->text) + (j-1)) ) {
 		j = nextnonblank(t,j);
