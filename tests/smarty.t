@@ -128,6 +128,13 @@ if ./markdown -V | grep SUPERSCRIPT >/dev/null; then
     else
 	./echo "ok"
     fi
+    ./echo -n "  A^B in link title ................ "
+    if ./echo "[link](here 'A^B')" | ./markdown -frelax | grep '<sup>B</sup>' >/dev/null; then
+	./echo "FAILED"
+	rc=1
+    else
+	./echo "ok"
+    fi
 fi
 
 exit $rc
