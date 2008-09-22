@@ -369,9 +369,8 @@ islist(Line *t, int *trim)
 
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
 #if ALPHA_LIST
-	if ( (j == t->dle + 3) && T(t->text)[t->dle] == '('
-			     && isalpha(T(t->text)[t->dle + 1])
-			      && T(t->text)[t->dle + 2] == ')' ) {
+	if ( (j == t->dle + 2) && isalpha(T(t->text)[t->dle])
+			       && T(t->text)[t->dle + 1] == ')' ) {
 	    j = nextnonblank(t,j);
 	    *trim = j;
 	    return AL;
