@@ -39,7 +39,7 @@ locals() {
 		echo WITH_SUPERSCRIPT=T
 		echo WITH_AMALLOC=T
 		echo WITH_DIV=T
-		echo WITH_ALPHA_LIST=T
+		#echo WITH_ALPHA_LIST=T
 		echo WITH_TABSTOPS=8 ;;
     --ENABLE-*)	enable=`echo $K | sed -e 's/--ENABLE-//' | tr '-' '_'`
 		echo WITH_${enable}=T ;;
