@@ -368,15 +368,14 @@ islist(Line *t, int *trim)
     }
 
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
+	if ( T(t->text)[j-1] == '.' ) {
 #if ALPHA_LIST
-	if ( (j == t->dle + 2) && isalpha(T(t->text)[t->dle])
-			       && T(t->text)[t->dle + 1] == ')' ) {
+	if ( (j == t->dle + 2) && isalpha(T(t->text)[t->dle]) ) {
 	    j = nextnonblank(t,j);
 	    *trim = j;
 	    return AL;
 	}
 #endif
-	if ( T(t->text)[j-1] == '.' ) {
 	    strtoul(T(t->text)+t->dle, &q, 10);
 	    if ( (q > T(t->text)+t->dle) && (q == T(t->text) + (j-1)) ) {
 		j = nextnonblank(t,j);
