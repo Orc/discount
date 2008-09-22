@@ -360,7 +360,7 @@ islist(Line *t, int *trim)
 	*trim = 4;
 	return DL;
     }
-    
+
     if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
 	i = nextnonblank(t, t->dle+1);
 	*trim = (i > 4) ? 4 : i;
@@ -368,14 +368,16 @@ islist(Line *t, int *trim)
     }
 
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
-	if ( T(t->text)[j-1] == '.' ) {
 #if WITH_ALPHA_LIST
-	    if ( isalpha(T(t->text)[t->dle]) && t->dle == j-2 ) {
-		j = nextnonblank(t,j);
-		*trim = j;
-		return AL;
-	    }
+	if ( (j == t->dle + 3) && T(t->text)[t->dle] == '('
+			     && isalpha(T(t->text)[t->dle + 1])
+			      && T(t->text)[t->dle + 2] == ')' ) {
+	    j = nextnonblank(t,j);
+	    *trim = j;
+	    return AL;
+	}
 #endif
+	if ( T(t->text)[j-1] == '.' ) {
 	    strtoul(T(t->text)+t->dle, &q, 10);
 	    if ( (q > T(t->text)+t->dle) && (q == T(t->text) + (j-1)) ) {
 		j = nextnonblank(t,j);
