@@ -14,6 +14,7 @@ ac_help='--enable-dl-tag		Use the DL tag extension
 --relaxed-emphasis	underscores aren'\''t special in the middle of words
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --enable-div		Enable >%id% divisions
+--enable-alpha-list	Enable (a)/(b)/(c) lists
 --enable-all-features	Turn on all optional features'
 
 LOCAL_AC_OPTIONS='
@@ -38,6 +39,7 @@ locals() {
 		echo WITH_SUPERSCRIPT=T
 		echo WITH_AMALLOC=T
 		echo WITH_DIV=T
+		echo WITH_ALPHA_LIST=T
 		echo WITH_TABSTOPS=8 ;;
     --ENABLE-*)	enable=`echo $K | sed -e 's/--ENABLE-//' | tr '-' '_'`
 		echo WITH_${enable}=T ;;
@@ -117,6 +119,7 @@ AC_SUB    'TABSTOP' $TABSTOP
 test -z "$WITH_SUPERSCRIPT" || AC_DEFINE 'SUPERSCRIPT'	1
 test -z "$RELAXED_EMPHASIS" || AC_DEFINE 'RELAXED_EMPHASIS'	1
 test -z "$WITH_DIV"         || AC_DEFINE 'DIV_QUOTE'	1
+test -z "$WITH_ALPHA_LIST"  || AC_DEFINE 'ALPHA_LIST'	1
 
 
 if [ "$WITH_AMALLOC" ]; then

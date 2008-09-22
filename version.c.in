@@ -22,4 +22,7 @@ char markdown_version[] = VERSION
 #if DIV_QUOTE
 		" DIV"
 #endif
+#if ALPHA_LIST
+		" AL"
+#endif
 		;

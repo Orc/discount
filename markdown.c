@@ -368,7 +368,7 @@ islist(Line *t, int *trim)
     }
 
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
-#if WITH_ALPHA_LIST
+#if ALPHA_LIST
 	if ( (j == t->dle + 3) && T(t->text)[t->dle] == '('
 			     && isalpha(T(t->text)[t->dle + 1])
 			      && T(t->text)[t->dle + 2] == ')' ) {
