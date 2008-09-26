@@ -116,11 +116,13 @@ web browser.
 Do not process any markdown pseudo-protocols when
 handing
 .Ar [][]
-links.down pseudo-protocols when
-handing
-.Ar [][]
 links.
+.It Ar MKD_NOHEADER
 Do not attempt to parse any Pandoc-style headers.
+.It Ar MKD_TOC
+Label all headers for use with the
+.Fn mkd_generatetoc
+function.
 .El
 .Sh RETURN VALUES
 The functions

@@ -73,7 +73,8 @@ typedef struct mmiot {
 #define INSIDE_TAG	0x0020
 #define NO_PSEUDO_PROTO	0x0040
 #define CDATA_OUTPUT	0x0080
-#define USER_FLAGS	0x00FF
+#define TOC		0x1000
+#define USER_FLAGS	0xF0FF
 #define EMBEDDED	DENY_A|DENY_IMG|NO_PSEUDO_PROTO|CDATA_OUTPUT
     char *base;
 } MMIOT;
@@ -105,6 +106,7 @@ extern int  mkd_generatehtml(Document *, FILE *);
 extern void mkd_cleanup(Document *);
 extern int  mkd_text(char *, int, FILE*, int);
 extern void mkd_basename(Document*, char *);
+extern void mkd_string_to_anchor(char*,int, void(*)(int,void*), void*);
 
 extern Document *mkd_in(FILE *, int);
 extern Document *mkd_string(char*,int, int);

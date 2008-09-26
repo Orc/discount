@@ -16,6 +16,7 @@ void mkd_basename(MMIOT*,char*);
  */
 int mkd_compile(MMIOT*, int);
 int mkd_generatehtml(MMIOT*,FILE*);
+int mkd_generatetoc(MMIOT*,FILE*);
 int mkd_cleanup(MMIOT*);
 
 /* markup functions
@@ -25,6 +26,7 @@ int mkd_style(MMIOT*, FILE*);
 int mkd_dump(MMIOT*, FILE*, int, char*);
 int markdown(MMIOT*, FILE*, int);
 void mkd_basename(MMIOT*,char*);
+void mkd_string_to_anchor(char *, int, int (*)(int,void*), void*);
 
 /* header block access
  */
@@ -50,6 +52,7 @@ extern char markdown_version[];
 #define MKD_TAGTEXT	0x0020	/* don't expand `_` and `*` */
 #define MKD_NO_EXT	0x0040	/* don't allow pseudo-protocols */
 #define MKD_CDATA	0x0080	/* generate code for xml ![CDATA[...]] */
+#define MKD_TOC		0x1000	/* do table-of-contents processing */
 #define MKD_EMBED	MKD_NOLINKS|MKD_NOIMAGE|MKD_TAGTEXT
 
 /* special flags for mkd_in() and mkd_string()

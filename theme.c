@@ -360,6 +360,13 @@ fbody(MMIOT *doc, FILE *output, int flags)
     mkd_generatehtml(doc, output);
 }
 
+/* ftoc() prints out the table of contents
+ */
+static void
+ftoc(MMIOT *doc, FILE *output, int flags)
+{
+    mkd_generatetoc(doc, output);
+}
 
 /* fstyle() prints out the document's style section
  */
@@ -394,6 +401,7 @@ static struct _keyword {
 } keyword[] = { 
     { "author?>",  0xffff, fauthor },
     { "body?>",    INBODY, fbody },
+    { "toc?>",     INBODY, ftoc },
     { "date?>",    0xffff, fdate },
     { "dir?>",     0xffff, fdirname },
     { "include(",  0xffff, finclude },
@@ -424,7 +432,7 @@ spin(FILE *template, MMIOT *doc, FILE *output)
 		fputs("<!--", output);
 		shift(3);
 		do {
-		    putc(c, output);
+		    putc(c=pull(), output);
 		} while ( ! (c == '-' && peek(1) == '-' && peek(2) == '>') );
 	    }
 	    else if ( (peek(1) == '?') && thesame(cursor(), "?theme ") ) {
@@ -578,7 +586,7 @@ char **argv;
 	fail("out of memory");
 #endif
 
-    if ( !mkd_compile(doc, 0) )
+    if ( !mkd_compile(doc, MKD_TOC) )
 	fail("couldn't compile input");
 
     if ( tmplfile )

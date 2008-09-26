@@ -223,3 +223,19 @@ mkd_basename(Document *document, char *base)
     if ( document )
 	document->base = base;
 }
+
+
+/* write out a Cstring, mangled into a form suitable for `<a href=` or `<a id=`
+ */
+void
+mkd_string_to_anchor(char *s, int len, void(*outchar)(int,void*), void *out)
+{
+    for ( ; len-- > 0; ++s ) {
+	if ( *s == ' ' || *s == '&' || *s == '<' || *s == '"' )
+	    (*outchar)('+', out);
+	else if ( isalnum(*s) || ispunct(*s) )
+	    (*outchar)(*s, out);
+	else
+	    (*outchar)('~',out);
+    }
+}

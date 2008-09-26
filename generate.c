@@ -1105,7 +1105,13 @@ code(int escape, MMIOT *f)
 static void
 printheader(Paragraph *pp, MMIOT *f)
 {
-    Qprintf(f, "<h%d>", pp->hnumber);
+    Qprintf(f, "<h%d", pp->hnumber);
+    if ( f->flags & TOC ) {
+	Qprintf(f, " id=\"", pp->hnumber);
+	mkd_string_to_anchor(T(pp->text->text), S(pp->text->text), Qchar, f);
+	Qchar('"', f);
+    }
+    Qchar('>', f);
     push(T(pp->text->text), S(pp->text->text), f);
     text(f);
     Qprintf(f, "</h%d>", pp->hnumber);
