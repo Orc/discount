@@ -297,19 +297,11 @@ ishdr(Line *t, int *htyp)
     for ( i=0; T(t->text)[i] == '#'; ++i)
 	;
 
+    /* ANY leading `#`'s make this into an ETX header
+     */
     if ( i ) {
-	j = S(t->text)-1;
-
-	while ( (j > i) && (T(t->text)[j] == '#') )
-	    --j;
-	
-	while ( (j > 1) && isspace(T(t->text)[j]) )
-	    --j;
-
-	if ( i < j ) {
-	    *htyp = ETX;
-	    return 1;
-	}
+	*htyp = ETX;
+	return 1;
     }
 
     /* then check for setext-style HEADER
@@ -411,7 +403,7 @@ headerblock(Paragraph *pp, int htyp)
 	     * the leading and trailing `#`'s
 	     */
 
-	    for (i=0; T(p->text)[i] == T(p->text)[0]; i++)
+	    for (i=0; (T(p->text)[i] == T(p->text)[0]) && (i < S(p->text)-1); i++)
 		;
 
 	    pp->hnumber = i;
@@ -421,8 +413,11 @@ headerblock(Paragraph *pp, int htyp)
 
 	    CLIP(p->text, 0, i);
 
-	    for (j=S(p->text); j && (T(p->text)[j-1] == '#'); --j)
+	    for (j=S(p->text); (j > 1) && (T(p->text)[j-1] == '#'); --j)
 		;
+
+	    while ( j && isspace(T(p->text)[j-1]) )
+		--j;
 
 	    S(p->text) = j;
 
