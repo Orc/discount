@@ -58,6 +58,9 @@ markdown: main.o $(MKDLIB)
 mkd2html:  mkd2html.o $(MKDLIB)
 	$(CC) -L. -o mkd2html mkd2html.o -lmarkdown @LIBS@
 
+makepage:  makepage.c $(MKDLIB)
+	$(CC) -L. -o makepage makepage.c -lmarkdown @LIBS@
+
 main.o: main.c mkdio.h config.h
 	$(CC) -I. -c main.c
 
