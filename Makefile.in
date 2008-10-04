@@ -8,7 +8,7 @@ LIBDIR=@libdir@
 INCDIR=@prefix@/include
 
 PGMS=markdown
-SAMPLE_PGMS=mkd2html
+SAMPLE_PGMS=mkd2html makepage
 @THEME@SAMPLE_PGMS+= theme
 MKDLIB=libmarkdown.a
 OBJS=mkdio.o markdown.o dumptree.o generate.o \
