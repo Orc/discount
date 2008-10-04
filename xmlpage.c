@@ -21,7 +21,7 @@ mkd_xhtmlpage(Document *p, int flags, FILE *out)
     extern char *mkd_doc_title(Document *);
     
     if ( mkd_compile(p, flags) ) {
-	fprintf(out, "<?xml version=\"1.o\" encoding=\"UTF-8\"?>\n");
+	fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 	fprintf(out, "<!DOCTYPE html "
 		     " PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\""
 		     " \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n");
@@ -30,11 +30,8 @@ mkd_xhtmlpage(Document *p, int flags, FILE *out)
 
 	fprintf(out, "<head>\n");
 	if ( title = mkd_doc_title(p) )
-	    fprintf(out, "  <title>%s</title>\n", title);
-
-	fprintf(out, "  <style>");
+	    fprintf(out, "<title>%s</title>\n", title);
 	mkd_style(p, out);
-	fprintf(out, "  </style>");
 	fprintf(out, "</head>\n");
 	
 	fprintf(out, "<body>\n");
