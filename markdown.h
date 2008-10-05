@@ -103,6 +103,7 @@ extern int  mkd_firstnonblank(Line *);
 extern int  mkd_compile(Document *, int);
 extern int  mkd_document(Document *, char **);
 extern int  mkd_generatehtml(Document *, FILE *);
+extern int  mkd_style(Document *, FILE *);
 extern void mkd_cleanup(Document *);
 extern int  mkd_text(char *, int, FILE*, int);
 extern void mkd_basename(Document*, char *);

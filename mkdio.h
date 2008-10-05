@@ -17,6 +17,7 @@ void mkd_basename(MMIOT*,char*);
 int mkd_compile(MMIOT*, int);
 int mkd_generatehtml(MMIOT*,FILE*);
 int mkd_generatetoc(MMIOT*,FILE*);
+int mkd_xhtmlpage(MMIOT*,int,FILE*);
 int mkd_cleanup(MMIOT*);
 
 /* markup functions

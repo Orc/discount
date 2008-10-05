@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <mkdio.h>
 
+float
 main(argc, argv)
 int argc;
 char **argv;

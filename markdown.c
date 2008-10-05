@@ -286,7 +286,7 @@ ishr(Line *t)
 static int
 ishdr(Line *t, int *htyp)
 {
-    int i, j;
+    int i;
 
 
     /* first check for etx-style ###HEADER###

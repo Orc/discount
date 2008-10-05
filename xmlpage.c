@@ -15,6 +15,7 @@
 #include "amalloc.h"
 
 
+int
 mkd_xhtmlpage(Document *p, int flags, FILE *out)
 {
     char *title;

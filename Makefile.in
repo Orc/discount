@@ -1,4 +1,4 @@
-CC=@CC@
+CC=@CC@ -I. -L.
 AR=@AR@
 RANLIB=@RANLIB@
 
@@ -48,18 +48,18 @@ version.o: version.c VERSION
 	$(CC) -DVERSION=\"`cat VERSION`\" -c version.c
 
 markdown: main.o $(MKDLIB)
-	$(CC) -L. -o markdown main.o -lmarkdown @LIBS@
+	$(CC) -o markdown main.o -lmarkdown @LIBS@
 
 # example programs
 @THEME@theme:  theme.o $(MKDLIB)
-@THEME@	$(CC) -L. -o theme theme.o -lmarkdown @LIBS@
+@THEME@	$(CC) -o theme theme.o -lmarkdown @LIBS@
 
 
 mkd2html:  mkd2html.o $(MKDLIB)
-	$(CC) -L. -o mkd2html mkd2html.o -lmarkdown @LIBS@
+	$(CC) -o mkd2html mkd2html.o -lmarkdown @LIBS@
 
 makepage:  makepage.c $(MKDLIB)
-	$(CC) -L. -o makepage makepage.c -lmarkdown @LIBS@
+	$(CC) -o makepage makepage.c -lmarkdown @LIBS@
 
 main.o: main.c mkdio.h config.h
 	$(CC) -I. -c main.c
