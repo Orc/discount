@@ -18,6 +18,10 @@ Markdown
 .Fn mkd_document "MMIOT *document" "char **doc"
 .Ft int
 .Fn mkd_generatehtml  "MMIOT *document" "FILE *output"
+.Ft int
+.Fn mkd_xhtmlpage "MMIOT *document" "int flags" "FILE *output"
+.Ft void
+.Fn mkd_generatetoc "MMIOT *document" "FILE *output"
 .Ft void
 .Fn mkd_cleanup "MMIOT*"
 .Ft char*
@@ -61,6 +65,8 @@ by the
 .Fn mkd_style ,
 .Fn mkd_document ,
 .Fn mkd_generatehtml ,
+.Fn mkd_generatetoc ,
+.Fn mkd_xhtmlpage ,
 .Fn mkd_doc_title ,
 .Fn mkd_doc_author ,
 and
@@ -82,6 +88,14 @@ and
 .Fn mkd_doc_date
 are used to read the contents of a Pandoc header,
 if any.
+.Pp
+.Fn mkd_xhtmlpage
+writes a xhtml page containing the document.  The regular set of
+flags can be passed.
+.Pp
+.Fn mkd_generatetoc
+Writes a document outline, in the form of a collection of nested
+lists, with links to each header in the document.
 .Pp
 .Fn mkd_cleanup
 deletes a

@@ -85,9 +85,10 @@ block level html;
 .Em <style>
 starting on column 1, raw html (or, in this case, css) following
 it, and either ending with a 
-.Em </style> at the end of the line or
-a
-.Em </style> at the beginning of a subsequent line.
+.Em </style>
+at the end of the line or a
+.Em </style>
+at the beginning of a subsequent line.
 .Pp
 Be warned that style blocks work like footnote links -- no matter
 where you define them they are valid for the entire document.
@@ -101,6 +102,26 @@ will
 count as a emphasis character if it's in the middle of a word.
 This is primarily for documenting code, if you don't wish to
 have to backquote all code references.
+.Ss alpha lists
+If markdown was configured with
+.Ar --enable-alpha-list ,
+alphabetic lists (like regular numeric lists, but with alphabetic
+items) are supported.    So:
+.nf
+    a. this
+    b. is
+    c. an alphabetic
+    d. list
+.fi
+will produce:
+.nf
+    <ol type=a>
+    <li>this</li>
+    <li>is</li>
+    <li>an alphabetic</li>
+    <li>list</li>
+    </ol>
+.fi
 .Sh AUTHOR
 David Parsons
 .%T http://www.pell.portland.or.us/~orc/
