@@ -339,8 +339,7 @@ puturl(char *s, int size, MMIOT *f)
 	    Qstring("&amp;", f);
 	else if ( c == '<' )
 	    Qstring("&lt;", f);
-	else if ( isalnum(c) || c == '.' || c == '-' || c == '_' || c == '/'
-			     || c == '=' || c == '?' || c == ':' || c == '#' )
+	else if ( isalnum(c) || ispunct(c) )
 	    Qchar(c, f);
 	else
 	    Qprintf(f, "%%%02X", c);
