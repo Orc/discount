@@ -1278,15 +1278,15 @@ AC_QUIET() {
 AC_TR=`acLookFor tr`
 if [ "$AC_TR" ]; then
     # try posix-style tr
-    ABC=`echo abc | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+    ABC=`echo abc | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`
     if [ "$ABC" = "ABC" ]; then
-	AC_UPPERCASE="$AC_TR 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"
-	AC_UPPER_PAT="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"
+	AC_UPPERCASE="$AC_TR abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	AC_UPPER_PAT="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     else
-	ABC=`echo abc | tr 'a-z' 'A-Z'`
+	ABC=`echo abc | tr a-z A-Z`
 	if [ "$ABC" = "ABC" ]; then
-	    AC_UPPERCASE="$AC_TR 'a-z' 'A-Z'"
-	    AC_UPPER_PAT="'A-Z'"
+	    AC_UPPERCASE="$AC_TR a-z A-Z"
+	    AC_UPPER_PAT="A-Z"
 	else
 	    ABC=`echo abc | tr '[a-z]' '[A-Z]'`
 	    if [ "$ABC" = "ABC" ]; then
