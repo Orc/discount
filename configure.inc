@@ -1278,20 +1278,20 @@ AC_QUIET() {
 AC_TR=`acLookFor tr`
 if [ "$AC_TR" ]; then
     # try posix-style tr
-    ABC=`echo abc | tr '[:lower:]' '[:upper:]'`
+    ABC=`echo abc | tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
     if [ "$ABC" = "ABC" ]; then
-	AC_UPPERCASE="$AC_TR '[:lower:]' '[:upper:]'"
-	AC_UPPER_PAT='[:upper:]'
+	AC_UPPERCASE="$AC_TR 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"
+	AC_UPPER_PAT="'ABCDEFGHIJKLMNOPQRSTUVWXYZ'"
     else
 	ABC=`echo abc | tr 'a-z' 'A-Z'`
 	if [ "$ABC" = "ABC" ]; then
 	    AC_UPPERCASE="$AC_TR 'a-z' 'A-Z'"
-	    AC_UPPER_PAT='A-Z'
+	    AC_UPPER_PAT="'A-Z'"
 	else
 	    ABC=`echo abc | tr '[a-z]' '[A-Z]'`
 	    if [ "$ABC" = "ABC" ]; then
 		AC_UPPERCASE="$AC_TR '[a-z]' '[A-Z]'"
-		AC_UPPER_PAT='[A-Z]'
+		AC_UPPER_PAT="'[A-Z]'"
 	    else
 		AC_FAIL "$AC_TR cannot translate lowercase to uppercase"
 		return 0
@@ -1301,6 +1301,9 @@ if [ "$AC_TR" ]; then
 else
     AC_FAIL "configure requires a functional version of tr"
 fi
+
+echo "AC_UPPER_PAT=$AC_UPPER_PAT"
+echo "AC_UPPERCASE=$AC_UPPERCASE"
 
 while [ $# -gt 0 ]; do
     unset matched
