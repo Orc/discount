@@ -27,7 +27,7 @@ else
 fi'
 
 locals() {
-    K=`echo $1 | tr '[a-z]' '[A-Z]'`
+    K=`echo $1 | $AC_UPPERCASE`
     case "$K" in
     --RELAXED-EMPHAS*)
 		echo RELAXED_EMPHASIS=T

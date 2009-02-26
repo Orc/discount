@@ -78,162 +78,6 @@ __ac_dir() {
     fi
 }
 
-while [ $# -gt 0 ]; do
-    unset matched
-
-    case X"$1" in
-    X--src|X--srcdir)
-	AC_SRCDIR=`__ac_dir "$2"`
-	_set_srcdir=1
-	shift 2;;
-
-    X--src=*|X--srcdir=*)
-	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
-	AC_SRCDIR=`__ac_dir "$__d"`
-	_set_srcdir=1
-	shift 1 ;;
-
-    X--prefix)
-	AC_PREFIX=`__ac_dir "$2"`
-	_set_prefix=1
-	shift 2;;
-
-    X--prefix=*)
-	__d=`echo "$1"| sed -e 's/^[^=]*=//'`
-	AC_PREFIX=`__ac_dir "$__d"`
-	_set_prefix=1
-	shift 1;;
-
-    X--confdir)
-	AC_CONFDIR=`__ac_dir "$2"`
-	_set_confdir=1
-	shift 2;;
-
-    X--confdir=*)
-	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
-	AC_CONFDIR=`__ac_dir "$__d"`
-	_set_confdir=1
-	shift 1;;
-
-    X--libexec|X--libexecdir)
-	AC_LIBEXEC=`__ac_dir "$2"`
-	_set_libexec=1
-	shift 2;;
-
-    X--libexec=*|X--libexecdir=*)
-	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
-	AC_LIBEXEC=`__ac_dir "$__d"`
-	_set_libexec=1
-	shift 1;;
-
-    X--lib|X--libdir)
-	AC_LIBDIR=`__ac_dir "$2"`
-	_set_libdir=1
-	shift 2;;
-
-    X--lib=*|X--libdir=*)
-	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
-	AC_LIBDIR=`__ac_dir "$__d"`
-	_set_libdir=1
-	shift 1;;
-
-    X--exec|X--execdir)
-	AC_EXECDIR=`__ac_dir "$2"`
-	_set_execdir=1
-	shift 2;;
-
-    X--exec=*|X--execdir=*)
-	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
-	AC_EXECDIR=`__ac_dir "$__d"`
-	_set_execdir=1
-	shift 1;;
-
-    X--sbin|X--sbindir)
-	AC_SBINDIR=`__ac_dir "$2"`
-	_set_sbindir=1
-	shift 2;;
-
-    X--sbin=*|X--sbindir=*)
-	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
-	AC_SBINDIR=`__ac_dir "$__d"`
-	_set_sbindir=1
-	shift 1;;
-
-    X--man|X--mandir)
-	AC_MANDIR=`__ac_dir "$2"`
-	_set_mandir=1
-	shift 2;;
-
-    X--man=*|X--mandir=*)
-	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
-	AC_MANDIR=`__ac_dir "$__d"`
-	_set_mandir=1
-	shift 1;;
-
-    X--use-*=*)
-	_var=`echo "$1"| sed -n 's/^--use-\([A-Za-z][-A-Za-z0-9_]*\)=.*$/\1/p'`
-	if [ "$_var" ]; then
-	    _val=`echo "$1" | sed -e 's/^--use-[^=]*=\(.*\)$/\1/'`
-	    _v=`echo $_var | tr '[a-z]' '[A-Z]' | tr '-' '_'`
-	    case X"$_val" in
-	    X[Yy][Ee][Ss]|X[Tt][Rr][Uu][Ee]) eval USE_${_v}=T ;;
-	    X[Nn][Oo]|X[Ff][Aa][Ll][Ss][Ee]) eval unset USE_${_v} ;;
-	    *) echo "Bad value for --use-$_var ; must be yes or no"
-	       exit 1 ;;
-	    esac
-	else
-	    echo "Bad option $1.   Use --help to show options" 1>&2
-	    exit 1
-	fi
-	shift 1 ;;
-
-    X--use-*)
-        _var=`echo "$1"|sed -n 's/^--use-\([A-Za-z][-A-Za-z0-9_]*\)$/\1/p'`
-	_v=`echo $_var | tr '[a-z]' '[A-Z]' | tr '-' '_'`
-	eval USE_${_v}=T
-	shift 1;;
-
-    X--with-*=*)
-	_var=`echo "$1"| sed -n 's/^--with-\([A-Za-z][-A-Za-z0-9_]*\)=.*$/\1/p'`
-	if [ "$_var" ]; then
-	    _val=`echo "$1" | sed -e 's/^--with-[^=]*=\(.*\)$/\1/'`
-	    _v=`echo $_var | tr '[a-z]' '[A-Z]' | tr '-' '_'`
-	    eval WITH_${_v}=\"$_val\"
-	else
-	    echo "Bad option $1.   Use --help to show options" 1>&2
-	    exit 1
-	fi
-	shift 1 ;;
-
-    X--with-*)
-	_var=`echo "$1" | sed -n 's/^--with-\([A-Za-z][A-Za-z0-9_-]*\)$/\1/p'`
-	if [ "$_var" ]; then
-	    _v=`echo $_var | tr '[a-z]' '[A-Z]' | tr '-' '_'`
-	    eval WITH_${_v}=1
-	else
-	    echo "Bad option $1.   Use --help to show options" 1>&2
-	    exit 1
-	fi
-	shift 1 ;;
-
-    X--help)
-	echo "$ac_standard"
-	test "$ac_help" && echo "$ac_help"
-	exit 0;;
-
-    *)	if [ "$LOCAL_AC_OPTIONS" ]; then
-	    eval "$LOCAL_AC_OPTIONS"
-	else
-	    ac_error=T
-	fi
-	if [ "$ac_error" ]; then
-	    echo "Bad option $1.   Use --help to show options" 1>&2
-	    exit 1
-	fi ;;
-    esac
-done
-
-
 #
 # echo w/o newline
 #
@@ -323,7 +167,7 @@ AC_CHECK_HEADERS () {
     LOGN "looking for header $hdr"
 
     if __MAKEDOTO /tmp/ngc$$.c; then
-	AC_DEFINE 'HAVE_'`echo $hdr | tr 'a-z' 'A-Z' | tr './' '_'` 1
+	AC_DEFINE 'HAVE_'`echo $hdr | $AC_UPPERCASE | tr './' '_'` 1
 	rc=0
     else
 	rc=1
@@ -359,7 +203,7 @@ EOF
     LOGN "looking for the $F function"
 
     if $AC_CC -o /tmp/ngc$$ /tmp/ngc$$.c $LIBS; then
-	AC_DEFINE `echo ${2:-HAVE_$F} | tr 'a-z' 'A-Z'` 1
+	AC_DEFINE `echo ${2:-HAVE_$F} | $AC_UPPERCASE` 1
 	TLOG " (found)"
 	rc=0
     else
@@ -399,7 +243,7 @@ EOF
     LOGN "looking for struct $struct"
 
     if __MAKEDOTO /tmp/ngc$$.c; then
-	AC_DEFINE HAVE_STRUCT_`echo ${struct} | tr 'a-z' 'A-Z'`
+	AC_DEFINE HAVE_STRUCT_`echo ${struct} | $AC_UPPERCASE`
 	rc=0
     else
 	rc=1
@@ -434,7 +278,7 @@ EOF
     LOGN "looking for $type type"
 
     if __MAKEDOTO /tmp/ngc$$.c; then
-	AC_DEFINE HAVE_TYPE_`echo ${type} | tr 'a-z' 'A-Z'`
+	AC_DEFINE HAVE_TYPE_`echo ${type} | $AC_UPPERCASE`
 	rc=0
     else
 	rc=1
@@ -473,7 +317,7 @@ EOF
     LOGN "checking that struct $struct has a $field field"
 
     if __MAKEDOTO /tmp/ngc$$.c; then
-	AC_DEFINE HAVE_`echo ${struct}_$field | tr 'a-z' 'A-Z'`
+	AC_DEFINE HAVE_`echo ${struct}_$field | $AC_UPPERCASE`
 	rc=0
     else
 	rc=1
@@ -615,7 +459,7 @@ MF_PATH_INCLUDE () {
 
     DEST=`acLookFor $__mode $*`
 
-    __sym=`echo "$SYM" | tr '[a-z]' '[A-Z]'`
+    __sym=`echo "$SYM" | $AC_UPPERCASE`
     if [ "$DEST" ]; then
 	TLOG " ($DEST)"
 	echo "$1 is $DEST"
@@ -632,7 +476,6 @@ MF_PATH_INCLUDE () {
     fi
 }
 
-
 #
 # AC_INIT starts the ball rolling
 #
@@ -644,7 +487,7 @@ AC_INIT () {
     rm -f $__config_files
     __cwd=`pwd`
     exec 5>&1 1>$__cwd/config.log 2>&1
-    AC_CONFIGURE_FOR=__AC_`echo $1 | sed -e 's/\..$//' | tr 'a-z' 'A-Z' | tr ' ' '_'`_D
+    AC_CONFIGURE_FOR=__AC_`echo $1 | sed -e 's/\..$//' | $AC_UPPERCASE  | tr ' ' '_'`_D
 
     # check to see whether to use echo -n or echo ...\c
     #
@@ -710,7 +553,7 @@ EOF
     AC_PROG_INSTALL
 
     ac_os=`uname -s`
-    _os=`echo $ac_os | tr '[a-z]' '[A-Z]' | sed -e 's/[^A-Z0-9_].*$//'`
+    _os=`echo $ac_os | $AC_UPPERCASE | sed -e 's/[^A-Z0-9_].*$//'`
     AC_DEFINE OS_$_os	1
     eval OS_${_os}=1
     unset _os
@@ -827,7 +670,7 @@ AC_PROG_YACC () {
 # AC_PROG looks for a program
 #
 AC_PROG () {
-    PN=`basename $1 | tr '[a-z]' '[A-Z]' | tr -dc '[A-Z]'`
+    PN=`basename $1 | $AC_UPPERCASE | tr -dc $AC_UPPER_PAT`
     TLOGN "looking for $1"
     DEST=`acLookFor $1`
     if [ "$DEST" ]; then
@@ -1430,3 +1273,187 @@ AC_CONFIG() {
 AC_QUIET() {
     eval $* 5>/dev/null
 }
+    
+
+AC_TR=`acLookFor tr`
+if [ "$AC_TR" ]; then
+    # try posix-style tr
+    ABC=`echo abc | tr '[:lower:]' '[:upper:]'`
+    if [ "$ABC" = "ABC" ]; then
+	AC_UPPERCASE="$AC_TR '[:lower:]' '[:upper:]'"
+	AC_UPPER_PAT='[:upper:]'
+    else
+	ABC=`echo abc | tr 'a-z' 'A-Z'`
+	if [ "$ABC" = "ABC" ]; then
+	    AC_UPPERCASE="$AC_TR 'a-z' 'A-Z'"
+	    AC_UPPER_PAT='A-Z'
+	else
+	    ABC=`echo abc | tr '[a-z]' '[A-Z]'`
+	    if [ "$ABC" = "ABC" ]; then
+		AC_UPPERCASE="$AC_TR '[a-z]' '[A-Z]'"
+		AC_UPPER_PAT='[A-Z]'
+	    else
+		AC_FAIL "$AC_TR cannot translate lowercase to uppercase"
+		return 0
+	    fi
+	fi
+    fi
+else
+    AC_FAIL "configure requires a functional version of tr"
+fi
+
+while [ $# -gt 0 ]; do
+    unset matched
+
+    case X"$1" in
+    X--src|X--srcdir)
+	AC_SRCDIR=`__ac_dir "$2"`
+	_set_srcdir=1
+	shift 2;;
+
+    X--src=*|X--srcdir=*)
+	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
+	AC_SRCDIR=`__ac_dir "$__d"`
+	_set_srcdir=1
+	shift 1 ;;
+
+    X--prefix)
+	AC_PREFIX=`__ac_dir "$2"`
+	_set_prefix=1
+	shift 2;;
+
+    X--prefix=*)
+	__d=`echo "$1"| sed -e 's/^[^=]*=//'`
+	AC_PREFIX=`__ac_dir "$__d"`
+	_set_prefix=1
+	shift 1;;
+
+    X--confdir)
+	AC_CONFDIR=`__ac_dir "$2"`
+	_set_confdir=1
+	shift 2;;
+
+    X--confdir=*)
+	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
+	AC_CONFDIR=`__ac_dir "$__d"`
+	_set_confdir=1
+	shift 1;;
+
+    X--libexec|X--libexecdir)
+	AC_LIBEXEC=`__ac_dir "$2"`
+	_set_libexec=1
+	shift 2;;
+
+    X--libexec=*|X--libexecdir=*)
+	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
+	AC_LIBEXEC=`__ac_dir "$__d"`
+	_set_libexec=1
+	shift 1;;
+
+    X--lib|X--libdir)
+	AC_LIBDIR=`__ac_dir "$2"`
+	_set_libdir=1
+	shift 2;;
+
+    X--lib=*|X--libdir=*)
+	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
+	AC_LIBDIR=`__ac_dir "$__d"`
+	_set_libdir=1
+	shift 1;;
+
+    X--exec|X--execdir)
+	AC_EXECDIR=`__ac_dir "$2"`
+	_set_execdir=1
+	shift 2;;
+
+    X--exec=*|X--execdir=*)
+	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
+	AC_EXECDIR=`__ac_dir "$__d"`
+	_set_execdir=1
+	shift 1;;
+
+    X--sbin|X--sbindir)
+	AC_SBINDIR=`__ac_dir "$2"`
+	_set_sbindir=1
+	shift 2;;
+
+    X--sbin=*|X--sbindir=*)
+	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
+	AC_SBINDIR=`__ac_dir "$__d"`
+	_set_sbindir=1
+	shift 1;;
+
+    X--man|X--mandir)
+	AC_MANDIR=`__ac_dir "$2"`
+	_set_mandir=1
+	shift 2;;
+
+    X--man=*|X--mandir=*)
+	__d=`echo "$1" | sed -e 's/^[^=]*=//'`
+	AC_MANDIR=`__ac_dir "$__d"`
+	_set_mandir=1
+	shift 1;;
+
+    X--use-*=*)
+	_var=`echo "$1"| sed -n 's/^--use-\([A-Za-z][-A-Za-z0-9_]*\)=.*$/\1/p'`
+	if [ "$_var" ]; then
+	    _val=`echo "$1" | sed -e 's/^--use-[^=]*=\(.*\)$/\1/'`
+	    _v=`echo $_var | $AC_UPPERCASE | tr '-' '_'`
+	    case X"$_val" in
+	    X[Yy][Ee][Ss]|X[Tt][Rr][Uu][Ee]) eval USE_${_v}=T ;;
+	    X[Nn][Oo]|X[Ff][Aa][Ll][Ss][Ee]) eval unset USE_${_v} ;;
+	    *) echo "Bad value for --use-$_var ; must be yes or no"
+	       exit 1 ;;
+	    esac
+	else
+	    echo "Bad option $1.   Use --help to show options" 1>&2
+	    exit 1
+	fi
+	shift 1 ;;
+
+    X--use-*)
+        _var=`echo "$1"|sed -n 's/^--use-\([A-Za-z][-A-Za-z0-9_]*\)$/\1/p'`
+	_v=`echo $_var | $AC_UPPERCASE | tr '-' '_'`
+	eval USE_${_v}=T
+	shift 1;;
+
+    X--with-*=*)
+	_var=`echo "$1"| sed -n 's/^--with-\([A-Za-z][-A-Za-z0-9_]*\)=.*$/\1/p'`
+	if [ "$_var" ]; then
+	    _val=`echo "$1" | sed -e 's/^--with-[^=]*=\(.*\)$/\1/'`
+	    _v=`echo $_var | $AC_UPPERCASE | tr '-' '_'`
+	    eval WITH_${_v}=\"$_val\"
+	else
+	    echo "Bad option $1.   Use --help to show options" 1>&2
+	    exit 1
+	fi
+	shift 1 ;;
+
+    X--with-*)
+	_var=`echo "$1" | sed -n 's/^--with-\([A-Za-z][A-Za-z0-9_-]*\)$/\1/p'`
+	if [ "$_var" ]; then
+	    _v=`echo $_var | $AC_UPPERCASE | tr '-' '_'`
+	    eval WITH_${_v}=1
+	else
+	    echo "Bad option $1.   Use --help to show options" 1>&2
+	    exit 1
+	fi
+	shift 1 ;;
+
+    X--help)
+	echo "$ac_standard"
+	test "$ac_help" && echo "$ac_help"
+	exit 0;;
+
+    *)	if [ "$LOCAL_AC_OPTIONS" ]; then
+	    eval "$LOCAL_AC_OPTIONS"
+	else
+	    ac_error=T
+	fi
+	if [ "$ac_error" ]; then
+	    echo "Bad option $1.   Use --help to show options" 1>&2
+	    exit 1
+	fi ;;
+    esac
+done
+
