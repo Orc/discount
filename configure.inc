@@ -1302,9 +1302,6 @@ else
     AC_FAIL "configure requires a functional version of tr"
 fi
 
-echo "AC_UPPER_PAT=$AC_UPPER_PAT"
-echo "AC_UPPERCASE=$AC_UPPERCASE"
-
 while [ $# -gt 0 ]; do
     unset matched
 
