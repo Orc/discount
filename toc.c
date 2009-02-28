@@ -20,10 +20,8 @@ int
 mkd_toc(Document *p, char **doc)
 {
     Paragraph *pp;
-    int last_hnumber = 0,
-	first_hnumber = 0;
+    int last_hnumber = 0;
     Cstring res;
-    char bfr[200];
     
     CREATE(res);
     RESERVE(res, 100);

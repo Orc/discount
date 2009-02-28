@@ -8,11 +8,10 @@
 
 /* putc() into a cstring
  */
-int
+void
 Csputc(int c, Cstring *iot)
 {
     EXPAND(*iot) = c;
-    return 1;
 }
 
 
@@ -38,12 +37,13 @@ Csprintf(Cstring *iot, char *fmt, ...)
 
 /* reparse() into a cstring
  */
+void
 Csreparse(Cstring *iot, char *buf, int size, int flags)
 {
     MMIOT f;
     ___mkd_initmmiot(&f, 0);
-    __mkd_reparse(buf, size, 0, &f);
-    __mkd_emblock(&f);
+    ___mkd_reparse(buf, size, 0, &f);
+    ___mkd_emblock(&f);
     SUFFIX(*iot, T(f.out), S(f.out));
     ___mkd_freemmiot(&f, 0);
 }

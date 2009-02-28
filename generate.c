@@ -277,10 +277,10 @@ emmatch(MMIOT *f, int go)
 }
 
 
-/* __mkd_emblock()
+/* ___mkd_emblock()
  */
 void
-__mkd_emblock(MMIOT *f)
+___mkd_emblock(MMIOT *f)
 {
     int i;
     block *p;
@@ -302,7 +302,7 @@ __mkd_emblock(MMIOT *f)
 /* generate html from a markup fragment
  */
 void
-__mkd_reparse(char *bfr, int size, int flags, MMIOT *f)
+___mkd_reparse(char *bfr, int size, int flags, MMIOT *f)
 {
     MMIOT sub;
 
@@ -316,7 +316,7 @@ __mkd_reparse(char *bfr, int size, int flags, MMIOT *f)
     S(sub.in)--;
     
     text(&sub);
-    __mkd_emblock(&sub);
+    ___mkd_emblock(&sub);
     
     Qwrite(T(sub.out), S(sub.out), f);
 
@@ -642,12 +642,12 @@ linkylinky(int image, MMIOT *f)
 
 	if ( S(link.title) ) {
 	    Qstring(" title=\"", f);
-	    __mkd_reparse(T(link.title), S(link.title), INSIDE_TAG, f);
+	    ___mkd_reparse(T(link.title), S(link.title), INSIDE_TAG, f);
 	    Qchar('"', f);
 	}
 
 	Qstring(tag->text_pfx, f);
-	__mkd_reparse(T(link.tag), S(link.tag), tag->flags, f);
+	___mkd_reparse(T(link.tag), S(link.tag), tag->flags, f);
 	Qstring(tag->text_sfx, f);
     }
     else
@@ -892,7 +892,7 @@ smartypants(int c, int *flags, MMIOT *f)
 			    break;
 			else if ( c == '\'' && peek(f, j+1) == '\'' ) {
 			    Qstring("&ldquo;", f);
-			    __mkd_reparse(cursor(f)+1, j-2, 0, f);
+			    ___mkd_reparse(cursor(f)+1, j-2, 0, f);
 			    Qstring("&rdquo;", f);
 			    shift(f,j+1);
 			    return 1;
@@ -958,7 +958,7 @@ text(MMIOT *f)
 			    ++len;
 			}
 			shift(f,len);
-			__mkd_reparse(sup, len, 0, f);
+			___mkd_reparse(sup, len, 0, f);
 			Qstring("</sup>", f);
 		    }
 		    break;
@@ -1198,19 +1198,19 @@ printhtml(Line *t, MMIOT *f)
 static void
 htmlify(Paragraph *p, char *block, char *arguments, MMIOT *f)
 {
-    __mkd_emblock(f);
+    ___mkd_emblock(f);
     if ( block )
 	Qprintf(f, arguments ? "<%s %s>" : "<%s>", block, arguments);
-    __mkd_emblock(f);
+    ___mkd_emblock(f);
 
     while (( p = display(p, f) )) {
-	__mkd_emblock(f);
+	___mkd_emblock(f);
 	Qstring("\n\n", f);
     }
 
     if ( block )
 	 Qprintf(f, "</%s>", block);
-    __mkd_emblock(f);
+    ___mkd_emblock(f);
 }
 
 
@@ -1226,7 +1226,7 @@ definitionlist(Paragraph *p, MMIOT *f)
 	for ( ; p ; p = p->next) {
 	    for ( tag = p->text; tag; tag = tag->next ) {
 		Qstring("<dt>", f);
-		__mkd_reparse(T(tag->text), S(tag->text), 0, f);
+		___mkd_reparse(T(tag->text), S(tag->text), 0, f);
 		Qstring("</dt>\n", f);
 	    }
 
@@ -1352,7 +1352,7 @@ mkd_document(Document *p, char **res)
 }
 
 
-/*  public interface for __mkd_reparse()
+/*  public interface for ___mkd_reparse()
  */
 int
 mkd_text(char *bfr, int size, FILE *output, int flags)
@@ -1362,8 +1362,8 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
     ___mkd_initmmiot(&f, 0);
     f.flags = flags & USER_FLAGS;
     
-    __mkd_reparse(bfr, size, 0, &f);
-    __mkd_emblock(&f);
+    ___mkd_reparse(bfr, size, 0, &f);
+    ___mkd_emblock(&f);
     if ( flags & CDATA_OUTPUT )
 	___mkd_xml(T(f.out), S(f.out), output);
     else

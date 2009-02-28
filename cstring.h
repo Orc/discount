@@ -66,7 +66,8 @@
 
 typedef STRING(char) Cstring;
 
-extern int Csputc(int, Cstring *);
+extern void Csputc(int, Cstring *);
 extern int Csprintf(Cstring *, char *, ...);
+extern void Csreparse(Cstring *, char *, int, int);
 
 #endif/*_CSTRING_D*/
