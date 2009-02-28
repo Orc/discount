@@ -12,7 +12,7 @@ SAMPLE_PGMS=mkd2html makepage
 @THEME@SAMPLE_PGMS+= theme
 MKDLIB=libmarkdown.a
 OBJS=mkdio.o markdown.o dumptree.o generate.o \
-     resource.o docheader.o version.o toc.o xmlpage.o @AMALLOC@
+     resource.o docheader.o version.o toc.o Csio.o xmlpage.o @AMALLOC@
 
 all: $(PGMS) $(SAMPLE_PGMS)
 

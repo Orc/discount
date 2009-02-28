@@ -100,6 +100,7 @@ main(int argc, char **argv)
     int rc;
     int flags = 0;
     int debug = 0;
+    int toc = 0;
     int use_mkd_text = 0;
     char *text = 0;
     char *ofile = 0;
@@ -112,7 +113,7 @@ main(int argc, char **argv)
     pgm = basename(argv[0]);
     opterr = 1;
 
-    while ( (opt=getopt(argc, argv, "b:df:F:o:s:t:V")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "b:df:F:o:s:t:TV")) != EOF ) {
 	switch (opt) {
 	case 'b':   urlbase = optarg;
 		    break;
@@ -126,6 +127,8 @@ main(int argc, char **argv)
 		    break;
 	case 't':   text = optarg;
 		    use_mkd_text = 1;
+		    break;
+	case 'T':   toc = 1;
 		    break;
 	case 's':   text = optarg;
 		    break;
@@ -171,8 +174,16 @@ main(int argc, char **argv)
 
 	if ( debug )
 	    rc = mkd_dump(doc, stdout, 0, argc ? basename(argv[0]) : "stdin");
-	else
-	    rc = markdown(doc, stdout, flags);
+	else {
+	    rc = 1;
+	    if ( mkd_compile(doc, flags) ) {
+		rc = 0;
+		if ( toc )
+		    mkd_generatetoc(doc, stdout);
+		mkd_generatehtml(doc, stdout);
+		mkd_cleanup(doc);
+	    }
+	}
     }
     adump();
     exit( (rc == 0) ? 0 : errno );

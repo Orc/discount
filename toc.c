@@ -17,12 +17,18 @@
 /* write an header index
  */
 int
-mkd_generatetoc(Document *p, FILE *output)
+mkd_toc(Document *p, char **doc)
 {
     Paragraph *pp;
-
     int last_hnumber = 0,
 	first_hnumber = 0;
+    Cstring res;
+    char bfr[200];
+    
+    CREATE(res);
+    RESERVE(res, 100);
+
+    *doc = 0;
 
     if ( !(p && p->ctx) ) return -1;
     if ( ! (p->ctx->flags & TOC) ) return 0;
@@ -31,32 +37,52 @@ mkd_generatetoc(Document *p, FILE *output)
         if ( pp->typ == HDR && pp->text ) {
 	    
 	    if ( last_hnumber == pp->hnumber )
-		fprintf(output, "%*s</li>\n", pp->hnumber, "");
+		Csprintf(&res,  "%*s</li>\n", pp->hnumber, "");
 	    else while ( last_hnumber > pp->hnumber ) {
-		fprintf(output, "%*s</li>\n%*s</ul>\n",
+		Csprintf(&res, "%*s</li>\n%*s</ul>\n",
 				 last_hnumber, "",
 				 last_hnumber-1,"");
 		--last_hnumber;
 	    }
 	    
 	    while ( pp->hnumber > last_hnumber ) {
-		fprintf(output, "\n%*s<ul>\n", pp->hnumber, "");
+		Csprintf(&res, "\n%*s<ul>\n", pp->hnumber, "");
 		++last_hnumber;
 	    }
-	    fprintf(output, "%*s<li><a href=\"#", pp->hnumber, "");
-	    mkd_string_to_anchor(T(pp->text->text), S(pp->text->text), putc, output);
-	    fprintf(output, "\">");
-	    mkd_text(T(pp->text->text), S(pp->text->text), output, 0);
-	    fprintf(output, "</a>");
+	    Csprintf(&res, "%*s<li><a href=\"#", pp->hnumber, "");
+	    mkd_string_to_anchor(T(pp->text->text), S(pp->text->text), Csputc, &res);
+	    Csprintf(&res, "\">");
+	    Csreparse(&res, T(pp->text->text), S(pp->text->text), 0);
+	    Csprintf(&res, "</a>");
         }
     }
 
     while ( last_hnumber > 0 ) {
-        fprintf(output, "%*s</li>\n%*s</ul>\n",
+	Csprintf(&res, "%*s</li>\n%*s</ul>\n",
 			last_hnumber, "", last_hnumber, "");
 	--last_hnumber;
     }
-
-    return 0;
+			/* HACK ALERT! HACK ALERT! HACK ALERT! */
+    *doc = T(res);	/* we know that a T(Cstring) is a character pointer */
+			/* so we can simply pick it up and carry it away, */
+    return S(res);	/* leaving the husk of the Ctring on the stack */
+			/* END HACK ALERT */
 }
 
+
+/* write an header index
+ */
+int
+mkd_generatetoc(Document *p, FILE *out)
+{
+    char *buf = 0;
+    int sz = mkd_toc(p, &buf);
+    int ret = EOF;
+
+    if ( sz > 0 )
+	ret = fwrite(buf, sz, 1, out);
+
+    if ( buf ) free(buf);
+
+    return ret;
+}

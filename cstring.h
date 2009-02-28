@@ -50,6 +50,7 @@
  */
 #define T(x)		(x).text
 #define S(x)		(x).size
+#define ALL(x)		(x).alloc
 
 /* abstract anchor type that defines a list base
  * with a function that attaches an element to
@@ -64,5 +65,8 @@
 				   :( ((t).text = (t).end = (p)) ) )
 
 typedef STRING(char) Cstring;
+
+extern int Csputc(int, Cstring *);
+extern int Csprintf(Cstring *, char *, ...);
 
 #endif/*_CSTRING_D*/
