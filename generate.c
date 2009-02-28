@@ -497,12 +497,14 @@ linkykey(int image, Footnote *val, MMIOT *f)
 {
     Footnote *ret;
     Cstring mylabel;
+    int here;
 
     memset(val, 0, sizeof *val);
 
     if ( (T(val->tag) = linkylabel(f, &S(val->tag))) == 0 )
 	return 0;
 
+    here = mmiottell(f);
     eatspace(f);
     switch ( pull(f) ) {
     case '(':
@@ -517,14 +519,21 @@ linkykey(int image, Footnote *val, MMIOT *f)
 
 	return peek(f,0) == ')';
 
-    case '[':
+    case '[':		/* footnote links /as defined in the standard/ */
+    default:		/* footnote links -- undocumented extension */
 	/* footnote link */
 	mylabel = val->tag;
-	if ( (T(val->tag) = linkylabel(f, &S(val->tag))) == 0 )
-	    return 0;
+	if ( peek(f,0) == '[' ) {
+	    if ( (T(val->tag) = linkylabel(f, &S(val->tag))) == 0 )
+		return 0;
 
-	if ( !S(val->tag) )
-	    val->tag = mylabel;
+	    if ( !S(val->tag) )
+		val->tag = mylabel;
+	}
+	else if ( f->flags & MKD_1_COMPAT )
+	    break;
+	else
+	    mmiotseek(f,here);
 
 	ret = bsearch(val, T(*f->footnotes), S(*f->footnotes),
 	               sizeof *val, (stfu)__mkd_footsort);

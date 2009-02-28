@@ -52,6 +52,7 @@ static struct {
     { "pants",   1, MKD_NOPANTS  },
     { "smarty",  1, MKD_NOPANTS  },
     { "toc",     0, MKD_TOC      },
+    { "1.0",     0, MKD_1_COMPAT },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])

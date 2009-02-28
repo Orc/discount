@@ -54,6 +54,7 @@ extern char markdown_version[];
 #define MKD_NO_EXT	0x0040	/* don't allow pseudo-protocols */
 #define MKD_CDATA	0x0080	/* generate code for xml ![CDATA[...]] */
 #define MKD_TOC		0x1000	/* do table-of-contents processing */
+#define MKD_1_COMPAT	0x2000	/* compatability with MarkdownTest_1.0 */
 #define MKD_EMBED	MKD_NOLINKS|MKD_NOIMAGE|MKD_TAGTEXT
 
 /* special flags for mkd_in() and mkd_string()
