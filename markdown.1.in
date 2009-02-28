@@ -55,6 +55,10 @@ Use markdown-standard 4-space tabstops.
 @STRICT@Disable superscript and relaxed emphasis.
 @STRICT@.It Ar relax
 @STRICT@Enable superscript and relaxed emphasis (this is the default.)
+.It Ar toc
+Enable table-of-contents support
+.It Ar 1.0
+Revert to Markdown 1.0 compatability.
 .El
 .Pp
 As an example, the option
@@ -68,7 +72,9 @@ Set translation flags.
 .Ar Bitmap
 is a bit map of the various configuration options
 described in
-.Xr markdown 3 .
+.Xr markdown 3 
+(the flag values are defined in
+.Pa mkdio.h )
 .It Fl V
 Show the version# and configuration data.
 .Pp
@@ -81,12 +87,6 @@ If the version includes the string
 .Em HEADER ,
 .Nm
 was configured to support pandoc header blocks.
-.It Fl F Ar bitmap
-Pass the flags contained in
-.Ar bitmap
-to the markdown compiler.  The valid flags are
-described in 
-.Xr markdown 3 .
 .It Fl o Pa file
 Write the generated html to 
 .Pa file .
@@ -98,6 +98,9 @@ to format
 instead of processing stdin with the
 .Xr markdown 3
 function.
+.It Fl T
+If run with the table-of-content flag on, dump the
+table of contents before the formatted text.
 .It Fl s Ar text
 Use the
 .Xr markdown 3
