@@ -1141,6 +1141,7 @@ printblock(Paragraph *pp, MMIOT *f)
 		push("<br/>\n", 6, f);
 	    }
 	    else {
+		___mkd_tidy(t);
 		push(T(t->text), S(t->text), f);
 		if ( t->next )
 		    push("\n", 1, f);

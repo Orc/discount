@@ -124,8 +124,8 @@ skipempty(Line *p)
 }
 
 
-static void
-tidy(Line *t)
+void
+___mkd_tidy(Line *t)
 {
     while ( S(t->text) && isspace(T(t->text)[S(t->text)-1]) )
 	--S(t->text);
@@ -495,7 +495,6 @@ textblock(Paragraph *p, int toplevel)
     Line *t, *next;
 
     for ( t = p->text; t ; t = next ) {
-	tidy(t);
 	if ( ((next = t->next) == 0) || endoftextblock(next, toplevel) ) {
 	    p->align = centered(p->text, t);
 	    t->next = 0;
@@ -842,7 +841,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 		/* HORRIBLE STANDARDS KLUDGE: the first line of every block
 		 * has trailing whitespace trimmed off.
 		 */
-		tidy(p->text);
+		___mkd_tidy(p->text);
 	    }
 	    
 	    ptr = codeblock(p);

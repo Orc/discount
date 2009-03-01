@@ -57,5 +57,29 @@ else
     rc=1
 fi
 
+./echo -n '  forcing a <br/> .................. '
+
+SRC="this  "
+
+count=`echo "$SRC" | ./markdown | grep '<br/>' | wc -l`
+
+if [ $count -eq 1 ]; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
+./echo -n '  trimming single spaces ........... '
+
+SRC="this "
+count=`echo "$SRC" | ./markdown | grep 'this ' | wc -l`
+
+if [ $count -eq 1 ]; then
+    ./echo "FAILED"
+    rc=1
+else
+    ./echo "ok"
+fi
 
 exit $rc
