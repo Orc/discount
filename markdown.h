@@ -130,5 +130,6 @@ extern void ___mkd_freeLineRange(Line *, Line *);
 extern void ___mkd_xml(char *, int, FILE *);
 extern void ___mkd_reparse(char *, int, int, MMIOT*);
 extern void ___mkd_emblock(MMIOT*);
+extern void ___mkd_tidy(Line *);
 
 #endif/*_MARKDOWN_D*/
