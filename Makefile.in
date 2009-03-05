@@ -17,30 +17,30 @@ OBJS=mkdio.o markdown.o dumptree.o generate.o \
 all: $(PGMS) $(SAMPLE_PGMS)
 
 install: $(PGMS)
-	@INSTALL_PROGRAM@ $(PGMS) $(BINDIR)
-	@INSTALL_DATA@ $(MKDLIB) $(LIBDIR)
-	@INSTALL_DATA@ mkdio.h $(INCDIR)
+	@INSTALL_PROGRAM@ $(PGMS) $(DESTDIR)/$(BINDIR)
+	@INSTALL_DATA@ $(MKDLIB) $(DESTDIR)/$(LIBDIR)
+	@INSTALL_DATA@ mkdio.h $(DESTDIR)/$(INCDIR)
 
 install.everything: install install.samples install.man
 
 install.samples: $(SAMPLE_PGMS) install
-	@INSTALL_PROGRAM@ $(SAMPLE_PGMS) $(BINDIR)
-	@INSTALL_DIR@ $(MANDIR)/man1
-	@INSTALL_DATA@ theme.1 $(MANDIR)/man1
+	@INSTALL_PROGRAM@ $(SAMPLE_PGMS) $(DESTDIR)/$(BINDIR)
+	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man1
+	@INSTALL_DATA@ theme.1 $(DESTDIR)/$(MANDIR)/man1
 
 install.man:
-	@INSTALL_DIR@ $(MANDIR)/man3
-	@INSTALL_DATA@ mkd-functions.3 markdown.3 $(MANDIR)/man3
+	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man3
+	@INSTALL_DATA@ mkd-functions.3 markdown.3 $(DESTDIR)/$(MANDIR)/man3
 	for x in mkd_text mkd_in mkd_string; do \
-	    ( echo '.\"' ; echo ".so man3/markdown.3" ) > $(MANDIR)/man3/$$x.3;\
+	    ( echo '.\"' ; echo ".so man3/markdown.3" ) > $(DESTDIR)/$(MANDIR)/man3/$$x.3;\
 	done
 	for x in mkd_compile mkd_style mkd_generatehtml mkd_cleanup mkd_doc_title mkd_doc_author mkd_doc_date; do \
-	    ( echo '.\"' ; echo ".so man3/mkd-functions.3" ) > $(MANDIR)/man3/$$x.3; \
+	    ( echo '.\"' ; echo ".so man3/mkd-functions.3" ) > $(DESTDIR)/$(MANDIR)/man3/$$x.3; \
 	done
-	@INSTALL_DIR@ $(MANDIR)/man7
-	@INSTALL_DATA@ markdown.7 mkd-extensions.7 $(MANDIR)/man7
-	@INSTALL_DIR@ $(MANDIR)/man1
-	@INSTALL_DATA@ markdown.1 $(MANDIR)/man1
+	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man7
+	@INSTALL_DATA@ markdown.7 mkd-extensions.7 $(DESTDIR)/$(MANDIR)/man7
+	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man1
+	@INSTALL_DATA@ markdown.1 $(DESTDIR)/$(MANDIR)/man1
 
 install.everything: install install.man
 
