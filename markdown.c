@@ -587,7 +587,7 @@ quoteblock(Paragraph *p)
 	    /* and this would be an "%id:" prefix */
 	    prefix="id";
 	    
-	if ( p->ident = malloc(4+i+S(q->text)) )
+	if ( p->ident = malloc(4+strlen(prefix)+S(q->text)) )
 	    sprintf(p->ident, "%s=\"%.*s\"", prefix, S(q->text)-(i+2),
 						     T(q->text)+(i+1) );
 
