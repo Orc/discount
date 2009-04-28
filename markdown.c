@@ -21,10 +21,12 @@
  */
 struct kw {
     char *id;
-    int  siz;
+    int  size;
+    int  selfclose;
 } ;
 
-#define KW(x)	{ x, sizeof(x)-1 }
+#define KW(x)	{ x, sizeof(x)-1, 0 }
+#define SC(x)	{ x, sizeof(x)-1, 1 }
 
 static struct kw blocktags[] = { KW("!--"), KW("STYLE"), KW("SCRIPT"),
 				 KW("ADDRESS"), KW("BDO"), KW("BLOCKQUOTE"),
@@ -33,7 +35,7 @@ static struct kw blocktags[] = { KW("!--"), KW("STYLE"), KW("SCRIPT"),
 				 KW("H6"), KW("LISTING"), KW("NOBR"),
 				 KW("UL"), KW("P"), KW("OL"), KW("DL"),
 				 KW("PLAINTEXT"), KW("PRE"), KW("TABLE"),
-				 KW("WBR"), KW("XMP"), KW("HR"), KW("BR") };
+				 KW("WBR"), KW("XMP"), SC("HR"), SC("BR") };
 #define SZTAGS	(sizeof blocktags / sizeof blocktags[0])
 #define MAXTAG	11 /* sizeof "BLOCKQUOTE" */
 
@@ -47,9 +49,9 @@ typedef ANCHOR(Paragraph) ParagraphRoot;
 static int
 casort(struct kw *a, struct kw *b)
 {
-    if ( a->siz != b->siz )
-	return a->siz - b->siz;
-    return strncasecmp(a->id, b->id, b->siz);
+    if ( a->size != b->size )
+	return a->size - b->size;
+    return strncasecmp(a->id, b->id, b->size);
 }
 
 
@@ -132,7 +134,7 @@ ___mkd_tidy(Line *t)
 }
 
 
-static char *
+static struct kw *
 isopentag(Line *p)
 {
     int i=0, len;
@@ -154,57 +156,85 @@ isopentag(Line *p)
 	;
 
     key.id = T(p->text)+1;
-    key.siz = i-1;
+    key.size = i-1;
     
-    if ( ret = bsearch(&key,blocktags,SZTAGS,sizeof key, (stfu)casort))
-	return ret->id;
+    if ( ret = bsearch(&key, blocktags, SZTAGS, sizeof key, (stfu)casort))
+	return ret;
 
     return 0;
 }
 
 
-static int
-selfclose(Line *t, char *tag)
-{
-    char *q = T(t->text);
-    int siz = strlen(tag);
+typedef struct _flo {
+    Line *t;
     int i;
+} FLO;
 
-    if ( strcasecmp(tag, "HR") == 0 || strcasecmp(tag, "BR") == 0 )
-	/* <HR> and <BR> are self-closing block-level tags,
-	 */
-	return 1;
 
-    i = S(t->text) - (siz + 3);
-
-    /* we specialcase start and end tags on the same line.
-     */
-    return ( i > 0 ) && (q[i] == '<') && (q[i+1] == '/')
-		     && (q[i+2+siz] == '>')
-		     && (strncasecmp(&q[i+2], tag, siz) == 0);
+static int
+flogetc(FLO *f)
+{
+    if ( f && f->t ) {
+	if ( f->i < S(f->t->text) )
+	    return T(f->t->text)[f->i++];
+	f->t = f->t->next;
+	f->i = 0;
+	return flogetc(f);
+    }
+    return EOF;
 }
 
 
 static Line *
-htmlblock(Paragraph *p, char *tag)
+htmlblock(Paragraph *p, struct kw *tag)
 {
-    Line *t = p->text, *ret;
-    int closesize;
-    char close[MAXTAG+4];
+    Line *ret;
+    FLO f = { p->text, 0 };
+    int c;
+    int i, closing, depth=0, sztag;
 
-    if ( selfclose(t, tag) || (strlen(tag) >= MAXTAG) ) {
-	ret = t->next;
-	t->next = 0;
+    if ( tag->selfclose || (tag->size >= MAXTAG) ) {
+	ret = f.t->next;
+	f.t->next = 0;
 	return ret;
     }
 
-    closesize = sprintf(close, "</%s>", tag);
+    while ( (c = flogetc(&f)) != EOF ) {
+	if ( c == '<' ) {
+	    /* tag? */
+	    c = flogetc(&f);
+	    if ( c == '!' ) { /* comment? */
+		if ( flogetc(&f) == '-' && flogetc(&f) == '-' ) {
+		    /* yes */
+		    while ( (c = flogetc(&f)) != EOF ) {
+			if ( c == '-' && flogetc(&f) == '-'
+				      && flogetc(&f) == '>')
+			      /* consumed whole comment */
+			      break;
+		    }
+		}
+	    }
+	    else { 
+		if ( closing = (c == '/') ) c = flogetc(&f);
 
-    for ( ; t ; t = t->next) {
-	if ( strncasecmp(T(t->text), close, closesize) == 0 ) {
-	    ret = t->next;
-	    t->next = 0;
-	    return ret;
+		for ( i=0; i < tag->size; c=flogetc(&f) ) {
+		    if ( tag->id[i++] != toupper(c) )
+			break;
+		}
+
+		if ( (i == tag->size) && !isalnum(c) ) {
+		    depth = depth + (closing ? -1 : 1);
+		    if ( depth == 0 ) {
+			while ( c != EOF && c != '>' ) {
+			    /* consume trailing gunk in close tag */
+			    c = flogetc(&f);
+			}
+			ret = f.t->next;
+			f.t->next = 0;
+			return ret;
+		    }
+		}
+	    }
 	}
     }
     return 0;
@@ -212,7 +242,7 @@ htmlblock(Paragraph *p, char *tag)
 
 
 static Line *
-comment(Paragraph *p, char *key)
+comment(Paragraph *p)
 {
     Line *t, *ret;
 
@@ -819,7 +849,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 {
     ParagraphRoot d = { 0, 0 };
     Paragraph *p = 0;
-    char *key;
+    struct kw *tag;
     Line *r;
     int para = toplevel;
     int hdr_type, list_type, indent;
@@ -827,12 +857,12 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     ptr = consume(ptr, &para);
 
     while ( ptr ) {
-	if ( toplevel && !(f->flags & DENY_HTML) && (key = isopentag(ptr)) ) {
-	    p = Pp(&d, ptr, strcmp(key, "STYLE") == 0 ? STYLE : HTML);
-	    if ( strcmp(key, "!--") == 0 )
-		ptr = comment(p, key);
+	if ( toplevel && !(f->flags & DENY_HTML) && (tag = isopentag(ptr)) ) {
+	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
+	    if ( strcmp(tag->id, "!--") == 0 )
+		ptr = comment(p);
 	    else
-		ptr = htmlblock(p, key);
+		ptr = htmlblock(p, tag);
 	}
 	else if ( iscode(ptr) ) {
 	    p = Pp(&d, ptr, CODE);

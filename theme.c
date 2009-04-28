@@ -547,6 +547,8 @@ char **argv;
 
 	    if ( added_text ) {
 		strcpy(output, argv[0]);
+		if ( S_ISDIR(sourceinfo.st_mode) )
+		    strcat(output, "/index");
 		strcat(output, ".html");
 	    }
 	    else {
