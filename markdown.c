@@ -191,7 +191,7 @@ htmlblock(Paragraph *p, struct kw *tag)
     Line *ret;
     FLO f = { p->text, 0 };
     int c;
-    int i, closing, depth=0, sztag;
+    int i, closing, depth=0;
 
     if ( tag->selfclose || (tag->size >= MAXTAG) ) {
 	ret = f.t->next;
