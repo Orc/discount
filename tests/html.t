@@ -115,4 +115,41 @@ else
     rc=1
 fi
 
+./echo -n '  nested html blocks (1) ........... '
+
+T='Markdown works fine *here*.
+
+*And* here.
+
+<div><pre>
+</pre></div>
+
+Markdown here is *not* parsed by RDiscount.
+
+Nor in *this* paragraph, and there are no paragraph breaks.'
+
+RSLT=`./echo "$T" | ./markdown | grep '<em>' | wc -l`
+
+if [ $RSLT -eq 4 ]; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
+./echo -n '  nested html blocks (2) ........... '
+
+T='<div>This is inside a html block
+<div>This is, too</div>and
+so is this</div>'
+
+RSLT=`./echo "$T" | ./markdown | grep '<p>' | wc -l`
+
+if [ $RSLT -eq 0 ]; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
 exit $rc
