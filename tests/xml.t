@@ -41,4 +41,13 @@ else
     ./echo "ok"
 fi
 
+./echo -n '  xml output with multibyte utf-8 .. '
+
+if ./echo 'tecnología y servicios más confiables' | ./markdown -fcdata | grep 'tecnología y servicios más confiables' >/dev/null; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
 exit $rc
