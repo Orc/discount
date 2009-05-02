@@ -15,7 +15,7 @@ ac_help='--enable-dl-tag		Use the DL tag extension
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --enable-div		Enable >%id% divisions
 --enable-alpha-list	Enable (a)/(b)/(c) lists
---enable-all-features	Turn on all optional features'
+--enable-all-features	Turn on all stable optional features'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
