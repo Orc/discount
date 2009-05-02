@@ -38,6 +38,8 @@ char* mkd_doc_date(MMIOT*);
 /* compiled data access
  */
 int mkd_document(MMIOT*, char**);
+int mkd_toc(MMIOT*, char**);
+/*int mkd_style(MMIOT*, char **);*/
 
 /* version#.
  */
