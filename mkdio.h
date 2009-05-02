@@ -50,7 +50,8 @@ extern char markdown_version[];
 #define MKD_NOPANTS	0x0004	/* don't run smartypants() */
 #define MKD_NOHTML	0x0008	/* don't allow raw html through AT ALL */
 #define MKD_STRICT	0x0010	/* disable SUPERSCRIPT, RELAXED_EMPHASIS */
-#define MKD_TAGTEXT	0x0020	/* don't expand `_` and `*` */
+#define MKD_TAGTEXT	0x0020	/* process text inside an html tag; no
+				 * <em>, no <bold>, no html or [] expansion */
 #define MKD_NO_EXT	0x0040	/* don't allow pseudo-protocols */
 #define MKD_CDATA	0x0080	/* generate code for xml ![CDATA[...]] */
 #define MKD_TOC		0x1000	/* do table-of-contents processing */
