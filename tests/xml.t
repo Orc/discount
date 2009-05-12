@@ -13,6 +13,15 @@ else
 fi
 
 
+./echo -n '  ... from mkd_generateline() ...... '
+
+if ./markdown -fcdata -t'"hello,sailor"' | grep '&amp;' >/dev/null; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
 ./echo -n '  html output from markdown() ...... '
 
 if ./echo '"hello,sailor"' | ./markdown -fnocdata | grep '&amp;' >/dev/null; then
@@ -23,16 +32,7 @@ else
 fi
 
 
-./echo -n '  xml output from mkd_text() ....... '
-
-if ./markdown -fcdata -t'"hello,sailor"' | grep '&amp;' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  html output from mkd_text() ...... '
+./echo -n '  ... from mkd_generateline() ...... '
 
 if ./markdown -fnocdata -t'"hello,sailor"' | grep '&amp;' >/dev/null; then
     ./echo "FAILED"
