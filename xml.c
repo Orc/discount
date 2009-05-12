@@ -67,8 +67,9 @@ mkd_xml(char *p, int size, char **res)
     RESERVE(f, 100);
 
     while ( size-- > 0 ) {
+	c = *p++;
 	if ( entity = mkd_xmlchar(c) )
-	    Cswrite(entity, strlen(entity), &f);
+	    Cswrite(&f, entity, strlen(entity));
 	else
 	    Csputc(c, &f);
     }

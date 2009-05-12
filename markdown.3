@@ -16,8 +16,6 @@ Markdown
 .Fn *mkd_string "char *string" "int size"
 .Ft int
 .Fn markdown "MMIOT *doc" "FILE *output" "int flags"
-.Ft int
-.Fn mkd_text "char *string" "int size" "FILE *output" "int flags"
 .Sh DESCRIPTION
 These functions
 convert
@@ -27,16 +25,6 @@ documents and strings into HTML.
 processes an entire document, while
 .Fn mkd_text
 processes a single string.
-.Pp
-The 
-.Fn markdown
-function expects to recieve a preprocessed text from the
-.Fn mkd_in
-or
-.Fn mkd_string
-functions, while
-.Fn mkd_text
-treats your input text as a single paragraph of markup.
 .Pp
 To process a file, you pass a FILE* to
 .Fn mkd_in ,
@@ -54,10 +42,8 @@ and pass its return value to
 .Fn markdown.
 .Pp
 .Fn Markdown
-and
-.Fn mkd_text
-accept the following flag values (or-ed together if needed)
-to restrict how they process their input:
+accepts the following flag values (or-ed together if needed)
+to restrict how it processes input:
 .Bl -tag -width MKD_NOIMAGE -compact
 .It Ar MKD_NOIMAGE
 Do not process `![]' and
@@ -96,11 +82,8 @@ MarkdownTest_1.0 compatability flag; trim trailing spaces from the
 first line of code blocks and disable implicit reference links.
 .El
 .Sh RETURN VALUES
-The functions
 .Fn markdown
-and
-.Fn mkd_text
-return 0 on success, 1 on failure.
+returns 0 on success, 1 on failure.
 The
 .Fn mkd_in
 and
@@ -109,6 +92,7 @@ functions return a MMIOT* on success, null on failure.
 .Sh SEE ALSO
 .Xr markdown 1 ,
 .Xr mkd-functions 3 ,
+.Xr mkd-line 3 ,
 .Xr markdown 7 ,
 .Xr mkd-extensions 7 ,
 .Xr mmap 2 .
@@ -120,8 +104,6 @@ Error handling is minimal at best.
 The
 .Ar MMIOT
 created by
-.Fn mkd_text
-and
 .Fn mkd_string
 is deleted by the
 .Nm

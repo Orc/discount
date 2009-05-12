@@ -36,11 +36,13 @@ char* mkd_doc_date(MMIOT*);
 int mkd_document(MMIOT*, char**);
 int mkd_toc(MMIOT*, char**);
 int mkd_css(MMIOT*, char **);
+int mkd_xml(MMIOT*, char **);
 
 /* write-to-file functions
  */
 int mkd_generatehtml(MMIOT*,FILE*);
 int mkd_generatetoc(MMIOT*,FILE*);
+int mkd_generatexml(MMIOT*,FILE*);
 int mkd_generatecss(MMIOT*,FILE*);
 #define mkd_style mkd_generatecss
 int mkd_generateline(char *, int, FILE*, int);
