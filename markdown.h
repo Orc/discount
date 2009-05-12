@@ -107,8 +107,12 @@ extern int  mkd_generatehtml(Document *, FILE *);
 extern int  mkd_css(Document *, char **);
 extern int  mkd_generatecss(Document *, FILE *);
 #define mkd_style mkd_generatecss
+extern int  mkd_xml(Document *, char **);
+extern int  mkd_generatexml(Document *, FILE *);
 extern void mkd_cleanup(Document *);
-extern int  mkd_text(char *, int, FILE*, int);
+extern int  mkd_line(char *, int, char **, int);
+extern int  mkd_generateline(char *, int, FILE*, int);
+#define mkd_text mkd_generateline
 extern void mkd_basename(Document*, char *);
 extern void mkd_string_to_anchor(char*,int, void(*)(int,void*), void*);
 
