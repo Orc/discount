@@ -31,11 +31,14 @@ install.samples: $(SAMPLE_PGMS) install
 
 install.man:
 	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man3
-	@INSTALL_DATA@ mkd-functions.3 markdown.3 $(DESTDIR)/$(MANDIR)/man3
-	for x in mkd_text mkd_in mkd_string; do \
+	@INSTALL_DATA@ mkd-functions.3 markdown.3 mkd-line.3 $(DESTDIR)/$(MANDIR)/man3
+	for x in mkd_line mkd_generateline; do \
+	    ( echo '.\"' ; echo ".so man3/mkd-line.3" ) > $(DESTDIR)/$(MANDIR)/man3/$$x.3;\
+	done
+	for x in mkd_in mkd_string; do \
 	    ( echo '.\"' ; echo ".so man3/markdown.3" ) > $(DESTDIR)/$(MANDIR)/man3/$$x.3;\
 	done
-	for x in mkd_compile mkd_style mkd_generatehtml mkd_cleanup mkd_doc_title mkd_doc_author mkd_doc_date; do \
+	for x in mkd_compile mkd_css mkd_generatecss mkd_generatehtml mkd_cleanup mkd_doc_title mkd_doc_author mkd_doc_date; do \
 	    ( echo '.\"' ; echo ".so man3/mkd-functions.3" ) > $(DESTDIR)/$(MANDIR)/man3/$$x.3; \
 	done
 	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man7
