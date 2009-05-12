@@ -102,7 +102,7 @@ main(int argc, char **argv)
     int flags = 0;
     int debug = 0;
     int toc = 0;
-    int use_mkd_text = 0;
+    int use_mkd_line = 0;
     char *text = 0;
     char *ofile = 0;
     char *urlbase = 0;
@@ -127,7 +127,7 @@ main(int argc, char **argv)
 	case 'f':   set(&flags, optarg);
 		    break;
 	case 't':   text = optarg;
-		    use_mkd_text = 1;
+		    use_mkd_line = 1;
 		    break;
 	case 'T':   toc = 1;
 		    break;
@@ -151,8 +151,8 @@ main(int argc, char **argv)
     argc -= optind;
     argv += optind;
 
-    if ( use_mkd_text )
-	rc = mkd_text( text, strlen(text), stdout, flags);
+    if ( use_mkd_line )
+	rc = mkd_generateline( text, strlen(text), stdout, flags);
     else {
 	if ( text ) {
 	    if ( (doc = mkd_string(text, strlen(text), flags)) == 0 ) {

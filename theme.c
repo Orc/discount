@@ -310,7 +310,7 @@ ftitle(MMIOT *doc, FILE* output, int flags)
 	h = pagename;
 
     if ( h )
-	mkd_text(h, strlen(h), output, flags);
+	mkd_generateline(h, strlen(h), output, flags);
 }
 
 
@@ -322,7 +322,7 @@ fdate(MMIOT *doc, FILE *output, int flags)
     char *h = infop ? ctime(&infop->st_mtime) : mkd_doc_date(doc);
 
     if ( h )
-	mkd_text(h, strlen(h), output, flags|MKD_TAGTEXT);
+	mkd_generateline(h, strlen(h), output, flags|MKD_TAGTEXT);
 }
 
 
@@ -339,7 +339,7 @@ fauthor(MMIOT *doc, FILE *output, int flags)
 #endif
 
     if ( h )
-	mkd_text(h, strlen(h), output, flags);
+	mkd_generateline(h, strlen(h), output, flags);
 }
 
 

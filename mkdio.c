@@ -244,18 +244,55 @@ mkd_string_to_anchor(char *s, int len, void(*outchar)(int,void*), void *out)
 }
 
 
-/*  public interface for ___mkd_reparse()
+/*  ___mkd_reparse() a line
+ */
+static void
+mkd_parse_line(char *bfr, int size, MMIOT *f, int flags)
+{
+    ___mkd_initmmiot(f, 0);
+    f->flags = flags & USER_FLAGS;
+    ___mkd_reparse(bfr, size, 0, f);
+    ___mkd_emblock(f);
+}
+
+
+/* ___mkd_reparse() a line, returning it in malloc()ed memory
  */
 int
-mkd_text(char *bfr, int size, FILE *output, int flags)
+mkd_line(char *bfr, int size, char **res, int flags)
+{
+    MMIOT f;
+    int len;
+    
+    mkd_parse_line(bfr, size, &f, flags);
+
+    if ( len = S(f.out) ) {
+	/* kludge alert;  we know that T(f.out) is malloced memory,
+	 * so we can just steal it away.   This is awful -- there
+	 * should be an opaque method that transparently moves 
+	 * the pointer out of the embedded Cstring.
+	 */
+	*res = T(f.out);
+	T(f.out) = 0;
+	S(f.out) = 0;
+    }
+    else {
+	 *res = 0;
+	 len = EOF;
+     }
+    ___mkd_freemmiot(&f, 0);
+    return len;
+}
+
+
+/* ___mkd_reparse() a line, writing it to a FILE
+ */
+int
+mkd_generateline(char *bfr, int size, FILE *output, int flags)
 {
     MMIOT f;
 
-    ___mkd_initmmiot(&f, 0);
-    f.flags = flags & USER_FLAGS;
-    
-    ___mkd_reparse(bfr, size, 0, &f);
-    ___mkd_emblock(&f);
+    mkd_parse_line(bfr, size, &f, flags);
     if ( flags & CDATA_OUTPUT )
 	mkd_generatexml(T(f.out), S(f.out), output);
     else
