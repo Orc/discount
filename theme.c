@@ -373,7 +373,7 @@ ftoc(MMIOT *doc, FILE *output, int flags)
 static void
 fstyle(MMIOT *doc, FILE *output, int flags)
 {
-    mkd_style(doc, output);
+    mkd_generatecss(doc, output);
 }
 
 
