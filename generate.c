@@ -1316,27 +1316,6 @@ display(Paragraph *p, MMIOT *f)
 }
 
 
-/*
- * dump out stylesheet sections.
- */
-static void
-stylesheets(Paragraph *p, MMIOT *f)
-{
-    Line* q;
-
-    for ( ; p ; p = p->next ) {
-	if ( p->typ == STYLE ) {
-	    for ( q = p->text; q ; q = q->next )
-		Qwrite(T(q->text), S(q->text), f);
-		Qchar('\n', f);
-	}
-	if ( p->down )
-	    stylesheets(p->down, f);
-    }
-    ___mkd_emblock(f);
-}
-
-
 /* return a pointer to the compiled markdown
  * document.
  */
@@ -1376,41 +1355,3 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
     ___mkd_freemmiot(&f, 0);
     return 0;
 }
-
-
-/* dump any embedded styles to a string
- */
-int
-mkd_css(Document *d, char **res)
-{
-    MMIOT f;
-    int size = EOF;
-
-    if ( res && *res && d && d->compiled ) {
-	___mkd_initmmiot(&f, 0);
-	stylesheets(d->code, &f);
-	*res = T(f.out);
-	size = S(f.out);
-	T(f.out) = 0;
-	S(f.out) = 0;
-	___mkd_freemmiot(&f, 0);
-    }
-    return size;
-}
-
-
-/* dump any embedded styles to a file
- */
-int
-mkd_generatecss(Document *d, FILE *f)
-{
-    char *res;
-    int written = EOF, size = mkd_css(d, &res);
-
-    if ( size > 0 )
-	written = fwrite(res, size, 1, f);
-    if ( res )
-	free(res);
-    return (written == size) ? size : EOF;
-}
-

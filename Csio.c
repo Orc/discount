@@ -35,6 +35,18 @@ Csprintf(Cstring *iot, char *fmt, ...)
 }
 
 
+/* write() into a cstring
+ */
+int
+Cswrite(Cstring *iot, char *bfr, int size)
+{
+    RESERVE(*iot, size);
+    memcpy(T(*iot)+S(*iot), bfr, size);
+    S(*iot) += size;
+    return size;
+}
+
+
 /* reparse() into a cstring
  */
 void
