@@ -37,7 +37,7 @@ mkd_xmlchar(unsigned char c)
 
 /* write output in XML format
  */
-void
+int
 mkd_generatexml(char *p, int size, FILE *out)
 {
     unsigned char c;
@@ -51,6 +51,7 @@ mkd_generatexml(char *p, int size, FILE *out)
 	else
 	    fputc(c, out);
     }
+    return 0;
 }
 
 
