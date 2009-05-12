@@ -1334,24 +1334,3 @@ mkd_document(Document *p, char **res)
     return EOF;
 }
 
-
-/*  public interface for ___mkd_reparse()
- */
-int
-mkd_text(char *bfr, int size, FILE *output, int flags)
-{
-    MMIOT f;
-
-    ___mkd_initmmiot(&f, 0);
-    f.flags = flags & USER_FLAGS;
-    
-    ___mkd_reparse(bfr, size, 0, &f);
-    ___mkd_emblock(&f);
-    if ( flags & CDATA_OUTPUT )
-	___mkd_xml(T(f.out), S(f.out), output);
-    else
-	fwrite(T(f.out), S(f.out), 1, output);
-
-    ___mkd_freemmiot(&f, 0);
-    return 0;
-}

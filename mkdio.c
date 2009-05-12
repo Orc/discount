@@ -193,7 +193,7 @@ mkd_generatehtml(Document *p, FILE *output)
 
     if ( (szdoc = mkd_document(p, &doc)) != EOF ) {
 	if ( p->ctx->flags & CDATA_OUTPUT )
-	    ___mkd_xml(doc, szdoc, output);
+	    mkd_generatexml(doc, szdoc, output);
 	else
 	    fwrite(doc, szdoc, 1, output);
 	putc('\n', output);
@@ -241,4 +241,26 @@ mkd_string_to_anchor(char *s, int len, void(*outchar)(int,void*), void *out)
 	else
 	    (*outchar)('~',out);
     }
+}
+
+
+/*  public interface for ___mkd_reparse()
+ */
+int
+mkd_text(char *bfr, int size, FILE *output, int flags)
+{
+    MMIOT f;
+
+    ___mkd_initmmiot(&f, 0);
+    f.flags = flags & USER_FLAGS;
+    
+    ___mkd_reparse(bfr, size, 0, &f);
+    ___mkd_emblock(&f);
+    if ( flags & CDATA_OUTPUT )
+	mkd_generatexml(T(f.out), S(f.out), output);
+    else
+	fwrite(T(f.out), S(f.out), 1, output);
+
+    ___mkd_freemmiot(&f, 0);
+    return 0;
 }
