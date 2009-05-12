@@ -13,7 +13,9 @@ Markdown
 .Ft int
 .Fn mkd_compile "MMIOT *document" "int flags"
 .Ft int
-.Fn mkd_style  "MMIOT *document" "FILE *output"
+.Fn mkd_css "MMIOT *document" "char **doc"
+.Ft int
+.Fn mkd_generatecss  "MMIOT *document" "FILE *output"
 .Ft int
 .Fn mkd_document "MMIOT *document" "char **doc"
 .Ft int
@@ -64,19 +66,23 @@ sections.
 .Pp
 Once compiled, the document can be examined and written
 by the
-.Fn mkd_style ,
+.Fn mkd_css ,
 .Fn mkd_document ,
+.Fn mkd_generatecss ,
 .Fn mkd_generatehtml ,
-.Fn mkd_toc ,
 .Fn mkd_generatetoc ,
+.Fn mkd_toc ,
 .Fn mkd_xhtmlpage ,
 .Fn mkd_doc_title ,
 .Fn mkd_doc_author ,
 and
 .Fn mkd_doc_date
 functions.
-The 
-.Fn mkd_style
+.Pp
+.Fn mkd_css
+allocates a string and populates it with any \<style\> sections
+provided in the document,
+.Fn mkd_generatecss
 writes any \<style\> sections to the output,
 .Fn mkd_document
 points

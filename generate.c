@@ -410,6 +410,11 @@ linkyurl(MMIOT *f, int *sizep)
 
     ptr = cursor(f);
 
+    /* if I do (title:blah blah blah) embedded links, I need to subvert
+     * linkyurl to do a lookahead for the pseudo-protocol, then snarf
+     * up everything up to the terminating ')'
+     */
+
     if ( c == '<' ) {
 	pull(f);
 	ptr++;
@@ -1314,23 +1319,21 @@ display(Paragraph *p, MMIOT *f)
 /*
  * dump out stylesheet sections.
  */
-static int
-stylesheets(Paragraph *p, FILE *f)
+static void
+stylesheets(Paragraph *p, MMIOT *f)
 {
     Line* q;
 
     for ( ; p ; p = p->next ) {
 	if ( p->typ == STYLE ) {
 	    for ( q = p->text; q ; q = q->next )
-		if ( fwrite(T(q->text), S(q->text), 1, f) == 1 )
-		    putc('\n', f);
-		else
-		    return EOF;
+		Qwrite(T(q->text), S(q->text), f);
+		Qchar('\n', f);
 	}
-	if ( p->down && (stylesheets(p->down, f) == EOF) )
-	    return EOF;
+	if ( p->down )
+	    stylesheets(p->down, f);
     }
-    return 0;
+    ___mkd_emblock(f);
 }
 
 
@@ -1375,13 +1378,39 @@ mkd_text(char *bfr, int size, FILE *output, int flags)
 }
 
 
-/* dump any embedded styles
+/* dump any embedded styles to a string
  */
 int
-mkd_style(Document *d, FILE *f)
+mkd_css(Document *d, char **res)
 {
-    if ( d && d->compiled )
-	return stylesheets(d->code, f);
-    return EOF;
+    MMIOT f;
+    int size = EOF;
+
+    if ( res && *res && d && d->compiled ) {
+	___mkd_initmmiot(&f, 0);
+	stylesheets(d->code, &f);
+	*res = T(f.out);
+	size = S(f.out);
+	T(f.out) = 0;
+	S(f.out) = 0;
+	___mkd_freemmiot(&f, 0);
+    }
+    return size;
+}
+
+
+/* dump any embedded styles to a file
+ */
+int
+mkd_generatecss(Document *d, FILE *f)
+{
+    char *res;
+    int written = EOF, size = mkd_css(d, &res);
+
+    if ( size > 0 )
+	written = fwrite(res, size, 1, f);
+    if ( res )
+	free(res);
+    return (written == size) ? size : EOF;
 }
 

@@ -17,13 +17,14 @@ void mkd_basename(MMIOT*,char*);
 int mkd_compile(MMIOT*, int);
 int mkd_generatehtml(MMIOT*,FILE*);
 int mkd_generatetoc(MMIOT*,FILE*);
+int mkd_generatecss(MMIOT*,FILE*);
+#define mkd_style mkd_generatecss
 int mkd_xhtmlpage(MMIOT*,int,FILE*);
 int mkd_cleanup(MMIOT*);
 
 /* markup functions
  */
 int mkd_text(char *, int, FILE*, int);
-int mkd_style(MMIOT*, FILE*);
 int mkd_dump(MMIOT*, FILE*, int, char*);
 int markdown(MMIOT*, FILE*, int);
 void mkd_basename(MMIOT*,char*);
@@ -39,7 +40,7 @@ char* mkd_doc_date(MMIOT*);
  */
 int mkd_document(MMIOT*, char**);
 int mkd_toc(MMIOT*, char**);
-/*int mkd_style(MMIOT*, char **);*/
+int mkd_css(MMIOT*, char **);
 
 /* version#.
  */
