@@ -65,6 +65,8 @@ extern char markdown_version[];
 #define MKD_CDATA	0x0080	/* generate code for xml ![CDATA[...]] */
 #define MKD_TOC		0x1000	/* do table-of-contents processing */
 #define MKD_1_COMPAT	0x2000	/* compatability with MarkdownTest_1.0 */
+#define MKD_AUTOLINK	0x4000	/* make http://foo.com link even without <>s */
+#define MKD_SAFELINK	0x8000	/* paranoid check for link protocol */
 #define MKD_EMBED	MKD_NOLINKS|MKD_NOIMAGE|MKD_TAGTEXT
 
 /* special flags for mkd_in() and mkd_string()

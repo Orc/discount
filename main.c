@@ -52,6 +52,8 @@ static struct {
     { "pants",   1, MKD_NOPANTS  },
     { "smarty",  1, MKD_NOPANTS  },
     { "toc",     0, MKD_TOC      },
+    { "autolink",0, MKD_AUTOLINK },
+    { "safelink",0, MKD_SAFELINK },
     { "1.0",     0, MKD_1_COMPAT },
 } ;
 

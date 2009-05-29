@@ -17,11 +17,6 @@
 #include "markdown.h"
 #include "amalloc.h"
 
-/* prefixes for <automatic links>
- */
-static char *autoprefix[] = { "http://", "https://", "ftp://", "news://" };
-#define SZAUTOPREFIX	(sizeof autoprefix / sizeof autoprefix[0])
-
 typedef int (*stfu)(const void*,const void*);
 
 
@@ -556,6 +551,24 @@ linkykey(int image, Footnote *val, MMIOT *f)
 }
 
 
+
+/* prefixes for <automatic links>
+ */
+static char *protocol[] = { "http://", "https://", "ftp://", "news://" };
+#define NRPROTOCOLS	(sizeof protocol / sizeof protocol[0])
+
+static int
+isautoprefix(char *text)
+{
+    int i;
+
+    for (i=0; i < NRPROTOCOLS; i++)
+	if ( strncasecmp(text, protocol[i], strlen(protocol[i])) == 0 )
+	    return 1;
+    return 0;
+}
+
+
 /*
  * all the tag types that linkylinky can produce are
  * defined by this structure. 
@@ -625,8 +638,14 @@ linkylinky(int image, MMIOT *f)
 
     if ( image )
 	tag = &imaget;
-    else if ( (f->flags & NO_PSEUDO_PROTO) || (tag = extratag(link.link)) == 0 )
+    else if ( (f->flags & NO_PSEUDO_PROTO) || (tag = extratag(link.link)) == 0 ) {
 	tag = &linkt;
+	if ( (f->flags & SAFELINK) && (T(link.link)[0] != '/')
+				   && !isautoprefix(T(link.link)) ) {
+	    mmiotseek(f, start);
+	    return 0;
+	}
+    }
 
     if ( f->flags & tag-> flags ) {
 	mmiotseek(f, start);
@@ -719,17 +738,19 @@ forbidden_tag(MMIOT *f)
  * spaminess of the rendered page.
  */
 static int
-maybe_tag_or_link(MMIOT *f)
+maybe_tag_or_link(MMIOT *f, int close)
 {
     char *text;
     int c, size, i;
-    int maybetag=1, maybeaddress=0;
+    int maybetag = (close != EOF);
+    int maybeaddress=0;
     int mailto;
+    int consume;
 
     if ( f->flags & INSIDE_TAG )
 	return 0;
 
-    for ( size=0; ((c = peek(f,size+1)) != '>') && !isspace(c); size++ ) {
+    for ( size=0; ((c = peek(f,size+1)) != close) && !isspace(c); size++ ) {
 	if ( ! (c == '/' || isalnum(c) || c == '~') )
 	    maybetag=0;
 	if ( c == '@' )
@@ -740,6 +761,8 @@ maybe_tag_or_link(MMIOT *f)
 
     if ( size == 0 )
 	return 0;
+    
+    consume = ( close != EOF ) ? (size+1) : (size);
 
     if ( maybetag  || (size >= 3 && strncmp(cursor(f), "!--", 3) == 0) ) {
 	Qstring(forbidden_tag(f) ? "&lt;" : "<", f);
@@ -751,19 +774,17 @@ maybe_tag_or_link(MMIOT *f)
     if ( f->flags & DENY_A ) return 0;
 
     text = cursor(f);
-    shift(f, size+1);
+    shift(f, consume);
 
-    for ( i=0; i < SZAUTOPREFIX; i++ )
-	if ( strncasecmp(text, autoprefix[i], strlen(autoprefix[i])) == 0 ) {
-	    Qstring("<a href=\"", f);
-	    puturl(text,size,f);
-	    Qstring("\">", f);
-	    puturl(text,size,f);
-	    Qstring("</a>", f);
-	    return 1;
-	}
+    if ( isautoprefix(text) ) {
+	Qstring("<a href=\"", f);
+	puturl(text,size,f);
+	Qstring("\">", f);
+	puturl(text,size,f);
+	Qstring("</a>", f);
+	return 1;
+    }
     if ( maybeaddress ) {
-
 	Qstring("<a href=\"", f);
 	if ( (size > 7) && strncasecmp(text, "mailto:", 7) == 0 )
 	    mailto = 7;
@@ -780,7 +801,8 @@ maybe_tag_or_link(MMIOT *f)
 	return 1;
     }
 
-    shift(f, -(size+1));
+    shift(f, -consume);
+
     return 0;
 } /* maybe_tag_or_link */
 
@@ -922,7 +944,15 @@ text(MMIOT *f)
     int rep;
     int smartyflags = 0;
 
-    while ( (c = pull(f)) != EOF ) {
+    while (1) {
+        if (f->flags & AUTOLINK)
+	    maybe_tag_or_link(f, EOF);
+
+        c = pull(f);
+
+        if (c == EOF)
+          break;
+
 	if ( smartypants(c, &smartyflags, f) )
 	    continue;
 	switch (c) {
@@ -1022,7 +1052,7 @@ text(MMIOT *f)
 		    }
 		    break;
 
-	case '<':   if ( !maybe_tag_or_link(f) )
+	case '<':   if ( !maybe_tag_or_link(f, '>') )
 			Qstring("&lt;", f);
 		    break;
 

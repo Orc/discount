@@ -144,6 +144,16 @@ else
     rc=1
 fi
 
+./echo -n '  Reddit-style embedded links ...... '
+V="http://www.pell.portland.or.us/~orc/Code/discount"
 
+Q=`echo "$V" | ./markdown -fautolink | grep -i '<a href=' | wc -l`
+
+if [ ${Q:-0} -eq 1 ]; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
 
 exit $rc
