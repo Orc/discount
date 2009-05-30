@@ -44,7 +44,7 @@ and pass its return value to
 .Fn Markdown
 accepts the following flag values (or-ed together if needed)
 to restrict how it processes input:
-.Bl -tag -width MKD_NOIMAGE -compact
+.Bl -tag -width MKD_SAFELINK -compact
 .It Ar MKD_NOIMAGE
 Do not process `![]' and
 remove
@@ -80,6 +80,16 @@ functions.
 .It Ar MKD_1_COMPAT
 MarkdownTest_1.0 compatability flag; trim trailing spaces from the
 first line of code blocks and disable implicit reference links.
+.It Ar MKD_AUTOLINK
+Greedily urlify links -- if
+.Em MKD_AUTOLINK
+is set, urls will be converted into hyperlinks even if they
+aren't encased in
+.Em <> .
+.It Ar MKD_SAFELINK
+Don't make hyperlinks from 
+.Em [][]
+links that have unknown url types.
 .El
 .Sh RETURN VALUES
 .Fn markdown
