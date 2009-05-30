@@ -554,7 +554,17 @@ linkykey(int image, Footnote *val, MMIOT *f)
 
 /* prefixes for <automatic links>
  */
-static char *protocol[] = { "http://", "https://", "ftp://", "news://" };
+static struct {
+    char *name;
+    int   nlen;
+} protocol[] = { 
+#define _aprotocol(x)	{ x, (sizeof x)-1 }
+    _aprotocol( "http://" ), 
+    _aprotocol( "https://" ), 
+    _aprotocol( "ftp://" ), 
+    _aprotocol( "news://" ),
+#undef _aprotocol
+};
 #define NRPROTOCOLS	(sizeof protocol / sizeof protocol[0])
 
 static int
@@ -563,7 +573,7 @@ isautoprefix(char *text)
     int i;
 
     for (i=0; i < NRPROTOCOLS; i++)
-	if ( strncasecmp(text, protocol[i], strlen(protocol[i])) == 0 )
+	if ( strncasecmp(text, protocol[i].name, protocol[i].nlen) == 0 )
 	    return 1;
     return 0;
 }
@@ -744,7 +754,7 @@ static int
 maybe_tag_or_link(MMIOT *f, int close)
 {
     char *text;
-    int c, size, i;
+    int c, size;
     int maybetag = (close != EOF);
     int maybeaddress=0;
     int mailto;
@@ -779,14 +789,6 @@ maybe_tag_or_link(MMIOT *f, int close)
     text = cursor(f);
     shift(f, consume);
 
-    if ( isautoprefix(text) ) {
-	Qstring("<a href=\"", f);
-	puturl(text,size,f);
-	Qstring("\">", f);
-	puturl(text,size,f);
-	Qstring("</a>", f);
-	return 1;
-    }
     if ( maybeaddress ) {
 	Qstring("<a href=\"", f);
 	if ( (size > 7) && strncasecmp(text, "mailto:", 7) == 0 )
@@ -803,9 +805,16 @@ maybe_tag_or_link(MMIOT *f, int close)
 	Qstring("</a>", f);
 	return 1;
     }
+    else if ( isautoprefix(text) ) {
+	Qstring("<a href=\"", f);
+	puturl(text,size,f);
+	Qstring("\">", f);
+	puturl(text,size,f);
+	Qstring("</a>", f);
+	return 1;
+    }
 
     shift(f, -consume);
-
     return 0;
 } /* maybe_tag_or_link */
 
