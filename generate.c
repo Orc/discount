@@ -639,12 +639,15 @@ linkylinky(int image, MMIOT *f)
     if ( image )
 	tag = &imaget;
     else if ( (f->flags & NO_PSEUDO_PROTO) || (tag = extratag(link.link)) == 0 ) {
-	tag = &linkt;
+	/* if SAFELINK, only accept links that are local or
+	 * a well-known protocol
+	 */
 	if ( (f->flags & SAFELINK) && (T(link.link)[0] != '/')
 				   && !isautoprefix(T(link.link)) ) {
 	    mmiotseek(f, start);
 	    return 0;
 	}
+	tag = &linkt;
     }
 
     if ( f->flags & tag-> flags ) {
