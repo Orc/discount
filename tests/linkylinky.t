@@ -66,7 +66,7 @@ else
     rc=1
 fi
 
-./echo -n '  label contains < ................. '
+./echo -n '  image label contains < ........... '
 
 if ./echo '![he<he<he](url)' | ./markdown | grep -i '&lt;' >/dev/null; then
     ./echo "ok"
@@ -75,9 +75,9 @@ else
     rc=1
 fi
 
-./echo -n '  label contains < ................. '
+./echo -n '  image label contains > ........... '
 
-if ./echo '![he<he<he](url)' | ./markdown | grep -i '&lt;' >/dev/null; then
+if ./echo '![he>he>he](url)' | ./markdown | grep -i '&gt;' >/dev/null; then
     ./echo "ok"
 else
     ./echo "FAILED"
