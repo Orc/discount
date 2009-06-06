@@ -127,10 +127,10 @@ skipempty(Line *p)
 
 
 void
-___mkd_tidy(Line *t)
+___mkd_tidy(Cstring *t)
 {
-    while ( S(t->text) && isspace(T(t->text)[S(t->text)-1]) )
-	--S(t->text);
+    while ( S(*t) && isspace(T(*t)[S(*t)-1]) )
+	--S(*t);
 }
 
 
@@ -871,7 +871,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 		/* HORRIBLE STANDARDS KLUDGE: the first line of every block
 		 * has trailing whitespace trimmed off.
 		 */
-		___mkd_tidy(p->text);
+		___mkd_tidy(&p->text->text);
 	    }
 	    
 	    ptr = codeblock(p);

@@ -82,4 +82,15 @@ else
     ./echo "ok"
 fi
 
+./echo -n '  markdown <br/> with -fnohtml ..... '
+
+count=`echo "foo  " | ./markdown -fnohtml | grep '<p>foo<br/>' | wc -l`
+
+if [ $count -eq 1 ] ;then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
 exit $rc

@@ -113,7 +113,7 @@ populate(getc_func getc, void* ctx, int flags)
 	    queue(a, &line);
 	    S(line) = 0;
 	}
-	else
+	else if ( isprint(c) || isspace(c) || (c & 0x80) )
 	    EXPAND(line) = c;
     }
 

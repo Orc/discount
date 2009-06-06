@@ -12,15 +12,6 @@ else
     rc=1
 fi
 
-./echo -n '  quote link title with () ......... '
-
-if ./echo '[hehehe](url (link title))' | ./markdown | grep -i 'title="link title"' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
 ./echo -n '  url contains + ................... '
 
 if ./echo '[hehehe](u+rl)' | ./markdown | grep -i '+' >/dev/null; then
@@ -42,6 +33,33 @@ fi
 ./echo -n '  url contains < ................... '
 
 if ./echo '[hehehe](u<rl)' | ./markdown | grep -i '&lt;' >/dev/null; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
+./echo -n '  url contains whitespace .......... '
+
+if ./echo '[hehehe](r u)' | ./markdown | grep -i '"r%20u"' >/dev/null; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
+./echo -n '  url contains whitespace & title .. '
+
+if ./echo '[hehehe](r u "there")' | ./markdown | grep -i '"r%20u"' >/dev/null; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
+./echo -n '  url contains escaped ) ........... '
+
+if ./echo '[hehehe](u\))' | ./markdown | grep -i '"u)"' >/dev/null; then
     ./echo "ok"
 else
     ./echo "FAILED"
@@ -116,6 +134,15 @@ else
     rc=1
 fi
 
+./echo -n '  pseudo-protocol "abbr:" .......... '
+
+if ./echo '[foo](abbr:bar)' | ./markdown | fgrep '<abbr title="bar">' >/dev/null; then
+    ./echo "ok"
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
 ./echo -n '  nested [][]s ..................... '
 
 count=`./echo '[[z](y)](x)' | ./markdown | tr '>' '\n' | grep -i '<a href' | wc -l`
@@ -138,18 +165,6 @@ V="
 count=`echo "$V" | ./markdown | fgrep '[]' | wc -l`
 
 if [ "$count" -lt 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  Reddit-style embedded links ...... '
-V="http://www.pell.portland.or.us/~orc/Code/discount"
-
-Q=`echo "$V" | ./markdown -fautolink | grep -i '<a href=' | wc -l`
-
-if [ ${Q:-0} -eq 1 ]; then
     ./echo "ok"
 else
     ./echo "FAILED"

@@ -11,6 +11,7 @@ typedef struct footnote {
     Cstring link;		/* what this footnote points to */
     Cstring title;		/* what it's called (TITLE= attribute) */
     int height, width;		/* dimensions (for image link) */
+    int dealloc;		/* deallocation needed? */
 } Footnote;
 
 /* each input line is read into a Line, which contains the line,
@@ -138,6 +139,6 @@ extern void ___mkd_freeLineRange(Line *, Line *);
 extern void ___mkd_xml(char *, int, FILE *);
 extern void ___mkd_reparse(char *, int, int, MMIOT*);
 extern void ___mkd_emblock(MMIOT*);
-extern void ___mkd_tidy(Line *);
+extern void ___mkd_tidy(Cstring *);
 
 #endif/*_MARKDOWN_D*/

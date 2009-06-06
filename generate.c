@@ -114,7 +114,7 @@ shift(MMIOT *f, int i)
 /* Qchar()
  */
 static void
-Qchar(char c, MMIOT *f)
+Qchar(int c, MMIOT *f)
 {
     block *cur;
     
@@ -393,8 +393,8 @@ linkylabel(MMIOT *f, int *sizep)
  * `text`, where I extract until I reach a ')' or
  * whitespace.
  */
-static char*
-linkyurl(MMIOT *f, int *sizep)
+static int
+linkyurl(MMIOT *f, Footnote *p, char *fin)
 {
     int size = 0;
     char *ptr;
@@ -403,27 +403,31 @@ linkyurl(MMIOT *f, int *sizep)
     if ( (c = eatspace(f)) == EOF )
 	return 0;
 
-    ptr = cursor(f);
-
-    /* if I do (title:blah blah blah) embedded links, I need to subvert
-     * linkyurl to do a lookahead for the pseudo-protocol, then snarf
-     * up everything up to the terminating ')'
-     */
+    p->dealloc = 1;
+    CREATE(p->link);
 
     if ( c == '<' ) {
 	pull(f);
-	ptr++;
+	ptr = cursor(f);
 	if ( (size = parenthetical('<', '>', f)) == EOF )
 	    return 0;
+	SUFFIX(p->link, ptr, size);
     }
     else {
-	for ( ; ((c=pull(f)) != ')') && !isspace(c); size++)
-	    if ( c == EOF ) return 0;
-	if ( c == ')' )
-	    shift(f, -1);
+	while (1) {
+	    if ( (c = pull(f)) == EOF )
+		return 0;
+	    else if ( strchr(fin, c) ) {
+		shift(f, -1);
+		break;
+	    }
+	    if ( (c == '\\') && strchr(fin, peek(f,1)) )
+		c = pull(f);
+	    EXPAND(p->link) = c;
+	}
+	___mkd_tidy(&p->link);
     }
-    *sizep = size;
-    return ptr;
+    return 1;
 }
 
 
@@ -497,6 +501,7 @@ linkykey(int image, Footnote *val, MMIOT *f)
 {
     Footnote *ret;
     Cstring mylabel;
+    Cstring *url;
     int here;
 
     memset(val, 0, sizeof *val);
@@ -509,7 +514,7 @@ linkykey(int image, Footnote *val, MMIOT *f)
     switch ( pull(f) ) {
     case '(':
 	/* embedded link */
-	if ( (T(val->link) = linkyurl(f,&S(val->link))) == 0 )
+	if ( !linkyurl(f, val, image ? "='\")" : "'\")") )
 	    return 0;
 
 	if ( image && !linkysize(f, &val->height, &val->width) )
@@ -592,12 +597,14 @@ typedef struct linkytype {
     char *text_pfx;	/* text prefix                  (eg: ">"           */
     char *text_sfx;	/* text suffix			(eg: "</a>"        */
     int      flags;	/* reparse flags */
+    int      kind;	/* tag is url or something else? */
+#define IS_URL	0x01
 } linkytype;
 
 static linkytype imaget = { 0, 0, "<img src=\"", "\"",
-			     1, " alt=\"", "\" />", DENY_IMG|INSIDE_TAG };
+			     1, " alt=\"", "\" />", DENY_IMG|INSIDE_TAG, IS_URL };
 static linkytype linkt  = { 0, 0, "<a href=\"", "\"",
-                             0, ">", "</a>", DENY_A };
+                             0, ">", "</a>", DENY_A, IS_URL };
 
 /*
  * pseudo-protocols for [][];
@@ -607,9 +614,10 @@ static linkytype linkt  = { 0, 0, "<a href=\"", "\"",
  * raw: just dump the link without any processing
  */
 static linkytype specials[] = {
-    { "id:", 3, "<a id=\"", "\"", 0, ">", "</a>", 0 },
-    { "class:", 6, "<span class=\"", "\"", 0, ">", "</span>", 0 },
-    { "raw:", 4, 0, 0, 0, 0, 0, 0 },
+    { "id:", 3, "<a id=\"", "\"", 0, ">", "</a>", 0, IS_URL },
+    { "class:", 6, "<span class=\"", "\"", 0, ">", "</span>", 0, 0 },
+    { "raw:", 4, 0, 0, 0, 0, 0, 0, 0 },
+    { "abbr:", 5, "<abbr title=\"", "\"", 0, ">", "</abbr>", 0, 0 },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])
@@ -642,7 +650,8 @@ linkylinky(int image, MMIOT *f)
     linkytype *tag;
 
     if ( !linkykey(image, &link, f) ) {
-	mmiotseek(f, start);
+failed: mmiotseek(f, start);
+	if ( link.dealloc ) DELETE(link.link);
 	return 0;
     }
 
@@ -654,22 +663,25 @@ linkylinky(int image, MMIOT *f)
 	 */
 	if ( (f->flags & SAFELINK) && (T(link.link)[0] != '/')
 				   && !isautoprefix(T(link.link)) ) {
-	    mmiotseek(f, start);
-	    return 0;
+	    goto failed;
 	}
 	tag = &linkt;
     }
 
-    if ( f->flags & tag-> flags ) {
-	mmiotseek(f, start);
-	return 0;
-    }
+    if ( f->flags & tag->flags )
+	goto failed;
 
     if ( tag->link_pfx ) {
 	Qstring(tag->link_pfx, f);
-	if ( f->base && (T(link.link)[tag->szpat] == '/') )
-	    puturl(f->base, strlen(f->base), f);
-	puturl(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
+	
+	if ( tag->kind & IS_URL ) {
+	    if ( f->base && (T(link.link)[tag->szpat] == '/') )
+		puturl(f->base, strlen(f->base), f);
+	    puturl(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
+	}
+	else
+	    ___mkd_reparse(T(link.link) + tag->szpat, S(link.link) - tag->szpat, INSIDE_TAG, f);
+	
 	Qstring(tag->link_sfx, f);
 
 	if ( tag->WxH && link.height && link.width ) {
@@ -690,6 +702,7 @@ linkylinky(int image, MMIOT *f)
     else
 	Qwrite(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
 
+    if ( link.dealloc ) DELETE(link.link);
     return 1;
 }
 
@@ -957,7 +970,7 @@ text(MMIOT *f)
     int smartyflags = 0;
 
     while (1) {
-        if (f->flags & AUTOLINK)
+        if ( (f->flags & AUTOLINK) && isalpha(peek(f,1)) )
 	    maybe_tag_or_link(f, EOF);
 
         c = pull(f);
@@ -969,6 +982,9 @@ text(MMIOT *f)
 	    continue;
 	switch (c) {
 	case 0:     break;
+
+	case 3:     Qstring("<br/>", f);
+		    break;
 
 	case '>':   if ( tag_text(f) )
 			Qstring("&gt;", f);
@@ -1185,10 +1201,10 @@ printblock(Paragraph *pp, MMIOT *f)
 	    if ( S(t->text) > 2 && T(t->text)[S(t->text)-2] == ' '
 				&& T(t->text)[S(t->text)-1] == ' ') {
 		push(T(t->text), S(t->text)-2, f);
-		push("<br/>\n", 6, f);
+		push("\003\n", 2, f);
 	    }
 	    else {
-		___mkd_tidy(t);
+		___mkd_tidy(&t->text);
 		push(T(t->text), S(t->text), f);
 		if ( t->next )
 		    push("\n", 1, f);
