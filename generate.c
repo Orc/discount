@@ -501,7 +501,6 @@ linkykey(int image, Footnote *val, MMIOT *f)
 {
     Footnote *ret;
     Cstring mylabel;
-    Cstring *url;
     int here;
 
     memset(val, 0, sizeof *val);
