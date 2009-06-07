@@ -787,16 +787,18 @@ maybe_tag_or_link(MMIOT *f, int close)
     if ( size == 0 )
 	return 0;
     
-    consume = ( close != EOF ) ? (size+1) : (size);
-
     if ( maybetag  || (size >= 3 && strncmp(cursor(f), "!--", 3) == 0) ) {
 	Qstring(forbidden_tag(f) ? "&lt;" : "<", f);
 	while ( ((c = peek(f, 1)) != EOF) && (c != '>') )
 	    cputc(pull(f), f);
 	return 1;
     }
+    if ( close == '>' && isspace(c) )
+	return 0;
 
     if ( f->flags & DENY_A ) return 0;
+
+    consume = ( close != EOF ) ? (size+1) : (size);
 
     text = cursor(f);
     shift(f, consume);
