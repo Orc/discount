@@ -415,15 +415,13 @@ linkyurl(MMIOT *f, Footnote *p, char *fin)
     }
     else {
 	while (1) {
-	    if ( (c = pull(f)) == EOF )
+	    if ( (c = peek(f,1)) == EOF )
 		return 0;
-	    else if ( strchr(fin, c) ) {
-		shift(f, -1);
+	    else if ( strchr(fin, c) )
 		break;
-	    }
-	    if ( (c == '\\') && strchr(fin, peek(f,1)) )
-		c = pull(f);
-	    EXPAND(p->link) = c;
+	    else if ( (c == '\\') && strchr(fin, peek(f,2)) )
+		pull(f);
+	    EXPAND(p->link) = pull(f);
 	}
 	___mkd_tidy(&p->link);
     }
@@ -674,7 +672,8 @@ failed: mmiotseek(f, start);
 	Qstring(tag->link_pfx, f);
 	
 	if ( tag->kind & IS_URL ) {
-	    if ( f->base && (T(link.link)[tag->szpat] == '/') )
+	    if ( f->base && S(link.link) > tag->szpat
+			 && (T(link.link)[tag->szpat] == '/') )
 		puturl(f->base, strlen(f->base), f);
 	    puturl(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
 	}
