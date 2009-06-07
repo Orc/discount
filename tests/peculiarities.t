@@ -82,17 +82,6 @@ else
     ./echo "ok"
 fi
 
-./echo -n '  markdown []() with baseurl ....... '
-
-V=`./markdown -bHOHO -s '[]()' 2>/dev/null`
-
-if [ "$V" ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
 ./echo -n '  markdown <br/> with -fnohtml ..... '
 
 count=`echo "foo  " | ./markdown -fnohtml | grep '<p>foo<br/>' | wc -l`
