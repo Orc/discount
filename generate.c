@@ -405,6 +405,7 @@ linkyurl(MMIOT *f, Footnote *p, char *fin)
 
     p->dealloc = 1;
     CREATE(p->link);
+    RESERVE(p->link,50);
 
     if ( c == '<' ) {
 	pull(f);
@@ -672,8 +673,7 @@ failed: mmiotseek(f, start);
 	Qstring(tag->link_pfx, f);
 	
 	if ( tag->kind & IS_URL ) {
-	    if ( f->base && S(link.link) > tag->szpat
-			 && (T(link.link)[tag->szpat] == '/') )
+	    if ( f->base && (T(link.link)[tag->szpat] == '/') )
 		puturl(f->base, strlen(f->base), f);
 	    puturl(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
 	}
