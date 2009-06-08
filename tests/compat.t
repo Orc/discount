@@ -12,8 +12,9 @@ LINKY='[this] is a test
 RES=`./echo "$LINKY" | ./markdown`
 
 count=`./echo "$RES" | grep -i '<a' | wc -l`
+rest=`./echo "$RES" | grep ' is a test' | wc -l`
 
-if [ "$count" -eq 1 ]; then
+if [ \( "$count" -eq 1 \) -a \( "$rest" -eq 1 \) ]; then
     ./echo "ok"
 else
     ./echo "FAILED"
