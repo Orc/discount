@@ -370,19 +370,23 @@ parenthetical(int in, int out, MMIOT *f)
 	else if ( c == out )
 	    --indent;
     }
-    return size-1;
+    return size ? (size-1) : 0;
 }
 
 
 /* extract a []-delimited label from the input stream.
  */
-static char *
-linkylabel(MMIOT *f, int *sizep)
+static int
+linkylabel(MMIOT *f, Cstring *res)
 {
     char *ptr = cursor(f);
+    int size;
 
-    if ( (*sizep = parenthetical('[',']',f)) != EOF )
-	return ptr;
+    if ( (size = parenthetical('[',']',f)) != EOF ) {
+	T(*res) = ptr;
+	S(*res) = size;
+	return 1;
+    }
     return 0;
 }
 
@@ -390,22 +394,19 @@ linkylabel(MMIOT *f, int *sizep)
 /* extract a (-prefixed url from the input stream.
  * the label is either of the format `<link>`, where I
  * extract until I find a >, or it is of the format
- * `text`, where I extract until I reach a ')' or
- * whitespace.
+ * `text`, where I extract until I reach a ')', a quote,
+ * or (if image) a '='
  */
 static int
-linkyurl(MMIOT *f, Footnote *p, char *fin)
+linkyurl(MMIOT *f, int image, Footnote *p)
 {
     int size = 0;
     char *ptr;
     int c;
+    char *stopper = image ? "='\")" : "'\")";
 
     if ( (c = eatspace(f)) == EOF )
 	return 0;
-
-    p->dealloc = 1;
-    CREATE(p->link);
-    RESERVE(p->link,50);
 
     if ( c == '<' ) {
 	pull(f);
@@ -418,9 +419,9 @@ linkyurl(MMIOT *f, Footnote *p, char *fin)
 	while (1) {
 	    if ( (c = peek(f,1)) == EOF )
 		return 0;
-	    else if ( strchr(fin, c) )
+	    else if ( strchr(stopper, c) )
 		break;
-	    else if ( (c == '\\') && strchr(fin, peek(f,2)) )
+	    else if ( (c == '\\') && strchr(stopper, peek(f,2)) )
 		pull(f);
 	    EXPAND(p->link) = pull(f);
 	}
@@ -433,14 +434,14 @@ linkyurl(MMIOT *f, Footnote *p, char *fin)
 /* extract a =HHHxWWW size from the input stream
  */
 static int
-linkysize(MMIOT *f, int *heightp, int *widthp)
+linkysize(MMIOT *f, int image, Footnote *ref)
 {
     int height=0, width=0;
     int c;
 
-    *heightp = 0;
-    *widthp = 0;
-
+    if ( !image )
+	return 1;
+	
     if ( (c = eatspace(f)) != '=' ) 
 	return (c != EOF);
     pull(f);	/* eat '=' */
@@ -454,8 +455,8 @@ linkysize(MMIOT *f, int *heightp, int *widthp)
 
 	if ( c != EOF ) {
 	    if ( !isspace(c) ) shift(f, -1);
-	    *heightp = height;
-	    *widthp = width;
+	    ref->height = height;
+	    ref->width  = width;
 	    return 1;
 	}
     }
@@ -465,94 +466,31 @@ linkysize(MMIOT *f, int *heightp, int *widthp)
 
 /* extract a )-terminated title from the input stream.
  */
-static char*
-linkytitle(MMIOT *f, int *sizep)
-{
-    int countq=0, qc, c, size;
-    char *ret, *lastqc = 0;
-
-    eatspace(f);
-    if ( (qc=pull(f)) != '"' && qc != '\'' && qc != '(' )
-	return 0;
-
-    if ( qc == '(' ) qc = ')';
-
-    for ( ret = cursor(f); (c = pull(f)) != EOF;  ) {
-	if ( (c == ')') && countq ) {
-	    size = (lastqc ? lastqc : cursor(f)) - ret;
-	    *sizep = size-1;
-	    return ret;
-	}
-	else if ( c == qc ) {
-	    lastqc = cursor(f);
-	    countq++;
-	}
-    }
-    return 0;
-}
-
-
-/* look up (or construct) a footnote from the [xxx] link
- * at the head of the stream.
- */
 static int
-linkykey(int image, Footnote *val, MMIOT *f)
+linkytitle(MMIOT *f, Footnote *ref)
 {
-    Footnote *ret;
-    Cstring mylabel;
-    int here;
+    int countq=0, qc, c;
+    char *title, *lastqc = 0;
 
-    memset(val, 0, sizeof *val);
-
-    if ( (T(val->tag) = linkylabel(f, &S(val->tag))) == 0 )
+    if ( (qc = eatspace(f)) == '"' || qc == '\'' ) {
+	pull(f);
+	title = cursor(f);
+	while ( (c = peek(f,1)) != EOF ) {
+	    if ( (c == ')') && countq ) {
+		S(ref->title) = (lastqc - title);
+		T(ref->title) = title;
+		return 1;
+	    }
+	    else if ( c == qc ) {
+		lastqc = cursor(f);
+		countq++;
+	    }
+	    pull(f);
+	}
 	return 0;
-
-    here = mmiottell(f);
-    eatspace(f);
-    switch ( pull(f) ) {
-    case '(':
-	/* embedded link */
-	if ( !linkyurl(f, val, image ? "='\")" : "'\")") )
-	    return 0;
-
-	if ( image && !linkysize(f, &val->height, &val->width) )
-	    return 0;
-
-	T(val->title) = linkytitle(f, &S(val->title));
-
-	return peek(f,0) == ')';
-
-    case '[':		/* footnote links /as defined in the standard/ */
-    default:		/* footnote links -- undocumented extension */
-	/* footnote link */
-	mylabel = val->tag;
-	if ( peek(f,0) == '[' ) {
-	    if ( (T(val->tag) = linkylabel(f, &S(val->tag))) == 0 )
-		return 0;
-
-	    if ( !S(val->tag) )
-		val->tag = mylabel;
-	}
-	else if ( f->flags & MKD_1_COMPAT )
-	    break;
-	else
-	    mmiotseek(f,here);
-
-	ret = bsearch(val, T(*f->footnotes), S(*f->footnotes),
-	               sizeof *val, (stfu)__mkd_footsort);
-
-	if ( ret ) {
-	    val->tag = mylabel;
-	    val->link = ret->link;
-	    val->title = ret->title;
-	    val->height = ret->height;
-	    val->width = ret->width;
-	    return 1;
-	}
     }
-    return 0;
+    return 1;
 }
-
 
 
 /* prefixes for <automatic links>
@@ -569,6 +507,7 @@ static struct {
 #undef _aprotocol
 };
 #define NRPROTOCOLS	(sizeof protocol / sizeof protocol[0])
+
 
 static int
 isautoprefix(char *text)
@@ -623,7 +562,7 @@ static linkytype specials[] = {
 /* see if t contains one of our pseudo-protocols.
  */
 static linkytype *
-extratag(Cstring t)
+pseudo(Cstring t)
 {
     int i;
     linkytype *r;
@@ -637,6 +576,64 @@ extratag(Cstring t)
 }
 
 
+/* print out a linky (or fail if it's Not Allowed)
+ */
+static int
+linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
+{
+    linkytype *tag;
+
+    if ( image )
+	tag = &imaget;
+    else if ( (f->flags & NO_PSEUDO_PROTO) || (tag = pseudo(ref->link)) == 0 ) {
+	/* if SAFELINK, only accept links that are local or
+	 * a well-known protocol
+	 */
+	if ( (f->flags & SAFELINK) && T(ref->link)
+				   && (T(ref->link)[0] != '/')
+				   && !isautoprefix(T(ref->link)) )
+	    return 0;
+	tag = &linkt;
+    }
+
+    if ( f->flags & tag->flags )
+	return 0;
+
+    if ( tag->link_pfx ) {
+	Qstring(tag->link_pfx, f);
+	
+	if ( tag->kind & IS_URL ) {
+	    if ( f->base && T(ref->link) && (T(ref->link)[tag->szpat] == '/') )
+		puturl(f->base, strlen(f->base), f);
+	    puturl(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, f);
+	}
+	else
+	    ___mkd_reparse(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, INSIDE_TAG, f);
+	
+	Qstring(tag->link_sfx, f);
+
+	if ( tag->WxH && ref->height && ref->width ) {
+	    Qprintf(f," height=\"%d\"", ref->height);
+	    Qprintf(f, " width=\"%d\"", ref->width);
+	}
+
+	if ( S(ref->title) ) {
+	    Qstring(" title=\"", f);
+	    ___mkd_reparse(T(ref->title), S(ref->title), INSIDE_TAG, f);
+	    Qchar('"', f);
+	}
+
+	Qstring(tag->text_pfx, f);
+	___mkd_reparse(T(text), S(text), tag->flags, f);
+	Qstring(tag->text_sfx, f);
+    }
+    else
+	Qwrite(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, f);
+
+    return 1;
+} /* linkyformat */
+
+
 /*
  * process embedded links and images
  */
@@ -644,64 +641,59 @@ static int
 linkylinky(int image, MMIOT *f)
 {
     int start = mmiottell(f);
-    Footnote link;
-    linkytype *tag;
+    int implicit_mark;
+    Cstring name;
+    Footnote key, *ref;
+		
+    int status = 0;
 
-    if ( !linkykey(image, &link, f) ) {
-failed: mmiotseek(f, start);
-	if ( link.dealloc ) DELETE(link.link);
-	return 0;
-    }
+    CREATE(name);
+    bzero(&key, sizeof key);
 
-    if ( image )
-	tag = &imaget;
-    else if ( (f->flags & NO_PSEUDO_PROTO) || (tag = extratag(link.link)) == 0 ) {
-	/* if SAFELINK, only accept links that are local or
-	 * a well-known protocol
-	 */
-	if ( (f->flags & SAFELINK) && (T(link.link)[0] != '/')
-				   && !isautoprefix(T(link.link)) ) {
-	    goto failed;
-	}
-	tag = &linkt;
-    }
+    if ( linkylabel(f, &name) ) {
+	implicit_mark = mmiottell(f);
+	eatspace(f);
 
-    if ( f->flags & tag->flags )
-	goto failed;
-
-    if ( tag->link_pfx ) {
-	Qstring(tag->link_pfx, f);
+	switch ( pull(f) ) {
+	case '(':  /* embedded link */
+	    if ( linkyurl(f, image, &key) && linkysize(f, image, &key)
+						&& linkytitle(f, &key) ) {
+		if ( peek(f, 1) == ')' ) {
+		    pull(f);
+		    status = linkyformat(f, name, image, &key);
+		}
+	    }
+	    break;
 	
-	if ( tag->kind & IS_URL ) {
-	    if ( f->base && (T(link.link)[tag->szpat] == '/') )
-		puturl(f->base, strlen(f->base), f);
-	    puturl(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
-	}
-	else
-	    ___mkd_reparse(T(link.link) + tag->szpat, S(link.link) - tag->szpat, INSIDE_TAG, f);
-	
-	Qstring(tag->link_sfx, f);
+	case '[':/* footnote link */
+	default: /* (undocumented) implicit link */
+	    if ( peek(f, 0) != '[' ) {
+		mmiotseek(f, implicit_mark);
+		if ( f->flags & MKD_1_COMPAT )
+		    break;
+	    }
+	    else if ( !linkylabel(f, &key.tag) )
+		break;
+	    
+	    if ( !S(key.tag) ) {
+		DELETE(key.tag);
+		T(key.tag) = T(name);
+		S(key.tag) = S(name);
+	    }
 
-	if ( tag->WxH && link.height && link.width ) {
-	    Qprintf(f," height=\"%d\"", link.height);
-	    Qprintf(f, " width=\"%d\"", link.width);
+	    if ( ref = bsearch(&key, T(*f->footnotes), S(*f->footnotes),
+				      sizeof key, (stfu)__mkd_footsort) )
+		status = linkyformat(f, name, image, ref);
 	}
-
-	if ( S(link.title) ) {
-	    Qstring(" title=\"", f);
-	    ___mkd_reparse(T(link.title), S(link.title), INSIDE_TAG, f);
-	    Qchar('"', f);
-	}
-
-	Qstring(tag->text_pfx, f);
-	___mkd_reparse(T(link.tag), S(link.tag), tag->flags, f);
-	Qstring(tag->text_sfx, f);
     }
-    else
-	Qwrite(T(link.link) + tag->szpat, S(link.link) - tag->szpat, f);
 
-    if ( link.dealloc ) DELETE(link.link);
-    return 1;
+    DELETE(name);
+    ___mkd_freefootnote(&key);
+
+    if ( status == 0 )
+	mmiotseek(f, start);
+
+    return status;
 }
 
 

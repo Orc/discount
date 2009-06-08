@@ -55,6 +55,17 @@ ___mkd_freeParagraph(Paragraph *p)
 }
 
 
+/* bye bye footnote.
+ */
+void
+___mkd_freefootnote(Footnote *f)
+{
+    DELETE(f->tag);
+    DELETE(f->link);
+    DELETE(f->title);
+}
+
+
 /* bye bye footnotes.
  */
 void
@@ -63,11 +74,8 @@ ___mkd_freefootnotes(MMIOT *f)
     int i;
 
     if ( f->footnotes ) {
-	for (i=0; i < S(*f->footnotes); i++) {
-	    DELETE(T(*f->footnotes)[i].tag);
-	    DELETE(T(*f->footnotes)[i].link);
-	    DELETE(T(*f->footnotes)[i].title);
-	}
+	for (i=0; i < S(*f->footnotes); i++)
+	    ___mkd_freefootnote( &T(*f->footnotes)[i] );
 	DELETE(*f->footnotes);
 	free(f->footnotes);
     }
