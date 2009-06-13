@@ -18,6 +18,7 @@ try() {
     fi
 }
 
+try 'single #' '#' '<p>#</p>'
 try 'empty ETX' '##' '<h1>#</h1>'
 try 'single-char ETX (##W)' '##W' '<h2>W</h2>'
 try 'single-char ETX (##W )' '##W  ' '<h2>W</h2>'

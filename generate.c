@@ -367,6 +367,10 @@ parenthetical(int in, int out, MMIOT *f)
 	    return EOF;
 	else if ( c == in )
 	    ++indent;
+	else if ( (c == '\\') && (peek(f,1) == out) ) {
+	    ++size;
+	    pull(f);
+	}
 	else if ( c == out )
 	    --indent;
     }
@@ -421,7 +425,7 @@ linkyurl(MMIOT *f, int image, Footnote *p)
 		return 0;
 	    else if ( strchr(stopper, c) )
 		break;
-	    else if ( (c == '\\') && strchr(stopper, peek(f,2)) )
+	    else if ( (c == '\\') && ispunct(peek(f,2)) )
 		pull(f);
 	    EXPAND(p->link) = pull(f);
 	}
@@ -746,64 +750,42 @@ forbidden_tag(MMIOT *f)
 }
 
 
-
-/* a < may be just a regular character, the start of an embedded html
- * tag, or the start of an <automatic link>.    If it's an automatic
- * link, we also need to know if it's an email address because if it
- * is we need to mangle it in our futile attempt to cut down on the
- * spaminess of the rendered page.
+/* The size-length token at cursor(f) is either a mailto:, an
+ * implicit mailto:, one of the approved url protocols, or just
+ * plain old text.   If it's a mailto: or an approved protocol,
+ * linkify it, otherwise say "no"
  */
 static int
-maybe_tag_or_link(MMIOT *f, int close)
+process_possible_link(MMIOT *f, int size)
 {
-    char *text;
-    int c, size;
-    int maybetag = (close != EOF);
-    int maybeaddress=0;
-    int mailto;
-    int consume;
-
-    if ( f->flags & INSIDE_TAG )
-	return 0;
-
-    for ( size=0; ((c = peek(f,size+1)) != close) && !isspace(c); size++ ) {
-	if ( ! (c == '/' || isalnum(c) || c == '~') )
-	    maybetag=0;
-	if ( c == '@' )
-	    maybeaddress=1;
-	else if ( c == EOF )
-	    return 0;
-    }
-
-    if ( size == 0 )
-	return 0;
+    int atmark = 0;
+    int mailto = 0;
+    char *text = cursor(f);
     
-    if ( maybetag  || (size >= 3 && strncmp(cursor(f), "!--", 3) == 0) ) {
-	Qstring(forbidden_tag(f) ? "&lt;" : "<", f);
-	while ( ((c = peek(f, 1)) != EOF) && (c != '>') )
-	    cputc(pull(f), f);
-	return 1;
-    }
-    if ( close == '>' && isspace(c) )
-	return 0;
-
     if ( f->flags & DENY_A ) return 0;
 
-    consume = ( close != EOF ) ? (size+1) : (size);
+    if ( (size > 7) && strncasecmp(text, "mailto:", 7) == 0 ) {
+	/* if it says it's a mailto, it's a mailto -- who am
+	 * I to second-guess the user?
+	 */
+	mailto = 7; 	/* 7 is the length of "mailto:"; we need this */
+    }
+    else {
+	/* Otherwise if it contains an @, it's probably a mail address,
+	 * but not if the @ is the first or last character in the link
+	 * candidate.
+	 */
+	for ( atmark = size-2; atmark > 0; --atmark )
+	    if ( text[atmark] == '@' )
+		break;
+    }
 
-    text = cursor(f);
-    shift(f, consume);
-
-    if ( maybeaddress ) {
+    if ( (atmark > 0) || (mailto > 0) ) {
 	Qstring("<a href=\"", f);
-	if ( (size > 7) && strncasecmp(text, "mailto:", 7) == 0 )
-	    mailto = 7;
-	else {
-	    mailto = 0;
+	if ( mailto == 0 ) {
 	    /* supply a mailto: protocol if one wasn't attached */
 	    mangle("mailto:", 7, f);
 	}
-
 	mangle(text, size, f);
 	Qstring("\">", f);
 	mangle(text+mailto, size-mailto, f);
@@ -818,10 +800,73 @@ maybe_tag_or_link(MMIOT *f, int close)
 	Qstring("</a>", f);
 	return 1;
     }
-
-    shift(f, -consume);
     return 0;
-} /* maybe_tag_or_link */
+} /* process_possible_link */
+
+
+/* a < may be just a regular character, the start of an embedded html
+ * tag, or the start of an <automatic link>.    If it's an automatic
+ * link, we also need to know if it's an email address because if it
+ * is we need to mangle it in our futile attempt to cut down on the
+ * spaminess of the rendered page.
+ */
+static int
+maybe_tag_or_link(MMIOT *f)
+{
+    int c, size;
+    int maybetag = 1;
+
+    if ( f->flags & INSIDE_TAG )
+	return 0;
+
+    for ( size=0; (c = peek(f, size+1)) != '>'; size++) {
+	if ( c == EOF )
+	    return 0;
+	else if ( isspace(c) )
+	    break;
+	else if ( ! (c == '/' || isalnum(c) ) )
+	    maybetag=0;
+    }
+
+    if ( size ) {
+	if ( maybetag || (size >= 3 && strncmp(cursor(f), "!--", 3) == 0) ) {
+	    Qstring(forbidden_tag(f) ? "&lt;" : "<", f);
+	    while ( ((c = peek(f, 1)) != EOF) && (c != '>') )
+		cputc(pull(f), f);
+	    return 1;
+	}
+	else if ( !isspace(c) && process_possible_link(f, size) ) {
+	    shift(f, size+1);
+	    return 1;
+	}
+    }
+    
+    return 0;
+}
+
+
+/* autolinking means that all inline html is <a href'ified>.   A
+ * autolink url is alphanumerics, slashes, periods, underscores,
+ * the at sign, colon, and the % character.
+ */
+static int
+maybe_autolink_tag(MMIOT *f)
+{
+    register int c;
+    int size;
+
+    /* greedily scan forward for the end of a legitimate link.
+     */
+    for ( size=0; (c=peek(f, size+1)) != EOF; size++ )
+	if ( !(isalnum(c) || strchr("/:._%~@", c)) )
+	    break;
+
+    if ( (size > 1) && process_possible_link(f, size) ) {
+	shift(f, size);
+	return 1;
+    }
+    return 0;
+}
 
 
 /* smartyquote code that's common for single and double quotes
@@ -963,7 +1008,7 @@ text(MMIOT *f)
 
     while (1) {
         if ( (f->flags & AUTOLINK) && isalpha(peek(f,1)) )
-	    maybe_tag_or_link(f, EOF);
+	    maybe_autolink_tag(f);
 
         c = pull(f);
 
@@ -1019,6 +1064,7 @@ text(MMIOT *f)
 		    break;
 #endif
 	case '_':
+	case '*':
 #if RELAXED_EMPHASIS
 	/* Underscores don't count if they're in the middle of a word */
 		    if ( (!(f->flags & STRICT))
@@ -1029,7 +1075,7 @@ text(MMIOT *f)
 		    }
 		    /* else fall into the regular old emphasis case */
 #endif
-	case '*':   if ( tag_text(f) )
+		    if ( tag_text(f) )
 			Qchar(c, f);
 		    else {
 			for (rep = 1; peek(f,1) == c; pull(f) )
@@ -1072,7 +1118,7 @@ text(MMIOT *f)
 		    }
 		    break;
 
-	case '<':   if ( !maybe_tag_or_link(f, '>') )
+	case '<':   if ( !maybe_tag_or_link(f) )
 			Qstring("&lt;", f);
 		    break;
 

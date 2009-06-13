@@ -337,7 +337,7 @@ ishdr(Line *t, int *htyp)
 
     /* ANY leading `#`'s make this into an ETX header
      */
-    if ( i ) {
+    if ( i && (i < S(t->text) || i > 1) ) {
 	*htyp = ETX;
 	return 1;
     }

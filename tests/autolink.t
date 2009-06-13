@@ -35,4 +35,24 @@ case "$Q" in
 	rc=1;;
 esac
 
+./echo -n '  (url) ............................ '
+
+Q=`echo "(http://here)" | ./markdown -fautolink`
+
+case "$Q" in
+'<p>(<a href="http://here">http://here</a>)</p>') ./echo "ok" ;;
+*)	./echo "FAILED"
+	rc=1;;
+esac
+
+./echo -n '  token with trailing @ ............ '
+
+Q=`echo "orc@" | ./markdown -fautolink`
+
+case "$Q" in
+'<p>orc@</p>') ./echo "ok" ;;
+*)             ./echo "FAILED";
+	       rc=1;;
+esac
+
 exit $rc
