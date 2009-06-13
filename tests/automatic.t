@@ -20,10 +20,11 @@ try() {
 
 try 'http url' '<http://here>' '<a href="http://here">http://here</a>'
 try 'ftp url' '<ftp://here>' '<a href="ftp://here">ftp://here</a>'
-try 'mail address' '<orc@pell>' '<a href='
+try 'mail address' '<orc@pell.portland.or.us>' '<a href='
 try 'mail address with mailto:' '<mailto:orc@pell>' '<a href='
 try 'invalid address (orc@)' '<orc@>' '<p>&lt;orc@></p>'
 try 'invalid address (@pell)' '<@pell>' '<p>&lt;@pell></p>'
+try 'invalid address (orc@pell)' '<orc@pell>' '<p>&lt;orc@pell></p>'
 try 'invalid address (mailto:orc@)' '<mailto:orc@>' '<a href='
 try 'invalid address (mailto:@pell)' '<mailto:@pell>' '<a href='
 

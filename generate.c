@@ -395,6 +395,25 @@ linkylabel(MMIOT *f, Cstring *res)
 }
 
 
+static int
+linkymatchquote(MMIOT *f, char quote)
+{
+    int offset = 2;
+    register c;
+
+    while ( (c = peek(f, offset)) != EOF ) {
+	++offset;
+	if ( c == quote ) {
+	    while ( (c = peek(f, offset)) != EOF && isspace(c) )
+		++offset;
+	    if ( c == ')' )
+		return 1;
+	}
+    }
+    return 0;
+}
+
+
 /* extract a (-prefixed url from the input stream.
  * the label is either of the format `<link>`, where I
  * extract until I find a >, or it is of the format
@@ -407,7 +426,6 @@ linkyurl(MMIOT *f, int image, Footnote *p)
     int size = 0;
     char *ptr;
     int c;
-    char *stopper = image ? "='\")" : "'\")";
 
     if ( (c = eatspace(f)) == EOF )
 	return 0;
@@ -423,7 +441,9 @@ linkyurl(MMIOT *f, int image, Footnote *p)
 	while (1) {
 	    if ( (c = peek(f,1)) == EOF )
 		return 0;
-	    else if ( strchr(stopper, c) )
+	    else if ( (c == '"' || c == '\'') && linkymatchquote(f, c) )
+		break;
+	    else if ( c == ')' || (image && c == '=' && isspace(peek(f,0))) )
 		break;
 	    else if ( (c == '\\') && ispunct(peek(f,2)) )
 		pull(f);
@@ -750,6 +770,31 @@ forbidden_tag(MMIOT *f)
 }
 
 
+/* Check a string to see if it looks like a mail address
+ * "looks like a mail address" means alphanumeric + some
+ * specials, then a `@`, then alphanumeric + some specials,
+ * but with a `.`
+ */
+static int
+maybe_address(char *p, int size)
+{
+    int ok = 0;
+    
+    for ( ;size && (isalnum(*p) || strchr("._-+*", *p)); ++p, --size)
+	;
+
+    if ( ! (size && *p == '@') )
+	return 0;
+    
+    --size, ++p;
+
+    for ( ;size && (isalnum(*p) || strchr("._-+", *p)); ++p, --size )
+	ok |= (*p == '.');
+
+    return size ? 0 : ok;
+}
+
+
 /* The size-length token at cursor(f) is either a mailto:, an
  * implicit mailto:, one of the approved url protocols, or just
  * plain old text.   If it's a mailto: or an approved protocol,
@@ -758,7 +803,7 @@ forbidden_tag(MMIOT *f)
 static int
 process_possible_link(MMIOT *f, int size)
 {
-    int atmark = 0;
+    int address= 0;
     int mailto = 0;
     char *text = cursor(f);
     
@@ -768,21 +813,15 @@ process_possible_link(MMIOT *f, int size)
 	/* if it says it's a mailto, it's a mailto -- who am
 	 * I to second-guess the user?
 	 */
+	address = 1;
 	mailto = 7; 	/* 7 is the length of "mailto:"; we need this */
     }
-    else {
-	/* Otherwise if it contains an @, it's probably a mail address,
-	 * but not if the @ is the first or last character in the link
-	 * candidate.
-	 */
-	for ( atmark = size-2; atmark > 0; --atmark )
-	    if ( text[atmark] == '@' )
-		break;
-    }
+    else 
+	address = maybe_address(text, size);
 
-    if ( (atmark > 0) || (mailto > 0) ) {
+    if ( address ) { 
 	Qstring("<a href=\"", f);
-	if ( mailto == 0 ) {
+	if ( !mailto ) {
 	    /* supply a mailto: protocol if one wasn't attached */
 	    mangle("mailto:", 7, f);
 	}
@@ -850,7 +889,7 @@ maybe_tag_or_link(MMIOT *f)
  * the at sign, colon, and the % character.
  */
 static int
-maybe_autolink_tag(MMIOT *f)
+maybe_autolink(MMIOT *f)
 {
     register int c;
     int size;
@@ -952,7 +991,7 @@ smartypants(int c, int *flags, MMIOT *f)
 {
     int i;
 
-    if ( f->flags & DENY_SMARTY )
+    if ( f->flags & (DENY_SMARTY||INSIDE_TAG) )
 	return 0;
 
     for ( i=0; i < NRSMART; i++)
@@ -1008,7 +1047,7 @@ text(MMIOT *f)
 
     while (1) {
         if ( (f->flags & AUTOLINK) && isalpha(peek(f,1)) )
-	    maybe_autolink_tag(f);
+	    maybe_autolink(f);
 
         c = pull(f);
 
