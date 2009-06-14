@@ -788,8 +788,10 @@ maybe_address(char *p, int size)
     
     --size, ++p;
 
+    if ( size && *p == '.' ) return 0;
+    
     for ( ;size && (isalnum(*p) || strchr("._-+", *p)); ++p, --size )
-	ok |= (*p == '.');
+	if ( *p == '.' && size > 1 ) ok = 1;
 
     return size ? 0 : ok;
 }
