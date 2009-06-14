@@ -1,0 +1,28 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+main(argc, argv)
+char **argv;
+{
+    register c;
+    int xp;
+    int width;
+
+    if ( argc != 2 ) {
+	fprintf(stderr, "usage: %s width\n", argv[0]);
+	exit(1);
+    }
+    else if ( (width=atoi(argv[1])) < 1 ) {
+	fprintf(stderr, "%s: please set width to > 0\n", argv[0]);
+	exit(1);
+    }
+
+
+    for ( xp = 1; (c = getchar()) != EOF; xp++ ) {
+	if ( c == '\n' )
+	    xp = 0;
+	if ( xp <= width )
+	    putchar(c);
+    }
+    exit(0);
+}

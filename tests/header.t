@@ -5,7 +5,7 @@ MARKDOWN_FLAGS=
 
 try() {
     
-    S=`./echo -n "$1" '..................................' | cut -c 1-34`
+    S=`./echo -n "$1" '..................................' | ./cols 34`
     ./echo -n "  $S "
 
     count=`./echo "$2" | ./markdown | grep "$3" | wc -l`

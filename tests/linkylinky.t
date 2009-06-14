@@ -109,7 +109,7 @@ fi
 
 ./echo -n '  linky-like []s work .............. '
 
-if ./echo '[foo]' | ./markdown | fgrep '[foo]' >/dev/null; then
+if ./echo '[foo]' | ./markdown | grep '\[foo\]' >/dev/null; then
     ./echo "ok"
 else
     ./echo "FAILED"
@@ -118,7 +118,7 @@ fi
 
 ./echo -n '  pseudo-protocol "id:" ............ '
 
-if ./echo '[foo](id:bar)' | ./markdown | fgrep 'a id' >/dev/null; then
+if ./echo '[foo](id:bar)' | ./markdown | grep 'a id' >/dev/null; then
     ./echo "ok"
 else
     ./echo "FAILED"
@@ -127,7 +127,7 @@ fi
 
 ./echo -n '  pseudo-protocol "class:" ......... '
 
-if ./echo '[foo](class:bar)' | ./markdown | fgrep 'span class' >/dev/null; then
+if ./echo '[foo](class:bar)' | ./markdown | grep 'span class' >/dev/null; then
     ./echo "ok"
 else
     ./echo "FAILED"
@@ -136,7 +136,7 @@ fi
 
 ./echo -n '  pseudo-protocol "abbr:" .......... '
 
-if ./echo '[foo](abbr:bar)' | ./markdown | fgrep '<abbr title="bar">' >/dev/null; then
+if ./echo '[foo](abbr:bar)' | ./markdown | grep '<abbr title="bar">' >/dev/null; then
     ./echo "ok"
 else
     ./echo "FAILED"
@@ -162,7 +162,7 @@ V="
 [1]: image1
 [2]: image2"
 
-count=`echo "$V" | ./markdown | fgrep '[]' | wc -l`
+count=`echo "$V" | ./markdown | grep '\[\]' | wc -l`
 
 if [ "$count" -lt 1 ]; then
     ./echo "ok"

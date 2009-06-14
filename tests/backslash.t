@@ -5,11 +5,11 @@ MARKDOWN_FLAGS=
 
 try() {
     
-    S=`./echo -n "$1" '..................................' | cut -c 1-34`
+    S=`./echo -n "$1" '..................................' | ./cols 34`
     ./echo -n "  $S "
 
     Q=`./echo "$2" | ./markdown`
-    count=`./echo "$Q" | grep -F "$3" | wc -l`
+    count=`./echo "$Q" | grep "$3" | wc -l`
 
     if [ $count -eq 1 ]; then
 	./echo "ok"
@@ -20,6 +20,6 @@ try() {
 }
 
 try 'backslashes in []()' '[foo](http://\this\is\.a\test\(here\))' \
-'<p><a href="http://\this\is.a\test(here)">foo</a></p>'
+'<p><a href="http://\\this\\is\.a\\test(here)">foo</a></p>'
 
 exit $rc
