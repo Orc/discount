@@ -395,21 +395,62 @@ linkylabel(MMIOT *f, Cstring *res)
 }
 
 
+/* see if the quote-prefixed linky segment is actually a title.
+ */
 static int
-linkymatchquote(MMIOT *f, char quote)
+linkytitle(MMIOT *f, char quote, Footnote *ref)
 {
-    int offset = 2;
+    int whence = mmiottell(f);
+    char *title = cursor(f);
+    char *e;
     register c;
 
-    while ( (c = peek(f, offset)) != EOF ) {
-	++offset;
+    while ( (c = pull(f)) != EOF ) {
+	e = cursor(f);
 	if ( c == quote ) {
-	    while ( (c = peek(f, offset)) != EOF && isspace(c) )
-		++offset;
-	    if ( c == ')' )
+	    if ( (c = eatspace(f)) == ')' ) {
+		T(ref->title) = 1+title;
+		S(ref->title) = (e-title)-2;
 		return 1;
+	    }
 	}
     }
+    mmiotseek(f, whence);
+    return 0;
+}
+
+
+/* extract a =HHHxWWW size from the input stream
+ */
+static int
+linkysize(MMIOT *f, Footnote *ref)
+{
+    int height=0, width=0;
+    int whence = mmiottell(f);
+    int c;
+    int ok;
+
+    if ( isspace(peek(f,0)) ) {
+	pull(f);	/* eat '=' */
+
+	for ( c = pull(f); isdigit(c); c = pull(f))
+	    width = (width * 10) + (c - '0');
+
+	if ( c == 'x' ) {
+	    for ( c = pull(f); isdigit(c); c = pull(f))
+		height = (height*10) + (c - '0');
+
+	    if ( isspace(c) )
+		c = eatspace(f);
+
+	    if ( (c == ')') || ((c == '\'' || c == '"') && linkytitle(f, c, ref)) ) {
+		ref->height = height;
+		ref->width  = width;
+		return 1;
+	    }
+	}
+    }
+    mmiotseek(f, whence);
     return 0;
 }
 
@@ -426,95 +467,38 @@ linkyurl(MMIOT *f, int image, Footnote *p)
     int size = 0;
     char *ptr;
     int c;
+    int mayneedtotrim=0;
 
     if ( (c = eatspace(f)) == EOF )
 	return 0;
 
     if ( c == '<' ) {
 	pull(f);
-	ptr = cursor(f);
-	if ( (size = parenthetical('<', '>', f)) == EOF )
+	mayneedtotrim=1;
+    }
+
+    while ( (c = peek(f,1)) != ')' ) {
+	if ( c == EOF )
 	    return 0;
-	SUFFIX(p->link, ptr, size);
-    }
-    else {
-	while (1) {
-	    if ( (c = peek(f,1)) == EOF )
-		return 0;
-	    else if ( (c == '"' || c == '\'') && linkymatchquote(f, c) )
-		break;
-	    else if ( c == ')' || (image && c == '=' && isspace(peek(f,0))) )
-		break;
-	    else if ( (c == '\\') && ispunct(peek(f,2)) )
-		pull(f);
-	    EXPAND(p->link) = pull(f);
-	}
-	___mkd_tidy(&p->link);
-    }
-    return 1;
-}
-
-
-/* extract a =HHHxWWW size from the input stream
- */
-static int
-linkysize(MMIOT *f, int image, Footnote *ref)
-{
-    int height=0, width=0;
-    int c;
-
-    if ( !image )
-	return 1;
-	
-    if ( (c = eatspace(f)) != '=' ) 
-	return (c != EOF);
-    pull(f);	/* eat '=' */
-
-    for ( c = pull(f); isdigit(c); c = pull(f))
-	width = (width * 10) + (c - '0');
-
-    if ( c == 'x' ) {
-	for ( c = pull(f); isdigit(c); c = pull(f))
-	    height = (height*10) + (c - '0');
-
-	if ( c != EOF ) {
-	    if ( !isspace(c) ) shift(f, -1);
-	    ref->height = height;
-	    ref->width  = width;
-	    return 1;
-	}
-    }
-    return 0;
-}
-
-
-/* extract a )-terminated title from the input stream.
- */
-static int
-linkytitle(MMIOT *f, Footnote *ref)
-{
-    int countq=0, qc, c;
-    char *title, *lastqc = 0;
-
-    if ( (qc = eatspace(f)) == '"' || qc == '\'' ) {
-	pull(f);
-	title = cursor(f);
-	while ( (c = peek(f,1)) != EOF ) {
-	    if ( (c == ')') && countq ) {
-		S(ref->title) = (lastqc - title);
-		T(ref->title) = title;
-		return 1;
-	    }
-	    else if ( c == qc ) {
-		lastqc = cursor(f);
-		countq++;
-	    }
+	else if ( (c == '"' || c == '\'') && linkytitle(f, c, p) )
+	    break;
+	else if ( image && (c == '=') && linkysize(f, p) )
+	    break;
+	else if ( (c == '\\') && ispunct(peek(f,2)) )
 	    pull(f);
-	}
-	return 0;
+	EXPAND(p->link) = pull(f);
     }
+    if ( peek(f, 1) == ')' )
+	pull(f);
+	
+    ___mkd_tidy(&p->link);
+    
+    if ( mayneedtotrim && (T(p->link)[S(p->link)-1] == '>') )
+	--S(p->link);
+    
     return 1;
 }
+
 
 
 /* prefixes for <automatic links>
@@ -680,13 +664,8 @@ linkylinky(int image, MMIOT *f)
 
 	switch ( pull(f) ) {
 	case '(':  /* embedded link */
-	    if ( linkyurl(f, image, &key) && linkysize(f, image, &key)
-						&& linkytitle(f, &key) ) {
-		if ( peek(f, 1) == ')' ) {
-		    pull(f);
-		    status = linkyformat(f, name, image, &key);
-		}
-	    }
+	    if ( linkyurl(f, image, &key) )
+		status = linkyformat(f, name, image, &key);
 	    break;
 	
 	case '[':/* footnote link */
@@ -993,7 +972,7 @@ smartypants(int c, int *flags, MMIOT *f)
 {
     int i;
 
-    if ( f->flags & (DENY_SMARTY||INSIDE_TAG) )
+    if ( f->flags & (DENY_SMARTY|INSIDE_TAG) )
 	return 0;
 
     for ( i=0; i < NRSMART; i++)
@@ -1105,12 +1084,20 @@ text(MMIOT *f)
 		    break;
 #endif
 	case '_':
-	case '*':
 #if RELAXED_EMPHASIS
 	/* Underscores don't count if they're in the middle of a word */
-		    if ( (!(f->flags & STRICT))
-			     && ((isthisspace(f,-1) && isthisspace(f,1))
-			      || (isthisalnum(f,-1) && isthisalnum(f,1))) ){
+		    if ( !(f->flags & STRICT) && isthisalnum(f,-1)
+					      && isthisalnum(f,1) ) {
+			Qchar(c, f);
+			break;
+		    }
+#endif
+	case '*':
+#if RELAXED_EMPHASIS
+	/* Underscores & stars don't count if they're out in the middle
+	 * of whitespace */
+		    if ( !(f->flags & STRICT) && isthisspace(f,-1)
+					      && isthisspace(f,1) ) {
 			Qchar(c, f);
 			break;
 		    }

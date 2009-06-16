@@ -108,10 +108,11 @@ main(int argc, char **argv)
     char *text = 0;
     char *ofile = 0;
     char *urlbase = 0;
-    char *q = getenv("MARKDOWN_FLAGS");
+    char *q;
     MMIOT *doc;
 
-    if ( q ) flags = strtol(q, 0, 0);
+    if ( q = getenv("MARKDOWN_FLAGS") )
+	flags = strtol(q, 0, 0);
 
     pgm = basename(argv[0]);
     opterr = 1;
