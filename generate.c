@@ -330,16 +330,17 @@ puturl(char *s, int size, MMIOT *f, int display)
     while ( size-- > 0 ) {
 	c = *s++;
 
+	if ( c == '\\' && size-- > 0 ) {
+	    c = *s++;
+
+	    if ( !( ispunct(c) || isspace(c) ) )
+		Qchar('\\', f);
+	}
+	
 	if ( c == '&' )
 	    Qstring("&amp;", f);
 	else if ( c == '<' )
 	    Qstring("&lt;", f);
-	else if ( c == '\\' ) {
-	    if ( size && (ispunct(*s)||isspace(*s)) )
-		/* silently discard the backslash */ ;
-	    else
-		Qchar(c, f);
-	}
 	else if ( isalnum(c) || ispunct(c) || (display && isspace(c)) )
 	    Qchar(c, f);
 	else
@@ -850,7 +851,8 @@ maybe_tag_or_link(MMIOT *f)
 	    return 0;
 	else if ( c == '\\' ) {
 	    maybetag=0;
-	    size++;
+	    if ( peek(f, size+2) != EOF )
+		size++;
 	}
 	else if ( isspace(c) )
 	    break;
@@ -888,8 +890,10 @@ maybe_autolink(MMIOT *f)
     /* greedily scan forward for the end of a legitimate link.
      */
     for ( size=0; (c=peek(f, size+1)) != EOF; size++ )
-	if ( c == '\\' )
-	    ++size;
+	if ( c == '\\' ) {
+	     if ( peek(f, size+2) != EOF )
+		++size;
+	}
 	else if ( !(isalnum(c) || strchr("/:._%~@&?=", c) || (c & 0x80)) )
 	    break;
 

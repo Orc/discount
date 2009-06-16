@@ -69,4 +69,9 @@ try -fautolink 'autolink url with escaped ()' \
     'http://a.com/\(foo\)' \
     '<p><a href="http://a.com/(foo)">http://a.com/(foo)</a></p>'
 
+try -fautolink 'autolink url with trailing \' \
+    'http://a.com/\\\)' \
+    '<p><a href="http://a.com/\)">http://a.com/\)</a></p>'
+
+
 exit $rc

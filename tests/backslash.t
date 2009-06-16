@@ -5,10 +5,15 @@ MARKDOWN_FLAGS=
 
 try() {
     
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
     S=`./echo -n "$1" '..................................' | ./cols 34`
     ./echo -n "  $S "
 
-    Q=`./echo "$2" | ./markdown`
+    Q=`./echo "$2" | ./markdown $FLAGS`
 
     if [ "$3" = "$Q" ]; then
 	./echo "ok"
