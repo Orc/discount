@@ -6,7 +6,7 @@
 
 ## Build
 
-	% mk 'CONFIG=--enable-all-features' config
+	% 'CONFIG=--enable-all-features' mk config
 	% mk install
 	% markdown -V
 	markdown: discount X.Y.Z DL_TAG HEADER DEBUG SUPERSCRIPT RELAXED DIV
@@ -27,17 +27,14 @@
 
 The supplied mkfile merely drives Discount's own configure script and
 then APE's *psh* environment to build the Discount source, then copies
-the result(s) to locations appropriate for system-wide use on Plan 9. There are
-a few other *mk*(1) targets:
+the result(s) to locations appropriate for system-wide use on Plan 9.
+There are a few other *mk*(1) targets:
 
 `install.libs`: Discount includes a C library and header.
 Installation is optional.  Plan 9 binaries are statically linked.
 
 `install.man`: Add manual pages for markdown(1) and (6).
 
-`install.progs`: Extra programs.  *makepage* writes complete
-XHTML documents, rather than fragments.  *mkd2html* is similar, but
+`install.progs`: Extra programs.  *makepage* writes complete XHTML
+ documents, rather than fragments.  *mkd2html* is similar, but
 produces HTML.
-
-`test`: Most of Parson's *Discount* test suite succeeds, but
-some programs are missing, like *fgrep*(1) and *cut*(1).

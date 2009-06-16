@@ -73,7 +73,9 @@ If run with the table-of-contents flag on, dump the table of contents before the
 .BI -t " text
 Use
 .IR mkd_text (2)
-to format text instead of processing standard input with
+to format
+.I  text
+ instead of processing standard input with
 .IR markdown (3).
 .TP
 .B -V
@@ -84,7 +86,7 @@ was configured with definition list support. If the version includes the string
 .BR HEADER ,
 .I markdown
 was configured to support pandoc header blocks.
-.PP
+.PD
 .SS TRANSLATION FLAGS
 The translation flags understood by
 .B -f
@@ -132,7 +134,7 @@ tags, and to expand double quotes.
 .SH SOURCE
 .B /sys/src/cmd/discount
 .SH SEE ALSO
-.IR markdown (3),
+.IR markdown (2),
 .IR markdown (6)
 .PP
 http://daringfireball.net/projects/markdown/,

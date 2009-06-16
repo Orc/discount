@@ -373,8 +373,8 @@ and
 .B 3/4ths
 are replaced with their entity and the indicated ordinal suffix letters.
 .PP
-Like the basic Markdown syntax, none of the ``Smarty Pants'' extensions are processed
-inside code blocks or spans.
+Like the basic Markdown syntax, none of the ``Smarty Pants''
+extensions are processed inside code blocks or spans.
 .PP
 .SS Discount Extensions
 This
@@ -386,7 +386,10 @@ format.
 .PD
 .TP
 Image dimensions
-Markdown embedded images have been extended to allow specifying the dimensions of the image by adding a new argument =/height/x/width/ to the link description. The new syntax is:
+Markdown embedded images have been extended to allow specifying the
+dimensions of the image by adding a new argument
+.I=/height/x/width/
+to the link description. The new syntax is:
 .IP
 .EX
 	![Alt text](/path/to/image.jpg =/height/x/width/ "Title")
@@ -394,6 +397,14 @@ Markdown embedded images have been extended to allow specifying the dimensions o
 .TP
 Pseudo-protocols
 Three pseudo-protocols have been added to links:
+.IP
+.Br abbr :
+Text following is used as the
+.B title
+attribute of an
+B abbr
+tag wrapping the alt text:
+.B <abbr title="text following abbr:">alt text</abbr>.
 .IP
 .BR id :
 The alt text is marked up and written to the output, wrapped with
