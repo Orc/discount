@@ -132,6 +132,7 @@ extern Document *mkd_string(char*,int, int);
 extern void ___mkd_freeLine(Line *);
 extern void ___mkd_freeLines(Line *);
 extern void ___mkd_freeParagraph(Paragraph *);
+extern void ___mkd_freefootnote(Footnote *);
 extern void ___mkd_freefootnotes(MMIOT *);
 extern void ___mkd_initmmiot(MMIOT *, void *);
 extern void ___mkd_freemmiot(MMIOT *, void *);

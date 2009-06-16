@@ -428,7 +428,6 @@ linkysize(MMIOT *f, Footnote *ref)
     int height=0, width=0;
     int whence = mmiottell(f);
     int c;
-    int ok;
 
     if ( isspace(peek(f,0)) ) {
 	pull(f);	/* eat '=' */
@@ -464,8 +463,6 @@ linkysize(MMIOT *f, Footnote *ref)
 static int
 linkyurl(MMIOT *f, int image, Footnote *p)
 {
-    int size = 0;
-    char *ptr;
     int c;
     int mayneedtotrim=0;
 
