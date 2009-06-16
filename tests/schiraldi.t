@@ -53,4 +53,20 @@ try -fnopants '[]() with a single quote mark' \
     '[Poe'"'"'s law](http://rationalwiki.com/wiki/Poe'"'"'s_Law)' \
     '<p><a href="http://rationalwiki.com/wiki/Poe'"'"'s_Law">Poe'"'"'s law</a></p>'
 
+try -fautolink 'autolink url with escaped spaces' \
+    'http://\(here\ I\ am\)' \
+    '<p><a href="http://(here%20I%20am)">http://(here I am)</a></p>'
+
+try -fautolink 'autolink café_racer' \
+    'http://en.wikipedia.org/wiki/café_racer' \
+    '<p><a href="http://en.wikipedia.org/wiki/caf%C3%A9_racer">http://en.wikipedia.org/wiki/caf%C3%A9_racer</a></p>'
+
+try -fautolink 'autolink url with arguments' \
+    'http://foo.bar?a&b=c' \
+    '<p><a href="http://foo.bar?a&amp;b=c">http://foo.bar?a&amp;b=c</a></p>'
+
+try -fautolink 'autolink url with escaped ()' \
+    'http://a.com/\(foo\)' \
+    '<p><a href="http://a.com/(foo)">http://a.com/(foo)</a></p>'
+
 exit $rc

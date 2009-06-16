@@ -323,7 +323,7 @@ ___mkd_reparse(char *bfr, int size, int flags, MMIOT *f)
  * write out a url, escaping problematic characters
  */
 static void
-puturl(char *s, int size, MMIOT *f)
+puturl(char *s, int size, MMIOT *f, int display)
 {
     unsigned char c;
 
@@ -334,7 +334,13 @@ puturl(char *s, int size, MMIOT *f)
 	    Qstring("&amp;", f);
 	else if ( c == '<' )
 	    Qstring("&lt;", f);
-	else if ( isalnum(c) || ispunct(c) )
+	else if ( c == '\\' ) {
+	    if ( size && (ispunct(*s)||isspace(*s)) )
+		/* silently discard the backslash */ ;
+	    else
+		Qchar(c, f);
+	}
+	else if ( isalnum(c) || ispunct(c) || (display && isspace(c)) )
 	    Qchar(c, f);
 	else
 	    Qprintf(f, "%%%02X", c);
@@ -463,7 +469,7 @@ linkysize(MMIOT *f, Footnote *ref)
 static int
 linkyurl(MMIOT *f, int image, Footnote *p)
 {
-    int c;
+    int c, size;
     int mayneedtotrim=0;
 
     if ( (c = eatspace(f)) == EOF )
@@ -474,16 +480,19 @@ linkyurl(MMIOT *f, int image, Footnote *p)
 	mayneedtotrim=1;
     }
 
-    while ( (c = peek(f,1)) != ')' ) {
+    T(p->link) = cursor(f);
+    for ( S(p->link)=0; (c = peek(f,1)) != ')'; ++S(p->link) ) {
 	if ( c == EOF )
 	    return 0;
 	else if ( (c == '"' || c == '\'') && linkytitle(f, c, p) )
 	    break;
 	else if ( image && (c == '=') && linkysize(f, p) )
 	    break;
-	else if ( (c == '\\') && ispunct(peek(f,2)) )
+	else if ( (c == '\\') && ispunct(peek(f,2)) ) {
+	    ++S(p->link);
 	    pull(f);
-	EXPAND(p->link) = pull(f);
+	}
+	pull(f);
     }
     if ( peek(f, 1) == ')' )
 	pull(f);
@@ -609,8 +618,8 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	
 	if ( tag->kind & IS_URL ) {
 	    if ( f->base && T(ref->link) && (T(ref->link)[tag->szpat] == '/') )
-		puturl(f->base, strlen(f->base), f);
-	    puturl(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, f);
+		puturl(f->base, strlen(f->base), f, 0);
+	    puturl(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, f, 0);
 	}
 	else
 	    ___mkd_reparse(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, INSIDE_TAG, f);
@@ -811,9 +820,9 @@ process_possible_link(MMIOT *f, int size)
     }
     else if ( isautoprefix(text) ) {
 	Qstring("<a href=\"", f);
-	puturl(text,size,f);
+	puturl(text,size,f, 0);
 	Qstring("\">", f);
-	puturl(text,size,f);
+	puturl(text,size,f, 1);
 	Qstring("</a>", f);
 	return 1;
     }
@@ -839,6 +848,10 @@ maybe_tag_or_link(MMIOT *f)
     for ( size=0; (c = peek(f, size+1)) != '>'; size++) {
 	if ( c == EOF )
 	    return 0;
+	else if ( c == '\\' ) {
+	    maybetag=0;
+	    size++;
+	}
 	else if ( isspace(c) )
 	    break;
 	else if ( ! (c == '/' || isalnum(c) ) )
@@ -875,7 +888,9 @@ maybe_autolink(MMIOT *f)
     /* greedily scan forward for the end of a legitimate link.
      */
     for ( size=0; (c=peek(f, size+1)) != EOF; size++ )
-	if ( !(isalnum(c) || strchr("/:._%~@", c)) )
+	if ( c == '\\' )
+	    ++size;
+	else if ( !(isalnum(c) || strchr("/:._%~@&?=", c) || (c & 0x80)) )
 	    break;
 
     if ( (size > 1) && process_possible_link(f, size) ) {
