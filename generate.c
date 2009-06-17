@@ -470,7 +470,7 @@ linkysize(MMIOT *f, Footnote *ref)
 static int
 linkyurl(MMIOT *f, int image, Footnote *p)
 {
-    int c, size;
+    int c;
     int mayneedtotrim=0;
 
     if ( (c = eatspace(f)) == EOF )
