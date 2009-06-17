@@ -3,30 +3,35 @@
 rc=0
 MARKDOWN_FLAGS=
 
-./echo -n '  paragraph followed by code ....... '
+try() {
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
 
-SEP="a
-    b"
+    Q=`./echo "$2" | ./markdown $FLAGS`
 
-RES=`./echo "$SEP" | ./markdown`
 
-pcount=`./echo "$RES" | grep -i '<p>' | wc -l`
-ccount=`./echo "$RES" | grep -i '<code>' | wc -l`
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
 
-if [ "$ccount" -eq 1 -a "$pcount" -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try 'paragraph followed by code' \
+    'a
+    b' \
+    '<p>a</p>
 
-./echo -n '  single-line paragraph ............ '
+<pre><code>b
+</code></pre>'
 
-if ./echo "a" | ./markdown | grep '<p>' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try 'single-line paragraph' 'a' '<p>a</p>'
 
 exit $rc
