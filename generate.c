@@ -899,7 +899,7 @@ maybe_autolink(MMIOT *f)
 	     if ( peek(f, size+2) != EOF )
 		++size;
 	}
-	else if ( !(isalnum(c) || strchr(",;+-/:._%~@&?=(", c) || (c & 0x80)) )
+	else if ( isspace(c) || strchr("'\"()[]{}<>`", c) )
 	    break;
 
     if ( (size > 1) && process_possible_link(f, size) ) {
