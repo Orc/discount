@@ -6,7 +6,7 @@
 
 ## Build
 
-	% 'CONFIG=--enable-all-features' mk config
+	% CONFIG='--enable-all-features' mk config
 	% mk install
 	% markdown -V
 	markdown: discount X.Y.Z DL_TAG HEADER DEBUG SUPERSCRIPT RELAXED DIV
@@ -36,5 +36,5 @@ Installation is optional.  Plan 9 binaries are statically linked.
 `install.man`: Add manual pages for markdown(1) and (6).
 
 `install.progs`: Extra programs.  *makepage* writes complete XHTML
- documents, rather than fragments.  *mkd2html* is similar, but
-produces HTML.
+documents, rather than fragments.  *mkd2html* is similar, but produces
+HTML.

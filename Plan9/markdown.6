@@ -42,7 +42,7 @@ in the output, end a line with two or more spaces, then a newline.
 .TP
 Headers
 Markdown defines two header styles,
-.I Setext
+.I setext
 and
 .IR atx .
 .IP
@@ -373,55 +373,58 @@ and
 .B 3/4ths
 are replaced with their entity and the indicated ordinal suffix letters.
 .PP
-Like the basic Markdown syntax, none of the ``Smarty Pants''
-extensions are processed inside code blocks or spans.
+Like the basic Markdown syntax, none of the ``Smarty Pants'' extensions are processed
+inside code blocks or spans.
 .PP
 .SS Discount Extensions
-This
-.IR markdown (1)
-recognizes a few of its own extensions to the
-.IR Markdown (6)
-format.
+.IR Markdown (1)
+recognizes a few of its own extensions to the Markdown format.
 .TF W
 .PD
 .TP
-Image dimensions
-Markdown embedded images have been extended to allow specifying the
-dimensions of the image by adding a new argument
-.I=/height/x/width/
-to the link description. The new syntax is:
+Image Dimensions
+Image specification has been extended with an argument describing image dimensions:
+.BI = height x width.
+For an image 400 pixels high and 300 wide, the new syntax is:
 .IP
 .EX
-	![Alt text](/path/to/image.jpg =/height/x/width/ "Title")
+	![Alt text](/path/to/image.jpg =400x300 "Title")
 .EE
 .TP
-Pseudo-protocols
-Three pseudo-protocols have been added to links:
+Pseudo-Protocols
+Pseudo-protocols that may replace the common
+.B http:
+or
+.B mailto:
+have been added to the link syntax described above.
 .IP
-.Br abbr :
+.BR abbr :
 Text following is used as the
 .B title
 attribute of an
-B abbr
-tag wrapping the alt text:
-.B <abbr title="text following abbr:">alt text</abbr>.
+.B abbr
+tag wrapping the link text. So
+.B [LT](abbr:Link Text)
+gives
+.B <abbr title="Link Text">LT</abbr>.
 .IP
 .BR id :
-The alt text is marked up and written to the output, wrapped with
-.B <a id=id>
+The link text is marked up and written to the output, wrapped with
+.B <a id=text following>
 and
 .BR </a> .
 .IP
 .BR class :
- The alt text is marked up and written to the output, wrapped with
-.B <span class=class>
+ The link text is marked up and written to the output, wrapped with
+.B <span class=text following>
 and
 .BR </span> .
 .IP
 .BR raw :
-The title is written -- with no further processing -- to the output.  The alt text is discarded.
+Text following is written to the output with no further processing.
+The link text is discarded.
 .TP
-Pandoc headers
+Pandoc Headers
 If
 .I markdown
 was configured with
@@ -441,7 +444,7 @@ and
 .I mkd_doc_date
 functions.
 .TP
-Definition lists
+Definition Lists
 If configured with
 .BR --enable-dl-tag ,
 markup for definition lists is enabled.  A definition list item is defined as
@@ -451,7 +454,7 @@ markup for definition lists is enabled.  A definition list item is defined as
 	definition
 .EE
 .TP
-Embedded stylesheets
+Embedded Stylesheets
 Stylesheets may be defined and modified in a
 .B <style>
 block.   A style block is parsed like any other block-level
@@ -465,9 +468,9 @@ following it, and either ending with a
 .B </style>
 at the end of the line or at the beginning of a subsequent line.
 .IP
-Be warned that style blocks work like footnote links: no matter where you define them, they are valid for the entire document.
+Style blocks apply to the entire document regardless of where they are defined.
 .TP
-Relaxed emphasis
+Relaxed Emphasis
 If
 .I markdown
 was configured with
@@ -475,9 +478,11 @@ was configured with
 the rules for emphasis are changed so that a single
 .B _
 will not count as an emphasis character if it's in the middle of a word.
-This is primarily for documenting code, if you don't with to have to backquote all code regerences.
+This is handy for documenting code, where
+.B _
+appears frequently, and would normally require a backslash escape.
 .TP
-Alpha lists
+Alphabetic Lists
 If configured with
 .BR --enable-alpha-list ,
 alphabetic lists are supported.
