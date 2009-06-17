@@ -3,30 +3,29 @@
 rc=0
 MARKDOWN_FLAGS=
 
-./echo -n '  bogus url (-fsafelink) ........... '
+try() {
+    unset FLAGS
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
 
-TRICK='[test](bad:protocol)'
+    Q=`./echo "$2" | ./markdown $FLAGS`
 
-count=`./echo "$TRICK" | ./markdown -fsafelink | grep '<a' | wc -l`
 
-if [ $count -eq 0 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
 
-./echo -n '  bogus url (-fnosafelink) ......... '
-
-TRICK='[test](bad:protocol)'
-
-count=`./echo "$TRICK" | ./markdown -fnosafelink | grep '<a' | wc -l`
-
-if [ $count -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try -fsafelink 'bogus url (-fsafelink)' '[test](bad:protocol)' '<p>[test](bad:protocol)</p>'
+try -fnosafelink 'bogus url (-fnosafelink)' '[test](bad:protocol)' '<p><a href="bad:protocol">test</a></p>'
 
 exit $rc

@@ -3,94 +3,72 @@
 rc=0
 MARKDOWN_FLAGS=
 
+try() {
+    unset FLAGS
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+
+    ./echo -n "  $1" '..................................' | ./cols 36
+
+    Q=`./echo "$2" | ./markdown $FLAGS`
+
+
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
+
+
+HEADER='% title
+% author(s)
+% date'
+
+
 if ./markdown -V | grep HEADER > /dev/null; then
 
-    ./echo -n '  valid header ..................... '
-    TEXT='% title
+    try 'valid header' "$HEADER" ''
+    try -F0x0100 'valid header with -F0x0100' "$HEADER" '<p>% title
 % author(s)
-% date
-'
-    count=`./echo "$TEXT" | ./markdown | grep title | wc -l`
+% date</p>'
 
-    if [ "$count" -eq 0 ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
-
-    ./echo -n '  valid header with -F0x0100........ '
-    TEXT='% title
+    try 'invalid header' \
+	'% title
 % author(s)
-% date
-'
-    count=`./echo "$TEXT" | ./markdown -F0x0100 | grep title | wc -l`
-
-    if [ "$count" -gt 0 ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
-
-    ./echo -n '  invalid header ................... '
-    TEXT='% title
+a pony!' \
+	'<p>% title
 % author(s)
-a pony!'
+a pony!</p>'
 
-    count=`./echo "$TEXT" | ./markdown | grep title | wc -l`
-
-    if [ "$count" -gt 0 ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
-
-    ./echo -n '  offset header .................... '
-    TEXT='
+    try 'offset header' \
+	'
 % title
 % author(s)
-% date
-content'
-
-    count=`./echo "$TEXT" | ./markdown | grep title | wc -l`
-
-    if [ "$count" -gt 0 ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
-
-    ./echo -n '  indented header .................. '
-    TEXT='    % title
-    % author(s)
-    % date
-content'
-
-    count=`./echo "$TEXT" | ./markdown | grep title | wc -l`
-
-    if [ "$count" -gt 0 ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
-else
-    ./echo -n '  ignore headers ................... '
-    TEXT='% title
+% date' \
+	'<p>% title
 % author(s)
-% date
-'
-    count=`./echo "$TEXT" | ./markdown | grep title | wc -l`
+% date</p>'
 
-    if [ "$count" -gt 0 ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
+    try 'indented header' \
+	'  % title
+% author(s)
+% date' \
+	'<p>  % title
+% author(s)
+% date</p>'
+
+else
+
+    try 'ignore headers' "$HEADER" '<p>% title
+% author(s)
+% date</p>'
+
 fi
 
 exit $rc

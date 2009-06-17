@@ -4,6 +4,7 @@ rc=0
 MARKDOWN_FLAGS=0x0; export MARKDOWN_FLAGS
 
 try() {
+    unset FLAGS
     case "$1" in
     -*) FLAGS="$1"
 	shift ;;

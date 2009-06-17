@@ -2,7 +2,7 @@
 rc=0
 
 try() {
-    
+    unset FLAGS
     case "$1" in
     -*) FLAGS=$1
 	shift ;;

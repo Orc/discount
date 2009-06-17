@@ -602,16 +602,19 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 
     if ( image )
 	tag = &imaget;
-    else if ( (f->flags & NO_PSEUDO_PROTO) || (tag = pseudo(ref->link)) == 0 ) {
+    else if ( tag = pseudo(ref->link) ) {
+	if ( f->flags & (NO_PSEUDO_PROTO|SAFELINK) )
+	    return 0;
+    }
+    else if ( (f->flags & SAFELINK) && T(ref->link)
+				    && (T(ref->link)[0] != '/')
+				    && !isautoprefix(T(ref->link)) )
 	/* if SAFELINK, only accept links that are local or
 	 * a well-known protocol
 	 */
-	if ( (f->flags & SAFELINK) && T(ref->link)
-				   && (T(ref->link)[0] != '/')
-				   && !isautoprefix(T(ref->link)) )
 	    return 0;
+    else
 	tag = &linkt;
-    }
 
     if ( f->flags & tag->flags )
 	return 0;

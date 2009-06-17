@@ -48,6 +48,7 @@ static struct {
     { "strict",  0, MKD_STRICT   },
     { "header",  1, MKD_NOHEADER },
     { "html",    1, MKD_NOHTML   },
+    { "ext",     1, MKD_NO_EXT   },
     { "cdata",   0, MKD_CDATA    },
     { "pants",   1, MKD_NOPANTS  },
     { "smarty",  1, MKD_NOPANTS  },

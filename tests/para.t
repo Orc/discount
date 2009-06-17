@@ -4,6 +4,7 @@ rc=0
 MARKDOWN_FLAGS=
 
 try() {
+    unset FLAGS
     case "$1" in
     -*) FLAGS=$1
 	shift ;;
