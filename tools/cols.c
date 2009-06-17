@@ -19,6 +19,14 @@ char **argv;
 
 
     for ( xp = 1; (c = getchar()) != EOF; xp++ ) {
+	if ( c & 0x80 ) {
+	    /* assume that (1) the output device understands utf-8, and
+	     *             (2) the only c & 0x80 input is utf-8.
+	    ++xp;
+	    do {
+		putchar(c);
+	    } while ( (c = getchar()) != EOF && (c & 0x80) );
+	}
 	if ( c == '\n' )
 	    xp = 0;
 	if ( xp <= width )
