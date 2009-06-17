@@ -69,9 +69,24 @@ try -fautolink 'autolink url with escaped ()' \
     'http://a.com/\(foo\)' \
     '<p><a href="http://a.com/(foo)">http://a.com/(foo)</a></p>'
 
-try -fautolink 'autolink url with trailing \' \
+try -fautolink 'autolink url with escaped \' \
     'http://a.com/\\\)' \
     '<p><a href="http://a.com/\)">http://a.com/\)</a></p>'
 
+try -fautolink 'autolink url with -' \
+    'http://experts-exchange.com' \
+    '<p><a href="http://experts-exchange.com">http://experts-exchange.com</a></p>'
+
+try -fautolink 'autolink url with +' \
+    'http://www67.wolframalpha.com/input/?i=how+old+was+jfk+jr+when+jfk+died' \
+    '<p><a href="http://www67.wolframalpha.com/input/?i=how+old+was+jfk+jr+when+jfk+died">http://www67.wolframalpha.com/input/?i=how+old+was+jfk+jr+when+jfk+died</a></p>'
+
+try -fautolink 'autolink url with ,' \
+    'http://www.spiegel.de/international/europe/0,1518,626171,00.html' \
+    '<p><a href="http://www.spiegel.de/international/europe/0,1518,626171,00.html">http://www.spiegel.de/international/europe/0,1518,626171,00.html</a></p>'
+
+try -fautolink 'autolink url with : & ;' \
+    'http://www.biblegateway.com/passage/?search=Matthew%205:29-30;&version=31;' \
+    '<p><a href="http://www.biblegateway.com/passage/?search=Matthew%205:29-30;&amp;version=31;">http://www.biblegateway.com/passage/?search=Matthew%205:29-30;&amp;version=31;</a></p>'
 
 exit $rc
