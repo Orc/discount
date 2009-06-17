@@ -3,41 +3,49 @@
 rc=0
 MARKDOWN_FLAGS=
 
-./echo -n '  header followed by paragraph ..... '
+try() {
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
 
-SEP='###Hello, sailor###
-And how are you today?'
+    Q=`./echo "$2" | ./markdown $FLAGS`
 
-RES=`./echo "$SEP" | ./markdown`
 
-hcount=`./echo "$RES" | grep -i '<h3>' | wc -l`
-pcount=`./echo "$RES" | grep -i '<p>' | wc -l`
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
 
-if [ "$hcount" -eq 1 -a "$pcount" -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try 'header followed by paragraph' \
+    '###Hello, sailor###
+And how are you today?' \
+    '<h3>Hello, sailor</h3>
 
-./echo -n '  two lists punctuated with a HR ... '
+<p>And how are you today?</p>'
 
-SEP='* A
+try 'two lists punctuated with a HR' \
+    '* A
 * * *
 * B
-* C'
-
-RES=`./echo "$SEP" | ./markdown`
-
-hrcount=`./echo "$RES" | grep -i '<hr' | wc -l`
-ulcount=`./echo "$RES" | grep -i '<ul>' | wc -l`
+* C' \
+    '<ul>
+<li>A</li>
+</ul>
 
 
-if [ "$hrcount" -eq 1 -a "$ulcount" -eq 2 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+<hr />
+
+<ul>
+<li>B</li>
+<li>C</li>
+</ul>'
 
 exit $rc
