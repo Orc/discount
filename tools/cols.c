@@ -22,6 +22,7 @@ char **argv;
 	if ( c & 0x80 ) {
 	    /* assume that (1) the output device understands utf-8, and
 	     *             (2) the only c & 0x80 input is utf-8.
+	     */
 	    ++xp;
 	    do {
 		putchar(c);

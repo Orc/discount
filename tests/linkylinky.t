@@ -3,172 +3,85 @@
 rc=0
 MARKDOWN_FLAGS=
 
-./echo -n '  url contains & ................... '
+try() {
+    
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
 
-if ./echo '[hehehe](u&rl)' | ./markdown | grep -i '&amp;' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+    Q=`./echo "$2" | ./markdown $FLAGS`
 
-./echo -n '  url contains + ................... '
 
-if ./echo '[hehehe](u+rl)' | ./markdown | grep -i '+' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
 
-./echo -n '  url contains " ................... '
+try 'url contains &' '[hehehe](u&rl)' '<p><a href="u&amp;rl">hehehe</a></p>'
+try 'url contains +' '[hehehe](u+rl)' '<p><a href="u+rl">hehehe</a></p>'
+try 'url contains "' '[hehehe](u"rl)' '<p><a href="u%22rl">hehehe</a></p>'
+try 'url contains <' '[hehehe](u<rl)' '<p><a href="u&lt;rl">hehehe</a></p>'
+try 'url contains whitespace' '[ha](r u)' '<p><a href="r%20u">ha</a></p>'
 
-if ./echo '[hehehe](u"rl)' | ./markdown | grep -i '%22' >/dev/null; then
-    ./echo "FAILED"
-    rc=1
-else
-    ./echo "ok"
-fi
+try 'url contains whitespace & title' \
+    '[hehehe](r u "there")' \
+    '<p><a href="r%20u" title="there">hehehe</a></p>'
 
-./echo -n '  url contains < ................... '
+try 'url contains escaped )' \
+    '[hehehe](u\))' \
+    '<p><a href="u)">hehehe</a></p>'
 
-if ./echo '[hehehe](u<rl)' | ./markdown | grep -i '&lt;' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try 'image label contains <' \
+    '![he<he<he](url)' \
+    '<p><img src="url" alt="he&lt;he&lt;he" /></p>'
 
-./echo -n '  url contains whitespace .......... '
+try 'image label contains >' \
+    '![he>he>he](url)' \
+    '<p><img src="url" alt="he&gt;he&gt;he" /></p>'
 
-if ./echo '[hehehe](r u)' | ./markdown | grep -i '"r%20u"' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try 'sloppy context link' \
+    '[heh]( url "how about it?" )' \
+    '<p><a href="url" title="how about it?">heh</a></p>'
 
-./echo -n '  url contains whitespace & title .. '
+try 'footnote urls formed properly' \
+    '[hehehe]: hohoho "ha ha"
 
-if ./echo '[hehehe](r u "there")' | ./markdown | grep -i '"r%20u"' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+[hehehe][]' \
+    '<p><a href="hohoho" title="ha ha">hehehe</a></p>'
 
-./echo -n '  url contains escaped ) ........... '
+try 'linky-like []s work' \
+    '[foo]' \
+    '<p>[foo]</p>'
 
-if ./echo '[hehehe](u\))' | ./markdown | grep -i '"u)"' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try 'pseudo-protocol "id:"'\
+    '[foo](id:bar)' \
+    '<p><a id="bar">foo</a></p>'
 
-./echo -n '  image label contains < ........... '
+try 'pseudo-protocol "class:"' \
+    '[foo](class:bar)' \
+    '<p><span class="bar">foo</span></p>'
 
-if ./echo '![he<he<he](url)' | ./markdown | grep -i '&lt;' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try 'pseudo-protocol "abbr:"'\
+    '[foo](abbr:bar)' \
+    '<p><abbr title="bar">foo</abbr></p>'
 
-./echo -n '  image label contains > ........... '
+try 'nested [][]s' \
+    '[[z](y)](x)' \
+    '<p><a href="x">[z](y)</a></p>'
 
-if ./echo '![he>he>he](url)' | ./markdown | grep -i '&gt;' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  sloppy context link .............. '
-
-if ./echo '[heh]( url "how about it?" )' | ./markdown | grep -i '</a>' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  footnote urls formed properly .... '
-
-TEST='[hehehe]: hohoho "ha ha"
-
-[hehehe][]
-'
-
-if ./echo "$TEST" | ./markdown | grep -i '&#00;' >/dev/null; then
-    ./echo "FAILED"
-    rc=1
-else
-    ./echo "ok"
-fi
-
-./echo -n '  linky-like []s work .............. '
-
-if ./echo '[foo]' | ./markdown | grep '\[foo\]' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  pseudo-protocol "id:" ............ '
-
-if ./echo '[foo](id:bar)' | ./markdown | grep 'a id' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  pseudo-protocol "class:" ......... '
-
-if ./echo '[foo](class:bar)' | ./markdown | grep 'span class' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  pseudo-protocol "abbr:" .......... '
-
-if ./echo '[foo](abbr:bar)' | ./markdown | grep '<abbr title="bar">' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  nested [][]s ..................... '
-
-count=`./echo '[[z](y)](x)' | ./markdown | tr '>' '\n' | grep -i '<a href' | wc -l`
-
-if [ "$count" -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  empty [][] tags .................. '
-
-V="
-[![][1]][2]
+try 'empty [][] tags' \
+    '[![][1]][2]
 
 [1]: image1
-[2]: image2"
-
-count=`echo "$V" | ./markdown | grep '\[\]' | wc -l`
-
-if [ "$count" -lt 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+[2]: image2' \
+    '<p><a href="image2"><img src="image1" alt="" /></a></p>'
 
 exit $rc

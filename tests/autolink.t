@@ -1,58 +1,42 @@
-./echo 'Reddit-style embedded links'
+./echo 'Reddit-style automatic links'
 rc=0
 
-./echo -n '  single link ...................... '
+try() {
+    
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
 
-V="http://www.pell.portland.or.us/~orc/Code/discount"
-Q=`echo "$V" | ./markdown -fautolink | grep -i '<a href=' | wc -l`
+    Q=`./echo "$2" | ./markdown $FLAGS`
 
-if [ ${Q:-0} -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
 
-./echo -n '  link surrounded by text .......... '
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
 
-V="here http://it is?"
-Q=`echo "$V" | ./markdown -fautolink`
+try -fautolink 'single link' \
+    'http://www.pell.portland.or.us/~orc/Code/discount' \
+    '<p><a href="http://www.pell.portland.or.us/~orc/Code/discount">http://www.pell.portland.or.us/~orc/Code/discount</a></p>'
 
-case "$Q" in
-'<p>here <a href="http://it">http://it</a> is?</p>') ./echo "ok" ;;
-*)	./echo "FAILED"
-	rc=1;;
-esac
+try -fautolink 'link surrounded by text' \
+    'here http://it is?' \
+    '<p>here <a href="http://it">http://it</a> is?</p>'
 
-./echo -n '  naked @ .......................... '
+try -fautolink 'naked @' '@' '<p>@</p>'
 
-V="@"
-Q=`echo "$V" | ./markdown -fautolink`
+try -fautolink 'parenthesised (url)' \
+    '(http://here)' \
+    '<p>(<a href="http://here">http://here</a>)</p>'
 
-case "$Q" in
-'<p>@</p>') ./echo "ok" ;;
-*)	./echo "FAILED"
-	rc=1;;
-esac
-
-./echo -n '  (url) ............................ '
-
-Q=`echo "(http://here)" | ./markdown -fautolink`
-
-case "$Q" in
-'<p>(<a href="http://here">http://here</a>)</p>') ./echo "ok" ;;
-*)	./echo "FAILED"
-	rc=1;;
-esac
-
-./echo -n '  token with trailing @ ............ '
-
-Q=`echo "orc@" | ./markdown -fautolink`
-
-case "$Q" in
-'<p>orc@</p>') ./echo "ok" ;;
-*)             ./echo "FAILED";
-	       rc=1;;
-esac
+try -fautolink 'token with trailing @' 'orc@' '<p>orc@</p>'
 
 exit $rc

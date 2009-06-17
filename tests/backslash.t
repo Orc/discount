@@ -10,15 +10,14 @@ try() {
 	shift ;;
     esac
     
-    S=`./echo -n "$1" '..................................' | ./cols 34`
-    ./echo -n "  $S "
+    ./echo -n "  $1" '..................................' | ./cols 36
 
     Q=`./echo "$2" | ./markdown $FLAGS`
 
     if [ "$3" = "$Q" ]; then
-	./echo "ok"
+	./echo " ok"
     else
-	./echo "FAILED"
+	./echo " FAILED"
 	./echo "wanted: $3"
 	./echo "got:    $Q"
 	rc=1

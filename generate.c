@@ -341,6 +341,8 @@ puturl(char *s, int size, MMIOT *f, int display)
 	    Qstring("&amp;", f);
 	else if ( c == '<' )
 	    Qstring("&lt;", f);
+	else if ( c == '"' )
+	    Qstring("%22", f);
 	else if ( isalnum(c) || ispunct(c) || (display && isspace(c)) )
 	    Qchar(c, f);
 	else

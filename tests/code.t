@@ -3,47 +3,36 @@
 rc=0
 MARKDOWN_FLAGS=
 
-./echo -n '  format for code block html ....... '
+try() {
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
 
-SEP='
-    this is
-    code
-'
+    Q=`./echo "$2" | ./markdown $FLAGS`
 
-count=`echo "$SEP" | ./markdown | wc -l`
 
-if [ $count -eq 3 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
 
-./echo -n '  unclosed single backtick ......... '
+try 'format for code block html' \
+'    this is
+    code' \
+    '<pre><code>this is
+code
+</code></pre>'
 
-if ./echo '`hi there' | ./markdown | grep '`' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  unclosed double backtick ......... '
-
-if ./echo '``hi there' | ./markdown | grep '``' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  remove space around code ......... '
-
-if ./echo '`` hi there ``' | ./markdown | grep '<code>hi there<\/code>' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try 'unclosed single backtick' '`hi there' '<p>`hi there</p>'
+try 'unclosed double backtick' '``hi there' '<p>``hi there</p>'
+try 'remove space around code' '`` hi there ``' '<p><code>hi there</code></p>'
 
 exit $rc

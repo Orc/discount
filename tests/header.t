@@ -5,15 +5,23 @@ MARKDOWN_FLAGS=
 
 try() {
     
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
     S=`./echo -n "$1" '..................................' | ./cols 34`
     ./echo -n "  $S "
 
-    count=`./echo "$2" | ./markdown | grep "$3" | wc -l`
+    Q=`./echo "$2" | ./markdown $FLAGS`
 
-    if [ $count -eq 1 ]; then
+
+    if [ "$3" = "$Q" ]; then
 	./echo "ok"
     else
 	./echo "FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
 	rc=1
     fi
 }
