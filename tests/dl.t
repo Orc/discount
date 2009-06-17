@@ -3,80 +3,64 @@
 rc=0
 MARKDOWN_FLAGS=
 
-SEP='
+try() {
+    unset FLAGS
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
+
+    Q=`./echo "$2" | ./markdown $FLAGS`
+
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
+
+SRC='
 =this=
     is an ugly
 =test=
-    eh?
-'
+    eh?'
 
-RES=`./echo "$SEP" | ./markdown`
+RSLT='<dl>
+<dt>this</dt>
+<dd>is an ugly</dd><dt>test</dt>
+<dd>eh?</dd></dl>'
 
 if ./markdown -V | grep DL_TAG >/dev/null; then
 
-    ./echo -n '  =tag= generates definition lists . '
+    try '=tag= generates definition lists' "$SRC" "$RSLT"
 
-    count=`./echo "$RES" | grep -i '<dl>' | wc -l`
-
-    if [ $count -eq 1 ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
-
-    ./echo -n '  two item list has two labels ..... '
-
-    count=`./echo "$RES" | grep -i '<dt>' | wc -l`
-
-    if [ $count -eq 2 ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
-
-    ./echo -n '  two item list has two entries..... '
-
-    count=`./echo "$RES" | grep -i '<dd>' | wc -l`
-
-    if [ $count -eq 2 ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
-
-    ./echo -n '  one item with two =tags= ......... '
-
-    SRC="
-=this=
+    try 'one item with two =tags=' \
+	'=this=
 =is=
-    A test, eh?"
-
-    RES=`./echo "$SRC" | ./markdown`
-
-    count1=`./echo "$RES" | grep -i '<dt>' | wc -l`
-    count2=`./echo "$RES" | grep -i '<dd>' | wc -l`
-
-    if [ \( "${count1:-0}" -eq 2 \) -a \( "${count2:-0}" -eq 1 \) ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
+    A test, eh?' \
+	'<dl>
+<dt>this</dt>
+<dt>is</dt>
+<dd>A test, eh?</dd></dl>'
+	
 
 else
-    ./echo -n '  =tag= does nothing ............... '
+    try '=tag= does nothing' "$SRC" \
+	'<p>=this=</p>
 
-    count=`./echo "$RES" | grep -i '<dl>' | wc -l`
+<pre><code>is an ugly
+</code></pre>
 
-    if [ $count -eq 0 ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
+<p>=test=</p>
+
+<pre><code>eh?
+</code></pre>'
+	
 fi
 
 exit $rc
