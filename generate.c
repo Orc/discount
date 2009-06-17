@@ -410,7 +410,7 @@ linkytitle(MMIOT *f, char quote, Footnote *ref)
     int whence = mmiottell(f);
     char *title = cursor(f);
     char *e;
-    register c;
+    register int c;
 
     while ( (c = pull(f)) != EOF ) {
 	e = cursor(f);
