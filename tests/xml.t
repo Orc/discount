@@ -3,51 +3,37 @@
 rc=0
 MARKDOWN_FLAGS=
 
-./echo -n '  xml output from markdown() ....... '
+try() {
+    unset FLAGS
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
 
-if ./echo '"hello,sailor"' | ./markdown -fcdata | grep '&amp;' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+    case "$2" in
+    -t*) Q=`./markdown $FLAGS "$2"` ;;
+    *)   Q=`./echo "$2" | ./markdown $FLAGS` ;;
+    esac
 
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
 
-./echo -n '  ... from mkd_generateline() ...... '
+try -fcdata 'xml output from markdown()' 'hello,sailor' '&lt;p&gt;hello,sailor&lt;/p&gt;'
+try -fcdata 'from mkd_generateline()' -t'"hello,sailor"' '&amp;ldquo;hello,sailor&amp;rdquo;'
+try -fnocdata 'html output from markdown()' '"hello,sailor"' '<p>&ldquo;hello,sailor&rdquo;</p>'
+try -fnocdata '... from mkd_generateline()' -t'"hello,sailor"' '&ldquo;hello,sailor&rdquo;'
 
-if ./markdown -fcdata -t'"hello,sailor"' | grep '&amp;' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  html output from markdown() ...... '
-
-if ./echo '"hello,sailor"' | ./markdown -fnocdata | grep '&amp;' >/dev/null; then
-    ./echo "FAILED"
-    rc=1
-else
-    ./echo "ok"
-fi
-
-
-./echo -n '  ... from mkd_generateline() ...... '
-
-if ./markdown -fnocdata -t'"hello,sailor"' | grep '&amp;' >/dev/null; then
-    ./echo "FAILED"
-    rc=1
-else
-    ./echo "ok"
-fi
-
-./echo -n '  xml output with multibyte utf-8 .. '
-
-if ./echo 'tecnología y servicios más confiables' | ./markdown -fcdata | grep 'tecnología y servicios más confiables' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try -fcdata 'xml output with multibyte utf-8' \
+    'tecnología y servicios más confiables' \
+    '&lt;p&gt;tecnología y servicios más confiables&lt;/p&gt;'
 
 exit $rc

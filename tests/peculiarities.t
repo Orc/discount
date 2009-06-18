@@ -3,94 +3,62 @@
 rc=0
 MARKDOWN_FLAGS=
 
-./echo -n '  list followed by header .......... '
+try() {
+    unset FLAGS
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
 
-SRC="
+    Q=`./echo "$2" | ./markdown $FLAGS`
+
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
+
+try 'list followed by header .......... ' \
+    "
 - AAA
 - BBB
--"
+-" \
+    '<ul>
+<li>AAA
 
-count=`./echo "$SRC" | ./markdown | sed -e '1,/<\/ul>/d' | wc -l`
+<h2>&ndash; BBB</h2></li>
+</ul>'
 
-if [ "$count" -gt 1 ]; then
-    ./echo "FAILED"
-    rc=1
-else
-    ./echo "ok"
-fi
-
-./echo -n '  ul with mixed item prefixes ...... '
-
-SRC="
+try 'ul with mixed item prefixes' \
+    '
 -  A
-1. B
-"
+1. B' \
+    '<ul>
+<li>A</li>
+<li>B</li>
+</ul>'
 
-RES=`echo "$SRC" | ./markdown`
-
-ulc=`./echo "$RES" | grep '<ul>' | wc -l`
-olc=`./echo "$RES" | grep '<ol>' | wc -l`
-
-if [ $ulc -eq 1 -a $olc -eq 0 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  ol with mixed item prefixes ...... '
-
-SRC="
+try 'ol with mixed item prefixes' \
+    '
 1. A
 -  B
-"
+' \
+    '<ol>
+<li>A</li>
+<li>B</li>
+</ol>'
 
-RES=`echo "$SRC" | ./markdown`
+try 'forcing a <br/>' 'this  ' '<p>this<br/>
+</p>'
 
-ulc=`./echo "$RES" | grep '<ul>' | wc -l`
-olc=`./echo "$RES" | grep '<ol>' | wc -l`
-
-if [ $olc -eq 1 -a $ulc -eq 0 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  forcing a <br/> .................. '
-
-SRC="this  "
-
-count=`echo "$SRC" | ./markdown | grep '<br/>' | wc -l`
-
-if [ $count -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  trimming single spaces ........... '
-
-SRC="this "
-count=`echo "$SRC" | ./markdown | grep 'this ' | wc -l`
-
-if [ $count -eq 1 ]; then
-    ./echo "FAILED"
-    rc=1
-else
-    ./echo "ok"
-fi
-
-./echo -n '  markdown <br/> with -fnohtml ..... '
-
-count=`echo "foo  " | ./markdown -fnohtml | grep '<p>foo<br/>' | wc -l`
-
-if [ $count -eq 1 ] ;then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try 'trimming single spaces' 'this ' '<p>this</p>'
+try -fnohtml 'markdown <br/> with -fnohtml' 'foo  '  '<p>foo<br/>
+</p>'
 
 exit $rc

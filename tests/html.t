@@ -3,121 +3,75 @@
 rc=0
 MARKDOWN_FLAGS=
 
-./echo -n '  self-closing block tags (hr) ..... '
+try() {
+    unset FLAGS
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
 
-SEP='
-<hr>
+    Q=`./echo "$2" | ./markdown $FLAGS`
 
-text
-'
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
 
-count=`./echo "$SEP" | ./markdown | grep '<p>' | wc -l`
+try 'self-closing block tags (hr)' \
+    '<hr>
 
-if [ $count -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+text' \
+    '<hr>
 
-./echo -n '  self-closing block tags (hr/) .... '
 
-SEP='
-<hr/>
+<p>text</p>'
 
-text
-'
+try 'self-closing block tags (hr/)' \
+    '<hr/>
 
-count=`./echo "$SEP" | ./markdown | grep '<p>' | wc -l`
+text' \
+    '<hr/>
 
-if [ $count -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
 
-./echo -n '  self-closing block tags (br) ..... '
+<p>text</p>'
 
-SEP='
-<br>
+try 'self-closing block tags (br)' \
+    '<br>
 
-text
-'
+text' \
+    '<br>
 
-count=`./echo "$SEP" | ./markdown | grep '<p>' | wc -l`
 
-if [ $count -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+<p>text</p>'
 
-./echo -n '  html comments .................... '
-
-SEP='
-<!--
+try 'html comments' \
+    '<!--
 **hi**
--->
-'
+-->' \
+    '<!--
+**hi**
+-->'
+    
+try 'no smartypants inside tags (#1)' \
+    '<img src="linky">' \
+    '<p><img src="linky"></p>'
 
-count=`./echo "$SEP" | ./markdown | grep 'strong' | wc -l`
+try 'no smartypants inside tags (#2)' \
+    '<img src="linky" alt=":)" />' \
+    '<p><img src="linky" alt=":)" /></p>'
 
-if [ $count -eq 0 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try -fnohtml 'block html with -fnohtml' '<b>hi!</b>' '<p>&lt;b>hi!&lt;/b></p>'
+try -fhtml 'allow html with -fhtml' '<b>hi!</b>' '<p><b>hi!</b></p>'
 
-./echo -n '  no smartypants inside tags (#1) .. '
-
-count=`./echo '<img src="linky">' | ./markdown | tr -dc '"' | wc -c`
-
-if [ $count -eq 2 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  no smartypants inside tags (#2) .. '
-
-count=`./echo '<img src="linky" alt=":)" />' | ./markdown | tr -dc '"' | wc -c`
-
-if [ $count -eq 4 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  block html with -fnohtml ......... '
-
-RSLT=`./echo "<b>hi!</b>" | ./markdown -fnohtml`
-
-if ./echo "$RSLT" | grep '<b>' >/dev/null; then
-    ./echo "FAILED"
-    rc=1
-else
-    ./echo "ok"
-fi
-
-./echo -n '  allow html with -fhtml ........... '
-
-RSLT=`./echo "<b>hi!</b>" | ./markdown -fhtml`
-
-if ./echo "$RSLT" | grep '<b>' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  nested html blocks (1) ........... '
-
-T='Markdown works fine *here*.
+try 'nested html blocks (1)' \
+    'Markdown works fine *here*.
 
 *And* here.
 
@@ -126,30 +80,25 @@ T='Markdown works fine *here*.
 
 Markdown here is *not* parsed by RDiscount.
 
-Nor in *this* paragraph, and there are no paragraph breaks.'
+Nor in *this* paragraph, and there are no paragraph breaks.' \
+    '<p>Markdown works fine <em>here</em>.</p>
 
-RSLT=`./echo "$T" | ./markdown | grep '<em>' | wc -l`
+<p><em>And</em> here.</p>
 
-if [ $RSLT -eq 4 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+<div><pre>
+</pre></div>
 
-./echo -n '  nested html blocks (2) ........... '
 
-T='<div>This is inside a html block
+<p>Markdown here is <em>not</em> parsed by RDiscount.</p>
+
+<p>Nor in <em>this</em> paragraph, and there are no paragraph breaks.</p>'
+
+try 'nested html blocks (2)' \
+    '<div>This is inside a html block
+<div>This is, too</div>and
+so is this</div>' \
+    '<div>This is inside a html block
 <div>This is, too</div>and
 so is this</div>'
-
-RSLT=`./echo "$T" | ./markdown | grep '<p>' | wc -l`
-
-if [ $RSLT -eq 0 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
 
 exit $rc
