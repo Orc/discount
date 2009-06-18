@@ -3,145 +3,134 @@
 rc=0
 MARKDOWN_FLAGS=
 
-./echo -n '  two separated items (1) .......... '
+try() {
+    unset FLAGS
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
 
-SEP=' * A
+    Q=`./echo "$2" | ./markdown $FLAGS`
 
-* B'
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
 
-RES=`./echo "$SEP" | ./markdown`
+try 'two separated items' \
+    ' * A
 
-count=`./echo "$RES" | grep -i '<ul>' | wc -l`
+* B' \
+    '<ul>
+<li><p>A</p></li>
+<li><p>B</p></li>
+</ul>'
 
-if [ "$count" -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  two separated items (2) .......... '
-
-count=`./echo "$RES" | grep -i '<p>' | wc -l`
-
-case `expr $count` in
-2)  ./echo "ok" ;;
-1)  ./echo "FAILED (known bug)" ;;
-*)  ./echo "FAILED ($count)" 
-    rc=1 ;;
-esac
+try 'two adjacent items' \
+    ' * A
+ * B' \
+    '<ul>
+<li>A</li>
+<li>B</li>
+</ul>'
 
 
-./echo -n '  two adjacent items ............... '
-
-SEP=' * A
- * B'
-
-count=`./echo "$SEP" | ./markdown | grep -i '<p>' | wc -l`
-
-if [ "$count" -eq 0 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  two adjacent items, then space ... '
-
-SEP=' * A
+try 'two adjacent items, then space' \
+    ' * A
 * B
 
-space, the final frontier'
+space, the final frontier' \
+    '<ul>
+<li>A</li>
+<li>B</li>
+</ul>
 
-count=`./echo "$SEP" | ./markdown | grep -i '<p>' | wc -l`
 
-if [ "$count" -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+<p>space, the final frontier</p>'
 
-./echo -n '  nested lists (1) ................. '
-
-SUB='
- 1. Sub (list)
- 2. Two (items)
- 3. Here'
-
-SEP='
- *   1. Sub (list)
+try 'nested lists (1)' \
+    ' *   1. Sub (list)
      2. Two (items)
-     3. Here'
+     3. Here' \
+    '<ul>
+<li><ol>
+<li>Sub (list)</li>
+<li>Two (items)</li>
+<li>Here</li>
+</ol>
+</li>
+</ul>'
 
-count1=`./echo "$SUB" | ./markdown | grep -i '<p>' | wc -l`
-count=`./echo "$SEP" | ./markdown | grep -i '<p>' | wc -l`
-
-if [ "$count" -eq "$count1" ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-./echo -n '  nested lists (2) ................. '
-
-SUB='
->A (list)
->
->1. Sub (list)
->2. Two (items)
->3. Here'
-
-SEP='
- * A (list)
+try 'nested lists (2)' \
+    ' * A (list)
 
      1. Sub (list)
      2. Two (items)
      3. Here
 
      Here
- * B (list)'
+ * B (list)' \
+    '<ul>
+<li><p>A (list)</p>
 
-count1=`./echo "$SUB" | ./markdown | grep -i '<p>' | wc -l`
-count=`./echo "$SEP" | ./markdown | grep -i '<p>' | wc -l`
+<ol>
+<li>Sub (list)</li>
+<li>Two (items)</li>
+<li>Here</li>
+</ol>
 
-if [ "$count" -gt $count1 ] ; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
 
-./echo -n '  blockquote inside list ........... '
+<p> Here</p></li>
+<li>B (list)</li>
+</ul>'
 
-SEP='
- *  A (list)
+try 'list inside blockquote' \
+    '>A (list)
+>
+>1. Sub (list)
+>2. Two (items)
+>3. Here' \
+    '<blockquote><p>A (list)</p>
+
+<ol>
+<li>Sub (list)</li>
+<li>Two (items)</li>
+<li>Here</li>
+</ol>
+</blockquote>'
+    
+try 'blockquote inside list' \
+    ' *  A (list)
    
     > quote
     > me
 
-    dont quote me'
+    dont quote me' \
+    '<ul>
+<li><p>A (list)</p>
 
-if ./echo "$SEP" | ./markdown | grep 'blockquote' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+<blockquote><p>quote
+me</p></blockquote>
 
-./echo -n '  empty list ....................... '
+dont quote me</li>
+</ul>'
 
-SEP='
-- 
-
-- 
+try 'empty list' \
 '
+- 
 
-if ./echo "$SEP" | ./markdown | grep '<li>' > /dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+- 
+' \
+'<ul>
+<li></li>
+<li></li>
+</ul>'
 
 exit $rc
