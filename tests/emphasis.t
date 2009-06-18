@@ -2,80 +2,39 @@
 
 rc=0
 MARKDOWN_FLAGS=
-MARKDOWN_VERSION=`./markdown -V`
 
-./echo -n '  *hi* -> <em>hi</em> .............. '
+try() {
+    unset FLAGS
+    case "$1" in
+    -*) FLAGS=$1
+	shift ;;
+    esac
+    
+    ./echo -n "  $1" '..................................' | ./cols 36
 
-if ./echo '*hi*' | ./markdown | grep -i '<em>hi</em>' >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+    Q=`./echo "$2" | ./markdown $FLAGS`
 
-./echo -n '  * -> * ........................... '
+    if [ "$3" = "$Q" ]; then
+	./echo " ok"
+    else
+	./echo " FAILED"
+	./echo "wanted: $3"
+	./echo "got   : $Q"
+	rc=1
+    fi
+}
 
-if ./echo 'A * A' | ./markdown | grep -i 'A \* A' > /dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
 
-./echo -n '  ***A**B* ......................... '
-
-if ./echo '***A**B*' | ./markdown -fnorelax | grep -i '<em><strong>A</strong>B</em>' > /dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  ***A*B** ......................... '
-
-if ./echo '***A*B**' | ./markdown -fnorelax | grep -i '<strong><em>A</em>B</strong>' > /dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  **A*B*** ......................... '
-
-if ./echo '**A*B***' | ./markdown -fnorelax | grep -i '<strong>A<em>B</em></strong>' > /dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  *A**B*** ......................... '
-
-if ./echo '*A**B***' | ./markdown -fnorelax | grep -i '<em>A<strong>B</strong></em>' > /dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try '*hi* -> <em>hi</em>' '*hi*' '<p><em>hi</em></p>'
+try '* -> *' 'A * A' '<p>A * A</p>'
+try -fstrict '***A**B*' '***A**B*' '<p><em><strong>A</strong>B</em></p>'
+try -fstrict '***A*B**' '***A*B**' '<p><strong><em>A</em>B</strong></p>'
+try -fstrict '**A*B***' '**A*B***' '<p><strong>A<em>B</em></strong></p>'
+try -fstrict '*A**B***' '*A**B***' '<p><em>A<strong>B</strong></em></p>'
 
 if ./markdown -V | grep RELAXED >/dev/null; then
-    ./echo -n '  _A_B with -frelax ................ '
-
-    if ./echo '_A_B' | ./markdown -frelax | grep -i 'A_B' > /dev/null; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
-    
-    ./echo -n '  _A_B with -fstrict ............... '
-
-    if ./echo '_A_B' | ./markdown -fstrict | grep -i 'A</em>B' > /dev/null; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	rc=1
-    fi
+    try -frelax '_A_B with -frelax' '_A_B' '<p>_A_B</p>'
+    try -fstrict '_A_B with -fstrict' '_A_B' '<p><em>A</em>B</p>'
 fi
 
 exit $rc
