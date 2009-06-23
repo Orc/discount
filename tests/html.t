@@ -70,8 +70,10 @@ try 'no smartypants inside tags (#2)' \
 try -fnohtml 'block html with -fnohtml' '<b>hi!</b>' '<p>&lt;b>hi!&lt;/b></p>'
 try -fhtml 'allow html with -fhtml' '<b>hi!</b>' '<p><b>hi!</b></p>'
 
-try 'nested html blocks (1)' \
-    'Markdown works fine *here*.
+
+# check that nested raw html blocks terminate properly.
+#
+BLOCK1SRC='Markdown works fine *here*.
 
 *And* here.
 
@@ -80,8 +82,9 @@ try 'nested html blocks (1)' \
 
 Markdown here is *not* parsed by RDiscount.
 
-Nor in *this* paragraph, and there are no paragraph breaks.' \
-    '<p>Markdown works fine <em>here</em>.</p>
+Nor in *this* paragraph, and there are no paragraph breaks.'
+
+BLOCK1OUT='<p>Markdown works fine <em>here</em>.</p>
 
 <p><em>And</em> here.</p>
 
@@ -92,6 +95,8 @@ Nor in *this* paragraph, and there are no paragraph breaks.' \
 <p>Markdown here is <em>not</em> parsed by RDiscount.</p>
 
 <p>Nor in <em>this</em> paragraph, and there are no paragraph breaks.</p>'
+
+try 'nested html blocks (1)' "$BLOCK1SRC" "$BLOCK1OUT"
 
 try 'nested html blocks (2)' \
     '<div>This is inside a html block
