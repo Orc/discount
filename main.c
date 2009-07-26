@@ -146,9 +146,10 @@ main(int argc, char **argv)
 			exit(1);
 		    }
 		    break;
-	default:    fprintf(stderr, "usage: %s [-dV] [-burl-base]"
-				    " [-F flags] [-f{+-}setting]"
-				    " [-o file] [file]\n", pgm);
+	default:    fprintf(stderr, "usage: %s [-dTV] [-b url-base]"
+				    " [-F bitmap] [-f {+-}flags]"
+				    " [-o ofile] [-s text]"
+				    " [-t text] [file]\n", pgm);
 		    exit(1);
 	}
     }

@@ -7,6 +7,9 @@ markdown \- convert Markdown text to HTML
 .B -dTV
 ]
 [
+.BI -b " url-base
+]
+[
 .BI -F " bitmap
 ]
 [
@@ -37,18 +40,23 @@ fragment representation on standard output.
 The options are:
 .TF dfdoptions
 .TP
+.BI -b " url-base
+Links in source begining with
+.B /
+will be prefixed with
+.I url-base
+in the output.
+.TP
 .B -d
-Instead of writing the
+Instead of printing an
 .SM HTML
-file, dump a parse tree to stdout.
+fragment, print a parse tree.
 .TP
 .BI -F " bitmap
 Set translation flags.
 .I Bitmap
 is a bit map of the various configuration options described in
 .IR markdown (2).
-(The flag values are defined in
-.BR mkdio.h ).
 .TP
 .BI -f " flags
 Set or clear various translation
@@ -70,13 +78,15 @@ Use the
 .IR markdown (2)
 function to format the
 .I text
-on standard input (the default behavior).
+on standard input.
 .TP
 .B -T
 Under
 .B -f
 .BR toc ,
-dump the table of contents before the formatted text.
+print the table of contents as an unordered list before the usual
+.SM HTML
+output.
 .TP
 .BI -t " text
 Use
@@ -128,7 +138,9 @@ Disable superscript and relaxed emphasis.
 Enable superscript and relaxed emphasis (the default).
 .TP
 .B toc
-Enable table of contents support.
+Enable table of contents support, generated from headings (in 
+.IR markdown (6))
+in the source.
 .TP
 .B 1.0
 Revert to Markdown 1.0 compatibility.

@@ -40,22 +40,22 @@ tags.  To request generation of
 .B <br />
 in the output, end a line with two or more spaces, then a newline.
 .TP
-Headers
-Markdown defines two header styles,
+Headings
+Headings can be marked in two ways, called
 .I setext
 and
 .IR atx .
 .IP
-Setext-style headers are
+Setext-style headings are
 ``underlined'' using equal signs (for first-level
-headers) and dashes (for second-level headers).
+headings) and dashes (for second-level headings).
 .IP
-Atx-style headers use 1-6 hash characters at the start of the line,
+Atx-style headings use 1-6 hash characters at the start of the line,
 corresponding to
 .SM HTML
 .BR <h^(1-6)^> .
 Optional closing hashes may follow
-the header text.
+the heading text.
 .TP
 Blockquotes
 Lines beginning with
@@ -65,7 +65,7 @@ Blockquotes can be nested
 by multiple levels of
 .BR >> .
 Blockquotes can contain other Markdown elements, including
-headers, lists, and code blocks.
+headings, lists, and code blocks.
 .TP
 Lists
 Markdown supports ordered (numbered) and unordered (bulleted) lists.
@@ -274,7 +274,7 @@ or
 .B <del>
 -- can be
 used anywhere in a Markdown
-paragraph, list item, or header.
+paragraph, list item, or heading.
 It is permitted to use
 .SM HTML
 tags instead of Markdown formatting; e.g.
@@ -442,6 +442,8 @@ which will be made available to the
 .IR mkd_doc_author ,
 and
 .I mkd_doc_date
+(in
+.IR markdown (2))
 functions.
 .TP
 Definition Lists
@@ -501,7 +503,8 @@ will produce an
 ordered list.
 .PD
 .SH SEE ALSO
-.IR markdown (1)
+.IR markdown (1),
+.IR markdown (2)
 .PP
 http://daringfireball.net/projects/markdown/syntax/,
 ``Markdown: Syntax''.

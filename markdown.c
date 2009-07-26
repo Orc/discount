@@ -659,7 +659,7 @@ listitem(Paragraph *p, int indent)
 	 * need any indentation
 	 */
 	if ( q != t->next ) {
-	    if (q->dle < 4) {
+	    if (q->dle < indent) {
 		q = t->next;
 		t->next = 0;
 		return q;
@@ -853,6 +853,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     struct kw *tag;
     Line *r;
     int para = toplevel;
+    int blocks = 0;
     int hdr_type, list_type, indent;
 
     ptr = consume(ptr, &para);
@@ -909,7 +910,8 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	if ( (para||toplevel) && !p->align )
 	    p->align = PARA;
 
-	para = toplevel;
+	blocks++;
+	para = toplevel || (blocks > 1);
 	ptr = consume(ptr, &para);
 
 	if ( para && !p->align )

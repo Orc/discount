@@ -9,9 +9,11 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl d
+.Op Fl T
 .Op Fl V
+.Op Fl b Ar url-base
 .Op Fl F Pa bitmap
-.Op Fl f Ar options
+.Op Fl f Ar flags
 .Op Fl o Pa file
 .Op Fl s Pa text
 .Op Fl t Pa text
@@ -28,10 +30,14 @@ to stdout.
 .Pp
 The options are as follows:
 .Bl -tag -width "-o file"
+.It Fl b Ar url-base
+Links in source begining with / will be prefixed with
+.Ar url-base
+in the output.
 .It Fl d
 Instead of writing the html file, dump a parse
 tree to stdout.
-.It Fl f options
+.It Fl f Ar flags
 Set or clear various translation flags.   The flags
 are in a comma-delimited list, with an optional
 .Ar +

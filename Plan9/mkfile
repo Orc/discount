@@ -22,6 +22,7 @@ install.libs: install
 
 install.man: install
 	cp markdown.1 /sys/man/1/markdown
+	cp markdown.2 /sys/man/2/markdown
 	cp markdown.6 /sys/man/6/markdown
 
 installall:V: install.libs install.man install.progs

@@ -119,7 +119,7 @@ try 'blockquote inside list' \
 <blockquote><p>quote
 me</p></blockquote>
 
-dont quote me</li>
+<p>dont quote me</p></li>
 </ul>'
 
 try 'empty list' \
