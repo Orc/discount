@@ -684,9 +684,10 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 {
     ParagraphRoot d = { 0, 0 };
     Paragraph *p;
-    Line *q = top->text, *text;
-    Line *label;
-    int para = 0;
+    Line *q = top->text, *text, *label;
+    int isdl = (top->typ == DL),
+	para = 0,
+	ltype;
 
     while (( text = q )) {
 	if ( top->typ == DL ) {
@@ -710,7 +711,8 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 
 	if ( para && (top->typ != DL) && p->down ) p->down->align = PARA;
 
-	if ( !(q = skipempty(text)) || (islist(q, &trim) == 0) )
+	if ( !(q = skipempty(text)) || ((ltype = islist(q, &trim)) == 0)
+				    || (isdl != (ltype == DL)) )
 	    break;
 
 	if ( para = (q != text) ) {

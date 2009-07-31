@@ -32,8 +32,10 @@ SRC='
 
 RSLT='<dl>
 <dt>this</dt>
-<dd>is an ugly</dd><dt>test</dt>
-<dd>eh?</dd></dl>'
+<dd>is an ugly</dd>
+<dt>test</dt>
+<dd>eh?</dd>
+</dl>'
 
 if ./markdown -V | grep DL_TAG >/dev/null; then
 
@@ -46,7 +48,8 @@ if ./markdown -V | grep DL_TAG >/dev/null; then
 	'<dl>
 <dt>this</dt>
 <dt>is</dt>
-<dd>A test, eh?</dd></dl>'
+<dd>A test, eh?</dd>
+</dl>'
 	
 
 else

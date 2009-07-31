@@ -1382,6 +1382,7 @@ definitionlist(Paragraph *p, MMIOT *f)
 	    }
 
 	    htmlify(p->down, "dd", p->ident, f);
+	    Qchar('\n', f);
 	}
 
 	Qstring("</dl>", f);
