@@ -1276,6 +1276,102 @@ printheader(Paragraph *pp, MMIOT *f)
 }
 
 
+#define CENTER 1
+#define LEFT 2
+#define RIGHT 3
+
+static char* alignments[] = { "", " align=\"center\"", " align=\"left\"",
+				  " align=\"right\"" };
+
+typedef STRING(int) Istring;
+
+static int
+splat(Line *p, char *block, Istring align, int force, MMIOT *f)
+{
+    int first,
+	idx = 0,
+	colno = 0;
+
+    Qstring("<tr>\n", f);
+    while ( idx < S(p->text) ) {
+	first = idx;
+	if ( force && (colno >= S(align)-1) )
+	    idx = S(p->text);
+	else
+	    while ( (idx < S(p->text)) && (T(p->text)[idx] != '|') )
+		++idx;
+
+	Qprintf(f, "<%s%s>",
+		   block,
+		   alignments[ (colno < S(align)) ? T(align)[colno]:0 ]);
+	___mkd_reparse(T(p->text)+first, idx-first, 0, f);
+	Qprintf(f, "</%s>\n", block);
+	idx++;
+	colno++;
+    }
+    if ( force )
+	while (colno < S(align) ) {
+	    Qprintf(f, "<%s></%s>\n", block, block);
+	    ++colno;
+	}
+    Qstring("</tr>\n", f);
+    return colno;
+}
+
+static int
+printtable(Paragraph *pp, MMIOT *f)
+{
+    /* header, dashes, then lines of content */
+
+    Line *hdr = pp->text;
+    Line *dash = hdr->next;
+    Line *body = dash->next;
+    Istring align;
+    int start;
+    int hcols;
+    char *p;
+
+    /* first figure out cell alignments */
+
+    CREATE(align);
+
+    for (p=T(dash->text), start=0; start < S(dash->text); ) {
+	char first, last;
+	int end;
+	
+	last=first=0;
+	for (end=start ; (end < S(dash->text)) && p[end] != '|'; ++ end ) {
+	    if ( !isspace(p[end]) ) {
+		if ( !first) first = p[end];
+		last = p[end];
+	    }
+	}
+	EXPAND(align) = ( first == ':' ) ? (( last == ':') ? CENTER : LEFT)
+					 : (( last == ':') ? RIGHT : 0 );
+	start = 1+end;
+    }
+
+    Qstring("<table>\n", f);
+    Qstring("<thead>\n", f);
+    hcols = splat(hdr, "th", align, 0, f);
+    Qstring("</thead>\n", f);
+
+    if ( hcols > S(align) )
+	S(align) = hcols;
+    else
+	while ( hcols > S(align) )
+	    EXPAND(align) = 0;
+
+    Qstring("<tbody>\n", f);
+    for ( ; body; body = body->next)
+	splat(body, "td", align, 1, f);
+    Qstring("</table>\n", f);
+    Qstring("</tbody>\n", f);
+
+    DELETE(align);
+}
+
+
 static int
 printblock(Paragraph *pp, MMIOT *f)
 {
@@ -1452,6 +1548,10 @@ display(Paragraph *p, MMIOT *f)
 
     case HDR:
 	printheader(p, f);
+	break;
+
+    case TABLE:
+	printtable(p, f);
 	break;
 
     default:

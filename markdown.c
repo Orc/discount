@@ -259,6 +259,25 @@ comment(Paragraph *p)
 }
 
 
+istable(Line *t)
+{
+    char *p;
+    Line *dashes = t->next;
+    
+    if ( !dashes )
+	return 0;
+	
+    if ( !memchr(T(t->text), '|', S(t->text)) )
+	return 0;
+
+    for ( p = T(dashes->text)+S(dashes->text)-1; p >= T(dashes->text); --p)
+	if ( ! ((*p == '|') || (*p == ':') || (*p == '-') || !isspace(*p)) )
+	    return 0;
+
+    return 1;
+}
+
+
 /* footnotes look like ^<whitespace>{0,3}[stuff]: <content>$
  */
 static int
@@ -628,6 +647,22 @@ quoteblock(Paragraph *p)
 }
 
 
+static Line *
+tableblock(Paragraph *p)
+{
+    Line *t, *q;
+    int bars;
+
+    for ( t = p->text; t && (q = t->next); t = t->next ) {
+	if ( !memchr(T(q->text), '|', S(q->text)) ) {
+	    t->next = 0;
+	    return q;
+	}
+    }
+    return 0;
+}
+
+
 static Paragraph *Pp(ParagraphRoot *, Line *, int);
 static Paragraph *compile(Line *, int, MMIOT *);
 
@@ -903,6 +938,10 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	else if ( toplevel && (isfootnote(ptr)) ) {
 	    ptr = consume(addfootnote(ptr, f), &para);
 	    continue;
+	}
+	else if ( istable(ptr) && !(f->flags & STRICT) ) {
+	    p = Pp(&d, ptr, TABLE);
+	    ptr = tableblock(p);
 	}
 	else {
 	    p = Pp(&d, ptr, MARKUP);
