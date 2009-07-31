@@ -133,4 +133,36 @@ try 'empty list' \
 <li></li>
 </ul>'
 
+
+if ./markdown -V | grep DL_TAG >/dev/null; then
+
+    try 'dl followed by non-dl' \
+    '=a=
+    test
+2. here' \
+'<dl>
+<dt>a</dt>
+<dd>test</dd>
+</dl>
+
+<ol>
+<li>here</li>
+</ol>'
+
+    try 'non-dl followed by dl' \
+    '1. hello
+=sailor=
+    hi!' \
+'<ol>
+<li>hello</li>
+</ol>
+
+
+<dl>
+<dt>sailor</dt>
+<dd>hi!</dd>
+</dl>'
+
+fi
+
 exit $rc
