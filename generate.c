@@ -1323,13 +1323,18 @@ printtable(Paragraph *pp, MMIOT *f)
 {
     /* header, dashes, then lines of content */
 
-    Line *hdr = pp->text;
-    Line *dash = hdr->next;
-    Line *body = dash->next;
+    Line *hdr, *dash, *body;
     Istring align;
     int start;
     int hcols;
     char *p;
+
+    if ( !(pp->text && pp->text->next && pp->text->next->next) )
+	return 0;
+
+    hdr = pp->text;
+    dash= hdr->next;
+    body= dash->next;
 
     /* first figure out cell alignments */
 

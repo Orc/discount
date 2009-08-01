@@ -271,7 +271,7 @@ istable(Line *t)
 	return 0;
 
     for ( p = T(dashes->text)+S(dashes->text)-1; p >= T(dashes->text); --p)
-	if ( ! ((*p == '|') || (*p == ':') || (*p == '-') || !isspace(*p)) )
+	if ( ! ((*p == '|') || (*p == ':') || (*p == '-') || isspace(*p)) )
 	    return 0;
 
     return 1;
