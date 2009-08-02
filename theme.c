@@ -545,24 +545,16 @@ char **argv;
 	    char *p, *q;
 	    output = alloca(strlen(source) + strlen(".html") + 1);
 
-	    if ( added_text ) {
-		strcpy(output, argv[0]);
-		if ( S_ISDIR(sourceinfo.st_mode) )
-		    strcat(output, "/index");
-		strcat(output, ".html");
-	    }
-	    else {
-		strcpy(output, source);
+	    strcpy(output, source);
 
-		if (( p = strchr(output, '/') ))
-		    q = strrchr(p+1, '.');
-		else
-		    q = strrchr(output, '.');
+	    if (( p = strchr(output, '/') ))
+		q = strrchr(p+1, '.');
+	    else
+		q = strrchr(output, '.');
 
-		if ( q )
-		    *q = 0;
-		strcat(q, ".html");
-	    }
+	    if ( q )
+		*q = 0;
+	    strcat(q, ".html");
 	}
     }
     if ( output ) {

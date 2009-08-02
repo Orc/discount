@@ -46,6 +46,7 @@ static struct {
     { "links",   1, MKD_NOLINKS  },
     { "relax",   1, MKD_STRICT   },
     { "strict",  0, MKD_STRICT   },
+    { "tables",  1, MKD_NOTABLES },
     { "header",  1, MKD_NOHEADER },
     { "html",    1, MKD_NOHTML   },
     { "ext",     1, MKD_NO_EXT   },

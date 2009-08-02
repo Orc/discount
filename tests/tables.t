@@ -24,6 +24,27 @@ try() {
     fi
 }
 
+
+try 'single-column table' \
+    '|hello
+|-----
+|sailor' \
+    '<table>
+<thead>
+<tr>
+<th></th>
+<th>hello</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td>sailor</td>
+</tr>
+</table>
+</tbody>'
+
+
 try 'two-column table' \
     '
   a  |  b
@@ -44,20 +65,21 @@ hello|sailor' \
 </table>
 </tbody>'
 
-
-try 'single-column table' \
-    '|hello
-|-----
-|sailor' \
+try 'three-column table' \
+'a|b|c
+-|-|-
+hello||sailor'\
     '<table>
 <thead>
 <tr>
-<th></th>
-<th>hello</th>
+<th>a</th>
+<th>b</th>
+<th>c</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td>hello</td>
 <td></td>
 <td>sailor</td>
 </tr>
@@ -129,6 +151,14 @@ hello|sailor|boy' \
 </table>
 </tbody>'
 
+
+try -fnotables 'tables with -fnotables' \
+    'a|b
+-|-
+hello|sailor' \
+    '<p>a|b
+&ndash;|&ndash;
+hello|sailor</p>'
 
 
 exit $rc

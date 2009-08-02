@@ -939,7 +939,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    ptr = consume(addfootnote(ptr, f), &para);
 	    continue;
 	}
-	else if ( istable(ptr) && !(f->flags & STRICT) ) {
+	else if ( istable(ptr) && !(f->flags & (STRICT|NOTABLES)) ) {
 	    p = Pp(&d, ptr, TABLE);
 	    ptr = tableblock(p);
 	}

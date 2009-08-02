@@ -74,11 +74,12 @@ typedef struct mmiot {
 #define INSIDE_TAG	0x0020
 #define NO_PSEUDO_PROTO	0x0040
 #define CDATA_OUTPUT	0x0080
+#define NOTABLES	0x0400
 #define TOC		0x1000
 #define MKD_1_COMPAT	0x2000
 #define AUTOLINK	0x4000
 #define SAFELINK	0x8000
-#define USER_FLAGS	0xF0FF
+#define USER_FLAGS	0xFCFF
 #define EMBEDDED	DENY_A|DENY_IMG|NO_PSEUDO_PROTO|CDATA_OUTPUT
     char *base;
 } MMIOT;
