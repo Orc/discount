@@ -652,11 +652,14 @@ quoteblock(Paragraph *p)
 }
 
 
+/*
+ * A table block starts with a table header (see istable()), and continues
+ * until EOF or a line that /doesn't/ contain a |.
+ */
 static Line *
 tableblock(Paragraph *p)
 {
     Line *t, *q;
-    int bars;
 
     for ( t = p->text; t && (q = t->next); t = t->next ) {
 	if ( !memchr(T(q->text), '|', S(q->text)) ) {
