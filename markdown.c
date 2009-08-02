@@ -259,17 +259,22 @@ comment(Paragraph *p)
 }
 
 
+/* tables look like
+ *   header|header{|header}
+ *   ------|------{|......}
+ *   {body lines}
+ */
+static int
 istable(Line *t)
 {
     char *p;
     Line *dashes = t->next;
     
-    if ( !dashes )
-	return 0;
-	
-    if ( !memchr(T(t->text), '|', S(t->text)) )
+    /* two lines, first must contain | */
+    if ( !(dashes && memchr(T(t->text), '|', S(t->text))) )
 	return 0;
 
+    /* second line must be only whitespace, |, -, or - */
     for ( p = T(dashes->text)+S(dashes->text)-1; p >= T(dashes->text); --p)
 	if ( ! ((*p == '|') || (*p == ':') || (*p == '-') || isspace(*p)) )
 	    return 0;
