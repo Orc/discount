@@ -1370,8 +1370,8 @@ printtable(Paragraph *pp, MMIOT *f)
     Qstring("<tbody>\n", f);
     for ( ; body; body = body->next)
 	splat(body, "td", align, 1, f);
-    Qstring("</table>\n", f);
     Qstring("</tbody>\n", f);
+    Qstring("</table>\n", f);
 
     DELETE(align);
 }

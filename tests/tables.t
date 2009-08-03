@@ -41,8 +41,8 @@ try 'single-column table' \
 <td></td>
 <td>sailor</td>
 </tr>
-</table>
-</tbody>'
+</tbody>
+</table>'
 
 
 try 'two-column table' \
@@ -62,8 +62,8 @@ hello|sailor' \
 <td>hello</td>
 <td>sailor</td>
 </tr>
-</table>
-</tbody>'
+</tbody>
+</table>'
 
 try 'three-column table' \
 'a|b|c
@@ -83,8 +83,8 @@ hello||sailor'\
 <td></td>
 <td>sailor</td>
 </tr>
-</table>
-</tbody>'
+</tbody>
+</table>'
 
 try 'two-column table with empty cells' \
     '
@@ -108,8 +108,8 @@ hello|
 <td>     </td>
 <td>sailor</td>
 </tr>
-</table>
-</tbody>'
+</tbody>
+</table>'
 
 try 'two-column table with alignment' \
     '
@@ -128,8 +128,8 @@ hello|sailor' \
 <td align="right">hello</td>
 <td align="left">sailor</td>
 </tr>
-</table>
-</tbody>'
+</tbody>
+</table>'
     
 try 'table with extra data column' \
     '
@@ -148,8 +148,8 @@ hello|sailor|boy' \
 <td>hello</td>
 <td>sailor|boy</td>
 </tr>
-</table>
-</tbody>'
+</tbody>
+</table>'
 
 
 try -fnotables 'tables with -fnotables' \

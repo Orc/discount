@@ -36,7 +36,7 @@ static struct kw blocktags[] = { KW("!--"), KW("STYLE"), KW("SCRIPT"),
 				 KW("UL"), KW("P"), KW("OL"), KW("DL"),
 				 KW("PLAINTEXT"), KW("PRE"), KW("TABLE"),
 				 KW("WBR"), KW("XMP"), SC("HR"), SC("BR"),
-				 KW("MAP") };
+				 KW("IFRAME"), KW("MAP") };
 #define SZTAGS	(sizeof blocktags / sizeof blocktags[0])
 #define MAXTAG	11 /* sizeof "BLOCKQUOTE" */
 
