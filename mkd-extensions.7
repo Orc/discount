@@ -44,6 +44,13 @@ is written
 to the output.  The 
 .Ar "alt text"
 is discarded.
+.It Ar abbr:
+The
+.Ar "alt text"
+is marked up and written to the output, wrapped with
+.Em "<abbr title="abbr">
+and
+.Em "</abbr>" .
 .El
 .Ss Pandoc headers
 If markdown was configured with
@@ -122,6 +129,40 @@ will produce:
     <li>list</li>
     </ol>
 .fi
+.Ss tables
+.Ar PHP Markdown Extra -style
+tables are supported;  input of the form
+.nf
+    header|header
+    ------|------
+     text | text
+.fi
+will produce:
+.nf
+    <table>
+    <thead>
+    <tr>
+    <th>header</th>
+    <th>header</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td>text</td>
+    <td>text</td>
+    </tr>
+    </tbody>
+    </table>
+.fi
+The dashed line can also contain
+.Em :
+characters for formatting;  if a 
+.Em :
+is at the start of a column, it tells
+.Nm discount
+to align the cell contents to the left;  if it's at the end, it
+aligns right, and if there's one at the start and at the
+end, it centers.
 .Sh AUTHOR
 David Parsons
 .%T http://www.pell.portland.or.us/~orc/
@@ -133,3 +174,5 @@ David Parsons
 .Xr mkd-extensions 7 .
 .Pp
 .%T http://daringfireball.net/projects/markdown
+.Pp
+.%T http://michelf.com/projects/php-markdown
