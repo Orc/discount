@@ -1374,6 +1374,7 @@ printtable(Paragraph *pp, MMIOT *f)
     Qstring("</table>\n", f);
 
     DELETE(align);
+    return 1;
 }
 
 
