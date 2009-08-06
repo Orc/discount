@@ -84,4 +84,9 @@ try 'empty [][] tags' \
 [2]: image2' \
     '<p><a href="image2"><img src="image1" alt="" /></a></p>'
 
+try 'footnote cuddled up to text' \
+'foo
+[bar]:bar' \
+    '<p>foo</p>'
+
 exit $rc

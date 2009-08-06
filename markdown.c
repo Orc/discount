@@ -578,17 +578,17 @@ szmarkerclass(char *p)
  * marker %[kind:]name%
  */
 static int
-isdivmarker(Line *p)
+isdivmarker(Line *p, int start)
 {
 #if DIV_QUOTE
     char *s = T(p->text);
     int len = S(p->text);
     int i;
 
-    if ( !(len && s[0] == '%' && s[len-1] == '%') ) return 0;
+    if ( !(len && s[start] == '%' && s[len-1] == '%') ) return 0;
 
-    i = szmarkerclass(s+1);
-    --len;
+    i = szmarkerclass(s+start+1)+start;
+    len -= start+1;
 
     while ( ++i < len )
 	if ( !isalnum(s[i]) )
@@ -625,13 +625,15 @@ quoteblock(Paragraph *p)
 	    t->dle = mkd_firstnonblank(t);
 	}
 
-	if ( !(q = skipempty(t->next)) || ((q != t->next) && !isquote(q)) ) {
+	q = skipempty(t->next);
+
+	if ( (q == 0) || ((q != t->next) && (!isquote(q) || isdivmarker(q,1))) ) {
 	    ___mkd_freeLineRange(t, q);
 	    t = q;
 	    break;
 	}
     }
-    if ( isdivmarker(p->text) ) {
+    if ( isdivmarker(p->text,0) ) {
 	char *prefix = "class";
 	int i;
 	
