@@ -534,7 +534,7 @@ endoftextblock(Line *t, int toplevelblock)
 {
     int z;
 
-    if ( blankline(t)||isquote(t)||iscode(t)||ishdr(t,&z)||ishr(t) )
+    if ( blankline(t)||isquote(t)||iscode(t)||ishdr(t,&z)||ishr(t)||isfootnote(t) )
 	return 1;
 
     /* HORRIBLE STANDARDS KLUDGE: Toplevel paragraphs eat absorb adjacent
