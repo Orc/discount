@@ -120,9 +120,9 @@ spaces or 1 tab -- is removed from each line of the code block in
 the output.
 .TP
 Horizontal Rules
-Produce a horizontal rule tag (
-.B <hr />
-) by placing three or
+Produce a horizontal rule tag
+.RB ( <hr\ /> )
+by placing three or
 more hyphens, asterisks, or underscores on a line by themselves.
 .SS Span Elements
 .TF W
@@ -133,9 +133,8 @@ Markdown supports two styles of links:
 .I inline
 and
 .IR reference .
-In both styles, the link text is delimited by square brackets (
-.B []
-).
+In both styles, the link text is delimited by square brackets
+.RB ( [] ).
 To create an inline link, use a set of regular parentheses immediately
 after the link text's closing square bracket.
 Inside the parentheses,
@@ -170,11 +169,11 @@ A URL value can then be assigned to the link by referencing
 the link text as the label name.
 .TP
 Emphasis
-Markdown treats asterisks (
-.B *
-) and underscores (
-.B _
-) as indicators of emphasis.
+Markdown treats asterisks
+.RB ( * )
+and underscores
+.RB ( _ )
+as indicators of emphasis.
 Text surrounded with single asterisks or underscores
 will be wrapped with an
 .SM HTML
@@ -186,9 +185,8 @@ Double asterisks or underscores generate an
 tag.
 .TP
 Code
-To indicate a span of code, wrap it with backtick quotes (
-.B `
-).
+To indicate a span of code, wrap it with backtick quotes
+.RB ( ` ).
 Unlike a code block, a code span indicates code within a
 normal paragraph.
 To include a literal backtick character within a code span, you can use
@@ -205,9 +203,8 @@ for links, allowing for two styles, once again
 and
 .IR reference .
 The syntax is as for each respective style of link, described above, but
-prefixed with an exclamation mark character (
-.B !
-).
+prefixed with an exclamation mark character
+.RB ( ! ).
 Inline image syntax looks like this:
 .IP
 .EX
@@ -332,14 +329,14 @@ into ``curly'' quote entities in the output (e.g.,
 .B 'text'
 becomes
 .BR &lsquo;text&rsquo; ).
-Input double-dashes (
-.B --
-) and triple-dashes become en- and em-dashes, respectively,
-while a series of three dots (
-.B ...
-) in the input becomes an ellipsis entity (
-.B &hellip;
-) in the
+Input double-dashes
+.RB ( -- )
+and triple-dashes become en- and em-dashes, respectively,
+while a series of three dots
+.RB ( ... )
+in the input becomes an ellipsis entity
+.RB ( &hellip; )
+in the
 .SM HTML
 output.
 .TP
@@ -378,9 +375,49 @@ inside code blocks or spans.
 .PP
 .SS Discount Extensions
 .IR Markdown (1)
-recognizes a few of its own extensions to the Markdown format.
+recognizes some extensions to the Markdown format,
+many of them adopted or adapted from other Markdown
+interpreters or document formatting systems.
 .TF W
 .PD
+.TP
+Pandoc Headers
+If
+.I markdown
+was configured with
+.BR --enable-pandoc-header ,
+the markdown source can have a 3-line Pandoc header in the format of
+.IP
+.EX
+% Title
+% Author
+% Date
+.EE
+.IP
+whose data is available to the
+.IR mkd_doc_title ,
+.IR mkd_doc_author ,
+and
+.I mkd_doc_date
+(in
+.IR markdown (2))
+functions.
+.TP
+Embedded Stylesheets
+Stylesheets may be defined and modified in a
+.B <style>
+block.   A style block is parsed like any other block-level
+.SM HTML;
+.B <style>
+starting on column 1, raw
+.SM HTML
+(or, in this case,
+.SM CSS \)
+following it, and either ending with a
+.B </style>
+at the end of the line or at the beginning of a subsequent line.
+.IP
+Style blocks apply to the entire document regardless of where they are defined.
 .TP
 Image Dimensions
 Image specification has been extended with an argument describing image dimensions:
@@ -424,27 +461,23 @@ and
 Text following is written to the output with no further processing.
 The link text is discarded.
 .TP
-Pandoc Headers
+Alphabetic Lists
 If
 .I markdown
 was configured with
-.BR --enable-pandoc-header ,
-the markdown source can have a 3-line Pandoc header in the format of
+.BR --enable-alpha-list ,
 .IP
 .EX
-% Title
-% Author
-% Date
+a. this
+b. is
+c. an alphabetic
+d. list
 .EE
 .IP
-which will be made available to the
-.IR mkd_doc_title ,
-.IR mkd_doc_author ,
-and
-.I mkd_doc_date
-(in
-.IR markdown (2))
-functions.
+yields an
+.SM HTML
+.B ol
+ordered list.
 .TP
 Definition Lists
 If configured with
@@ -456,51 +489,45 @@ markup for definition lists is enabled.  A definition list item is defined as
 	definition
 .EE
 .TP
-Embedded Stylesheets
-Stylesheets may be defined and modified in a
-.B <style>
-block.   A style block is parsed like any other block-level
-.SM HTML;
-.B <style>
-starting on column 1, raw
-.SM HTML
-(or, in this case,
-.SM CSS \)
-following it, and either ending with a
-.B </style>
-at the end of the line or at the beginning of a subsequent line.
-.IP
-Style blocks apply to the entire document regardless of where they are defined.
-.TP
-Relaxed Emphasis
-If
-.I markdown
-was configured with
-.BR --relaxed-emphasis ,
-the rules for emphasis are changed so that a single
-.B _
-will not count as an emphasis character if it's in the middle of a word.
-This is handy for documenting code, where
-.B _
-appears frequently, and would normally require a backslash escape.
-.TP
-Alphabetic Lists
-If configured with
-.BR --enable-alpha-list ,
-alphabetic lists are supported.
-So:
+Tables
+Tables are specified with a pipe
+.RB ( | )
+and dash
+.RB ( - )
+marking. The markdown text
 .IP
 .EX
-a. this
-b. is
-c. an alphabetic
-d. list
+header0|header1
+-------|-------
+  textA|textB
+  textC|textD
 .EE
 .IP
 will produce an
 .SM HTML
-.B ol
-ordered list.
+.B table
+of two columns and three rows.
+A header row is designated by ``underlining'' with dashes.
+Declare a column's alignment by affixing a colon
+.RB ( : )
+to the left or right end of the dashes underlining its header.
+In the output, this
+yields the corresponding value for the
+.B align
+attribute on each
+.B td
+cell in the column.
+A colon at both ends of a column's header dashes indicates center alignment.
+.TP
+Relaxed Emphasis
+If configured with
+.BR --relaxed-emphasis ,
+the rules for emphasis are changed so that a single
+.B _
+will not count as an emphasis character in the middle of a word.
+This is useful for documenting some code where
+.B _
+appears frequently, and would normally require a backslash escape.
 .PD
 .SH SEE ALSO
 .IR markdown (1),
@@ -511,3 +538,6 @@ http://daringfireball.net/projects/markdown/syntax/,
 .PP
 http://daringfireball.net/projects/smartypants/,
 ``Smarty Pants''.
+.PP
+http://michelf.com/projects/php-markdown/extra/#table,
+``PHP Markdown Extra: Tables''.
