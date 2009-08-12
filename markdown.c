@@ -901,8 +901,6 @@ compile_document(Line *ptr, MMIOT *f)
     struct kw *tag;
     int eaten;
 
-    //ptr = consume(ptr, &eaten);
-
     while ( ptr ) {
 	if ( !(f->flags & DENY_HTML) && (tag = isopentag(ptr)) ) {
 	    if ( text ) {
