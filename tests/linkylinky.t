@@ -89,4 +89,32 @@ try 'footnote cuddled up to text' \
 [bar]:bar' \
     '<p>foo</p>'
 
+try 'mid-paragraph footnote' \
+'talk talk talk talk
+[bar]: bar
+talk talk talk talk' \
+'<p>talk talk talk talk
+talk talk talk talk</p>'
+
+try 'mid-blockquote footnote' \
+'>blockquote!
+[footnote]: here!
+>blockquote!' \
+'<blockquote><p>blockquote!
+blockquote!</p></blockquote>'
+
+try 'end-blockquote footnote' \
+'>blockquote!
+>blockquote!
+[footnote]: here!' \
+'<blockquote><p>blockquote!
+blockquote!</p></blockquote>'
+
+try 'start-blockquote footnote' \
+'[footnote]: here!
+>blockquote!
+>blockquote!' \
+'<blockquote><p>blockquote!
+blockquote!</p></blockquote>'
+
 exit $rc

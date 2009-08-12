@@ -889,24 +889,28 @@ consume(Line *ptr, int *eaten)
 
 /*
  * top-level compilation; break the document into
- * style, html, and text blocks with footnote links
+ * style, html, and source blocks with footnote links
  * weeded out.
  */
 static Paragraph *
 compile_document(Line *ptr, MMIOT *f)
 {
     ParagraphRoot d = { 0, 0 };
+    ANCHOR(Line) source = { 0, 0 };
     Paragraph *p = 0;
-    Line *text = 0, *tail = 0;
     struct kw *tag;
     int eaten;
 
     while ( ptr ) {
 	if ( !(f->flags & DENY_HTML) && (tag = isopentag(ptr)) ) {
-	    if ( text ) {
+	    /* If we encounter a html/style block, compile and save all
+	     * of the cached source BEFORE processing the html/style.
+	     */
+	    if ( T(source) ) {
+		E(source)->next = 0;
 		p = Pp(&d, 0, SOURCE);
-		p->down = compile(text, 1, f);
-		text = tail = 0;
+		p->down = compile(T(source), 1, f);
+		T(source) = E(source) = 0;
 	    }
 	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
 	    if ( strcmp(tag->id, "!--") == 0 )
@@ -915,24 +919,27 @@ compile_document(Line *ptr, MMIOT *f)
 		ptr = htmlblock(p, tag);
 	}
 	else if ( isfootnote(ptr) ) {
+	    /* footnotes, like cats, sleep anywhere; pull them
+	     * out of the input stream and file them away for
+	     * later processing
+	     */
 	    ptr = consume(addfootnote(ptr, f), &eaten);
-	    continue;
 	}
 	else {
-	    Line *r = ptr->next;
-	    if ( tail ) {
-		tail->next = ptr;
-		tail = ptr;
-	    }
-	    else
-		text = tail = ptr;
-	    tail->next = 0;
-	    ptr = r;
+	    /* source; cache it up to wait for eof or the
+	     * next html/style block
+	     */
+	    ATTACH(source,ptr);
+	    ptr = ptr->next;
 	}
     }
-    if ( text ) {
+    if ( T(source) ) {
+	/* if there's any cached source at EOF, compile
+	 * it now.
+	 */
+	E(source)->next = 0;
 	p = Pp(&d, 0, SOURCE);
-	p->down = compile(text, 1, f);
+	p->down = compile(T(source), 1, f);
     }
     return T(d);
 }

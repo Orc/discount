@@ -60,9 +60,10 @@
  * macro will work with it.
  */
 #define ANCHOR(t)	struct { t *text, *end; }
+#define E(t)		((t).end)
 
-#define ATTACH(t, p)	( (t).text ?( ((t).end->next = (p)), ((t).end = (p)) ) \
-				   :( ((t).text = (t).end = (p)) ) )
+#define ATTACH(t, p)	( T(t) ? ( (E(t)->next = (p)), (E(t) = (p)) ) \
+			       : ( (T(t) = E(t) = (p)) ) )
 
 typedef STRING(char) Cstring;
 
