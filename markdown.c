@@ -899,20 +899,15 @@ compile_document(Line *ptr, MMIOT *f)
     Paragraph *p = 0;
     Line *text = 0, *tail = 0;
     struct kw *tag;
-    int para = 1;
+    int eaten;
 
-    ptr = consume(ptr, &para);
+    //ptr = consume(ptr, &eaten);
 
     while ( ptr ) {
 	if ( !(f->flags & DENY_HTML) && (tag = isopentag(ptr)) ) {
 	    if ( text ) {
-#if 1
 		p = Pp(&d, 0, SOURCE);
 		p->down = compile(text, 1, f);
-#else
-		p = compile(text, 1, f);
-		ATTACH(d, p);
-#endif
 		text = tail = 0;
 	    }
 	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
@@ -922,7 +917,7 @@ compile_document(Line *ptr, MMIOT *f)
 		ptr = htmlblock(p, tag);
 	}
 	else if ( isfootnote(ptr) ) {
-	    ptr = consume(addfootnote(ptr, f), &para);
+	    ptr = consume(addfootnote(ptr, f), &eaten);
 	    continue;
 	}
 	else {
@@ -938,13 +933,8 @@ compile_document(Line *ptr, MMIOT *f)
 	}
     }
     if ( text ) {
-#if 1
 	p = Pp(&d, 0, SOURCE);
 	p->down = compile(text, 1, f);
-#else
-	p = compile(text, 1, f);
-	ATTACH(d, p);
-#endif
     }
     return T(d);
 }

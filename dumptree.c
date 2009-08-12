@@ -30,7 +30,8 @@ Pptype(int typ)
     case OL        : return "ol";
     case LISTITEM  : return "item";
     case HDR       : return "header";
-    case HR        : return "HR";
+    case HR        : return "hr";
+    case TABLE     : return "table";
     case SOURCE    : return "source";
     default        : return "mystery node!";
     }
