@@ -534,8 +534,7 @@ endoftextblock(Line *t, int toplevelblock)
 {
     int z;
 
-    if ( blankline(t)||isquote(t)||iscode(t)||ishdr(t,&z)
-		     ||ishr(t)||(toplevelblock && isfootnote(t)) )
+    if ( blankline(t)||isquote(t)||iscode(t)||ishdr(t,&z)||ishr(t) )
 	return 1;
 
     /* HORRIBLE STANDARDS KLUDGE: Toplevel paragraphs eat absorb adjacent
@@ -889,6 +888,69 @@ consume(Line *ptr, int *eaten)
 
 
 /*
+ * top-level compilation; break the document into
+ * style, html, and text blocks with footnote links
+ * weeded out.
+ */
+static Paragraph *
+compile_document(Line *ptr, MMIOT *f)
+{
+    ParagraphRoot d = { 0, 0 };
+    Paragraph *p = 0;
+    Line *text = 0, *tail = 0;
+    struct kw *tag;
+    int para = 1;
+
+    ptr = consume(ptr, &para);
+
+    while ( ptr ) {
+	if ( !(f->flags & DENY_HTML) && (tag = isopentag(ptr)) ) {
+	    if ( text ) {
+#if 1
+		p = Pp(&d, 0, SOURCE);
+		p->down = compile(text, 1, f);
+#else
+		p = compile(text, 1, f);
+		ATTACH(d, p);
+#endif
+		text = tail = 0;
+	    }
+	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
+	    if ( strcmp(tag->id, "!--") == 0 )
+		ptr = comment(p);
+	    else
+		ptr = htmlblock(p, tag);
+	}
+	else if ( isfootnote(ptr) ) {
+	    ptr = consume(addfootnote(ptr, f), &para);
+	    continue;
+	}
+	else {
+	    Line *r = ptr->next;
+	    if ( tail ) {
+		tail->next = ptr;
+		tail = ptr;
+	    }
+	    else
+		text = tail = ptr;
+	    tail->next = 0;
+	    ptr = r;
+	}
+    }
+    if ( text ) {
+#if 1
+	p = Pp(&d, 0, SOURCE);
+	p->down = compile(text, 1, f);
+#else
+	p = compile(text, 1, f);
+	ATTACH(d, p);
+#endif
+    }
+    return T(d);
+}
+
+
+/*
  * break a collection of markdown input into
  * blocks of lists, code, html, and text to
  * be marked up.
@@ -907,14 +969,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     ptr = consume(ptr, &para);
 
     while ( ptr ) {
-	if ( toplevel && !(f->flags & DENY_HTML) && (tag = isopentag(ptr)) ) {
-	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
-	    if ( strcmp(tag->id, "!--") == 0 )
-		ptr = comment(p);
-	    else
-		ptr = htmlblock(p, tag);
-	}
-	else if ( iscode(ptr) ) {
+	if ( iscode(ptr) ) {
 	    p = Pp(&d, ptr, CODE);
 	    
 	    if ( f->flags & MKD_1_COMPAT) {
@@ -945,10 +1000,6 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	else if ( ishdr(ptr, &hdr_type) ) {
 	    p = Pp(&d, ptr, HDR);
 	    ptr = headerblock(p, hdr_type);
-	}
-	else if ( toplevel && (isfootnote(ptr)) ) {
-	    ptr = consume(addfootnote(ptr, f), &para);
-	    continue;
 	}
 	else if ( istable(ptr) && !(f->flags & (STRICT|NOTABLES)) ) {
 	    p = Pp(&d, ptr, TABLE);
@@ -1014,7 +1065,7 @@ mkd_compile(Document *doc, int flags)
 
     initialize();
 
-    doc->code = compile(T(doc->content), 1, doc->ctx);
+    doc->code = compile_document(T(doc->content), doc->ctx);
     qsort(T(*doc->ctx->footnotes), S(*doc->ctx->footnotes),
 		        sizeof T(*doc->ctx->footnotes)[0],
 			           (stfu)__mkd_footsort);

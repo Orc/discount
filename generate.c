@@ -1560,6 +1560,10 @@ display(Paragraph *p, MMIOT *f)
 	printtable(p, f);
 	break;
 
+    case SOURCE:
+	htmlify(p->down, 0, 0, f);
+	break;
+	
     default:
 	printblock(p, f);
 	break;

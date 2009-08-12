@@ -31,6 +31,7 @@ Pptype(int typ)
     case LISTITEM  : return "item";
     case HDR       : return "header";
     case HR        : return "HR";
+    case SOURCE    : return "source";
     default        : return "mystery node!";
     }
 }
