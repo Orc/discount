@@ -948,7 +948,6 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 {
     ParagraphRoot d = { 0, 0 };
     Paragraph *p = 0;
-    struct kw *tag;
     Line *r;
     int para = toplevel;
     int blocks = 0;
