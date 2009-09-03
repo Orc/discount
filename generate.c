@@ -661,7 +661,6 @@ static int
 linkylinky(int image, MMIOT *f)
 {
     int start = mmiottell(f);
-    int implicit_mark;
     Cstring name;
     Footnote key, *ref;
 		
@@ -671,34 +670,37 @@ linkylinky(int image, MMIOT *f)
     bzero(&key, sizeof key);
 
     if ( linkylabel(f, &name) ) {
-	implicit_mark = mmiottell(f);
-	eatspace(f);
-
-	switch ( pull(f) ) {
-	case '(':  /* embedded link */
+	if ( peek(f,1) == '(' ) {
+	    pull(f);
 	    if ( linkyurl(f, image, &key) )
 		status = linkyformat(f, name, image, &key);
-	    break;
-	
-	case '[':/* footnote link */
-	default: /* (undocumented) implicit link */
-	    if ( peek(f, 0) != '[' ) {
-		mmiotseek(f, implicit_mark);
-		if ( f->flags & MKD_1_COMPAT )
-		    break;
-	    }
-	    else if ( !linkylabel(f, &key.tag) )
-		break;
-	    
-	    if ( !S(key.tag) ) {
-		DELETE(key.tag);
-		T(key.tag) = T(name);
-		S(key.tag) = S(name);
-	    }
+	}
+	else {
+	    int goodlink, implicit_mark = mmiottell(f);
 
-	    if ( ref = bsearch(&key, T(*f->footnotes), S(*f->footnotes),
-				      sizeof key, (stfu)__mkd_footsort) )
-		status = linkyformat(f, name, image, ref);
+	    if ( eatspace(f) == '[' ) {
+		pull(f);	/* consume leading '[' */
+		goodlink = linkylabel(f, &key.tag);
+	    }
+	    else {
+		/* new markdown implicit name syntax doesn't
+		 * require a second []
+		 */
+		mmiotseek(f, implicit_mark);
+		goodlink = !(f->flags & MKD_1_COMPAT);
+	    }
+	    
+	    if ( goodlink ) {
+		if ( !S(key.tag) ) {
+		    DELETE(key.tag);
+		    T(key.tag) = T(name);
+		    S(key.tag) = S(name);
+		}
+
+		if ( ref = bsearch(&key, T(*f->footnotes), S(*f->footnotes),
+					  sizeof key, (stfu)__mkd_footsort) )
+		    status = linkyformat(f, name, image, ref);
+	    }
 	}
     }
 

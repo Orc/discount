@@ -117,4 +117,8 @@ try 'start-blockquote footnote' \
 '<blockquote><p>blockquote!
 blockquote!</p></blockquote>'
 
+try '[text] (text) not a link' \
+'[test] (me)' \
+'<p>[test] (me)</p>'
+
 exit $rc
