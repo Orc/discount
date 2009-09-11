@@ -19,7 +19,7 @@
 int
 mkd_toc(Document *p, char **doc)
 {
-    Paragraph *pp;
+    Paragraph *tp, *srcp;
     int last_hnumber = 0;
     Cstring res;
     
@@ -31,27 +31,31 @@ mkd_toc(Document *p, char **doc)
     if ( !(p && p->ctx) ) return -1;
     if ( ! (p->ctx->flags & TOC) ) return 0;
 
-    for ( pp = p->code; pp ; pp = pp->next ) {
-        if ( pp->typ == HDR && pp->text ) {
+    for ( tp = p->code; tp ; tp = tp->next ) {
+	if ( tp->typ == SOURCE ) {
+	    for ( srcp = tp->down; srcp; srcp = srcp->next ) {
+		if ( srcp->typ == HDR && srcp->text ) {
 	    
-	    if ( last_hnumber == pp->hnumber )
-		Csprintf(&res,  "%*s</li>\n", pp->hnumber, "");
-	    else while ( last_hnumber > pp->hnumber ) {
-		Csprintf(&res, "%*s</li>\n%*s</ul>\n",
-				 last_hnumber, "",
-				 last_hnumber-1,"");
-		--last_hnumber;
+		    if ( last_hnumber == srcp->hnumber )
+			Csprintf(&res,  "%*s</li>\n", srcp->hnumber, "");
+		    else while ( last_hnumber > srcp->hnumber ) {
+			Csprintf(&res, "%*s</li>\n%*s</ul>\n",
+					 last_hnumber, "",
+					 last_hnumber-1,"");
+			--last_hnumber;
+		    }
+
+		    while ( srcp->hnumber > last_hnumber ) {
+			Csprintf(&res, "\n%*s<ul>\n", srcp->hnumber, "");
+			++last_hnumber;
+		    }
+		    Csprintf(&res, "%*s<li><a href=\"#", srcp->hnumber, "");
+		    mkd_string_to_anchor(T(srcp->text->text), S(srcp->text->text), Csputc, &res);
+		    Csprintf(&res, "\">");
+		    Csreparse(&res, T(srcp->text->text), S(srcp->text->text), 0);
+		    Csprintf(&res, "</a>");
+		}
 	    }
-	    
-	    while ( pp->hnumber > last_hnumber ) {
-		Csprintf(&res, "\n%*s<ul>\n", pp->hnumber, "");
-		++last_hnumber;
-	    }
-	    Csprintf(&res, "%*s<li><a href=\"#", pp->hnumber, "");
-	    mkd_string_to_anchor(T(pp->text->text), S(pp->text->text), Csputc, &res);
-	    Csprintf(&res, "\">");
-	    Csreparse(&res, T(pp->text->text), S(pp->text->text), 0);
-	    Csprintf(&res, "</a>");
         }
     }
 
