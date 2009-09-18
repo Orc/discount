@@ -1278,9 +1278,7 @@ printheader(Paragraph *pp, MMIOT *f)
 }
 
 
-#define CENTER 1
-#define LEFT 2
-#define RIGHT 3
+enum e_alignments { a_NONE, a_CENTER, a_LEFT, a_RIGHT };
 
 static char* alignments[] = { "", " align=\"center\"", " align=\"left\"",
 				  " align=\"right\"" };
@@ -1305,7 +1303,7 @@ splat(Line *p, char *block, Istring align, int force, MMIOT *f)
 
 	Qprintf(f, "<%s%s>",
 		   block,
-		   alignments[ (colno < S(align)) ? T(align)[colno]:0 ]);
+		   alignments[ (colno < S(align)) ? T(align)[colno] : a_NONE ]);
 	___mkd_reparse(T(p->text)+first, idx-first, 0, f);
 	Qprintf(f, "</%s>\n", block);
 	idx++;
@@ -1353,8 +1351,8 @@ printtable(Paragraph *pp, MMIOT *f)
 		last = p[end];
 	    }
 	}
-	EXPAND(align) = ( first == ':' ) ? (( last == ':') ? CENTER : LEFT)
-					 : (( last == ':') ? RIGHT : 0 );
+	EXPAND(align) = ( first == ':' ) ? (( last == ':') ? a_CENTER : a_LEFT)
+					 : (( last == ':') ? a_RIGHT : a_NONE );
 	start = 1+end;
     }
 
@@ -1363,11 +1361,11 @@ printtable(Paragraph *pp, MMIOT *f)
     hcols = splat(hdr, "th", align, 0, f);
     Qstring("</thead>\n", f);
 
-    if ( hcols > S(align) )
+    if ( hcols < S(align) )
 	S(align) = hcols;
     else
 	while ( hcols > S(align) )
-	    EXPAND(align) = 0;
+	    EXPAND(align) = a_NONE;
 
     Qstring("<tbody>\n", f);
     for ( ; body; body = body->next)
