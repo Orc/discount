@@ -9,10 +9,10 @@ mkd_generateline \- convert Markdown text to HTML
 .B #include <mkdio.h>
 .PP
 .B
-MMIOT* mkd_in(FILE *input)
+MMIOT* mkd_in(FILE *input, int flags)
 .PP
 .B
-MMIOT* mkd_string(char *string, int size)
+MMIOT* mkd_string(char *buf, int size, int flags)
 .PP
 .B
 int	markdown(MMIOT *doc, FILE *output, int flags)
@@ -39,7 +39,7 @@ int	mkd_xhtmlpage(MMIOT *document, int flags, FILE *output)
 int	mkd_toc(MMIOT *document, char **doc)
 .PP
 .B
-void	mkd_generatetoc(MMIOT *document, FILE *output)
+int	mkd_generatetoc(MMIOT *document, FILE *output)
 .PP
 .B
 void	mkd_cleanup(MMIOT*);

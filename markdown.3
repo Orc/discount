@@ -11,9 +11,9 @@ Markdown
 .Sh SYNOPSIS
 .Fd #include <mkdio.h>
 .Ft MMIOT
-.Fn *mkd_in "FILE *input"
+.Fn *mkd_in "FILE *input" "int flags"
 .Ft MMIOT
-.Fn *mkd_string "char *string" "int size"
+.Fn *mkd_string "char *string" "int size" "int flags"
 .Ft int
 .Fn markdown "MMIOT *doc" "FILE *output" "int flags"
 .Sh DESCRIPTION
