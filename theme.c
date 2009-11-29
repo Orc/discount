@@ -319,9 +319,9 @@ ftitle(MMIOT *doc, FILE* output, int flags)
 static void
 fdate(MMIOT *doc, FILE *output, int flags)
 {
-    char *h = infop ? ctime(&infop->st_mtime) : mkd_doc_date(doc);
+    char *h;
 
-    if ( h )
+    if ( (h = mkd_doc_date(doc)) || ( infop && (h = ctime(&infop->st_mtime)) ) )
 	mkd_generateline(h, strlen(h), output, flags|MKD_TAGTEXT);
 }
 
