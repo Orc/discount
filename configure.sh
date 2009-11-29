@@ -76,6 +76,14 @@ else
     AC_DEFINE 'INITRNG(x)' '(void)1'
 fi
 
+if AC_CHECK_FUNCS 'bzero((char*)0,0)'; then
+    : # Yay
+elif AC_CHECK_FUNCS 'memset((char*)0,0,0)'; then
+    AC_DEFINE 'bzero(p,s)' 'memset(p,s,0)'
+else
+    AC_FAIL "$TARGET requires bzero or memset"
+fi
+
 if AC_CHECK_FUNCS random; then
     AC_DEFINE 'COINTOSS()' '(random()&1)'
 elif AC_CHECK_FUNCS rand; then

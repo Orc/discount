@@ -183,27 +183,33 @@ AC_CHECK_HEADERS () {
 AC_CHECK_FUNCS () {
     AC_PROG_CC
 
-F=$1
-shift
-rm -f /tmp/ngc$$.c
+    B=`echo "$1" | sed -e 's/(.*)//'`
 
-while [ "$1" ]; do
-    echo "#include <$1>" >> /tmp/ngc$$.c
+    case "$B" in
+    "$1") F="$1()" ;;
+    *)    F="$1" ;;
+    esac
+
     shift
-done
+    rm -f /tmp/ngc$$.c
+
+    while [ "$1" ]; do
+	echo "#include <$1>" >> /tmp/ngc$$.c
+	shift
+    done
 
     cat >> /tmp/ngc$$.c << EOF
 main()
 {
 
-    $F();
+    $F;
 }
 EOF
 
-    LOGN "looking for the $F function"
+    LOGN "looking for the $B function"
 
     if $AC_CC -o /tmp/ngc$$ /tmp/ngc$$.c $LIBS; then
-	AC_DEFINE `echo ${2:-HAVE_$F} | $AC_UPPERCASE` 1
+	AC_DEFINE `echo ${2:-HAVE_$B} | $AC_UPPERCASE` 1
 	TLOG " (found)"
 	rc=0
     else
