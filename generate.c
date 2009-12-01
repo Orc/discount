@@ -667,7 +667,7 @@ linkylinky(int image, MMIOT *f)
     int status = 0;
 
     CREATE(name);
-    bzero(&key, sizeof key);
+    memset(&key, 0, sizeof key);
 
     if ( linkylabel(f, &name) ) {
 	if ( peek(f,1) == '(' ) {
