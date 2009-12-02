@@ -106,4 +106,6 @@ so is this</div>' \
 <div>This is, too</div>and
 so is this</div>'
 
+try 'unfinished tags' '<foo bar' '<p>&lt;foo bar</p>'
+    
 exit $rc

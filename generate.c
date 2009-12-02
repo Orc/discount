@@ -869,6 +869,16 @@ maybe_tag_or_link(MMIOT *f)
 
     if ( size ) {
 	if ( maybetag || (size >= 3 && strncmp(cursor(f), "!--", 3) == 0) ) {
+
+	    /* It is not a html tag unless we find the closing '>' in
+	     * the same block.
+	     */
+	    while ( (c = peek(f, size+1)) != '>' )
+		if ( c == EOF )
+		    return 0;
+		else
+		    size++;
+	    
 	    Qstring(forbidden_tag(f) ? "&lt;" : "<", f);
 	    while ( ((c = peek(f, 1)) != EOF) && (c != '>') )
 		cputc(pull(f), f);
