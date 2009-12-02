@@ -31,4 +31,13 @@ try '[](single quote) text (quote)' \
 
 try '[](unclosed <url)' '[foo](<http://no trailing gt)' \
 			'<p><a href="http://no%20trailing%20gt">foo</a></p>'
+
+try '<unfinished <tags> (1)' \
+'<foo [bar](foo)  <s>hi</s>' \
+'<p><foo [bar](foo)  <s>hi</s></p>'
+    
+try '<unfinished &<tags> (2)' \
+'<foo [bar](foo)  &<s>hi</s>' \
+'<p><foo [bar](foo)  &<s>hi</s></p>'
+    
 exit $rc

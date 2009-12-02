@@ -881,7 +881,7 @@ maybe_tag_or_link(MMIOT *f)
 	    
 	    Qstring(forbidden_tag(f) ? "&lt;" : "<", f);
 	    while ( ((c = peek(f, 1)) != EOF) && (c != '>') )
-		cputc(pull(f), f);
+		Qchar(pull(f), f);
 	    return 1;
 	}
 	else if ( !isspace(c) && process_possible_link(f, size) ) {
