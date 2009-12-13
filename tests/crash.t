@@ -45,4 +45,13 @@ else
     rc=1
 fi
 
+./echo -n '  unclosed html block .............. '
+
+if ./echo '<table></table' | ./markdown >/dev/null 2>/dev/null; then
+    ./echo 'ok'
+else
+    ./echo "FAILED"
+    rc=1
+fi
+
 exit $rc

@@ -230,6 +230,8 @@ htmlblock(Paragraph *p, struct kw *tag)
 			    /* consume trailing gunk in close tag */
 			    c = flogetc(&f);
 			}
+			if ( !f.t )
+			    return 0;
 			ret = f.t->next;
 			f.t->next = 0;
 			return ret;
