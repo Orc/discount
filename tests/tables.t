@@ -160,5 +160,27 @@ hello|sailor' \
 &ndash;|&ndash;
 hello|sailor</p>'
 
+try 'deceptive non-table text' \
+    'a | b | c
+
+text' \
+    '<p>a | b | c</p>
+
+<p>text</p>'
+
+try 'table headers only' \
+    'a|b|c
+-|-|-' \
+    '<table>
+<thead>
+<tr>
+<th>a</th>
+<th>b</th>
+<th>c</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>'
 
 exit $rc

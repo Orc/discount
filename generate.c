@@ -632,9 +632,9 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	
 	Qstring(tag->link_sfx, f);
 
-	if ( tag->WxH && ref->height && ref->width ) {
-	    Qprintf(f," height=\"%d\"", ref->height);
-	    Qprintf(f, " width=\"%d\"", ref->width);
+	if ( tag->WxH) {
+	    if ( ref->height) Qprintf(f," height=\"%d\"", ref->height);
+	    if ( ref->width) Qprintf(f, " width=\"%d\"", ref->width);
 	}
 
 	if ( S(ref->title) ) {
@@ -1339,7 +1339,7 @@ printtable(Paragraph *pp, MMIOT *f)
     int hcols;
     char *p;
 
-    if ( !(pp->text && pp->text->next && pp->text->next->next) )
+    if ( !(pp->text && pp->text->next) )
 	return 0;
 
     hdr = pp->text;
