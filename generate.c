@@ -645,9 +645,9 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	    if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
 	}
 
-	if ( tag->WxH) {
-	    if ( ref->height) Qprintf(f," height=\"%d\"", ref->height);
-	    if ( ref->width) Qprintf(f, " width=\"%d\"", ref->width);
+	if ( tag->WxH ) {
+	    if ( ref->height ) Qprintf(f," height=\"%d\"", ref->height);
+	    if ( ref->width ) Qprintf(f, " width=\"%d\"", ref->width);
 	}
 
 	if ( S(ref->title) ) {
