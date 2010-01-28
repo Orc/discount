@@ -1060,8 +1060,12 @@ mkd_compile(Document *doc, int flags)
 
     doc->compiled = 1;
     memset(doc->ctx, 0, sizeof(MMIOT) );
-    doc->ctx->flags = flags & USER_FLAGS;
-    doc->ctx->base = doc->base;
+    doc->ctx->flags     = flags & USER_FLAGS;
+    doc->ctx->base      = doc->base;
+    doc->ctx->e_context = doc->e_context;
+    doc->ctx->e_free    = doc->e_free;
+    doc->ctx->e_url     = doc->e_url;
+    doc->ctx->e_flags   = doc->e_flags;
     CREATE(doc->ctx->in);
     doc->ctx->footnotes = malloc(sizeof doc->ctx->footnotes[0]);
     CREATE(*doc->ctx->footnotes);

@@ -599,6 +599,7 @@ static int
 linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 {
     linkytype *tag;
+    char *edit;
 
     if ( image )
 	tag = &imaget;
@@ -623,14 +624,26 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	Qstring(tag->link_pfx, f);
 	
 	if ( tag->kind & IS_URL ) {
-	    if ( f->base && T(ref->link) && (T(ref->link)[tag->szpat] == '/') )
-		puturl(f->base, strlen(f->base), f, 0);
-	    puturl(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, f, 0);
+	    if ( f->e_url && (edit = (*f->e_url)(T(ref->link), S(ref->link), f->e_context)) ) {
+		puturl(edit, strlen(edit), f, 0);
+		if ( f->e_free ) (*f->e_free)(edit, f->e_context);
+	    }
+	    else {
+		if ( f->base && T(ref->link) && (T(ref->link)[tag->szpat] == '/') )
+		    puturl(f->base, strlen(f->base), f, 0);
+		puturl(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, f, 0);
+	    }
 	}
 	else
 	    ___mkd_reparse(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, INSIDE_TAG, f);
 	
 	Qstring(tag->link_sfx, f);
+
+	if ( f->e_flags && (edit = (*f->e_flags)(T(ref->link), S(ref->link), f->e_context)) ) {
+	    Qchar(' ', f);
+	    Qstring(edit, f);
+	    if ( f->e_free ) (*f->e_free)(edit, f->e_context);
+	}
 
 	if ( tag->WxH) {
 	    if ( ref->height) Qprintf(f," height=\"%d\"", ref->height);
@@ -827,9 +840,22 @@ process_possible_link(MMIOT *f, int size)
 	return 1;
     }
     else if ( isautoprefix(text) ) {
+	char *edit;
 	Qstring("<a href=\"", f);
-	puturl(text,size,f, 0);
-	Qstring("\">", f);
+	if ( f->e_url && (edit = (*f->e_url)(text, size, f->e_context)) ) {
+	    puturl(edit, strlen(edit), f, 0);
+	    if ( f->e_free ) (*f->e_free)(edit, f->e_context);
+	}
+	else
+	    puturl(text,size,f, 0);
+	if ( f->e_flags && (edit = (*f->e_flags)(text, size, f->e_context)) ) {
+	    Qstring("\" ", f);
+	    Qstring(edit, f);
+	    if ( f->e_free ) (*f->e_free)(edit, f->e_context);
+	    Qchar('>', f);
+	}
+	else
+	    Qstring("\">", f);
 	puturl(text,size,f, 1);
 	Qstring("</a>", f);
 	return 1;

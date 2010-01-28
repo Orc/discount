@@ -48,6 +48,14 @@ int mkd_generatecss(MMIOT*,FILE*);
 int mkd_generateline(char *, int, FILE*, int);
 #define mkd_text mkd_generateline
 
+/* url generator callbacks
+ */
+typedef char * (e_func)(char*, int, void*);
+void mkd_e_url(void *, e_func);
+void mkd_e_flags(void *, e_func);
+void mkd_e_free(void *, void (*dealloc)(void*, void*) );
+void mkd_e_context(void *, void *);
+
 /* version#.
  */
 extern char markdown_version[];

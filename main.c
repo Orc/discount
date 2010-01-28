@@ -98,6 +98,13 @@ set(int *flags, char *optionstring)
 }
 
 
+char *
+e_flags(char *text, int size, char *context)
+{
+    return context;
+}
+
+
 float
 main(int argc, char **argv)
 {
@@ -107,6 +114,7 @@ main(int argc, char **argv)
     int debug = 0;
     int toc = 0;
     int use_mkd_line = 0;
+    char *urlflags = 0;
     char *text = 0;
     char *ofile = 0;
     char *urlbase = 0;
@@ -119,7 +127,7 @@ main(int argc, char **argv)
     pgm = basename(argv[0]);
     opterr = 1;
 
-    while ( (opt=getopt(argc, argv, "b:df:F:o:s:t:TV")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "b:df:E:F:o:s:t:TV")) != EOF ) {
 	switch (opt) {
 	case 'b':   urlbase = optarg;
 		    break;
@@ -127,6 +135,8 @@ main(int argc, char **argv)
 		    break;
 	case 'V':   printf("%s: discount %s\n", pgm, markdown_version);
 		    exit(0);
+	case 'E':   urlflags = optarg;
+		    break;
 	case 'F':   flags = strtol(optarg, 0, 0);
 		    break;
 	case 'f':   set(&flags, optarg);
@@ -178,6 +188,10 @@ main(int argc, char **argv)
 	}
 	if ( urlbase )
 	    mkd_basename(doc, urlbase);
+	if ( urlflags ) {
+	    mkd_e_context(doc, urlflags);
+	    mkd_e_flags(doc, e_flags);
+	}
 
 	if ( debug )
 	    rc = mkd_dump(doc, stdout, 0, argc ? basename(argv[0]) : "stdin");

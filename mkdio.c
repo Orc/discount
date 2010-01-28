@@ -301,3 +301,39 @@ mkd_generateline(char *bfr, int size, FILE *output, int flags)
     ___mkd_freemmiot(&f, 0);
     return 0;
 }
+
+
+/* set the url display callback
+ */
+void
+mkd_e_url(Document *f, e_func edit)
+{
+    if ( f ) f->e_url = edit;
+}
+
+
+/* set the url options callback
+ */
+void
+mkd_e_flags(Document *f, e_func edit)
+{
+    if ( f ) f->e_flags = edit;
+}
+
+
+/* set the url display/options deallocator
+ */
+void
+mkd_e_free(Document *f, void (*dealloc)(void*,void*))
+{
+    if ( f ) f->e_free = dealloc;
+}
+
+
+/* set the url display/options context field
+ */
+void
+mkd_e_context(Document *f, void *context)
+{
+    if ( f ) f->e_context = context;
+}
