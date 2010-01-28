@@ -306,7 +306,7 @@ mkd_generateline(char *bfr, int size, FILE *output, int flags)
 /* set the url display callback
  */
 void
-mkd_e_url(Document *f, e_func edit)
+mkd_e_url(Document *f, mkd_callback_t edit)
 {
     if ( f ) f->e_url = edit;
 }
@@ -315,7 +315,7 @@ mkd_e_url(Document *f, e_func edit)
 /* set the url options callback
  */
 void
-mkd_e_flags(Document *f, e_func edit)
+mkd_e_flags(Document *f, mkd_callback_t edit)
 {
     if ( f ) f->e_flags = edit;
 }

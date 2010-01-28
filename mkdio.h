@@ -50,9 +50,10 @@ int mkd_generateline(char *, int, FILE*, int);
 
 /* url generator callbacks
  */
-typedef char * (e_func)(char*, int, void*);
-void mkd_e_url(void *, e_func);
-void mkd_e_flags(void *, e_func);
+typedef char * (mkd_callback_t)(char*, int, void*);
+
+void mkd_e_url(void *, mkd_callback_t);
+void mkd_e_flags(void *, mkd_callback_t);
 void mkd_e_free(void *, void (*dealloc)(void*, void*) );
 void mkd_e_context(void *, void *);
 
