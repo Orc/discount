@@ -88,9 +88,20 @@ clean:
 distclean spotless: clean
 	rm -f @GENERATED_FILES@ @CONFIGURE_FILES@
 
-markdown.o: markdown.c config.h cstring.h markdown.h
-generate.o: generate.c config.h cstring.h markdown.h
-dumptree.o: dumptree.c cstring.h markdown.h
-mkdio.o: mkdio.c mkdio.h cstring.h config.h
-xmlpage.o: xmlpage.c mkdio.h cstring.h config.h
-toc.o: toc.c mkdio.h cstring.h config.h
+Csio.o: Csio.c cstring.h amalloc.h config.h markdown.h
+amalloc.o: amalloc.c
+css.o: css.c config.h cstring.h amalloc.h markdown.h
+docheader.o: docheader.c config.h cstring.h amalloc.h markdown.h
+dumptree.o: dumptree.c markdown.h cstring.h amalloc.h config.h
+generate.o: generate.c config.h cstring.h amalloc.h markdown.h
+main.o: main.c config.h amalloc.h
+makepage.o: makepage.c
+markdown.o: markdown.c config.h cstring.h amalloc.h markdown.h
+mkd2html.o: mkd2html.c config.h mkdio.h cstring.h amalloc.h
+mkdio.o: mkdio.c config.h cstring.h amalloc.h markdown.h
+resource.o: resource.c config.h cstring.h amalloc.h markdown.h
+theme.o: theme.c config.h mkdio.h cstring.h amalloc.h
+toc.o: toc.c config.h cstring.h amalloc.h markdown.h
+version.o: version.c config.h
+xml.o: xml.c config.h cstring.h amalloc.h markdown.h
+xmlpage.o: xmlpage.c config.h cstring.h amalloc.h markdown.h
