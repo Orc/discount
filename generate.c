@@ -593,13 +593,46 @@ pseudo(Cstring t)
 }
 
 
+/* print out the start of an `img' or `a' tag, applying callbacks
+ * and/or prefixing a url base.
+ */
+static void
+printlinkyref(MMIOT *f, linkytype *tag, char *link, int size)
+{
+    char *edit;
+    
+    Qstring(tag->link_pfx, f);
+	
+    if ( tag->kind & IS_URL ) {
+	if ( f->cb->e_url && (edit = (*f->cb->e_url)(link, size, f->cb->e_data)) ) {
+	    puturl(edit, strlen(edit), f, 0);
+	    if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
+	}
+	else {
+	    if ( f->cb->base && link && (link[tag->szpat] == '/') )
+		puturl(f->cb->base, strlen(f->cb->base), f, 0);
+	    puturl(link + tag->szpat, size - tag->szpat, f, 0);
+	}
+    }
+    else
+	___mkd_reparse(link + tag->szpat, size - tag->szpat, INSIDE_TAG, f);
+
+    Qstring(tag->link_sfx, f);
+
+    if ( f->cb->e_flags && (edit = (*f->cb->e_flags)(link, size, f->cb->e_data)) ) {
+	Qchar(' ', f);
+	Qstring(edit, f);
+	if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
+    }
+} /* printlinkyref */
+
+
 /* print out a linky (or fail if it's Not Allowed)
  */
 static int
 linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 {
     linkytype *tag;
-    char *edit;
 
     if ( image )
 	tag = &imaget;
@@ -613,7 +646,7 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	/* if SAFELINK, only accept links that are local or
 	 * a well-known protocol
 	 */
-	    return 0;
+	return 0;
     else
 	tag = &linkt;
 
@@ -621,29 +654,7 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	return 0;
 
     if ( tag->link_pfx ) {
-	Qstring(tag->link_pfx, f);
-	
-	if ( tag->kind & IS_URL ) {
-	    if ( f->cb->e_url && (edit = (*f->cb->e_url)(T(ref->link), S(ref->link), f->cb->e_data)) ) {
-		puturl(edit, strlen(edit), f, 0);
-		if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
-	    }
-	    else {
-		if ( f->cb->base && T(ref->link) && (T(ref->link)[tag->szpat] == '/') )
-		    puturl(f->cb->base, strlen(f->cb->base), f, 0);
-		puturl(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, f, 0);
-	    }
-	}
-	else
-	    ___mkd_reparse(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, INSIDE_TAG, f);
-	
-	Qstring(tag->link_sfx, f);
-
-	if ( f->cb->e_flags && (edit = (*f->cb->e_flags)(T(ref->link), S(ref->link), f->cb->e_data)) ) {
-	    Qchar(' ', f);
-	    Qstring(edit, f);
-	    if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
-	}
+	printlinkyref(f, tag, T(ref->link), S(ref->link));
 
 	if ( tag->WxH ) {
 	    if ( ref->height ) Qprintf(f," height=\"%d\"", ref->height);
@@ -840,22 +851,8 @@ process_possible_link(MMIOT *f, int size)
 	return 1;
     }
     else if ( isautoprefix(text) ) {
-	char *edit;
-	Qstring("<a href=\"", f);
-	if ( f->cb->e_url && (edit = (*f->cb->e_url)(text, size, f->cb->e_data)) ) {
-	    puturl(edit, strlen(edit), f, 0);
-	    if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
-	}
-	else
-	    puturl(text,size,f, 0);
-	if ( f->cb->e_flags && (edit = (*f->cb->e_flags)(text, size, f->cb->e_data)) ) {
-	    Qstring("\" ", f);
-	    Qstring(edit, f);
-	    if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
-	    Qchar('>', f);
-	}
-	else
-	    Qstring("\">", f);
+	printlinkyref(f, &linkt, text, size);
+	Qchar('>', f);
 	puturl(text,size,f, 1);
 	Qstring("</a>", f);
 	return 1;
