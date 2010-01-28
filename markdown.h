@@ -56,11 +56,20 @@ typedef struct block {
 typedef STRING(block) Qblock;
 
 
+typedef char* (*mkd_callback_t)(const char*, const int, void*);
+
+typedef struct callback_data {
+    char *base;			/* url basename for url fragments */
+    void *e_data;		/* private data for callbacks */
+    mkd_callback_t e_url;	/* url edit callback */
+    mkd_callback_t e_flags;	/* extra href flags callback */
+    void (*e_free)(void*,void*);/* edit/flags callback memory deallocator */
+} Callback_data;
+
+
 /* a magic markdown io thing holds all the data structures needed to
  * do the backend processing of a markdown document
  */
-typedef char* (*mkd_callback_t)(const char*, const int, void*);
-
 typedef struct mmiot {
     Cstring out;
     Cstring in;
@@ -83,10 +92,7 @@ typedef struct mmiot {
 #define SAFELINK	0x8000
 #define USER_FLAGS	0xFCFF
 #define EMBEDDED	DENY_A|DENY_IMG|NO_PSEUDO_PROTO|CDATA_OUTPUT
-    char *base;
-    void *e_context;
-    mkd_callback_t e_url, e_flags;
-    void (*e_free)(void*,void*);
+    Callback_data *cb;
 } MMIOT;
 
 
@@ -105,10 +111,7 @@ typedef struct document {
     int html;			/* set after (internal) htmlify() */
     int tabstop;		/* for properly expanding tabs (ick) */
     MMIOT *ctx;			/* backend buffers, flags, and structures */
-    char *base;			/* url basename for url fragments */
-    void *e_context;
-    mkd_callback_t e_url, e_flags;
-    void (*e_free)(void*,void*);
+    Callback_data cb;		/* callback functions & private data */
 } Document;
 
 

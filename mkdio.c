@@ -221,7 +221,7 @@ void
 mkd_basename(Document *document, char *base)
 {
     if ( document )
-	document->base = base;
+	document->cb.base = base;
 }
 
 
@@ -308,7 +308,8 @@ mkd_generateline(char *bfr, int size, FILE *output, int flags)
 void
 mkd_e_url(Document *f, mkd_callback_t edit)
 {
-    if ( f ) f->e_url = edit;
+    if ( f )
+	f->cb.e_url = edit;
 }
 
 
@@ -317,7 +318,8 @@ mkd_e_url(Document *f, mkd_callback_t edit)
 void
 mkd_e_flags(Document *f, mkd_callback_t edit)
 {
-    if ( f ) f->e_flags = edit;
+    if ( f )
+	f->cb.e_flags = edit;
 }
 
 
@@ -326,14 +328,16 @@ mkd_e_flags(Document *f, mkd_callback_t edit)
 void
 mkd_e_free(Document *f, void (*dealloc)(void*,void*))
 {
-    if ( f ) f->e_free = dealloc;
+    if ( f )
+	f->cb.e_free = dealloc;
 }
 
 
 /* set the url display/options context field
  */
 void
-mkd_e_context(Document *f, void *context)
+mkd_e_context(Document *f, void *data)
 {
-    if ( f ) f->e_context = context;
+    if ( f )
+	f->cb.e_data = data;
 }

@@ -55,7 +55,7 @@ typedef char * (mkd_callback_t)(char*, int, void*);
 void mkd_e_url(void *, mkd_callback_t);
 void mkd_e_flags(void *, mkd_callback_t);
 void mkd_e_free(void *, void (*dealloc)(void*, void*) );
-void mkd_e_context(void *, void *);
+void mkd_e_data(void *, void *);
 
 /* version#.
  */

@@ -304,7 +304,7 @@ ___mkd_reparse(char *bfr, int size, int flags, MMIOT *f)
     ___mkd_initmmiot(&sub, f->footnotes);
     
     sub.flags = f->flags | flags;
-    sub.base = f->base;
+    sub.cb = f->cb;
 
     push(bfr, size, &sub);
     EXPAND(sub.in) = 0;
@@ -624,13 +624,13 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	Qstring(tag->link_pfx, f);
 	
 	if ( tag->kind & IS_URL ) {
-	    if ( f->e_url && (edit = (*f->e_url)(T(ref->link), S(ref->link), f->e_context)) ) {
+	    if ( f->cb->e_url && (edit = (*f->cb->e_url)(T(ref->link), S(ref->link), f->cb->e_data)) ) {
 		puturl(edit, strlen(edit), f, 0);
-		if ( f->e_free ) (*f->e_free)(edit, f->e_context);
+		if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
 	    }
 	    else {
-		if ( f->base && T(ref->link) && (T(ref->link)[tag->szpat] == '/') )
-		    puturl(f->base, strlen(f->base), f, 0);
+		if ( f->cb->base && T(ref->link) && (T(ref->link)[tag->szpat] == '/') )
+		    puturl(f->cb->base, strlen(f->cb->base), f, 0);
 		puturl(T(ref->link) + tag->szpat, S(ref->link) - tag->szpat, f, 0);
 	    }
 	}
@@ -639,10 +639,10 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	
 	Qstring(tag->link_sfx, f);
 
-	if ( f->e_flags && (edit = (*f->e_flags)(T(ref->link), S(ref->link), f->e_context)) ) {
+	if ( f->cb->e_flags && (edit = (*f->cb->e_flags)(T(ref->link), S(ref->link), f->cb->e_data)) ) {
 	    Qchar(' ', f);
 	    Qstring(edit, f);
-	    if ( f->e_free ) (*f->e_free)(edit, f->e_context);
+	    if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
 	}
 
 	if ( tag->WxH) {
@@ -842,16 +842,16 @@ process_possible_link(MMIOT *f, int size)
     else if ( isautoprefix(text) ) {
 	char *edit;
 	Qstring("<a href=\"", f);
-	if ( f->e_url && (edit = (*f->e_url)(text, size, f->e_context)) ) {
+	if ( f->cb->e_url && (edit = (*f->cb->e_url)(text, size, f->cb->e_data)) ) {
 	    puturl(edit, strlen(edit), f, 0);
-	    if ( f->e_free ) (*f->e_free)(edit, f->e_context);
+	    if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
 	}
 	else
 	    puturl(text,size,f, 0);
-	if ( f->e_flags && (edit = (*f->e_flags)(text, size, f->e_context)) ) {
+	if ( f->cb->e_flags && (edit = (*f->cb->e_flags)(text, size, f->cb->e_data)) ) {
 	    Qstring("\" ", f);
 	    Qstring(edit, f);
-	    if ( f->e_free ) (*f->e_free)(edit, f->e_context);
+	    if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
 	    Qchar('>', f);
 	}
 	else
