@@ -833,35 +833,53 @@ EOF
 AC_SCALAR_TYPES () {
     cat > /tmp/pd$$.c << EOF
 #include <stdio.h>
-main()
+int pound_define = 1;
+
+say(char *w, char *v)
 {
+    printf(pound_define ? "#define %s %s\n"
+			: "s:@%s@:%s:g\n", w, v);
+}
+
+main(argc, argv)
+char **argv;
+{
+
+    if ( argc > 1 && strcmp(argv[1], "sub") == 0 )
+	pound_define = 0;
+	
     unsigned long v_long;
     unsigned int v_int;
     unsigned short v_short;
 
     if (sizeof v_long == 4)
-	puts("#define DWORD	unsigned long");
+	say("DWORD", "unsigned long");
     else if (sizeof v_int == 4)
-	puts("#define DWORD	unsigned int");
+	sat("DWORD", "unsigned int");
     else
 	exit(1);
 
     if (sizeof v_int == 2)
-	puts("#define WORD	unsigned int");
+	say("WORD", "unsigned int");
     else if (sizeof v_short == 2)
-	puts("#define WORD	unsigned short");
+	say("WORD", "unsigned short");
     else
 	exit(2);
-    puts("#define BYTE	unsigned char");
+    say("BYTE", "unsigned char");
     exit(0);
 }
 EOF
     rc=1
     LOGN "defining WORD & DWORD scalar types"
     if $AC_CC /tmp/pd$$.c -o /tmp/pd$$; then
-	if /tmp/pd$$  >> $__cwd/config.h; then
-	    rc=0
-	fi
+	case "$1" in
+	sub)if /tmp/pd$$ sub >> $__cwd/config.sub; then
+		rc=0
+	    fi;;
+	*)  if /tmp/pd$$ >> $__cwd/config.h; then
+		rc=0
+	    fi ;;
+	esac
     fi
     case "$rc" in
     0) TLOG "" ;;
