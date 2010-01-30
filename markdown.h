@@ -59,7 +59,6 @@ typedef STRING(block) Qblock;
 typedef char* (*mkd_callback_t)(const char*, const int, void*);
 
 typedef struct callback_data {
-    char *base;			/* url basename for url fragments */
     void *e_data;		/* private data for callbacks */
     mkd_callback_t e_url;	/* url edit callback */
     mkd_callback_t e_flags;	/* extra href flags callback */

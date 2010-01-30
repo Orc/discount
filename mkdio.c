@@ -217,14 +217,6 @@ markdown(Document *document, FILE *out, int flags)
 }
 
 
-void
-mkd_basename(Document *document, char *base)
-{
-    if ( document )
-	document->cb.base = base;
-}
-
-
 /* write out a Cstring, mangled into a form suitable for `<a href=` or `<a id=`
  */
 void

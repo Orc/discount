@@ -593,8 +593,7 @@ pseudo(Cstring t)
 }
 
 
-/* print out the start of an `img' or `a' tag, applying callbacks
- * and/or prefixing a url base.
+/* print out the start of an `img' or `a' tag, applying callbacks as needed.
  */
 static void
 printlinkyref(MMIOT *f, linkytype *tag, char *link, int size)
@@ -608,11 +607,8 @@ printlinkyref(MMIOT *f, linkytype *tag, char *link, int size)
 	    puturl(edit, strlen(edit), f, 0);
 	    if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
 	}
-	else {
-	    if ( f->cb->base && link && (link[tag->szpat] == '/') )
-		puturl(f->cb->base, strlen(f->cb->base), f, 0);
+	else
 	    puturl(link + tag->szpat, size - tag->szpat, f, 0);
-	}
     }
     else
 	___mkd_reparse(link + tag->szpat, size - tag->szpat, INSIDE_TAG, f);
