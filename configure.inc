@@ -833,14 +833,18 @@ EOF
 AC_SCALAR_TYPES () {
     cat > /tmp/pd$$.c << EOF
 #include <stdio.h>
+#include <string.h>
+
 int pound_define = 1;
 
+void
 say(char *w, char *v)
 {
     printf(pound_define ? "#define %s %s\n"
 			: "s:@%s@:%s:g\n", w, v);
 }
 
+void
 main(argc, argv)
 char **argv;
 {
@@ -854,7 +858,7 @@ char **argv;
     if (sizeof v_long == 4)
 	say("DWORD", "unsigned long");
     else if (sizeof v_int == 4)
-	sat("DWORD", "unsigned int");
+	say("DWORD", "unsigned int");
     else
 	exit(1);
 
