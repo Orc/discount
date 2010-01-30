@@ -844,14 +844,13 @@ say(char *w, char *v)
 main(argc, argv)
 char **argv;
 {
-
-    if ( argc > 1 && strcmp(argv[1], "sub") == 0 )
-	pound_define = 0;
-	
     unsigned long v_long;
     unsigned int v_int;
     unsigned short v_short;
 
+    if ( argc > 1 && strcmp(argv[1], "sub") == 0 )
+	pound_define = 0;
+	
     if (sizeof v_long == 4)
 	say("DWORD", "unsigned long");
     else if (sizeof v_int == 4)
