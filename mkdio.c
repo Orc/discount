@@ -325,10 +325,10 @@ mkd_e_free(Document *f, mkd_free_t dealloc)
 }
 
 
-/* set the url display/options context field
+/* set the url display/options context data field
  */
 void
-mkd_e_context(Document *f, void *data)
+mkd_e_data(Document *f, void *data)
 {
     if ( f )
 	f->cb.e_data = data;

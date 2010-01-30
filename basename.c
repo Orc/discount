@@ -38,6 +38,6 @@ void
 mkd_basename(MMIOT *document, char *base)
 {
     mkd_e_url(document, e_basename);
-    mkd_e_context(document, base);
+    mkd_e_data(document, base);
     mkd_e_free(document, e_free);
 }

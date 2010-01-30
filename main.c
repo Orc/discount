@@ -189,7 +189,7 @@ main(int argc, char **argv)
 	if ( urlbase )
 	    mkd_basename(doc, urlbase);
 	if ( urlflags ) {
-	    mkd_e_context(doc, urlflags);
+	    mkd_e_data(doc, urlflags);
 	    mkd_e_flags(doc, e_flags);
 	}
 
