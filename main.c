@@ -99,9 +99,9 @@ set(int *flags, char *optionstring)
 
 
 char *
-e_flags(char *text, int size, char *context)
+e_flags(const char *text, const int size, void *context)
 {
-    return context;
+    return (char*)context;
 }
 
 

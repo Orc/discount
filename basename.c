@@ -10,14 +10,15 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "mkdio.h"
 #include "cstring.h"
-#include "markdown.h"
 #include "amalloc.h"
 
 static char *
-e_basename(char *string, int size, char *base)
+e_basename(const char *string, const int size, void *context)
 {
     char *ret;
+    char *base = (char*)context;
     
     if ( base && string && (*string != '/') && (ret=malloc(strlen(base)+size+2)) ) {
 	strcpy(ret, base);
@@ -28,13 +29,13 @@ e_basename(char *string, int size, char *base)
 }
 
 static void
-e_free(char *string, char *base)
+e_free(char *string, void *context)
 {
     if ( string ) free(string);
 }
 
 void
-mkd_basename(Document *document, char *base)
+mkd_basename(MMIOT *document, char *base)
 {
     mkd_e_url(document, e_basename);
     mkd_e_context(document, base);

@@ -318,7 +318,7 @@ mkd_e_flags(Document *f, mkd_callback_t edit)
 /* set the url display/options deallocator
  */
 void
-mkd_e_free(Document *f, void (*dealloc)(void*,void*))
+mkd_e_free(Document *f, mkd_free_t dealloc)
 {
     if ( f )
 	f->cb.e_free = dealloc;
