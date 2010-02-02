@@ -345,6 +345,8 @@ puturl(char *s, int size, MMIOT *f, int display)
 	    Qstring("%22", f);
 	else if ( isalnum(c) || ispunct(c) || (display && isspace(c)) )
 	    Qchar(c, f);
+	else if ( c == 003 )	/* untokenize ^C */
+	    Qstring("  ", f);
 	else
 	    Qprintf(f, "%%%02X", c);
     }
@@ -1095,7 +1097,7 @@ text(MMIOT *f)
 	switch (c) {
 	case 0:     break;
 
-	case 3:     Qstring("<br/>", f);
+	case 3:     Qstring(tag_text(f) ? "  " : "<br/>", f);
 		    break;
 
 	case '>':   if ( tag_text(f) )
@@ -1284,6 +1286,10 @@ code(int escape, MMIOT *f)
 		    if ( peek(f,1) == '>' || (c = pull(f)) == EOF )
 			break;
 	
+	case 003:   /* ^C; expand back to 2 spaces */
+		    Qstring("  ", f);
+		    break;
+		    
 	default:    cputc(c, f);
 		    break;
 	}
