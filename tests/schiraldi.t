@@ -26,8 +26,9 @@ try() {
     fi
 }
 
-try -fnohtml 'breaks with -fnohtml' 'foo  ' '<p>foo<br/>
-</p>'
+try -fnohtml 'breaks with -fnohtml' 'foo  
+bar' '<p>foo<br/>
+bar</p>'
 
 try 'links with trailing \)' \
     '[foo](http://en.wikipedia.org/wiki/Link_(film\))' \
@@ -93,5 +94,11 @@ try -fautolink 'autolink url with ,' \
 try -fautolink 'autolink url with : & ;' \
     'http://www.biblegateway.com/passage/?search=Matthew%205:29-30;&version=31;' \
     '<p><a href="http://www.biblegateway.com/passage/?search=Matthew%205:29-30;&amp;version=31;">http://www.biblegateway.com/passage/?search=Matthew%205:29-30;&amp;version=31;</a></p>'
+
+Q="'"
+try -fautolink 'security hole with \" in []()' \
+'[XSS](/ "\"=\"\"onmouseover='$Q'alert(String.fromCharCode(88,83,83))'$Q'")' \
+'<p><a href="/" title="\&quot;=\&quot;\&quot;onmouseover='$Q'alert(String.fromCharCode(88,83,83))'$Q'">XSS</a></p>'
+
 
 exit $rc

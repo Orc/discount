@@ -39,5 +39,7 @@ try '<unfinished <tags> (1)' \
 try '<unfinished &<tags> (2)' \
 '<foo [bar](foo)  &<s>hi</s>' \
 '<p><foo [bar](foo)  &<s>hi</s></p>'
+
+try 'paragraph <br/> oddity' 'EOF  ' '<p>EOF</p>'
     
 exit $rc

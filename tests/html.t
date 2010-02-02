@@ -68,6 +68,7 @@ try 'no smartypants inside tags (#2)' \
     '<p><img src="linky" alt=":)" /></p>'
 
 try -fnohtml 'block html with -fnohtml' '<b>hi!</b>' '<p>&lt;b>hi!&lt;/b></p>'
+try -fnohtml 'malformed tag injection' '<x <script>' '<p>&lt;x &lt;script></p>'
 try -fhtml 'allow html with -fhtml' '<b>hi!</b>' '<p><b>hi!</b></p>'
 
 

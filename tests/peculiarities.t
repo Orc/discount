@@ -54,11 +54,13 @@ try 'ol with mixed item prefixes' \
 <li>B</li>
 </ol>'
 
-try 'forcing a <br/>' 'this  ' '<p>this<br/>
-</p>'
+try 'forcing a <br/>' 'this  
+is' '<p>this<br/>
+is</p>'
 
 try 'trimming single spaces' 'this ' '<p>this</p>'
-try -fnohtml 'markdown <br/> with -fnohtml' 'foo  '  '<p>foo<br/>
-</p>'
+try -fnohtml 'markdown <br/> with -fnohtml' 'foo  
+is'  '<p>foo<br/>
+is</p>'
 
 exit $rc

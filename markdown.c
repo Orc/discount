@@ -315,7 +315,14 @@ isfootnote(Line *t)
 static int
 isquote(Line *t)
 {
-    return ( T(t->text)[0] == '>' );
+    int j;
+
+    for ( j=0; j < 4; j++ )
+	if ( T(t->text)[j] == '>' )
+	    return 1;
+	else if ( !isspace(T(t->text)[j]) )
+	    return 0;
+    return 0;
 }
 
 
@@ -382,9 +389,14 @@ ishdr(Line *t, int *htyp)
 
     if ( t->next ) {
 	char *q = T(t->next->text);
+	int last = S(t->next->text);
 
 	if ( (*q == '=') || (*q == '-') ) {
-	    for (i=1; i < S(t->next->text); i++)
+	    /* ignore trailing whitespace */
+	    while ( (last > 1) && isspace(q[last-1]) )
+		--last;
+
+	    for (i=1; i < last; i++)
 		if ( q[0] != q[i] )
 		    return 0;
 	    *htyp = SETEXT;
@@ -629,7 +641,16 @@ quoteblock(Paragraph *p)
 
     for ( t = p->text; t ; t = q ) {
 	if ( isquote(t) ) {
-	    qp = (T(t->text)[1] == ' ') ? 2 : 1;
+	    /* clip leading spaces */
+	    for (qp = 0; T(t->text)[qp] != '>'; qp ++)
+		/* assert: the first nonblank character on this line
+		 * will be a >
+		 */;
+	    /* clip '>' */
+	    qp++;
+	    /* clip next space, if any */
+	    if ( T(t->text)[qp] == ' ' )
+		qp++;
 	    CLIP(t->text, 0, qp);
 	    t->dle = mkd_firstnonblank(t);
 	}
@@ -709,8 +730,9 @@ listitem(Paragraph *p, int indent)
 	}
 
 	/* after a blank line, the next block needs to start with a line
-	 * that's indented 4 spaces, but after that the line doesn't
-	 * need any indentation
+	 * that's indented 4(? -- reference implementation allows a 1
+	 * character indent, but that has unfortunate side effects here)
+	 * spaces, but after that the line doesn't need any indentation
 	 */
 	if ( q != t->next ) {
 	    if (q->dle < indent) {
@@ -718,7 +740,8 @@ listitem(Paragraph *p, int indent)
 		t->next = 0;
 		return q;
 	    }
-	    indent = 4;
+	    /* indent as far as the initial line was indented. */
+	    indent = clip;
 	}
 
 	if ( (q->dle < indent) && (ishr(q) || islist(q,&z)) && !ishdr(q,&z) ) {

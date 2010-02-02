@@ -87,7 +87,7 @@ try 'nested lists (2)' \
 </ol>
 
 
-<p> Here</p></li>
+<p>  Here</p></li>
 <li>B (list)</li>
 </ul>'
 
@@ -133,6 +133,16 @@ try 'empty list' \
 <li></li>
 </ul>'
 
+
+try 'blockquote inside a list' \
+'   * This is a list item.
+
+      > This is a quote insde a list item. ' \
+'<ul>
+<li><p> This is a list item.</p>
+
+<blockquote><p>This is a quote insde a list item.</p></blockquote></li>
+</ul>'
 
 if ./markdown -V | grep DL_TAG >/dev/null; then
 
