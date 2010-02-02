@@ -1282,14 +1282,14 @@ code(int escape, MMIOT *f)
 		    Qchar(c, f);
 		    break;
 
-	case '\\':  cputc(c, f);
-		    if ( peek(f,1) == '>' || (c = pull(f)) == EOF )
-			break;
-	
 	case 003:   /* ^C; expand back to 2 spaces */
 		    Qstring("  ", f);
 		    break;
 		    
+	case '\\':  cputc(c, f);
+		    if ( peek(f,1) == '>' || (c = pull(f)) == EOF )
+			break;
+	
 	default:    cputc(c, f);
 		    break;
 	}
