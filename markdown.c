@@ -487,7 +487,8 @@ headerblock(Paragraph *pp, int htyp)
 	     * the leading and trailing `#`'s
 	     */
 
-	    for (i=0; (T(p->text)[i] == T(p->text)[0]) && (i < S(p->text)-1); i++)
+	    for (i=0; (T(p->text)[i] == T(p->text)[0]) && (i < S(p->text)-1)
+						       && (i < 6); i++)
 		;
 
 	    pp->hnumber = i;
