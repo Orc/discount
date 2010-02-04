@@ -1150,16 +1150,13 @@ text(MMIOT *f)
 		    }
 #endif
 	case '*':
-#if RELAXED_EMPHASIS
 	/* Underscores & stars don't count if they're out in the middle
 	 * of whitespace */
-		    if ( !(f->flags & STRICT) && isthisspace(f,-1)
-					      && isthisspace(f,1) ) {
+		    if ( isthisspace(f,-1) && isthisspace(f,1) ) {
 			Qchar(c, f);
 			break;
 		    }
 		    /* else fall into the regular old emphasis case */
-#endif
 		    if ( tag_text(f) )
 			Qchar(c, f);
 		    else {
