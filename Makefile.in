@@ -13,7 +13,7 @@ SAMPLE_PGMS=mkd2html makepage
 MKDLIB=libmarkdown.a
 OBJS=mkdio.o markdown.o dumptree.o generate.o \
      resource.o docheader.o version.o toc.o css.o \
-     xml.o Csio.o xmlpage.o basename.o @AMALLOC@
+     xml.o Csio.o xmlpage.o basename.o emmatch.o @AMALLOC@
 
 all: $(PGMS) $(SAMPLE_PGMS)
 
@@ -94,6 +94,7 @@ basename.o: basename.c config.h cstring.h amalloc.h markdown.h
 css.o: css.c config.h cstring.h amalloc.h markdown.h
 docheader.o: docheader.c config.h cstring.h amalloc.h markdown.h
 dumptree.o: dumptree.c markdown.h cstring.h amalloc.h config.h
+emmatch.o: emmatch.c config.h cstring.h amalloc.h markdown.h
 generate.o: generate.c config.h cstring.h amalloc.h markdown.h
 main.o: main.c config.h amalloc.h
 makepage.o: makepage.c
