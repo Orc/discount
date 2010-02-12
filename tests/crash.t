@@ -1,57 +1,30 @@
-./echo "crashes"
+. tests/functions.sh
+
+title "crashes"
 
 rc=0
 MARKDOWN_FLAGS=
 
-./echo -n '  zero-length input ................ '
+try 'zero-length input' '' ''
 
-if ./markdown < /dev/null >/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try 'hanging quote in list' \
+' * > this should not die
 
-./echo -n '  hanging quote in list ............ '
+no.' \
+'<ul>
+<li><blockquote><p>this should not die</p></blockquote></li>
+</ul>
 
-./markdown >/dev/null 2>/dev/null << EOF
- * > this should not die
 
-no.
-EOF
+<p>no.</p>'
 
-if [ "$?" -eq 0 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
+try 'dangling list item' ' - ' \
+'<ul>
+<li></li>
+</ul>'
 
-./echo -n '  dangling list item ............... '
+try -bHOHO 'empty []() with baseurl' '[]()' '<p><a href=""></a></p>'
+try 'unclosed html block' '<table></table' '<table></table'
 
-if ./echo ' - ' | ./markdown >/dev/null 2>/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  empty []() with baseurl .......... '
-
-if ./markdown -bHOHO -s '[]()' >/dev/null 2>/dev/null; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  unclosed html block .............. '
-
-if ./echo '<table></table' | ./markdown >/dev/null 2>/dev/null; then
-    ./echo 'ok'
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
+summary $0
 exit $rc

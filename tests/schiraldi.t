@@ -1,30 +1,9 @@
-./echo "Bugs & misfeatures reported by Mike Schiraldi"
+. tests/functions.sh
+
+title "Bugs & misfeatures reported by Mike Schiraldi"
 
 rc=0
 MARKDOWN_FLAGS=
-
-try() {
-    unset FLAGS
-    case "$1" in
-    -*) FLAGS=$1
-	shift ;;
-    esac
-    
-    S=`./echo -n "$1" '..................................' | ./cols 34`
-    ./echo -n "  $S "
-
-    Q=`./echo "$2" | ./markdown $FLAGS`
-
-
-    if [ "$3" = "$Q" ]; then
-	./echo "ok"
-    else
-	./echo "FAILED"
-	./echo "wanted: $3"
-	./echo "got   : $Q"
-	rc=1
-    fi
-}
 
 try -fnohtml 'breaks with -fnohtml' 'foo  
 bar' '<p>foo<br/>
@@ -101,4 +80,5 @@ try -fautolink 'security hole with \" in []()' \
 '<p><a href="/" title="\&quot;=\&quot;\&quot;onmouseover='$Q'alert(String.fromCharCode(88,83,83))'$Q'">XSS</a></p>'
 
 
+summary $0
 exit $rc

@@ -1,27 +1,7 @@
-./echo 'Reddit-style automatic links'
+. tests/functions.sh
+
+title 'Reddit-style automatic links'
 rc=0
-
-try() {
-    unset FLAGS
-    case "$1" in
-    -*) FLAGS=$1
-	shift ;;
-    esac
-    
-    ./echo -n "  $1" '..................................' | ./cols 36
-
-    Q=`./echo "$2" | ./markdown $FLAGS`
-
-
-    if [ "$3" = "$Q" ]; then
-	./echo " ok"
-    else
-	./echo " FAILED"
-	./echo "wanted: $3"
-	./echo "got   : $Q"
-	rc=1
-    fi
-}
 
 try -fautolink 'single link' \
     'http://www.pell.portland.or.us/~orc/Code/discount' \
@@ -43,4 +23,5 @@ try -fautolink 'parenthesised (url)' \
 
 try -fautolink 'token with trailing @' 'orc@' '<p>orc@</p>'
 
+summary $0
 exit $rc

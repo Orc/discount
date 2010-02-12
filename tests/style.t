@@ -1,32 +1,17 @@
-./echo "styles"
+. tests/functions.sh
+
+title "styles"
 
 rc=0
 MARKDOWN_FLAGS=
 
-./echo -n '  <style> blocks -- one line ....... '
-
-count=`./echo '<style> ul {display:none;} </style>' | ./markdown|wc -c`
-
-if [ $count -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
-./echo -n '  <style> blocks -- multiline ...... '
+try '<style blocks -- one line' '<style> ul {display:none;} </style>' ''
 
 ASK='<style>
 ul {display:none;}
 </style>'
 
-count=`./echo "$ASK" | ./markdown | wc -c`
+try '<style> blocks -- multiline' "$ASK" ''
 
-if [ $count -eq 1 ]; then
-    ./echo "ok"
-else
-    ./echo "FAILED"
-    rc=1
-fi
-
+summary $0
 exit $rc

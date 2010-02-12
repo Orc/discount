@@ -1,30 +1,9 @@
-./echo "smarty pants"
+. tests/functions.sh
+
+title "smarty pants"
 
 rc=0
 MARKDOWN_FLAGS=0x0; export MARKDOWN_FLAGS
-
-try() {
-    unset FLAGS
-    case "$1" in
-    -*) FLAGS="$1"
-	shift ;;
-    esac
-    
-    ./echo -n "  $1" '..................................' | ./cols 36
-
-    Q=`./echo "$2" | ./markdown $FLAGS`
-
-
-    if [ "$3" = "$Q" ]; then
-	./echo " ok"
-    else
-	./echo " FAILED"
-	./echo "wanted: $3"
-	./echo "got   : $Q"
-	rc=1
-    fi
-}
-
 
 try '(c) -> &copy;' '(c)' '<p>&copy;</p>'
 try '(r) -> &reg;' '(r)' '<p>&reg;</p>'
@@ -47,4 +26,5 @@ if ./markdown -V | grep SUPERSCRIPT >/dev/null; then
     try -frelax 'A^B in link title' '[link](here "A^B")' '<p><a href="here" title="A^B">link</a></p>'
 fi
 
+summary $0
 exit $rc

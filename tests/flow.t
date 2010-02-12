@@ -1,29 +1,9 @@
-./echo "paragraph flow"
+. tests/functions.sh
+
+title "paragraph flow"
 
 rc=0
 MARKDOWN_FLAGS=
-
-try() {
-    unset FLAGS
-    case "$1" in
-    -*) FLAGS=$1
-	shift ;;
-    esac
-    
-    ./echo -n "  $1" '..................................' | ./cols 36
-
-    Q=`./echo "$2" | ./markdown $FLAGS`
-
-
-    if [ "$3" = "$Q" ]; then
-	./echo " ok"
-    else
-	./echo " FAILED"
-	./echo "wanted: $3"
-	./echo "got   : $Q"
-	rc=1
-    fi
-}
 
 try 'header followed by paragraph' \
     '###Hello, sailor###
@@ -49,4 +29,5 @@ try 'two lists punctuated with a HR' \
 <li>C</li>
 </ul>'
 
+summary $0
 exit $rc

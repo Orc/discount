@@ -1,29 +1,9 @@
-./echo "embedded links"
+. tests/functions.sh
+
+title "embedded links"
 
 rc=0
 MARKDOWN_FLAGS=
-
-try() {
-    unset FLAGS
-    case "$1" in
-    -*) FLAGS=$1
-	shift ;;
-    esac
-    
-    ./echo -n "  $1" '..................................' | ./cols 36
-
-    Q=`./echo "$2" | ./markdown $FLAGS`
-
-
-    if [ "$3" = "$Q" ]; then
-	./echo " ok"
-    else
-	./echo " FAILED"
-	./echo "wanted: $3"
-	./echo "got   : $Q"
-	rc=1
-    fi
-}
 
 try 'url contains &' '[hehehe](u&rl)' '<p><a href="u&amp;rl">hehehe</a></p>'
 try 'url contains +' '[hehehe](u+rl)' '<p><a href="u+rl">hehehe</a></p>'
@@ -121,4 +101,5 @@ try '[text] (text) not a link' \
 '[test] (me)' \
 '<p>[test] (me)</p>'
 
+summary $0
 exit $rc
