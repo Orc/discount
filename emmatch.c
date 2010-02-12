@@ -81,6 +81,16 @@ emfill(block *p)
 } /* emfill */
 
 
+static void
+emclose(MMIOT *f, int first, int last)
+{
+    int j;
+
+    for (j=first+1; j<last-1; j++)
+	emfill(&T(f->Q)[j]);
+}
+
+
 static struct emtags {
     char open[10];
     char close[10];
@@ -119,9 +129,10 @@ emmatch(MMIOT *f, int first, int last)
     }
 
     if ( e ) {
-	/* if we found emphasis to match, match it and then
-	 * recursively call emblock to match emphasis inside
-	 * the new html block.
+	/* if we found emphasis to match, match it, recursively call
+	 * emblock to match emphasis inside the new html block, add
+	 * the emphasis markers for the block, then (tail) recursively
+	 * call ourself to match any remaining emphasis on this token.
 	 */
 	block *end = &T(f->Q)[e];
 
@@ -132,6 +143,8 @@ emmatch(MMIOT *f, int first, int last)
 
 	PREFIX(start->b_text, emtags[match-1].open, emtags[match-1].size-1);
 	SUFFIX(end->b_post, emtags[match-1].close, emtags[match-1].size);
+
+	emmatch(f, first, last);
     }
 } /* emmatch */
 
@@ -147,6 +160,7 @@ emblock(MMIOT *f, int first, int last)
     for ( i = first; i <= last; i++ )
 	if ( T(f->Q)[i].b_type != bTEXT )
 	    emmatch(f, i, last);
+    emclose(f, first, last);
 } /* emblock */
 
 
