@@ -15,6 +15,8 @@ OBJS=mkdio.o markdown.o dumptree.o generate.o \
      resource.o docheader.o version.o toc.o css.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o @AMALLOC@
 
+MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
+
 all: $(PGMS) $(SAMPLE_PGMS)
 
 install: $(PGMS)
@@ -31,7 +33,7 @@ install.samples: $(SAMPLE_PGMS) install
 
 install.man:
 	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man3
-	@INSTALL_DATA@ mkd-functions.3 markdown.3 mkd-line.3 $(DESTDIR)/$(MANDIR)/man3
+	@INSTALL_DATA@ $(MAN3PAGES) $(DESTDIR)/$(MANDIR)/man3
 	for x in mkd_line mkd_generateline; do \
 	    ( echo '.\"' ; echo ".so man3/mkd-line.3" ) > $(DESTDIR)/$(MANDIR)/man3/$$x.3;\
 	done
