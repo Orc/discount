@@ -402,27 +402,27 @@ linkyurl(MMIOT *f, int image, Footnote *p)
 
 /* prefixes for <automatic links>
  */
-static struct {
+static struct _protocol {
     char *name;
     int   nlen;
 } protocol[] = { 
 #define _aprotocol(x)	{ x, (sizeof x)-1 }
-    _aprotocol( "http://" ), 
     _aprotocol( "https://" ), 
-    _aprotocol( "ftp://" ), 
+    _aprotocol( "http://" ), 
     _aprotocol( "news://" ),
+    _aprotocol( "ftp://" ), 
 #undef _aprotocol
 };
 #define NRPROTOCOLS	(sizeof protocol / sizeof protocol[0])
 
 
 static int
-isautoprefix(char *text)
+isautoprefix(char *text, int size)
 {
     int i;
 
     for (i=0; i < NRPROTOCOLS; i++)
-	if ( strncasecmp(text, protocol[i].name, protocol[i].nlen) == 0 )
+	if ( (size >= protocol[i].nlen) && strncasecmp(text, protocol[i].name, protocol[i].nlen) == 0 )
 	    return 1;
     return 0;
 }
@@ -528,7 +528,7 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
     }
     else if ( (f->flags & SAFELINK) && T(ref->link)
 				    && (T(ref->link)[0] != '/')
-				    && !isautoprefix(T(ref->link)) )
+				    && !isautoprefix(T(ref->link), S(ref->link)) )
 	/* if SAFELINK, only accept links that are local or
 	 * a well-known protocol
 	 */
@@ -736,7 +736,7 @@ process_possible_link(MMIOT *f, int size)
 	Qstring("</a>", f);
 	return 1;
     }
-    else if ( isautoprefix(text) ) {
+    else if ( isautoprefix(text, size) ) {
 	printlinkyref(f, &linkt, text, size);
 	Qchar('>', f);
 	puturl(text,size,f, 1);
