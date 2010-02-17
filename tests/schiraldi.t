@@ -79,6 +79,13 @@ try -fautolink 'security hole with \" in []()' \
 '[XSS](/ "\"=\"\"onmouseover='$Q'alert(String.fromCharCode(88,83,83))'$Q'")' \
 '<p><a href="/" title="\&quot;=\&quot;\&quot;onmouseover='$Q'alert(String.fromCharCode(88,83,83))'$Q'">XSS</a></p>'
 
+try -fautolink 'autolink and prefix fragment' \
+'xxxxxxx http://x.com/
+
+xxx xxxxht' \
+'<p>xxxxxxx <a href="http://x.com/">http://x.com/</a></p>
+
+<p>xxx xxxxht</p>'
 
 summary $0
 exit $rc
