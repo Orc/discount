@@ -420,9 +420,10 @@ static int
 isautoprefix(char *text, int size)
 {
     int i;
+    struct _protocol *p;
 
-    for (i=0; i < NRPROTOCOLS; i++)
-	if ( (size >= protocol[i].nlen) && strncasecmp(text, protocol[i].name, protocol[i].nlen) == 0 )
+    for (i=0, p=protocol; i < NRPROTOCOLS; i++, p++)
+	if ( (size >= p->nlen) && strncasecmp(text, p->name, p->nlen) == 0 )
 	    return 1;
     return 0;
 }
@@ -474,8 +475,7 @@ pseudo(Cstring t)
     int i;
     linkytype *r;
 
-    for ( i=0; i < NR(specials); i++ ) {
-	r = &specials[i];
+    for ( i=0, r=specials; i < NR(specials); i++,r++ ) {
 	if ( (S(t) > r->szpat) && (strncasecmp(T(t), r->pat, r->szpat) == 0) )
 	    return r;
     }
