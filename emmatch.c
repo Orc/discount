@@ -154,8 +154,7 @@ emmatch(MMIOT *f, int first, int last)
 static void
 emblock(MMIOT *f, int first, int last)
 {
-    int i, j;
-    block *p;
+    int i;
     
     for ( i = first; i <= last; i++ )
 	if ( T(f->Q)[i].b_type != bTEXT )
