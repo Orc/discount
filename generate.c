@@ -21,7 +21,7 @@ typedef int (*stfu)(const void*,const void*);
 
 
 /* forward declarations */
-static int matchticks(MMIOT*, int);
+static int matchticks(MMIOT*, int*);
 static void codeblock(MMIOT*);
 static void codespan(MMIOT*, int);
 static int nrticks(int, MMIOT*);
@@ -1071,7 +1071,7 @@ text(MMIOT *f)
 		    else {
 			int size, tick = nrticks(0, f);
 
-			if ( size = matchticks(f, tick) ) {
+			if ( size = matchticks(f, &tick) ) {
 			    shift(f, tick);
 			    codespan(f, size-tick);
 			    shift(f, size-1);
@@ -1126,18 +1126,28 @@ text(MMIOT *f)
 
 
 static int
-matchticks(MMIOT *f, int escape)
+matchticks(MMIOT *f, int *escape)
 {
     int size, tick, c;
+    int subsize=0, subtick=0;
     
-    for (size = escape; (c=peek(f,size)) != EOF; ) {
+    for (size = *escape; (c=peek(f,size)) != EOF; ) {
 	if ( c == '`' )
-	    if ( (tick=nrticks(size,f)) == escape )
+	    if ( (tick=nrticks(size,f)) == *escape )
 		return size;
-	    else
+	    else {
+		if ( !subsize ) {
+		    subsize = size;
+		    subtick = tick;
+		}
 		size += tick;
+	    }
 	else
 	    size++;
+    }
+    if ( subsize ) {
+	*escape = subtick;
+	return subsize;
     }
     return 0;
     
