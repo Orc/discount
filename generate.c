@@ -23,6 +23,7 @@ typedef int (*stfu)(const void*,const void*);
 /* forward declarations */
 static int iscodeblock(MMIOT*);
 static void code(int, MMIOT*);
+static int ticks(int, MMIOT*);
 static void text(MMIOT *f);
 static Paragraph *display(Paragraph*, MMIOT*);
 
@@ -1057,14 +1058,12 @@ text(MMIOT *f)
 	case '`':   if ( tag_text(f) || !iscodeblock(f) )
 			Qchar(c, f);
 		    else {
+			int tick = ticks(0, f);
+
 			Qstring("<code>", f);
-			if ( peek(f, 1) == '`' ) {
-			    pull(f);
-			    code(2, f);
-			}
-			else
-			    code(1, f);
-			Qstring("</code>", f);
+			shift(f, tick-1);
+			code(tick, f);
+			Qstring("</code>", f);		    
 		    }
 		    break;
 
@@ -1128,19 +1127,25 @@ iscodeblock(MMIOT *f)
     }
     return 0;
     
-}
+} /* iscodeblock */
+
 
 static int
-endofcode(int escape, int offset, MMIOT *f)
+ticks(int offset, MMIOT *f)
 {
-    switch (escape) {
-    case 2: if ( peek(f, offset+1) == '`' ) {
-		shift(f,1);
-    case 1:     shift(f,offset);
-		return 1;
-	    }
-    default:return 0;
-    }
+    int  tick = 0;
+
+    while ( peek(f, offset+tick) == '`' ) tick++;
+
+    return tick;
+}
+
+
+static void
+Qcopy(int count, MMIOT *f)
+{
+    while ( count-- > 0 )
+	Qchar(pull(f), f);
 }
 
 
@@ -1150,21 +1155,25 @@ endofcode(int escape, int offset, MMIOT *f)
 static void
 code(int escape, MMIOT *f)
 {
-    int c;
+    int c, tick;
 
     if ( escape && (peek(f,1) == ' ') )
 	shift(f,1);
 
     while ( (c = pull(f)) != EOF ) {
 	switch (c) {
-	case ' ':   if ( peek(f,1) == '`' && endofcode(escape, 1, f) )
-			return;
-		    Qchar(c, f);
-		    break;
-
-	case '`':   if ( endofcode(escape, 0, f) )
-			return;
-		    Qchar(c, f);
+	case '`':
+	case ' ':   if ( escape )  {
+			int offset = (c == ' ') ? 1 : 0;
+			if ( (tick = ticks(offset, f)) == escape ) {
+			    shift(f, escape+(offset-1));
+			    return;
+			}
+			Qchar(c, f);
+			Qcopy(tick+(offset-1), f);
+		    }
+		    else
+			Qchar(c, f);
 		    break;
 
 	case 003:   /* ^C; expand back to 2 spaces */
