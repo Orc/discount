@@ -21,9 +21,10 @@ typedef int (*stfu)(const void*,const void*);
 
 
 /* forward declarations */
-static int iscodeblock(MMIOT*);
-static void code(int, MMIOT*);
-static int ticks(int, MMIOT*);
+static int matchticks(MMIOT*, int);
+static void codeblock(MMIOT*);
+static void codespan(MMIOT*, int);
+static int nrticks(int, MMIOT*);
 static void text(MMIOT *f);
 static Paragraph *display(Paragraph*, MMIOT*);
 
@@ -164,6 +165,16 @@ Qprintf(MMIOT *f, char *fmt, ...)
     vsnprintf(bfr, sizeof bfr, fmt, ptr);
     va_end(ptr);
     Qstring(bfr, f);
+}
+
+
+/* Qcopy()
+ */
+static void
+Qcopy(int count, MMIOT *f)
+{
+    while ( count-- > 0 )
+	Qchar(pull(f), f);
 }
 
 
@@ -1055,15 +1066,20 @@ text(MMIOT *f)
 		    }
 		    break;
 	
-	case '`':   if ( tag_text(f) || !iscodeblock(f) )
+	case '`':   if ( tag_text(f) )
 			Qchar(c, f);
 		    else {
-			int tick = ticks(0, f);
+			int size, tick = nrticks(0, f);
 
-			Qstring("<code>", f);
-			shift(f, tick-1);
-			code(tick, f);
-			Qstring("</code>", f);		    
+			if ( size = matchticks(f, tick) ) {
+			    shift(f, tick);
+			    codespan(f, size-tick);
+			    shift(f, size-1);
+			}
+			else {
+			    Qchar(c, f);
+			    Qcopy(tick-1, f);
+			}
 		    }
 		    break;
 
@@ -1110,28 +1126,26 @@ text(MMIOT *f)
 
 
 static int
-iscodeblock(MMIOT *f)
+matchticks(MMIOT *f, int escape)
 {
-    int i=1, single = 1, c;
+    int size, tick, c;
     
-    if ( peek(f,i) == '`' ) {
-	single=0;
-	i++;
-    }
-    while ( (c=peek(f,i)) != EOF ) {
-	if ( (c == '`') && (single || peek(f,i+1) == '`') )
-	    return 1;
-	else if ( c == '\\' )
-	    i++;
-	i++;
+    for (size = escape; (c=peek(f,size)) != EOF; ) {
+	if ( c == '`' )
+	    if ( (tick=nrticks(size,f)) == escape )
+		return size;
+	    else
+		size += tick;
+	else
+	    size++;
     }
     return 0;
     
-} /* iscodeblock */
+} /* matchticks */
 
 
 static int
-ticks(int offset, MMIOT *f)
+nrticks(int offset, MMIOT *f)
 {
     int  tick = 0;
 
@@ -1141,54 +1155,39 @@ ticks(int offset, MMIOT *f)
 }
 
 
-static void
-Qcopy(int count, MMIOT *f)
-{
-    while ( count-- > 0 )
-	Qchar(pull(f), f);
-}
-
-
 /* the only characters that have special meaning in a code block are
  * `<' and `&' , which are /always/ expanded to &lt; and &amp;
  */
 static void
-code(int escape, MMIOT *f)
+codeblock(MMIOT *f)
 {
-    int c, tick;
-
-    if ( escape && (peek(f,1) == ' ') )
-	shift(f,1);
+    int c;
 
     while ( (c = pull(f)) != EOF ) {
-	switch (c) {
-	case '`':
-	case ' ':   if ( escape )  {
-			int offset = (c == ' ') ? 1 : 0;
-			if ( (tick = ticks(offset, f)) == escape ) {
-			    shift(f, escape+(offset-1));
-			    return;
-			}
-			Qchar(c, f);
-			Qcopy(tick+(offset-1), f);
-		    }
-		    else
-			Qchar(c, f);
-		    break;
-
-	case 003:   /* ^C; expand back to 2 spaces */
-		    Qstring("  ", f);
-		    break;
-		    
-	case '\\':  cputc(c, f);
-		    if ( peek(f,1) == '>' || (c = pull(f)) == EOF )
-			break;
-	
-	default:    cputc(c, f);
-		    break;
-	}
+	if ( c == 003 ) /* ^C; expand back to 2 spaces */
+	    Qstring("  ", f);
+	else
+	    cputc(c, f);
     }
 } /* code */
+
+
+static void
+codespan(MMIOT *f, int size)
+{
+    int i=0, c;
+
+    if ( size > 1 && peek(f, size-1) == ' ' ) --size;
+    if ( peek(f,i) == ' ' ) ++i;
+    
+    Qstring("<code>", f);
+    for ( ; i < size; i++ )
+	if ( (c = peek(f,i)) == 003 ) /* ^C; expand back to 2 spaces */
+	    Qstring("  ", f);
+	else
+	    cputc(c, f);
+    Qstring("</code>", f);		    
+}
 
 
 /* print a header block
@@ -1248,6 +1247,7 @@ splat(Line *p, char *block, Istring align, int force, MMIOT *f)
     Qstring("</tr>\n", f);
     return colno;
 }
+
 
 static int
 printtable(Paragraph *pp, MMIOT *f)
@@ -1357,7 +1357,7 @@ printcode(Line *t, MMIOT *f)
 	else blanks++;
 
     Qstring("<pre><code>", f);
-    code(0, f);
+    codeblock(f);
     Qstring("</code></pre>", f);
 }
 
