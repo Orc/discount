@@ -21,10 +21,6 @@ typedef int (*stfu)(const void*,const void*);
 
 
 /* forward declarations */
-static int matchticks(MMIOT*, int*);
-static void codeblock(MMIOT*);
-static void codespan(MMIOT*, int);
-static int nrticks(int, MMIOT*);
 static void text(MMIOT *f);
 static Paragraph *display(Paragraph*, MMIOT*);
 
@@ -664,6 +660,89 @@ mangle(char *s, int len, MMIOT *f)
 }
 
 
+/* nrticks() -- count up a row of tick marks
+ */
+static int
+nrticks(int offset, MMIOT *f)
+{
+    int  tick = 0;
+
+    while ( peek(f, offset+tick) == '`' ) tick++;
+
+    return tick;
+} /* nrticks */
+
+
+/* matchticks() -- match a certain # of ticks, and if that fails
+ *                 match the largest subset of those ticks.
+ *
+ *                 if a subset was matched, modify the passed in
+ *                 # of ticks so that the caller (text()) can
+ *                 appropriately process the horrible thing.
+ */
+static int
+matchticks(MMIOT *f, int *ticks)
+{
+    int size, tick, c;
+    int subsize=0, subtick=0;
+    
+    for (size = *ticks; (c=peek(f,size)) != EOF; ) {
+	if ( c == '`' )
+	    if ( (tick=nrticks(size,f)) == *ticks )
+		return size;
+	    else {
+		if ( tick > subtick ) {
+		    subsize = size;
+		    subtick = tick;
+		}
+		size += tick;
+	    }
+	else
+	    size++;
+    }
+    if ( subsize ) {
+	*ticks = subtick;
+	return subsize;
+    }
+    return 0;
+    
+} /* matchticks */
+
+
+/* code() -- write a string out as code. The only characters that have
+ *           special meaning in a code block are * `<' and `&' , which
+ *           are /always/ expanded to &lt; and &amp;
+ */
+static void
+code(MMIOT *f, char *s, int length)
+{
+    int i,c;
+
+    for ( i=0; i < length; i++ )
+	if ( (c = s[i]) == 003)  /* ^C: expand back to 2 spaces */
+	    Qstring("  ", f);
+	else
+	    cputc(c, f);
+} /* code */
+
+
+/*  codespan() -- write out a chunk of text as code, trimming one
+ *                space off the front and/or back as appropriate.
+ */
+static void
+codespan(MMIOT *f, int size)
+{
+    int i=0, c;
+
+    if ( size > 1 && peek(f, size-1) == ' ' ) --size;
+    if ( peek(f,i) == ' ' ) ++i, --size;
+    
+    Qstring("<code>", f);
+    code(f, cursor(f)+(i-1), size);
+    Qstring("</code>", f);
+} /* codespan */
+
+
 /* before letting a tag through, validate against
  * DENY_A and DENY_IMG
  */
@@ -1125,81 +1204,6 @@ text(MMIOT *f)
 } /* text */
 
 
-static int
-matchticks(MMIOT *f, int *escape)
-{
-    int size, tick, c;
-    int subsize=0, subtick=0;
-    
-    for (size = *escape; (c=peek(f,size)) != EOF; ) {
-	if ( c == '`' )
-	    if ( (tick=nrticks(size,f)) == *escape )
-		return size;
-	    else {
-		if ( !subsize ) {
-		    subsize = size;
-		    subtick = tick;
-		}
-		size += tick;
-	    }
-	else
-	    size++;
-    }
-    if ( subsize ) {
-	*escape = subtick;
-	return subsize;
-    }
-    return 0;
-    
-} /* matchticks */
-
-
-static int
-nrticks(int offset, MMIOT *f)
-{
-    int  tick = 0;
-
-    while ( peek(f, offset+tick) == '`' ) tick++;
-
-    return tick;
-}
-
-
-/* the only characters that have special meaning in a code block are
- * `<' and `&' , which are /always/ expanded to &lt; and &amp;
- */
-static void
-codeblock(MMIOT *f)
-{
-    int c;
-
-    while ( (c = pull(f)) != EOF ) {
-	if ( c == 003 ) /* ^C; expand back to 2 spaces */
-	    Qstring("  ", f);
-	else
-	    cputc(c, f);
-    }
-} /* code */
-
-
-static void
-codespan(MMIOT *f, int size)
-{
-    int i=0, c;
-
-    if ( size > 1 && peek(f, size-1) == ' ' ) --size;
-    if ( peek(f,i) == ' ' ) ++i;
-    
-    Qstring("<code>", f);
-    for ( ; i < size; i++ )
-	if ( (c = peek(f,i)) == 003 ) /* ^C; expand back to 2 spaces */
-	    Qstring("  ", f);
-	else
-	    cputc(c, f);
-    Qstring("</code>", f);		    
-}
-
-
 /* print a header block
  */
 static void
@@ -1355,19 +1359,18 @@ printcode(Line *t, MMIOT *f)
 {
     int blanks;
 
-    for ( blanks = 0; t ; t = t->next )
+    Qstring("<pre><code>", f);
+    for ( blanks = 0; t ; t = t->next ) {
 	if ( S(t->text) > t->dle ) {
 	    while ( blanks ) {
-		push("\n", 1, f);
+		Qchar('\n', f);
 		--blanks;
 	    }
-	    push(T(t->text), S(t->text), f);
-	    push("\n", 1, f);
+	    code(f, T(t->text), S(t->text));
+	    Qchar('\n', f);
 	}
 	else blanks++;
-
-    Qstring("<pre><code>", f);
-    codeblock(f);
+    }
     Qstring("</code></pre>", f);
 }
 
