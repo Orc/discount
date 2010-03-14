@@ -171,6 +171,8 @@ typedef struct _flo {
     int i;
 } FLO;
 
+#define floindex(x) (x.i)
+
 
 static int
 flogetc(FLO *f)
@@ -183,6 +185,22 @@ flogetc(FLO *f)
 	return flogetc(f);
     }
     return EOF;
+}
+
+
+static void
+splitline(Line *t, int cutpoint)
+{
+    if ( t && (cutpoint < S(t->text)) ) {
+	Line *tmp = calloc(1, sizeof *tmp);
+
+	tmp->next = t->next;
+	t->next = tmp;
+
+	tmp->dle = t->dle;
+	SUFFIX(tmp->text, T(t->text)+cutpoint, S(t->text)-cutpoint);
+	S(t->text) = cutpoint;
+    }
 }
 
 
@@ -232,6 +250,7 @@ htmlblock(Paragraph *p, struct kw *tag)
 			}
 			if ( !f.t )
 			    return 0;
+			splitline(f.t, floindex(f));
 			ret = f.t->next;
 			f.t->next = 0;
 			return ret;
@@ -248,9 +267,11 @@ static Line *
 comment(Paragraph *p)
 {
     Line *t, *ret;
+    char *end;
 
     for ( t = p->text; t ; t = t->next) {
-	if ( strstr(T(t->text), "-->") ) {
+	if ( end = strstr(T(t->text), "-->") ) {
+	    splitline(t, 3 + (end - T(t->text)) );
 	    ret = t->next;
 	    t->next = 0;
 	    return ret;
