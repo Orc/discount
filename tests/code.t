@@ -21,6 +21,11 @@ try '`>`' '`>`' '<p><code>&gt;</code></p>'
 try '`` ` ``' '`` ` ``' '<p><code>`</code></p>'
 try '````` ``` `' '````` ``` `' '<p><code>``</code> `</p>'
 try '````` ` ```' '````` ` ```' '<p><code>`` `</code></p>'
+try 'backslashes in code(1)' '    printf "%s: \n", $1;' \
+'<pre><code>printf "%s: \n", $1;
+</code></pre>'
+try 'backslashes in code(2)' '`printf "%s: \n", $1;`' \
+'<p><code>printf "%s: \n", $1;</code></p>'
 
 summary $0
 exit $rc
