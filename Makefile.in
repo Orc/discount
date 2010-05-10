@@ -79,9 +79,9 @@ test:	$(PGMS) echo cols
 	    sh $$x || exit 1; \
 	done
 
-cols:   tools/cols.c
+cols:   tools/cols.c config.h
 	$(CC) -o cols tools/cols.c
-echo:   tools/echo.c
+echo:   tools/echo.c config.h
 	$(CC) -o echo tools/echo.c
 	
 clean:
