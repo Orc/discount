@@ -389,26 +389,9 @@ ishr(Line *t)
 
 
 static int
-ishdr(Line *t, int *htyp)
+issetext(Line *t, int *htyp)
 {
     int i;
-
-
-    /* first check for etx-style ###HEADER###
-     */
-
-    /* leading run of `#`'s ?
-     */
-    for ( i=0; T(t->text)[i] == '#'; ++i)
-	;
-
-    /* ANY leading `#`'s make this into an ETX header
-     */
-    if ( i && (i < S(t->text) || i > 1) ) {
-	*htyp = ETX;
-	return 1;
-    }
-
     /* then check for setext-style HEADER
      *                             ======
      */
@@ -430,6 +413,31 @@ ishdr(Line *t, int *htyp)
 	}
     }
     return 0;
+}
+
+
+static int
+ishdr(Line *t, int *htyp)
+{
+    int i;
+
+
+    /* first check for etx-style ###HEADER###
+     */
+
+    /* leading run of `#`'s ?
+     */
+    for ( i=0; T(t->text)[i] == '#'; ++i)
+	;
+
+    /* ANY leading `#`'s make this into an ETX header
+     */
+    if ( i && (i < S(t->text) || i > 1) ) {
+	*htyp = ETX;
+	return 1;
+    }
+
+    return issetext(t, htyp);
 }
 
 
@@ -767,11 +775,12 @@ listitem(Paragraph *p, int indent)
 		t->next = 0;
 		return q;
 	    }
-	    /* indent as far as the initial line was indented. */
-	    indent = clip;
+	    /* indent at least 2, and at most as
+	     * as far as the initial line was indented. */
+	    indent = clip ? clip : 2;
 	}
 
-	if ( (q->dle < indent) && (ishr(q) || islist(q,&z)) && !ishdr(q,&z) ) {
+	if ( (q->dle < indent) && (ishr(q) || islist(q,&z)) && !issetext(q,&z) ) {
 	    q = t->next;
 	    t->next = 0;
 	    return q;
