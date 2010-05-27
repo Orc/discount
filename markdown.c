@@ -28,7 +28,9 @@ struct kw {
 #define KW(x)	{ x, sizeof(x)-1, 0 }
 #define SC(x)	{ x, sizeof(x)-1, 1 }
 
-static struct kw blocktags[] = { KW("!--"), KW("STYLE"), KW("SCRIPT"),
+static struct kw comment = KW("!--");
+
+static struct kw blocktags[] = { KW("STYLE"), KW("SCRIPT"),
 				 KW("ADDRESS"), KW("BDO"), KW("BLOCKQUOTE"),
 				 KW("CENTER"), KW("DFN"), KW("DIV"), KW("H1"),
 				 KW("H2"), KW("H3"), KW("H4"), KW("H5"),
@@ -145,14 +147,22 @@ isopentag(Line *p)
 {
     int i=0, len;
     struct kw key, *ret;
+    char *line;
 
     if ( !p ) return 0;
 
+    line = T(p->text);
     len = S(p->text);
 
-    if ( len < 3 || T(p->text)[0] != '<' )
+    if ( len < 3 || line[0] != '<' )
 	return 0;
 
+    if ( line[1] == '!' && line[2] == '-' && line[3] == '-' )
+	/* comments need special case handling, because
+	 * the !-- doesn't need to end in a whitespace
+	 */
+	return &comment;
+    
     /* find how long the tag is so we can check to see if
      * it's a block-level tag
      */
@@ -210,6 +220,25 @@ splitline(Line *t, int cutpoint)
 
 
 static Line *
+commentblock(Paragraph *p)
+{
+    Line *t, *ret;
+    char *end;
+
+    for ( t = p->text; t ; t = t->next) {
+	if ( end = strstr(T(t->text), "-->") ) {
+	    splitline(t, 3 + (end - T(t->text)) );
+	    ret = t->next;
+	    t->next = 0;
+	    return ret;
+	}
+    }
+    return t;
+
+}
+
+
+static Line *
 htmlblock(Paragraph *p, struct kw *tag)
 {
     Line *ret;
@@ -217,6 +246,9 @@ htmlblock(Paragraph *p, struct kw *tag)
     int c;
     int i, closing, depth=0;
 
+    if ( tag == &comment )
+	return commentblock(p);
+    
     if ( tag->selfclose || (tag->size >= MAXTAG) ) {
 	ret = f.t->next;
 	f.t->next = 0;
@@ -265,25 +297,6 @@ htmlblock(Paragraph *p, struct kw *tag)
 	}
     }
     return 0;
-}
-
-
-static Line *
-comment(Paragraph *p)
-{
-    Line *t, *ret;
-    char *end;
-
-    for ( t = p->text; t ; t = t->next) {
-	if ( end = strstr(T(t->text), "-->") ) {
-	    splitline(t, 3 + (end - T(t->text)) );
-	    ret = t->next;
-	    t->next = 0;
-	    return ret;
-	}
-    }
-    return t;
-
 }
 
 
@@ -981,10 +994,7 @@ compile_document(Line *ptr, MMIOT *f)
 		T(source) = E(source) = 0;
 	    }
 	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
-	    if ( strcmp(tag->id, "!--") == 0 )
-		ptr = comment(p);
-	    else
-		ptr = htmlblock(p, tag);
+	    ptr = htmlblock(p, tag);
 	}
 	else if ( isfootnote(ptr) ) {
 	    /* footnotes, like cats, sleep anywhere; pull them
