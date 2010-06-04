@@ -13,7 +13,6 @@ ac_help='--enable-dl-tag		Use the DL tag extension
 --enable-amalloc	Enable memory allocation debugging
 --relaxed-emphasis	underscores aren'\''t special in the middle of words
 --with-tabstops=N	Set tabstops to N characters (default is 4)
---enable-html5		Support html5 block elements
 --enable-div		Enable >%id% divisions
 --enable-alpha-list	Enable (a)/(b)/(c) lists
 --enable-all-features	Turn on all stable optional features'
@@ -129,7 +128,6 @@ test -z "$WITH_SUPERSCRIPT" || AC_DEFINE 'SUPERSCRIPT'	1
 test -z "$RELAXED_EMPHASIS" || AC_DEFINE 'RELAXED_EMPHASIS'	1
 test -z "$WITH_DIV"         || AC_DEFINE 'DIV_QUOTE'	1
 test -z "$WITH_ALPHA_LIST"  || AC_DEFINE 'ALPHA_LIST'	1
-test -z "$WITH_HTML5"       || AC_DEFINE 'HTML5_BLOCK_ELEMENTS'	1
 
 
 if [ "$WITH_AMALLOC" ]; then

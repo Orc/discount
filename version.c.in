@@ -25,7 +25,4 @@ char markdown_version[] = VERSION
 #if ALPHA_LIST
 		" AL"
 #endif
-#if HTML5_BLOCK_ELEMENTS
-		" H5"
-#endif
 		;
