@@ -272,12 +272,12 @@ parenthetical(int in, int out, MMIOT *f)
     for ( indent=1,size=0; indent; size++ ) {
 	if ( (c = pull(f)) == EOF )
 	    return EOF;
-	else if ( c == in )
-	    ++indent;
-	else if ( (c == '\\') && (peek(f,1) == out) ) {
+	else if ( (c == '\\') && (peek(f,1) == out || peek(f,1) == in) ) {
 	    ++size;
 	    pull(f);
 	}
+	else if ( c == in )
+	    ++indent;
 	else if ( c == out )
 	    --indent;
     }
