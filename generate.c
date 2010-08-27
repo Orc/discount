@@ -702,7 +702,8 @@ matchticks(MMIOT *f, int *ticks)
 	    size++;
     }
     if ( subsize ) {
-	*ticks = subtick;
+	if ( subtick < *ticks )
+	    *ticks = subtick;
 	return subsize;
     }
     return 0;
@@ -733,7 +734,7 @@ code(MMIOT *f, char *s, int length)
 static void
 codespan(MMIOT *f, int size)
 {
-    int i=0, c;
+    int i=0;
 
     if ( size > 1 && peek(f, size-1) == ' ' ) --size;
     if ( peek(f,i) == ' ' ) ++i, --size;
