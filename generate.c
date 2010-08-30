@@ -664,11 +664,11 @@ mangle(char *s, int len, MMIOT *f)
 /* nrticks() -- count up a row of tick marks
  */
 static int
-nrticks(int offset, MMIOT *f)
+nrticks(int offset, int tickchar, MMIOT *f)
 {
     int  tick = 0;
 
-    while ( peek(f, offset+tick) == '`' ) tick++;
+    while ( peek(f, offset+tick) == tickchar ) tick++;
 
     return tick;
 } /* nrticks */
@@ -682,14 +682,14 @@ nrticks(int offset, MMIOT *f)
  *                 appropriately process the horrible thing.
  */
 static int
-matchticks(MMIOT *f, int *ticks)
+matchticks(MMIOT *f, int tickchar, int *ticks)
 {
     int size, tick, c;
     int subsize=0, subtick=0;
     
     for (size = *ticks; (c=peek(f,size)) != EOF; ) {
-	if ( c == '`' )
-	    if ( (tick=nrticks(size,f)) == *ticks )
+	if ( c == tickchar )
+	    if ( (tick=nrticks(size,tickchar,f)) == *ticks )
 		return size;
 	    else {
 		if ( tick > subtick ) {
@@ -1152,14 +1152,21 @@ text(MMIOT *f)
 		    }
 		    break;
 	
+	case '~':
 	case '`':   if ( tag_text(f) )
 			Qchar(c, f);
 		    else {
-			int size, tick = nrticks(0, f);
+			int size, tick = nrticks(0, c, f);
 
-			if ( size = matchticks(f, &tick) ) {
+			if ( (c == '`' || tick > 1) && (size = matchticks(f, c, &tick)) ) {
 			    shift(f, tick);
-			    codespan(f, size-tick);
+			    if ( c == '`' )
+				codespan(f, size-tick);
+			    else {
+				Qstring("<del>", f);
+				___mkd_reparse(cursor(f)-1, size-tick, 0, f);
+				Qstring("</del>", f);
+			    }
 			    shift(f, size-1);
 			}
 			else {
