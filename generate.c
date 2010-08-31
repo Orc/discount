@@ -18,7 +18,7 @@
 #include "amalloc.h"
 
 typedef int (*stfu)(const void*,const void*);
-
+typedef void (*spanhandler)(MMIOT*,int);
 
 /* forward declarations */
 static void text(MMIOT *f);
@@ -715,6 +715,17 @@ code(MMIOT *f, char *s, int length)
 } /* code */
 
 
+/*  delspan() -- write out a chunk of text, blocking with <del>...</del>
+ */
+static void
+delspan(MMIOT *f, int size)
+{
+    Qstring("<del>", f);
+    ___mkd_reparse(cursor(f)-1, size, 0, f);
+    Qstring("</del>", f);
+}
+
+
 /*  codespan() -- write out a chunk of text as code, trimming one
  *                space off the front and/or back as appropriate.
  */
@@ -1046,6 +1057,30 @@ smartypants(int c, int *flags, MMIOT *f)
 } /* smartypants */
 
 
+/* process a body of text encased in some sort of tick marks.   If it
+ * works, generate the output and return 1, otherwise just return 0 and
+ * let the caller figure it out.
+ */
+static int
+tickhandler(MMIOT *f, int tickchar, int minticks, spanhandler spanner)
+{
+    int endticks, size;
+    int tick = nrticks(0, tickchar, f);
+
+    if ( (tick >= minticks) && (size = matchticks(f,tickchar,tick,&endticks)) ) {
+	if ( endticks < tick ) {
+	    size += (tick - endticks);
+	    tick = endticks;
+	}
+
+	shift(f, tick);
+	(*spanner)(f,size);
+	shift(f, size+tick-1);
+	return 1;
+    }
+    return 0;
+}
+
 #define tag_text(f)	(f->flags & INSIDE_TAG)
 
 
@@ -1139,33 +1174,12 @@ text(MMIOT *f)
 		    }
 		    break;
 	
-	case '~':
-	case '`':   if ( tag_text(f) )
+	case '~':   if ( tag_text(f) || !tickhandler(f,c,2,delspan) )
 			Qchar(c, f);
-		    else {
-			int endticks,minticks = (c == '~') ? 2 : 1;
-			int size, tick = nrticks(0, c, f);
+		    break;
 
-			if ( (tick >= minticks) && (size = matchticks(f,c,tick,&endticks)) ) {
-			    if ( endticks < tick ) {
-				size += (tick - endticks);
-				tick = endticks;
-			    }
-
-			    shift(f, tick);
-			    if ( c == '~' ) {
-				Qstring("<del>", f);
-				___mkd_reparse(cursor(f)-1, size, 0, f);
-				Qstring("</del>", f);
-			    }
-			    else
-				codespan(f, size);
-
-			    shift(f, size+tick-1);
-			}
-			else
-			    Qchar(c, f);
-		    }
+	case '`':   if ( tag_text(f) || !tickhandler(f,c,1,codespan) )
+			Qchar(c, f);
 		    break;
 
 	case '\\':  switch ( c = pull(f) ) {
