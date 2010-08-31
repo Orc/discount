@@ -164,16 +164,6 @@ Qprintf(MMIOT *f, char *fmt, ...)
 }
 
 
-/* Qcopy()
- */
-static void
-Qcopy(int count, MMIOT *f)
-{
-    while ( count-- > 0 )
-	Qchar(pull(f), f);
-}
-
-
 /* Qem()
  */
 static void
@@ -677,37 +667,34 @@ nrticks(int offset, int tickchar, MMIOT *f)
 /* matchticks() -- match a certain # of ticks, and if that fails
  *                 match the largest subset of those ticks.
  *
- *                 if a subset was matched, modify the passed in
- *                 # of ticks so that the caller (text()) can
- *                 appropriately process the horrible thing.
+ *                 if a subset was matched, return the # of ticks
+ *		   that were matched.
  */
 static int
-matchticks(MMIOT *f, int tickchar, int *ticks)
+matchticks(MMIOT *f, int tickchar, int ticks, int *endticks)
 {
-    int size, tick, c;
+    int size, count, c;
     int subsize=0, subtick=0;
     
-    for (size = *ticks; (c=peek(f,size)) != EOF; ) {
-	if ( c == tickchar )
-	    if ( (tick=nrticks(size,tickchar,f)) == *ticks )
+    *endticks = ticks;
+    for (size = 0; (c=peek(f,size+ticks)) != EOF; size ++) {
+	if ( (c == tickchar) && ( count = nrticks(size+ticks,tickchar,f)) ) {
+	    if ( count == ticks )
 		return size;
-	    else {
-		if ( tick > subtick ) {
+	    else if ( count ) {
+		if ( (count > subtick) && (count < ticks) ) {
 		    subsize = size;
-		    subtick = tick;
+		    subtick = count;
 		}
-		size += tick;
+		size += count;
 	    }
-	else
-	    size++;
+	}
     }
     if ( subsize ) {
-	if ( subtick < *ticks )
-	    *ticks = subtick;
+	*endticks = subtick;
 	return subsize;
     }
     return 0;
-    
 } /* matchticks */
 
 
@@ -1156,23 +1143,28 @@ text(MMIOT *f)
 	case '`':   if ( tag_text(f) )
 			Qchar(c, f);
 		    else {
+			int endticks,minticks = (c == '~') ? 2 : 1;
 			int size, tick = nrticks(0, c, f);
 
-			if ( (c == '`' || tick > 1) && (size = matchticks(f, c, &tick)) ) {
+			if ( (tick >= minticks) && (size = matchticks(f,c,tick,&endticks)) ) {
+			    if ( endticks < tick ) {
+				size += (tick - endticks);
+				tick = endticks;
+			    }
+
 			    shift(f, tick);
-			    if ( c == '`' )
-				codespan(f, size-tick);
-			    else {
+			    if ( c == '~' ) {
 				Qstring("<del>", f);
-				___mkd_reparse(cursor(f)-1, size-tick, 0, f);
+				___mkd_reparse(cursor(f)-1, size, 0, f);
 				Qstring("</del>", f);
 			    }
-			    shift(f, size-1);
+			    else
+				codespan(f, size);
+
+			    shift(f, size+tick-1);
 			}
-			else {
+			else
 			    Qchar(c, f);
-			    Qcopy(tick-1, f);
-			}
 		    }
 		    break;
 
