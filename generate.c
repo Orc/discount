@@ -1174,7 +1174,7 @@ text(MMIOT *f)
 		    }
 		    break;
 	
-	case '~':   if ( tag_text(f) || !tickhandler(f,c,2,delspan) )
+	case '~':   if ( (f->flags & (NOSTRIKETHROUGH|INSIDE_TAG|STRICT)) || !tickhandler(f,c,2,delspan) )
 			Qchar(c, f);
 		    break;
 

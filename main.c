@@ -56,6 +56,8 @@ static struct {
     { "toc",     0, MKD_TOC      },
     { "autolink",0, MKD_AUTOLINK },
     { "safelink",0, MKD_SAFELINK },
+    { "del",     1, MKD_NOSTRIKETHROUGH },
+    { "strikethrough", 1, MKD_NOSTRIKETHROUGH },
     { "1.0",     0, MKD_1_COMPAT },
 } ;
 
