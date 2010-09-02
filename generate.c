@@ -1347,8 +1347,8 @@ static int
 printblock(Paragraph *pp, MMIOT *f)
 {
     Line *t = pp->text;
-    static char *Begin[] = { "", "<p>", "<center>"  };
-    static char *End[]   = { "", "</p>","</center>" };
+    static char *Begin[] = { "", "<p>", "<p style=\"text-align:center;\">"  };
+    static char *End[]   = { "", "</p>","</p>" };
 
     while (t) {
 	if ( S(t->text) ) {
