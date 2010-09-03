@@ -457,7 +457,7 @@ static linkytype linkt  = { 0, 0, "<a href=\"", "\"",
  * raw: just dump the link without any processing
  */
 static linkytype specials[] = {
-    { "id:", 3, "<a id=\"", "\"", 0, ">", "</a>", 0, IS_URL },
+    { "id:", 3, "<span id=\"", "\"", 0, ">", "</span>", 0, 0 },
     { "raw:", 4, 0, 0, 0, 0, 0, DENY_HTML, 0 },
     { "lang:", 5, "<span lang=\"", "\"", 0, ">", "</span>", 0, 0 },
     { "abbr:", 5, "<abbr title=\"", "\"", 0, ">", "</abbr>", 0, 0 },
@@ -1464,7 +1464,7 @@ listdisplay(int typ, Paragraph *p, MMIOT* f)
     if ( p ) {
 	Qprintf(f, "<%cl", (typ==UL)?'u':'o');
 	if ( typ == AL )
-	    Qprintf(f, " type=a");
+	    Qprintf(f, " type=\"a\"");
 	Qprintf(f, ">\n");
 
 	for ( ; p ; p = p->next ) {
