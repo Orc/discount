@@ -44,7 +44,7 @@ try 'linky-like []s work' \
 
 try 'pseudo-protocol "id:"'\
     '[foo](id:bar)' \
-    '<p><a id="bar">foo</a></p>'
+    '<p><span id="bar">foo</span></p>'
 
 try 'pseudo-protocol "class:"' \
     '[foo](class:bar)' \

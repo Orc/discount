@@ -226,14 +226,15 @@ mkd_string_to_anchor(char *s, int len, void(*outchar)(int,void*), void *out)
 {
     unsigned char c;
     
+    if ( len && !isalpha(*s) )
+	(*outchar)('L',out);
+
     for ( ; len-- > 0; ) {
 	c = *s++;
-	if ( c == ' ' || c == '&' || c == '<' || c == '"' )
-	    (*outchar)('+', out);
-	else if ( isalnum(c) || ispunct(c) || (c & 0x80) )
+	if ( isalnum(c) || c == '_' || c == '_' || c == ':' || c == '.' )
 	    (*outchar)(c, out);
 	else
-	    (*outchar)('~',out);
+	    (*outchar)('_',out);
     }
 }
 
