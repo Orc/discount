@@ -18,9 +18,7 @@ RSLT='<dl>
 <dd>eh?</dd>
 </dl>'
 
-if ./markdown -V | grep DL_TAG >/dev/null; then
-
-    try '=tag= generates definition lists' "$SRC" "$RSLT"
+try -fdefinitionlist '=tag= generates definition lists' "$SRC" "$RSLT"
 
     try 'one item with two =tags=' \
 	'=this=
@@ -33,8 +31,7 @@ if ./markdown -V | grep DL_TAG >/dev/null; then
 </dl>'
 	
 
-else
-    try '=tag= does nothing' "$SRC" \
+    try -fnodefinitionlist '=tag= does nothing' "$SRC" \
 	'<p>=this=</p>
 
 <pre><code>is an ugly
@@ -45,7 +42,5 @@ else
 <pre><code>eh?
 </code></pre>'
 	
-fi
-
 summary $0
 exit $rc
