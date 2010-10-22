@@ -26,7 +26,7 @@ mkd_toc(Document *p, char **doc)
     *doc = 0;
 
     if ( !(p && p->ctx) ) return -1;
-    if ( ! (p->ctx->flags & TOC) ) return 0;
+    if ( ! (p->ctx->flags & MKD_TOC) ) return 0;
 
     CREATE(res);
     RESERVE(res, 100);

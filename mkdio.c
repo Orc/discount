@@ -94,7 +94,7 @@ populate(getc_func getc, void* ctx, int flags)
 
     if ( !a ) return 0;
 
-    a->tabstop = (flags & STD_TABSTOP) ? 4 : TABSTOP;
+    a->tabstop = (flags & MKD_TABSTOP) ? 4 : TABSTOP;
 
     CREATE(line);
 
@@ -118,7 +118,7 @@ populate(getc_func getc, void* ctx, int flags)
 
     DELETE(line);
 
-    if ( (pandoc == 3) && !(flags & (MKD_NOHEADER|STRICT)) ) {
+    if ( (pandoc == 3) && !(flags & (MKD_NOHEADER|MKD_STRICT)) ) {
 	/* the first three lines started with %, so we have a header.
 	 * clip the first three lines out of content and hang them
 	 * off header.
@@ -186,7 +186,7 @@ mkd_generatehtml(Document *p, FILE *output)
     int szdoc;
 
     if ( (szdoc = mkd_document(p, &doc)) != EOF ) {
-	if ( p->ctx->flags & CDATA_OUTPUT )
+	if ( p->ctx->flags & MKD_CDATA )
 	    mkd_generatexml(doc, szdoc, output);
 	else
 	    fwrite(doc, szdoc, 1, output);
@@ -292,7 +292,7 @@ mkd_generateline(char *bfr, int size, FILE *output, DWORD flags)
     MMIOT f;
 
     mkd_parse_line(bfr, size, &f, flags);
-    if ( flags & CDATA_OUTPUT )
+    if ( flags & MKD_CDATA )
 	mkd_generatexml(T(f.out), S(f.out), output);
     else
 	fwrite(T(f.out), S(f.out), 1, output);

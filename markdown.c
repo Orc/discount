@@ -938,7 +938,7 @@ compile_document(Line *ptr, MMIOT *f)
     int eaten;
 
     while ( ptr ) {
-	if ( !(f->flags & DENY_HTML) && (tag = isopentag(ptr)) ) {
+	if ( !(f->flags & MKD_NOHTML) && (tag = isopentag(ptr)) ) {
 	    /* If we encounter a html/style block, compile and save all
 	     * of the cached source BEFORE processing the html/style.
 	     */
@@ -1028,7 +1028,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p = Pp(&d, ptr, HDR);
 	    ptr = headerblock(p, hdr_type);
 	}
-	else if ( istable(ptr) && !(f->flags & (STRICT|NOTABLES)) ) {
+	else if ( istable(ptr) && !(f->flags & (MKD_STRICT|MKD_NOTABLES)) ) {
 	    p = Pp(&d, ptr, TABLE);
 	    ptr = tableblock(p);
 	}

@@ -445,9 +445,9 @@ typedef struct linkytype {
 } linkytype;
 
 static linkytype imaget = { 0, 0, "<img src=\"", "\"",
-			     1, " alt=\"", "\" />", DENY_IMG|INSIDE_TAG, IS_URL };
+			     1, " alt=\"", "\" />", MKD_NOIMAGE|MKD_TAGTEXT, IS_URL };
 static linkytype linkt  = { 0, 0, "<a href=\"", "\"",
-                             0, ">", "</a>", DENY_A, IS_URL };
+                             0, ">", "</a>", MKD_NOLINKS, IS_URL };
 
 /*
  * pseudo-protocols for [][];
@@ -458,7 +458,7 @@ static linkytype linkt  = { 0, 0, "<a href=\"", "\"",
  */
 static linkytype specials[] = {
     { "id:", 3, "<span id=\"", "\"", 0, ">", "</span>", 0, 0 },
-    { "raw:", 4, 0, 0, 0, 0, 0, DENY_HTML, 0 },
+    { "raw:", 4, 0, 0, 0, 0, 0, MKD_NOHTML, 0 },
     { "lang:", 5, "<span lang=\"", "\"", 0, ">", "</span>", 0, 0 },
     { "abbr:", 5, "<abbr title=\"", "\"", 0, ">", "</abbr>", 0, 0 },
     { "class:", 6, "<span class=\"", "\"", 0, ">", "</span>", 0, 0 },
@@ -503,7 +503,7 @@ printlinkyref(MMIOT *f, linkytype *tag, char *link, int size)
 	    puturl(link + tag->szpat, size - tag->szpat, f, 0);
     }
     else
-	___mkd_reparse(link + tag->szpat, size - tag->szpat, INSIDE_TAG, f);
+	___mkd_reparse(link + tag->szpat, size - tag->szpat, MKD_TAGTEXT, f);
 
     Qstring(tag->link_sfx, f);
 
@@ -525,13 +525,13 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
     if ( image )
 	tag = &imaget;
     else if ( tag = pseudo(ref->link) ) {
-	if ( f->flags & (NO_PSEUDO_PROTO|SAFELINK) )
+	if ( f->flags & (MKD_NO_EXT|MKD_SAFELINK) )
 	    return 0;
     }
-    else if ( (f->flags & SAFELINK) && T(ref->link)
-				    && (T(ref->link)[0] != '/')
-				    && !isautoprefix(T(ref->link), S(ref->link)) )
-	/* if SAFELINK, only accept links that are local or
+    else if ( (f->flags & MKD_SAFELINK) && T(ref->link)
+				        && (T(ref->link)[0] != '/')
+				        && !isautoprefix(T(ref->link), S(ref->link)) )
+	/* if MKD_SAFELINK, only accept links that are local or
 	 * a well-known protocol
 	 */
 	return 0;
@@ -553,7 +553,7 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 
 	if ( S(ref->title) ) {
 	    Qstring(" title=\"", f);
-	    ___mkd_reparse(T(ref->title), S(ref->title), INSIDE_TAG, f);
+	    ___mkd_reparse(T(ref->title), S(ref->title), MKD_TAGTEXT, f);
 	    Qchar('"', f);
 	}
 
@@ -751,19 +751,19 @@ codespan(MMIOT *f, int size)
 
 
 /* before letting a tag through, validate against
- * DENY_A and DENY_IMG
+ * MKD_NOLINKS and MKD_NOIMAGE
  */
 static int
 forbidden_tag(MMIOT *f)
 {
     int c = toupper(peek(f, 1));
 
-    if ( f->flags & DENY_HTML )
+    if ( f->flags & MKD_NOHTML )
 	return 1;
 
-    if ( c == 'A' && (f->flags & DENY_A) && !isthisalnum(f,2) )
+    if ( c == 'A' && (f->flags & MKD_NOLINKS) && !isthisalnum(f,2) )
 	return 1;
-    if ( c == 'I' && (f->flags & DENY_IMG)
+    if ( c == 'I' && (f->flags & MKD_NOIMAGE)
 		  && strncasecmp(cursor(f)+1, "MG", 2) == 0
 		  && !isthisalnum(f,4) )
 	return 1;
@@ -810,7 +810,7 @@ process_possible_link(MMIOT *f, int size)
     int mailto = 0;
     char *text = cursor(f);
     
-    if ( f->flags & DENY_A ) return 0;
+    if ( f->flags & MKD_NOLINKS ) return 0;
 
     if ( (size > 7) && strncasecmp(text, "mailto:", 7) == 0 ) {
 	/* if it says it's a mailto, it's a mailto -- who am
@@ -857,7 +857,7 @@ maybe_tag_or_link(MMIOT *f)
     int c, size;
     int maybetag = 1;
 
-    if ( f->flags & INSIDE_TAG )
+    if ( f->flags & MKD_TAGTEXT )
 	return 0;
 
     for ( size=0; (c = peek(f, size+1)) != '>'; size++) {
@@ -1020,7 +1020,7 @@ smartypants(int c, int *flags, MMIOT *f)
 {
     int i;
 
-    if ( f->flags & (DENY_SMARTY|INSIDE_TAG|IS_LABEL) )
+    if ( f->flags & (MKD_NOPANTS|MKD_TAGTEXT|IS_LABEL) )
 	return 0;
 
     for ( i=0; i < NRSMART; i++)
@@ -1088,7 +1088,7 @@ tickhandler(MMIOT *f, int tickchar, int minticks, spanhandler spanner)
     return 0;
 }
 
-#define tag_text(f)	(f->flags & INSIDE_TAG)
+#define tag_text(f)	(f->flags & MKD_TAGTEXT)
 
 
 static void
@@ -1099,7 +1099,7 @@ text(MMIOT *f)
     int smartyflags = 0;
 
     while (1) {
-        if ( (f->flags & AUTOLINK) && isalpha(peek(f,1)) && !tag_text(f) )
+        if ( (f->flags & MKD_AUTOLINK) && isalpha(peek(f,1)) && !tag_text(f) )
 	    maybe_autolink(f);
 
         c = pull(f);
@@ -1139,7 +1139,7 @@ text(MMIOT *f)
 			Qchar(c, f);
 		    break;
 	/* A^B -> A<sup>B</sup> */
-	case '^':   if ( (f->flags & (MKD_NOSUPERSCRIPT|STRICT|INSIDE_TAG))
+	case '^':   if ( (f->flags & (MKD_NOSUPERSCRIPT|MKD_STRICT|MKD_TAGTEXT))
 						       || isthisspace(f,-1)
 							|| isthisspace(f,1) )
 			Qchar(c,f);
@@ -1157,7 +1157,7 @@ text(MMIOT *f)
 		    break;
 	case '_':
 	/* Underscores don't count if they're in the middle of a word */
-		    if ( (f->flags & (MKD_NORELAXED|STRICT))
+		    if ( (f->flags & (MKD_NORELAXED|MKD_STRICT))
 					&& isthisalnum(f,-1)
 					 && isthisalnum(f,1) ) {
 			Qchar(c, f);
@@ -1180,7 +1180,7 @@ text(MMIOT *f)
 		    }
 		    break;
 	
-	case '~':   if ( (f->flags & (NOSTRIKETHROUGH|INSIDE_TAG|STRICT)) || !tickhandler(f,c,2,delspan) )
+	case '~':   if ( (f->flags & (MKD_NOSTRIKETHROUGH|MKD_TAGTEXT|MKD_STRICT)) || !tickhandler(f,c,2,delspan) )
 			Qchar(c, f);
 		    break;
 
@@ -1236,7 +1236,7 @@ static void
 printheader(Paragraph *pp, MMIOT *f)
 {
     Qprintf(f, "<h%d", pp->hnumber);
-    if ( f->flags & TOC ) {
+    if ( f->flags & MKD_TOC ) {
 	Qprintf(f, " id=\"", pp->hnumber);
 	mkd_string_to_anchor(T(pp->text->text), S(pp->text->text), Qchar, f, 1);
 	Qchar('"', f);
