@@ -10,8 +10,6 @@
 ac_help='--enable-dl-tag		Use the DL tag extension
 --enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
---enable-div		Enable >%id% divisions
---enable-alpha-list	Enable (a)/(b)/(c) lists
 --enable-all-features	Turn on all stable optional features'
 
 LOCAL_AC_OPTIONS='
@@ -28,9 +26,6 @@ locals() {
     case "$K" in
     --ENABLE-ALL|--ENABLE-ALL-FEATURES)
 		echo WITH_AMALLOC=T
-		echo WITH_DL_TAG=T
-		echo WITH_DIV=T
-		echo WITH_ALPHA_LIST=T
 		;;
     --ENABLE-*)	enable=`echo $K | sed -e 's/--ENABLE-//' | tr '-' '_'`
 		echo WITH_${enable}=T ;;
@@ -115,25 +110,12 @@ fi
 AC_DEFINE 'TABSTOP' $TABSTOP
 AC_SUB    'TABSTOP' $TABSTOP
 
-test -z "$WITH_SUPERSCRIPT" || AC_DEFINE 'SUPERSCRIPT'	1
-test -z "$RELAXED_EMPHASIS" || AC_DEFINE 'RELAXED_EMPHASIS'	1
-test -z "$WITH_DIV"         || AC_DEFINE 'DIV_QUOTE'	1
-test -z "$WITH_ALPHA_LIST"  || AC_DEFINE 'ALPHA_LIST'	1
-
-
 if [ "$WITH_AMALLOC" ]; then
     AC_DEFINE	'USE_AMALLOC'	1
     AC_SUB	'AMALLOC'	'amalloc.o'
 else
     AC_SUB	'AMALLOC'	''
 fi
-
-if [ "$RELAXED_EMPHASIS" -o "$WITH_SUPERSCRIPT" ]; then
-    AC_SUB      'STRICT'	''
-else
-    AC_SUB	'STRICT'	'.\"'
-fi
-
 
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
 
