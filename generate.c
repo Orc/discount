@@ -614,6 +614,8 @@ linkylinky(int image, MMIOT *f)
 		if ( ref = bsearch(&key, T(*f->footnotes), S(*f->footnotes),
 					  sizeof key, (stfu)__mkd_footsort) )
 		    status = linkyformat(f, name, image, ref);
+		else if ( f->flags & IS_LABEL )
+		    status = linkyformat(f, name, image, &imaget);
 	    }
 	}
     }
