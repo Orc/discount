@@ -60,9 +60,7 @@ and
 .Em "</span>" .
 .El
 .Ss Pandoc headers
-If markdown was configured with
-.Ar --enable-pandoc-header ,
-the markdown source document can have a 3-line 
+The markdown source document can have a 3-line 
 .Xr Pandoc
 header in the format of
 .nf
@@ -77,9 +75,7 @@ and
 .Fn mkd_doc_date
 functions.
 .Ss Definition lists
-If markdown was configured with
-.Ar --enable-dl-tag ,
-markup for definition lists is enabled.  A definition list item
+A definition list item
 is defined as
 .nf
 =tag=
@@ -107,9 +103,7 @@ at the beginning of a subsequent line.
 Be warned that style blocks work like footnote links -- no matter
 where you define them they are valid for the entire document.
 .Ss relaxed emphasis
-If markdown was configured with
-.Ar --relaxed-emphasis ,
-the rules for emphasis are changed so that a single
+The rules for emphasis are changed so that a single
 .Ar _
 will
 .Em not
@@ -117,9 +111,7 @@ count as a emphasis character if it's in the middle of a word.
 This is primarily for documenting code, if you don't wish to
 have to backquote all code references.
 .Ss alpha lists
-If markdown was configured with
-.Ar --enable-alpha-list ,
-alphabetic lists (like regular numeric lists, but with alphabetic
+Alphabetic lists (like regular numeric lists, but with alphabetic
 items) are supported.    So:
 .nf
     a. this
@@ -137,7 +129,7 @@ will produce:
     </ol>
 .fi
 .Ss tables
-.Ar PHP Markdown Extra -style
+.Ar "PHP Markdown Extra"
 tables are supported;  input of the form
 .nf
     header|header
