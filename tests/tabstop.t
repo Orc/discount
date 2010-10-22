@@ -42,7 +42,7 @@ if [ "${TAB:-4}" -eq 8 ]; then
 </li>
 </ul>'
 
-fi
 
 summary $0
+fi
 exit $rc

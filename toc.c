@@ -23,46 +23,47 @@ mkd_toc(Document *p, char **doc)
     int last_hnumber = 0;
     Cstring res;
     
-    CREATE(res);
-    RESERVE(res, 100);
-
     *doc = 0;
 
     if ( !(p && p->ctx) ) return -1;
     if ( ! (p->ctx->flags & TOC) ) return 0;
+
+    CREATE(res);
+    RESERVE(res, 100);
 
     for ( tp = p->code; tp ; tp = tp->next ) {
 	if ( tp->typ == SOURCE ) {
 	    for ( srcp = tp->down; srcp; srcp = srcp->next ) {
 		if ( srcp->typ == HDR && srcp->text ) {
 	    
-		    if ( last_hnumber == srcp->hnumber )
-			Csprintf(&res,  "%*s</li>\n", srcp->hnumber, "");
-		    else while ( last_hnumber > srcp->hnumber ) {
-			Csprintf(&res, "%*s</li>\n%*s</ul>\n",
-					 last_hnumber, "",
-					 last_hnumber-1,"");
-			--last_hnumber;
+		    if ( last_hnumber >= srcp->hnumber ) {
+			while ( last_hnumber > srcp->hnumber ) {
+			    Csprintf(&res, "%*s</ul></li>\n", last_hnumber-1,"");
+			    --last_hnumber;
+			}
 		    }
 
 		    while ( srcp->hnumber > last_hnumber ) {
-			Csprintf(&res, "\n%*s<ul>\n", srcp->hnumber, "");
+			Csprintf(&res, "%*s%s<ul>\n", last_hnumber, "",
+				    last_hnumber ? "<li>" : "");
 			++last_hnumber;
 		    }
 		    Csprintf(&res, "%*s<li><a href=\"#", srcp->hnumber, "");
-		    mkd_string_to_anchor(T(srcp->text->text), S(srcp->text->text), Csputc, &res);
+		    mkd_string_to_anchor(T(srcp->text->text),
+					 S(srcp->text->text), Csputc, &res,1);
 		    Csprintf(&res, "\">");
-		    Csreparse(&res, T(srcp->text->text), S(srcp->text->text), 0);
+		    mkd_string_to_anchor(T(srcp->text->text),
+					 S(srcp->text->text), Csputc, &res,0);
 		    Csprintf(&res, "</a>");
+		    Csprintf(&res, "</li>\n");
 		}
 	    }
         }
     }
 
     while ( last_hnumber > 0 ) {
-	Csprintf(&res, "%*s</li>\n%*s</ul>\n",
-			last_hnumber, "", last_hnumber, "");
 	--last_hnumber;
+	Csprintf(&res, last_hnumber ? "%*s</ul></li>\n" : "%*s</ul>\n", last_hnumber, "");
     }
 			/* HACK ALERT! HACK ALERT! HACK ALERT! */
     *doc = T(res);	/* we know that a T(Cstring) is a character pointer */

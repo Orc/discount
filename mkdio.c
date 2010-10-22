@@ -146,7 +146,7 @@ populate(getc_func getc, void* ctx, int flags)
 /* convert a file into a linked list
  */
 Document *
-mkd_in(FILE *f, int flags)
+mkd_in(FILE *f, DWORD flags)
 {
     return populate((getc_func)fgetc, f, flags & INPUT_MASK);
 }
@@ -174,7 +174,7 @@ strget(struct string_ctx *in)
 /* convert a block of text into a linked list
  */
 Document *
-mkd_string(char *buf, int len, int flags)
+mkd_string(char *buf, int len, DWORD flags)
 {
     struct string_ctx about;
 
@@ -222,19 +222,32 @@ markdown(Document *document, FILE *out, int flags)
 /* write out a Cstring, mangled into a form suitable for `<a href=` or `<a id=`
  */
 void
-mkd_string_to_anchor(char *s, int len, void(*outchar)(int,void*), void *out)
+mkd_string_to_anchor(char *s, int len, void(*outchar)(int,void*),
+				       void *out, int labelformat)
 {
     unsigned char c;
+
+    int i, size;
+    char *line;
+
+    size = mkd_line(s, len, &line, IS_LABEL);
     
-    for ( ; len-- > 0; ) {
-	c = *s++;
-	if ( c == ' ' || c == '&' || c == '<' || c == '"' )
-	    (*outchar)('+', out);
-	else if ( isalnum(c) || ispunct(c) || (c & 0x80) )
-	    (*outchar)(c, out);
+    for ( i=0; i < size ; i++ ) {
+	c = line[i];
+	if ( labelformat ) {
+	    if ( c == ' ' || c == '&' || c == '<' || c == '"' )
+		(*outchar)('+', out);
+	    else if ( isalnum(c) || ispunct(c) || (c & 0x80) )
+		(*outchar)(c, out);
+	    else
+		(*outchar)('~',out);
+	}
 	else
-	    (*outchar)('~',out);
+	    (*outchar)(c,out);
     }
+	
+    if (line)
+	free(line);
 }
 
 
@@ -253,7 +266,7 @@ mkd_parse_line(char *bfr, int size, MMIOT *f, int flags)
 /* ___mkd_reparse() a line, returning it in malloc()ed memory
  */
 int
-mkd_line(char *bfr, int size, char **res, int flags)
+mkd_line(char *bfr, int size, char **res, DWORD flags)
 {
     MMIOT f;
     int len;
@@ -268,7 +281,7 @@ mkd_line(char *bfr, int size, char **res, int flags)
 	 */
 	*res = T(f.out);
 	T(f.out) = 0;
-	S(f.out) = 0;
+	S(f.out) = ALLOCATED(f.out) = 0;
     }
     else {
 	 *res = 0;
@@ -282,7 +295,7 @@ mkd_line(char *bfr, int size, char **res, int flags)
 /* ___mkd_reparse() a line, writing it to a FILE
  */
 int
-mkd_generateline(char *bfr, int size, FILE *output, int flags)
+mkd_generateline(char *bfr, int size, FILE *output, DWORD flags)
 {
     MMIOT f;
 

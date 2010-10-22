@@ -63,7 +63,7 @@ AC_PROG ranlib
 
 AC_C_VOLATILE
 AC_C_CONST
-AC_SCALAR_TYPES sub
+AC_SCALAR_TYPES sub hdr
 AC_CHECK_BASENAME
 
 AC_CHECK_HEADERS sys/types.h pwd.h && AC_CHECK_FUNCS getpwuid
@@ -149,4 +149,4 @@ fi
 [ "$WITH_DL_TAG" ] && AC_DEFINE 'DL_TAG_EXTENSION' '1'
 [ "$WITH_PANDOC_HEADER" ] && AC_DEFINE 'PANDOC_HEADER' '1'
 
-AC_OUTPUT Makefile version.c markdown.1
+AC_OUTPUT Makefile version.c markdown.1 mkdio.h

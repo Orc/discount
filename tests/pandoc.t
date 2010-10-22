@@ -13,7 +13,7 @@ HEADER='% title
 if ./markdown -V | grep HEADER > /dev/null; then
 
     try 'valid header' "$HEADER" ''
-    try -F0x0100 'valid header with -F0x0100' "$HEADER" '<p>% title
+    try -F0x10000000 'valid header with -F0x10000000' "$HEADER" '<p>% title
 % author(s)
 % date</p>'
 

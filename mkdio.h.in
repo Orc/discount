@@ -7,22 +7,22 @@ typedef void MMIOT;
 
 /* line builder for markdown()
  */
-MMIOT *mkd_in(FILE*,int);		/* assemble input from a file */
-MMIOT *mkd_string(char*,int,int);	/* assemble input from a buffer */
+MMIOT *mkd_in(FILE*,@DWORD@);		/* assemble input from a file */
+MMIOT *mkd_string(char*,int,@DWORD@);	/* assemble input from a buffer */
 
 void mkd_basename(MMIOT*,char*);
 
 /* compilation, debugging, cleanup
  */
-int mkd_compile(MMIOT*, int);
+int mkd_compile(MMIOT*, @DWORD@);
 int mkd_cleanup(MMIOT*);
 
 /* markup functions
  */
 int mkd_dump(MMIOT*, FILE*, int, char*);
-int markdown(MMIOT*, FILE*, int);
-int mkd_line(char *, int, char **, int);
-void mkd_string_to_anchor(char *, int, int (*)(int,void*), void*);
+int markdown(MMIOT*, FILE*, @DWORD@);
+int mkd_line(char *, int, char **, @DWORD@);
+void mkd_string_to_anchor(char *, int, int (*)(int,void*), void*, int);
 int mkd_xhtmlpage(MMIOT*,int,FILE*);
 
 /* header block access
@@ -45,7 +45,7 @@ int mkd_generatetoc(MMIOT*,FILE*);
 int mkd_generatexml(char *, int,FILE*);
 int mkd_generatecss(MMIOT*,FILE*);
 #define mkd_style mkd_generatecss
-int mkd_generateline(char *, int, FILE*, int);
+int mkd_generateline(char *, int, FILE*, @DWORD@);
 #define mkd_text mkd_generateline
 
 /* url generator callbacks

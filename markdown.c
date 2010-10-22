@@ -1074,7 +1074,7 @@ mkd_initialize()
  * prepare and compile `text`, returning a Paragraph tree.
  */
 int
-mkd_compile(Document *doc, int flags)
+mkd_compile(Document *doc, DWORD flags)
 {
     if ( !doc )
 	return 0;

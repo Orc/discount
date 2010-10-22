@@ -875,14 +875,22 @@ EOF
     rc=1
     LOGN "defining WORD & DWORD scalar types"
     if $AC_CC /tmp/pd$$.c -o /tmp/pd$$; then
-	case "$1" in
-	sub)if /tmp/pd$$ sub >> $__cwd/config.sub; then
-		rc=0
-	    fi;;
-	*)  if /tmp/pd$$ >> $__cwd/config.h; then
-		rc=0
-	    fi ;;
-	esac
+	while [ "$1" ]; do
+	    case "$1" in
+	    sub)if /tmp/pd$$ sub >> $__cwd/config.sub; then
+		    rc=0
+		fi;;
+	    *)  if /tmp/pd$$ >> $__cwd/config.h; then
+		    rc=0
+		fi ;;
+	    esac
+	    shift
+	done
+	if [ "$rc" != 0 ]; then
+	    if /tmp/pd$$ >> $__cwd/config.h; then
+		rc=1
+	    fi
+	fi
     fi
     case "$rc" in
     0) TLOG "" ;;
