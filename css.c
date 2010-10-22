@@ -28,9 +28,10 @@ stylesheets(Paragraph *p, Cstring *f)
 
     for ( ; p ; p = p->next ) {
 	if ( p->typ == STYLE ) {
-	    for ( q = p->text; q ; q = q->next )
+	    for ( q = p->text; q ; q = q->next ) {
 		Cswrite(f, T(q->text), S(q->text));
 		Csputc('\n', f);
+	    }
 	}
 	if ( p->down )
 	    stylesheets(p->down, f);
