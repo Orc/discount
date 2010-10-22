@@ -1020,7 +1020,7 @@ smartypants(int c, int *flags, MMIOT *f)
 {
     int i;
 
-    if ( f->flags & (DENY_SMARTY|INSIDE_TAG) )
+    if ( f->flags & (DENY_SMARTY|INSIDE_TAG|IS_LABEL) )
 	return 0;
 
     for ( i=0; i < NRSMART; i++)
