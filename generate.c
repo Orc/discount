@@ -1137,9 +1137,9 @@ text(MMIOT *f)
 			Qchar(c, f);
 		    break;
 	/* A^B -> A<sup>B</sup> */
-	case '^':   if ( !(f->flags & MKD_SUPERSCRIPT) ||
-		      (f->flags & (STRICT|INSIDE_TAG)) || isthisspace(f,-1)
-						       || isthisspace(f,1) )
+	case '^':   if ( (f->flags & (MKD_NOSUPERSCRIPT|STRICT|INSIDE_TAG))
+						       || isthisspace(f,-1)
+							|| isthisspace(f,1) )
 			Qchar(c,f);
 		    else {
 			char *sup = cursor(f);
@@ -1155,9 +1155,9 @@ text(MMIOT *f)
 		    break;
 	case '_':
 	/* Underscores don't count if they're in the middle of a word */
-		    if ( (f->flags & MKD_RELAXED) && !(f->flags & STRICT)
-						  && isthisalnum(f,-1)
-						  && isthisalnum(f,1) ) {
+		    if ( (f->flags & (MKD_NORELAXED|STRICT))
+					&& isthisalnum(f,-1)
+					 && isthisalnum(f,1) ) {
 			Qchar(c, f);
 			break;
 		    }
