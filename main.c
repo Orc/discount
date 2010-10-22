@@ -58,6 +58,8 @@ static struct {
     { "safelink",0, MKD_SAFELINK },
     { "del",     1, MKD_NOSTRIKETHROUGH },
     { "strikethrough", 1, MKD_NOSTRIKETHROUGH },
+    { "superscript", 1, MKD_NOSUPERSCRIPT },
+    { "emphasis",    0, MKD_NORELAXED },
     { "1.0",     0, MKD_1_COMPAT },
 } ;
 

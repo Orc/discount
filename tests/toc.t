@@ -8,10 +8,9 @@ MARKDOWN_FLAGS=
 try '-T -ftoc' 'table of contents' \
 '#H1
 hi' \
-'
- <ul>
- <li><a href="#H1">H1</a> </li>
- </ul>
+'<ul>
+ <li><a href="#H1">H1</a></li>
+</ul>
 <h1 id="H1">H1</h1>
 
 <p>hi</p>'

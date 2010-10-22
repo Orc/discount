@@ -489,10 +489,13 @@ printlinkyref(MMIOT *f, linkytype *tag, char *link, int size)
 {
     char *edit;
     
+    if ( f->flags & IS_LABEL )
+	return;
+    
     Qstring(tag->link_pfx, f);
 	
     if ( tag->kind & IS_URL ) {
-	if ( f->cb->e_url && (edit = (*f->cb->e_url)(link, size, f->cb->e_data)) ) {
+	if ( f->cb && f->cb->e_url && (edit = (*f->cb->e_url)(link, size, f->cb->e_data)) ) {
 	    puturl(edit, strlen(edit), f, 0);
 	    if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
 	}
@@ -504,7 +507,7 @@ printlinkyref(MMIOT *f, linkytype *tag, char *link, int size)
 
     Qstring(tag->link_sfx, f);
 
-    if ( f->cb->e_flags && (edit = (*f->cb->e_flags)(link, size, f->cb->e_data)) ) {
+    if ( f->cb && f->cb->e_flags && (edit = (*f->cb->e_flags)(link, size, f->cb->e_data)) ) {
 	Qchar(' ', f);
 	Qstring(edit, f);
 	if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
@@ -538,7 +541,9 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
     if ( f->flags & tag->flags )
 	return 0;
 
-    if ( tag->link_pfx ) {
+    if ( f->flags & IS_LABEL )
+	___mkd_reparse(T(text), S(text), tag->flags, f);
+    else if ( tag->link_pfx ) {
 	printlinkyref(f, tag, T(ref->link), S(ref->link));
 
 	if ( tag->WxH ) {
@@ -609,6 +614,8 @@ linkylinky(int image, MMIOT *f)
 		if ( ref = bsearch(&key, T(*f->footnotes), S(*f->footnotes),
 					  sizeof key, (stfu)__mkd_footsort) )
 		    status = linkyformat(f, name, image, ref);
+		else if ( f->flags & IS_LABEL )
+		    status = linkyformat(f, name, image, &imaget);
 	    }
 	}
     }
@@ -1013,7 +1020,7 @@ smartypants(int c, int *flags, MMIOT *f)
 {
     int i;
 
-    if ( f->flags & (DENY_SMARTY|INSIDE_TAG) )
+    if ( f->flags & (DENY_SMARTY|INSIDE_TAG|IS_LABEL) )
 	return 0;
 
     for ( i=0; i < NRSMART; i++)
@@ -1131,9 +1138,10 @@ text(MMIOT *f)
 	case '[':   if ( tag_text(f) || !linkylinky(0, f) )
 			Qchar(c, f);
 		    break;
-#if SUPERSCRIPT
 	/* A^B -> A<sup>B</sup> */
-	case '^':   if ( (f->flags & (STRICT|INSIDE_TAG)) || isthisspace(f,-1) || isthisspace(f,1) )
+	case '^':   if ( (f->flags & (MKD_NOSUPERSCRIPT|STRICT|INSIDE_TAG))
+						       || isthisspace(f,-1)
+							|| isthisspace(f,1) )
 			Qchar(c,f);
 		    else {
 			char *sup = cursor(f);
@@ -1147,16 +1155,14 @@ text(MMIOT *f)
 			Qstring("</sup>", f);
 		    }
 		    break;
-#endif
 	case '_':
-#if RELAXED_EMPHASIS
 	/* Underscores don't count if they're in the middle of a word */
-		    if ( !(f->flags & STRICT) && isthisalnum(f,-1)
-					      && isthisalnum(f,1) ) {
+		    if ( (f->flags & (MKD_NORELAXED|STRICT))
+					&& isthisalnum(f,-1)
+					 && isthisalnum(f,1) ) {
 			Qchar(c, f);
 			break;
 		    }
-#endif
 	case '*':
 	/* Underscores & stars don't count if they're out in the middle
 	 * of whitespace */
@@ -1232,7 +1238,7 @@ printheader(Paragraph *pp, MMIOT *f)
     Qprintf(f, "<h%d", pp->hnumber);
     if ( f->flags & TOC ) {
 	Qprintf(f, " id=\"", pp->hnumber);
-	mkd_string_to_anchor(T(pp->text->text), S(pp->text->text), Qchar, f);
+	mkd_string_to_anchor(T(pp->text->text), S(pp->text->text), Qchar, f, 1);
 	Qchar('"', f);
     }
     Qchar('>', f);
@@ -1432,7 +1438,6 @@ htmlify(Paragraph *p, char *block, char *arguments, MMIOT *f)
 }
 
 
-#if DL_TAG_EXTENSION
 static void
 definitionlist(Paragraph *p, MMIOT *f)
 {
@@ -1455,7 +1460,6 @@ definitionlist(Paragraph *p, MMIOT *f)
 	Qstring("</dl>", f);
     }
 }
-#endif
 
 
 static void
@@ -1507,11 +1511,9 @@ display(Paragraph *p, MMIOT *f)
 	listdisplay(p->typ, p->down, f);
 	break;
 
-#if DL_TAG_EXTENSION
     case DL:
 	definitionlist(p->down, f);
 	break;
-#endif
 
     case HR:
 	Qstring("<hr />", f);
