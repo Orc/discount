@@ -122,4 +122,4 @@ fi
 [ "$WITH_DL_TAG" ] && AC_DEFINE 'DL_TAG_EXTENSION' '1'
 [ "$WITH_PANDOC_HEADER" ] && AC_DEFINE 'PANDOC_HEADER' '1'
 
-AC_OUTPUT Makefile version.c markdown.1 mkdio.h
+AC_OUTPUT Makefile version.c mkdio.h

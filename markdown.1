@@ -41,40 +41,66 @@ tree to stdout.
 Set or clear various translation flags.   The flags
 are in a comma-delimited list, with an optional
 .Ar +
-(set) prefix on each flag.
-.Bl -tag -width "NOHEADER"
-.It Ar noimage
-Don't allow image tags.
-.It Ar nolinks
-Don't allow links.
-.It Ar nohtml
-Don't allow 
-.B any
-embedded html.
-.It Ar cdata
-Generate valid XML output.
-.It Ar noheader
-Do not process pandoc headers.
-.It Ar notables
-Do not process Markdown Extra-style tables.
-.It Ar tabstops
+(enable),
+.Ar -
+(disable), or
+.Ar no
+(disable) lprefix on each flag.
+.Bl -tag -width "definitionlist"
+.It Ar tabstop
 Use markdown-standard 4-space tabstops.
-.It Ar strict
-Disable most optional features.
+.It Ar image
+Allow images.
+.It Ar links
+Allow links.
 .It Ar relax
-Enable most optional features (this is the default.)
+Allow most optional features.
+.It Ar strict
+Prohibit most optional features.
+.It Ar tables
+Allow markdown-extra style tables.
+.It Ar header
+Allow pandoc headers.
+.It Ar html
+Allow embedded html.
+.It Ar ext
+Allow pseudo-protocols in links.
+.It Ar cdata
+Write output as CDATA.
+.It Ar pants
+Enable smartypants processing.
+.It Ar smarty
+Enable smartypants processing.
 .It Ar toc
-Enable table-of-contents support
+Enable table-of-contents support.
+.It Ar autolink
+Linkify any URLs found in the input.
+.It Ar safelink
+Only linkify URLs that are local or a well-known protocol.
+.It Ar del
+Enable strikethrough.
+.It Ar strikethrough
+Enable strikethrough.
+.It Ar superscript
+Enable superscript.
+.It Ar emphasis
+Enable relaxed emphasis (underscores in the middle of words do not count for emphasis.)
+.It Ar divquote
+Enable division quotes.
+.It Ar alphalist
+Enable alphabetic list items.
+.It Ar definitionlist
+Enable definition lists.
 .It Ar 1.0
 Revert to Markdown 1.0 compatability.
 .El
 .Pp
 As an example, the option
-.Fl f Ar nolinks,quot
+.Fl f Ar nolinks,smarty
 tells
 .Nm
-to not allow \<a tags, and to expand
-double-quotes.
+to not allow \<a tags, and to do smarty
+pants processing.
 .It Fl F Ar bitmap
 Set translation flags.
 .Ar Bitmap
@@ -87,14 +113,14 @@ described in
 Show the version# and configuration data.
 .Pp
 If the version includes the string
-.Em DL_TAG ,
+.Em DEBUG ,
 .Nm
-was configured with definition list support.
+was configured with memory allocation debugging.
 .Pp
 If the version includes the string
-.Em HEADER ,
+.Em TAB ,
 .Nm
-was configured to support pandoc header blocks.
+was configured to use the specified tabstop.
 .It Fl o Pa file
 Write the generated html to 
 .Pa file .
