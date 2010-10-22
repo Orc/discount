@@ -8,10 +8,7 @@
 # load in the configuration file
 #
 ac_help='--enable-dl-tag		Use the DL tag extension
---enable-pandoc-header	Use pandoc-style header blocks
---enable-superscript	A^B becomes A<sup>B</sup>
 --enable-amalloc	Enable memory allocation debugging
---relaxed-emphasis	underscores aren'\''t special in the middle of words
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --enable-div		Enable >%id% divisions
 --enable-alpha-list	Enable (a)/(b)/(c) lists
@@ -29,15 +26,9 @@ fi'
 locals() {
     K=`echo $1 | $AC_UPPERCASE`
     case "$K" in
-    --RELAXED-EMPHAS*)
-		echo RELAXED_EMPHASIS=T
-		;;
     --ENABLE-ALL|--ENABLE-ALL-FEATURES)
-		echo WITH_DL_TAG=T
-		echo RELAXED_EMPHASIS=T
-		echo WITH_PANDOC_HEADER=T
-		echo WITH_SUPERSCRIPT=T
 		echo WITH_AMALLOC=T
+		echo WITH_DL_TAG=T
 		echo WITH_DIV=T
 		#echo WITH_ALPHA_LIST=T
 		;;
