@@ -57,8 +57,7 @@ tags from the output.
 .It Ar MKD_NOPANTS
 Do not do Smartypants-style mangling of quotes, dashes, or ellipses.
 .It Ar MKD_STRICT
-Disable superscript and relaxed emphasis processing (if they are configured;
-otherwise it's a no-op.)
+Disable most of Discount's extended features.
 .\" .It Ar MKD_QUOT
 .\" Expand
 .\" .Ar \&"
@@ -77,6 +76,29 @@ Label all headers for use with the
 and
 .Fn mkd_toc
 functions.
+.It Ar MKD_NODLIST
+Disable definition lsits.
+.It Ar MKD_NOSTRIKETHROUGH
+Disable ~~strikethrough~~.
+.It Ar MKD_AUTOLINK
+Convert all URLs into links, not just the ones that are
+surrounded by <>s.
+.It Ar MKD_SAFELINK
+Paranoid check for link protocol.   Don't make a link for
+a URL that does not either reference a local item or uses
+a well known protocol.
+.It Ar MKD_NOHEADER
+Don't process pandoc-style header blocks.
+.It Ar MKD_TABSTOP
+Expand tabs to 4 spaces.
+.It Ar MKD_NODIVQUOTE
+Disable
+.Ar >%class%
+blocks
+.It Ar MKD_NOALPHALIST
+Disable alpha lists.
+.It Ar MKD_NODLIST
+Disable definition lists.
 .It Ar MKD_1_COMPAT
 MarkdownTest_1.0 compatability flag; trim trailing spaces from the
 first line of code blocks and disable implicit reference links.
