@@ -20,7 +20,7 @@ MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 
 all: $(PGMS) $(SAMPLE_PGMS)
 
-install: $(PGMS)
+install: $(PGMS) verify
 	@INSTALL_PROGRAM@ $(PGMS) $(DESTDIR)/$(BINDIR)
 	@INSTALL_DATA@ $(MKDLIB) $(DESTDIR)/$(LIBDIR)
 	@INSTALL_DATA@ mkdio.h $(DESTDIR)/$(INCDIR)
@@ -74,6 +74,9 @@ main.o: main.c mkdio.h config.h
 $(MKDLIB): $(OBJS)
 	$(AR) crv $(MKDLIB) $(OBJS)
 	$(RANLIB) $(MKDLIB)
+
+verify: tools/checkbits.sh
+	@tools/checkbits.sh && echo "headers are ok!"
 
 test:	$(PGMS) echo cols
 	@for x in tests/*.t; do \
