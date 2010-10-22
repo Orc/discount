@@ -224,15 +224,15 @@ mkd_string_to_anchor(char *s, int len, void(*outchar)(int,void*),
 
     size = mkd_line(s, len, &line, IS_LABEL);
     
+    if ( labelformat && size && !isalpha(line[0]) )
+	(*outchar)('L',out);
     for ( i=0; i < size ; i++ ) {
 	c = line[i];
 	if ( labelformat ) {
-	    if ( c == ' ' || c == '&' || c == '<' || c == '"' )
-		(*outchar)('+', out);
-	    else if ( isalnum(c) || ispunct(c) || (c & 0x80) )
+	    if ( isalnum(c) || (c == '_') || (c == ':') || (c == '-') || (c == '.' ) )
 		(*outchar)(c, out);
 	    else
-		(*outchar)('~',out);
+		(*outchar)('.',out);
 	}
 	else
 	    (*outchar)(c,out);
