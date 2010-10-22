@@ -118,7 +118,7 @@ populate(getc_func getc, void* ctx, int flags)
 
     DELETE(line);
 
-    if ( (pandoc == 3) && !(flags & MKD_NOHEADER) ) {
+    if ( (pandoc == 3) && !(flags & (MKD_NOHEADER|STRICT)) ) {
 	/* the first three lines started with %, so we have a header.
 	 * clip the first three lines out of content and hang them
 	 * off header.
