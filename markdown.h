@@ -93,9 +93,12 @@ typedef struct mmiot {
 #define MKD_1_COMPAT	0x00002000
 #define AUTOLINK	0x00004000
 #define SAFELINK	0x00008000
-#define MKD_DLIST	0x00010000
+#define MKD_NOHEADER	0x00010000
+#define STD_TABSTOP	0x00020000
 #define IS_LABEL	0x08000000
 #define USER_FLAGS	0x0FFFFFFF
+#define INPUT_MASK	(MKD_NOHEADER|STD_TABSTOP)
+
 #define EMBEDDED	DENY_A|DENY_IMG|NO_PSEUDO_PROTO|CDATA_OUTPUT
     Callback_data *cb;
 } MMIOT;
@@ -140,10 +143,6 @@ extern void mkd_string_to_anchor(char*,int, void(*)(int,void*), void*, int);
 
 extern Document *mkd_in(FILE *, DWORD);
 extern Document *mkd_string(char*,int, DWORD);
-
-#define NO_HEADER	0x10000000
-#define STD_TABSTOP	0x20000000
-#define INPUT_MASK	(NO_HEADER|STD_TABSTOP)
 
 
 /* internal resource handling functions.

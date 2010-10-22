@@ -70,7 +70,6 @@ queue(Document* a, Cstring *line)
 }
 
 
-#ifdef PANDOC_HEADER
 /* trim leading blanks from a header line
  */
 static void
@@ -79,7 +78,6 @@ snip(Line *p)
     CLIP(p->text, 0, 1);
     p->dle = mkd_firstnonblank(p);
 }
-#endif
 
 
 /* build a Document from any old input.
@@ -92,9 +90,7 @@ populate(getc_func getc, void* ctx, int flags)
     Cstring line;
     Document *a = new_Document();
     int c;
-#ifdef PANDOC_HEADER
     int pandoc = 0;
-#endif
 
     if ( !a ) return 0;
 
@@ -104,14 +100,12 @@ populate(getc_func getc, void* ctx, int flags)
 
     while ( (c = (*getc)(ctx)) != EOF ) {
 	if ( c == '\n' ) {
-#ifdef PANDOC_HEADER
 	    if ( pandoc != EOF && pandoc < 3 ) {
 		if ( S(line) && (T(line)[0] == '%') )
 		    pandoc++;
 		else
 		    pandoc = EOF;
 	    }
-#endif
 	    queue(a, &line);
 	    S(line) = 0;
 	}
@@ -124,8 +118,7 @@ populate(getc_func getc, void* ctx, int flags)
 
     DELETE(line);
 
-#ifdef PANDOC_HEADER
-    if ( (pandoc == 3) && !(flags & NO_HEADER) ) {
+    if ( (pandoc == 3) && !(flags & MKD_NOHEADER) ) {
 	/* the first three lines started with %, so we have a header.
 	 * clip the first three lines out of content and hang them
 	 * off header.
@@ -137,7 +130,6 @@ populate(getc_func getc, void* ctx, int flags)
 	snip(a->headers->next);
 	snip(a->headers->next->next);
     }
-#endif
 
     return a;
 }
