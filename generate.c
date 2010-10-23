@@ -1157,7 +1157,7 @@ text(MMIOT *f)
 		    break;
 	case '_':
 	/* Underscores don't count if they're in the middle of a word */
-		    if ( (f->flags & (MKD_NORELAXED|MKD_STRICT))
+		    if ( !(f->flags & (MKD_NORELAXED|MKD_STRICT))
 					&& isthisalnum(f,-1)
 					 && isthisalnum(f,1) ) {
 			Qchar(c, f);
