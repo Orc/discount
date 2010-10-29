@@ -351,6 +351,53 @@ linkysize(MMIOT *f, Footnote *ref)
 }
 
 
+/* extract a <...>-encased url from the input stream.
+ * (markdown 1.0.2b8 compatability; older versions
+ * of markdown treated the < and > as syntactic
+ * sugar that didn't have to be there.  1.0.2b8 
+ * requires a closing >, and then falls into the
+ * title or closing )
+ */
+static int
+linkybroket(MMIOT *f, int image, Footnote *p)
+{
+    int c;
+    int good = 0;
+
+    T(p->link) = cursor(f);
+    for ( S(p->link)=0; (c = pull(f)) != '>'; ++S(p->link) ) {
+	/* pull in all input until a '>' is found, or die trying.
+	 */
+	if ( c == EOF )
+	    return 0;
+	else if ( (c == '\\') && ispunct(peek(f,2)) ) {
+	    ++S(p->link);
+	    pull(f);
+	}
+    }
+
+    c = eatspace(f);
+
+    /* next nonspace needs to be a title, a size, or )
+     */
+    if ( ( c == '\'' || c == '"' ) && linkytitle(f,c,p) )
+	good=1;
+    else if ( image && (c == '=') && linkysize(f,p) )
+	good=1;
+    else 
+	good=( c == ')' );
+
+    if ( good ) {
+	if ( peek(f, 1) == ')' )
+	    pull(f);
+	    
+	___mkd_tidy(&p->link);
+    }
+
+    return good;
+} /* linkybroket */
+
+
 /* extract a (-prefixed url from the input stream.
  * the label is either of the format `<link>`, where I
  * extract until I find a >, or it is of the format
@@ -368,6 +415,8 @@ linkyurl(MMIOT *f, int image, Footnote *p)
 
     if ( c == '<' ) {
 	pull(f);
+	if ( !(f->flags & MKD_1_COMPAT) )
+	    return linkybroket(f,image,p);
 	mayneedtotrim=1;
     }
 

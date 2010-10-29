@@ -12,6 +12,10 @@ try 'url contains <' '[hehehe](u<rl)' '<p><a href="u&lt;rl">hehehe</a></p>'
 try 'url contains whitespace' '[ha](r u)' '<p><a href="r%20u">ha</a></p>'
 try 'label contains escaped []s' '[a\[b\]c](d)' '<p><a href="d">a[b]c</a></p>'
 
+try '<label> w/o title' '[hello](<sailor>)' '<p><a href="sailor">hello</a></p>'
+try '<label> with title' '[hello](<sailor> "boy")' '<p><a href="sailor" title="boy">hello</a></p>'
+try '<label> with whitespace' '[hello](  <sailor> )' '<p><a href="sailor">hello</a></p>'
+
 try 'url contains whitespace & title' \
     '[hehehe](r u "there")' \
     '<p><a href="r%20u" title="there">hehehe</a></p>'
