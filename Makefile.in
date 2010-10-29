@@ -75,8 +75,8 @@ $(MKDLIB): $(OBJS)
 	$(AR) crv $(MKDLIB) $(OBJS)
 	$(RANLIB) $(MKDLIB)
 
-verify: tools/checkbits.sh
-	@tools/checkbits.sh && echo "headers are ok!"
+verify: echo tools/checkbits.sh
+	@./echo -n "headers ... "; tools/checkbits.sh && echo "GOOD"
 
 test:	$(PGMS) echo cols verify
 	@for x in tests/*.t; do \

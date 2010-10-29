@@ -641,7 +641,10 @@ linkylinky(int image, MMIOT *f)
 	else {
 	    int goodlink, implicit_mark = mmiottell(f);
 
-	    if ( eatspace(f) == '[' ) {
+	    if ( isspace(peek(f,1)) )
+		pull(f);
+	    
+	    if ( peek(f,1) == '[' ) {
 		pull(f);	/* consume leading '[' */
 		goodlink = linkylabel(f, &key.tag);
 	    }
@@ -1242,6 +1245,14 @@ text(MMIOT *f)
 				break;
 		    case '<':   Qstring("&lt;", f);
 				break;
+		    case '^':   if ( f->flags & (MKD_STRICT|MKD_NOSUPERSCRIPT) ) {
+				    Qchar('\\', f);
+				    shift(f,-1);
+				    break;
+				}
+				Qchar(c, f);
+				break;
+				
 		    case '>': case '#': case '.': case '-':
 		    case '+': case '{': case '}': case ']':
 		    case '!': case '[': case '*': case '_':

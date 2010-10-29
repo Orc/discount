@@ -106,5 +106,17 @@ try '[text] (text) not a link' \
 '[test] (me)' \
 '<p>[test] (me)</p>'
 
+try '[test] [this] w/ one space between' \
+'[test] [this]
+[test]: yay!
+[this]: nay!' \
+'<p><a href="nay!">test</a></p>'
+
+try '[test] [this] w/ two spaces between' \
+'[test]  [this]
+[test]: yay!
+[this]: nay!' \
+'<p><a href="yay!">test</a>  <a href="nay!">this</a></p>'
+
 summary $0
 exit $rc
