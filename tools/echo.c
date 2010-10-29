@@ -19,4 +19,5 @@ char **argv;
 	fputs(argv[i], stdout);
     }
     if (nl) putchar('\n');
+    exit(0);
 }
