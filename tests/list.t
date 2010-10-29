@@ -124,9 +124,7 @@ try 'blockquote inside a list' \
 <blockquote><p>This is a quote insde a list item.</p></blockquote></li>
 </ul>'
 
-if ./markdown -V | grep DL_TAG >/dev/null; then
-
-    try 'dl followed by non-dl' \
+try 'dl followed by non-dl' \
     '=a=
     test
 2. here' \
@@ -139,7 +137,7 @@ if ./markdown -V | grep DL_TAG >/dev/null; then
 <li>here</li>
 </ol>'
 
-    try 'non-dl followed by dl' \
+try 'non-dl followed by dl' \
     '1. hello
 =sailor=
     hi!' \
@@ -152,8 +150,6 @@ if ./markdown -V | grep DL_TAG >/dev/null; then
 <dt>sailor</dt>
 <dd>hi!</dd>
 </dl>'
-
-fi
 
 summary $0
 exit $rc
