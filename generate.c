@@ -1198,11 +1198,28 @@ text(MMIOT *f)
 		    else {
 			char *sup = cursor(f);
 			int len = 0;
-			Qstring("<sup>",f);
-			while ( !isthisspace(f,1+len) ) {
-			    ++len;
+
+			if ( peek(f,1) == '(' ) {
+			    int here = mmiottell(f);
+			    pull(f);
+
+			    if ( (len = parenthetical('(',')',f)) <= 0 ) {
+				mmiotseek(f,here);
+				Qchar(c, f);
+				break;
+			    }
+			    sup++;
 			}
-			shift(f,len);
+			else {
+			    while ( isthisalnum(f,1+len) )
+				++len;
+			    if ( !len ) {
+				Qchar(c,f);
+				break;
+			    }
+			    shift(f,len);
+			}
+			Qstring("<sup>",f);
 			___mkd_reparse(sup, len, 0, f);
 			Qstring("</sup>", f);
 		    }
