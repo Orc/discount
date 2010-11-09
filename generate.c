@@ -454,10 +454,10 @@ static struct _protocol {
     int   nlen;
 } protocol[] = { 
 #define _aprotocol(x)	{ x, (sizeof x)-1 }
-    _aprotocol( "https://" ), 
-    _aprotocol( "http://" ), 
-    _aprotocol( "news://" ),
-    _aprotocol( "ftp://" ), 
+    _aprotocol( "https:" ), 
+    _aprotocol( "http:" ), 
+    _aprotocol( "news:" ),
+    _aprotocol( "ftp:" ), 
 #undef _aprotocol
 };
 #define NRPROTOCOLS	(sizeof protocol / sizeof protocol[0])
