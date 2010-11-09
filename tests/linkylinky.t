@@ -118,5 +118,13 @@ try '[test] [this] w/ two spaces between' \
 [this]: nay!' \
 '<p><a href="yay!">test</a>  <a href="nay!">this</a></p>'
 
+try -f1.0 'link with <> (-f1.0)' \
+	  '[this](<is a (test)>)' \
+	  '<p><a href="is%20a%20(test">this</a>>)</p>'
+
+try       'link with <>' \
+	  '[this](<is a (test)>)' \
+	  '<p><a href="is%20a%20(test)">this</a></p>'
+
 summary $0
 exit $rc
