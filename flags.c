@@ -1,0 +1,72 @@
+#include <stdio.h>
+#include "markdown.h"
+
+struct flagnames {
+    DWORD flag;
+    char *name;
+};
+
+static struct flagnames flagnames[] = {
+    { MKD_NOLINKS,        "!LINKS" },
+    { MKD_NOIMAGE,        "!IMAGE" },
+    { MKD_NOPANTS,        "!PANTS" },
+    { MKD_NOHTML,         "!HTML" },
+    { MKD_STRICT,         "STRICT" },
+    { MKD_TAGTEXT,        "TAGTEXT" },
+    { MKD_NO_EXT,         "!EXT" },
+    { MKD_CDATA,          "CDATA" },
+    { MKD_NOSUPERSCRIPT,  "!SUPERSCRIPT" },
+    { MKD_NORELAXED,      "!RELAXED" },
+    { MKD_NOTABLES,       "!TABLES" },
+    { MKD_NOSTRIKETHROUGH,"!STRIKETHROUGH" },
+    { MKD_TOC,            "TOC" },
+    { MKD_1_COMPAT,       "1_COMPAT" },
+    { MKD_AUTOLINK,       "AUTOLINK" },
+    { MKD_SAFELINK,       "SAFELINK" },
+    { MKD_NOHEADER,       "!HEADER" },
+    { MKD_TABSTOP,        "TABSTOP" },
+    { MKD_NODIVQUOTE,     "!DIVQUOTE" },
+    { MKD_NOALPHALIST,    "!ALPHALIST" },
+    { MKD_NODLIST,        "!DLIST" },
+};
+#define NR(x)	(sizeof x/sizeof x[0])
+
+
+void
+mkd_flags_are(FILE *f, DWORD flags, int htmlplease)
+{
+    int i;
+    int not, set;
+    char *name;
+
+    if ( htmlplease )
+	fprintf(f, "<table class=\"mkd_flags_are\">\n");
+    for (i=0; i < NR(flagnames); i++) {
+	set = flags & flagnames[i].flag;
+	name = flagnames[i].name;
+	not = *name == '!';
+
+	if ( htmlplease )
+	    fprintf(f, " <tr><td>");
+	else
+	    fputc(' ', f);
+	if ( set )
+	    fprintf(f, "%s", name);
+	else if ( not )
+	    fprintf(f, "%s", 1+name);
+	else
+	    fprintf(f, "!%s", name);
+	if ( htmlplease )
+	    fprintf(f, "</td></tr>\n");
+    }
+    if ( htmlplease )
+	fprintf(f, "</table>");
+    fputc('\n', f);
+}
+
+void
+mkd_mmiot_flags(FILE *f, MMIOT *m, int htmlplease)
+{
+    if ( m )
+	mkd_flags_are(f, m->flags, htmlplease);
+}

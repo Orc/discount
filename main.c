@@ -120,6 +120,7 @@ main(int argc, char **argv)
     int flags = 0;
     int debug = 0;
     int toc = 0;
+    int version = 0;
     int with_html5 = 0;
     int use_mkd_line = 0;
     char *urlflags = 0;
@@ -143,9 +144,8 @@ main(int argc, char **argv)
 		    break;
 	case 'd':   debug = 1;
 		    break;
-	case 'V':   printf("%s: discount %s%s\n", pgm, markdown_version,
-				with_html5 ? " +html5":"");
-		    exit(0);
+	case 'V':   version++;
+		    break;
 	case 'E':   urlflags = optarg;
 		    break;
 	case 'F':   flags = strtol(optarg, 0, 0);
@@ -175,6 +175,15 @@ main(int argc, char **argv)
 		    exit(1);
 	}
     }
+
+    if ( version ) {
+	printf("%s: discount %s%s", pgm, markdown_version,
+				  with_html5 ? " +html5":"");
+	if ( version > 1 )
+	    mkd_flags_are(stdout, flags, 0);
+	exit(0);
+    }
+
     argc -= optind;
     argv += optind;
 
