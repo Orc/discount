@@ -20,7 +20,7 @@ static struct flagnames flagnames[] = {
     { MKD_NOTABLES,       "!TABLES" },
     { MKD_NOSTRIKETHROUGH,"!STRIKETHROUGH" },
     { MKD_TOC,            "TOC" },
-    { MKD_1_COMPAT,       "1_COMPAT" },
+    { MKD_1_COMPAT,       "MKD_1_COMPAT" },
     { MKD_AUTOLINK,       "AUTOLINK" },
     { MKD_SAFELINK,       "SAFELINK" },
     { MKD_NOHEADER,       "!HEADER" },
