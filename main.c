@@ -181,6 +181,7 @@ main(int argc, char **argv)
 				  with_html5 ? " +html5":"");
 	if ( version > 1 )
 	    mkd_flags_are(stdout, flags, 0);
+	putchar('\n');
 	exit(0);
     }
 
