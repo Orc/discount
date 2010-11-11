@@ -44,20 +44,26 @@ mkd_flags_are(FILE *f, DWORD flags, int htmlplease)
     for (i=0; i < NR(flagnames); i++) {
 	set = flags & flagnames[i].flag;
 	name = flagnames[i].name;
-	not = *name == '!';
+	if ( not = (*name == '!') ) {
+	    ++name;
+	    set = !set;
+	}
 
 	if ( htmlplease )
 	    fprintf(f, " <tr><td>");
 	else
 	    fputc(' ', f);
-	if ( set )
-	    fprintf(f, "%s", name);
-	else if ( not )
-	    fprintf(f, "%s", 1+name);
-	else
-	    fprintf(f, "!%s", name);
-	if ( htmlplease )
+
+	if ( !set )
+	    fprintf(f, htmlplease ? "<s>" : "!");
+
+	fprintf(f, "%s", name);
+
+	if ( htmlplease ) {
+	    if ( !set )
+		fprintf(f, "</s>");
 	    fprintf(f, "</td></tr>\n");
+	}
     }
     if ( htmlplease )
 	fprintf(f, "</table>");
