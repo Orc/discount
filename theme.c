@@ -42,6 +42,12 @@ struct passwd *me = 0;
 #endif
 struct stat *infop = 0;
 
+
+#define INTAG 0x01
+#define INHEAD 0x02
+#define INBODY 0x04
+
+
 #ifndef HAVE_BASENAME
 char *
 basename(char *path)
@@ -241,7 +247,7 @@ istag(int *p, char *pat)
 /* finclude() includes some (unformatted) source
  */
 static void
-finclude(MMIOT *doc, FILE *out, int flags)
+finclude(MMIOT *doc, FILE *out, int flags, int whence)
 {
     int c;
     Cstring include;
@@ -272,7 +278,7 @@ finclude(MMIOT *doc, FILE *out, int flags)
 /* fdirname() prints out the directory part of a path
  */
 static void
-fdirname(MMIOT *doc, FILE *output, int flags)
+fdirname(MMIOT *doc, FILE *output, int flags, int whence)
 {
     char *p;
 
@@ -284,7 +290,7 @@ fdirname(MMIOT *doc, FILE *output, int flags)
 /* fbasename() prints out the file name part of a path
  */
 static void
-fbasename(MMIOT *doc, FILE *output, int flags)
+fbasename(MMIOT *doc, FILE *output, int flags, int whence)
 {
     char *p;
 
@@ -303,7 +309,7 @@ fbasename(MMIOT *doc, FILE *output, int flags)
 /* ftitle() prints out the document title
  */
 static void
-ftitle(MMIOT *doc, FILE* output, int flags)
+ftitle(MMIOT *doc, FILE* output, int flags, int whence)
 {
     char *h;
     if ( (h = mkd_doc_title(doc)) == 0 && pagename )
@@ -317,7 +323,7 @@ ftitle(MMIOT *doc, FILE* output, int flags)
 /* fdate() prints out the document date
  */
 static void
-fdate(MMIOT *doc, FILE *output, int flags)
+fdate(MMIOT *doc, FILE *output, int flags, int whence)
 {
     char *h;
 
@@ -329,7 +335,7 @@ fdate(MMIOT *doc, FILE *output, int flags)
 /* fauthor() prints out the document author
  */
 static void
-fauthor(MMIOT *doc, FILE *output, int flags)
+fauthor(MMIOT *doc, FILE *output, int flags, int whence)
 {
     char *h = mkd_doc_author(doc);
 
@@ -343,10 +349,20 @@ fauthor(MMIOT *doc, FILE *output, int flags)
 }
 
 
+/* fconfig() prints out a tabular version of
+ * tabular versions of the flags.
+ */
+static void
+fconfig(MMIOT *doc, FILE *output, int flags, int whence)
+{
+    mkd_mmiot_flags(output, doc, (whence & (INHEAD|INTAG)) ? 0 : 1);
+}
+
+
 /* fversion() prints out the document version
  */
 static void
-fversion(MMIOT *doc, FILE *output, int flags)
+fversion(MMIOT *doc, FILE *output, int flags, int whence)
 {
     fwrite(markdown_version, strlen(markdown_version), 1, output);
 }
@@ -355,7 +371,7 @@ fversion(MMIOT *doc, FILE *output, int flags)
 /* fbody() prints out the document
  */
 static void
-fbody(MMIOT *doc, FILE *output, int flags)
+fbody(MMIOT *doc, FILE *output, int flags, int whence)
 {
     mkd_generatehtml(doc, output);
 }
@@ -363,7 +379,7 @@ fbody(MMIOT *doc, FILE *output, int flags)
 /* ftoc() prints out the table of contents
  */
 static void
-ftoc(MMIOT *doc, FILE *output, int flags)
+ftoc(MMIOT *doc, FILE *output, int flags, int whence)
 {
     mkd_generatetoc(doc, output);
 }
@@ -371,15 +387,11 @@ ftoc(MMIOT *doc, FILE *output, int flags)
 /* fstyle() prints out the document's style section
  */
 static void
-fstyle(MMIOT *doc, FILE *output, int flags)
+fstyle(MMIOT *doc, FILE *output, int flags, int whence)
 {
     mkd_generatecss(doc, output);
 }
 
-
-#define INTAG 0x01
-#define INHEAD 0x02
-#define INBODY 0x04
 
 /*
  * theme expansions we love:
@@ -397,7 +409,7 @@ fstyle(MMIOT *doc, FILE *output, int flags)
 static struct _keyword {
     char *kw;
     int where;
-    void (*what)(MMIOT*,FILE*,int);
+    void (*what)(MMIOT*,FILE*,int,int);
 } keyword[] = { 
     { "author?>",  0xffff, fauthor },
     { "body?>",    INBODY, fbody },
@@ -409,6 +421,7 @@ static struct _keyword {
     { "style?>",   INHEAD, fstyle },
     { "title?>",   0xffff, ftitle },
     { "version?>", 0xffff, fversion },
+    { "config?>",  0xffff, fconfig },
 };
 #define NR(x)	(sizeof x / sizeof x[0])
 
@@ -454,7 +467,7 @@ spin(FILE *template, MMIOT *doc, FILE *output)
 		for (i=0; i < NR(keyword); i++)
 		    if ( thesame(p, keyword[i].kw) ) {
 			if ( keyword[i].where & where )
-			    (*keyword[i].what)(doc,output,flags);
+			    (*keyword[i].what)(doc,output,flags,where);
 			break;
 		    }
 
