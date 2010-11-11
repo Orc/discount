@@ -36,7 +36,7 @@ void
 mkd_flags_are(FILE *f, DWORD flags, int htmlplease)
 {
     int i;
-    int not, set;
+    int not, set, even=1;
     char *name;
 
     if ( htmlplease )
@@ -49,8 +49,10 @@ mkd_flags_are(FILE *f, DWORD flags, int htmlplease)
 	    set = !set;
 	}
 
-	if ( htmlplease )
-	    fprintf(f, " <tr><td>");
+	if ( htmlplease ) {
+	    if ( even ) fprintf(f, " <tr>");
+	    fprintf(f, "<td>");
+	}
 	else
 	    fputc(' ', f);
 
@@ -62,11 +64,15 @@ mkd_flags_are(FILE *f, DWORD flags, int htmlplease)
 	if ( htmlplease ) {
 	    if ( !set )
 		fprintf(f, "</s>");
-	    fprintf(f, "</td></tr>\n");
+	    fprintf(f, "</td>");
+	    if ( !even ) fprintf(f, "</tr>\n");
 	}
+	even = !even;
     }
-    if ( htmlplease )
+    if ( htmlplease ) {
+	if ( even ) fprintf(f, "</tr>\n");
 	fprintf(f, "</table>");
+    }
     fputc('\n', f);
 }
 
