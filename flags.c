@@ -71,9 +71,8 @@ mkd_flags_are(FILE *f, DWORD flags, int htmlplease)
     }
     if ( htmlplease ) {
 	if ( even ) fprintf(f, "</tr>\n");
-	fprintf(f, "</table>");
+	fprintf(f, "</table>\n");
     }
-    fputc('\n', f);
 }
 
 void
