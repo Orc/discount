@@ -1622,14 +1622,21 @@ display(Paragraph *p, MMIOT *f)
 int
 mkd_document(Document *p, char **res)
 {
+    int size;
+    
     if ( p && p->compiled ) {
 	if ( ! p->html ) {
 	    htmlify(p->code, 0, 0, p->ctx);
 	    p->html = 1;
 	}
 
+	size = S(p->ctx->out);
+	
+	if ( (size == 0) || T(p->ctx->out)[size-1] )
+	    EXPAND(p->ctx->out) = 0;
+	
 	*res = T(p->ctx->out);
-	return S(p->ctx->out);
+	return size;
     }
     return EOF;
 }
