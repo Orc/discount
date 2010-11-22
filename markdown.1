@@ -47,52 +47,59 @@ are in a comma-delimited list, with an optional
 .Ar no
 (disable) lprefix on each flag.
 .Bl -tag -width "definitionlist"
-.It Ar tabstop
-Use markdown-standard 4-space tabstops.
-.It Ar image
-Allow images.
 .It Ar links
 Allow links.
-.It Ar relax
-Allow most optional features.
-.It Ar strict
-Prohibit most optional features.
-.It Ar tables
-Allow markdown-extra style tables.
-.It Ar header
-Allow pandoc headers.
-.It Ar html
-Allow embedded html.
-.It Ar ext
-Allow pseudo-protocols in links.
-.It Ar cdata
-Write output as CDATA.
-.It Ar pants
-Enable smartypants processing.
+.It Ar image
+Allow images.
 .It Ar smarty
-Enable smartypants processing.
-.It Ar toc
-Enable table-of-contents support.
-.It Ar autolink
-Linkify any URLs found in the input.
-.It Ar safelink
-Only linkify URLs that are local or a well-known protocol.
-.It Ar del
-Enable strikethrough.
-.It Ar strikethrough
-Enable strikethrough.
+Enable smartypants.
+.It Ar pants
+Enable smartypants.
+.It Ar html
+Allow raw html.
+.It Ar strict
+Disable superscript, strikethrough & relaxed emphasis.
+.It Ar ext
+Enable pseudo-protocols.
+.It Ar cdata
+Generate code for xml 
+.Em ![CDATA[...]] .
 .It Ar superscript
-Enable superscript.
+Enable superscript processing.
 .It Ar emphasis
-Enable relaxed emphasis (underscores in the middle of words do not count for emphasis.)
-.It Ar divquote
-Enable division quotes.
-.It Ar alphalist
-Enable alphabetic list items.
-.It Ar definitionlist
-Enable definition lists.
+Emphasis happens 
+.Em everywhere .
+.It Ar tables
+Don't process PHP Markdown Extra tables.
+.It Ar del
+Enable
+.Em ~~strikethrough~~ .
+.It Ar strikethrough
+Enable 
+.Em ~~strikethrough~~ .
+.It Ar toc
+Enable table-of-contents processing.
 .It Ar 1.0
-Revert to Markdown 1.0 compatability.
+Compatability with MarkdownTest_1.0
+.It Ar autolink
+Make
+.Pa http://foo.com
+a link even without
+.Em <> .
+.It Ar safelink
+Paranoid check for link protocol.
+.It Ar header
+Process pandoc-style header blocks.
+.It Ar tabstop
+Expand tabs to 4 spaces.
+.It Ar divquote
+Allow
+.Pa >%class%
+blocks.
+.It Ar alphalist
+Allow alphabetic lists.
+.It Ar definitionlist
+Allow definition lists.
 .El
 .Pp
 As an example, the option
@@ -110,7 +117,7 @@ described in
 (the flag values are defined in
 .Pa mkdio.h )
 .It Fl V
-Show the version# and configuration data.
+Show the version# and compile-time configuration data.
 .Pp
 If the version includes the string
 .Em DEBUG ,
@@ -121,6 +128,9 @@ If the version includes the string
 .Em TAB ,
 .Nm
 was configured to use the specified tabstop.
+.It Fl VV
+Show the version#, the compile-time configuration, and the
+run-time configuration.
 .It Fl o Pa file
 Write the generated html to 
 .Pa file .
