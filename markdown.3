@@ -44,76 +44,66 @@ and pass its return value to
 .Fn Markdown
 accepts the following flag values (or-ed together if needed)
 to restrict how it processes input:
-.Bl -tag -width MKD_SAFELINK -compact
-.It Ar MKD_NOIMAGE
-Do not process `![]' and
-remove
-.Em \<img\>
-tags from the output.
+.Bl -tag -width MKD_NOSTRIKETHROUGH -compact
 .It Ar MKD_NOLINKS
-Do not process `[]' and remove
-.Em \<a\>
-tags from the output.
+Don't do link processing, block 
+.Em <a>
+tags.
+.It Ar MKD_NOIMAGE
+Don't do image processing, block
+.Em <img> .
 .It Ar MKD_NOPANTS
-Do not do Smartypants-style mangling of quotes, dashes, or ellipses.
+Don't run 
+.Em smartypants() .
+.It Ar MKD_NOHTML
+Don't allow raw html through AT ALL
 .It Ar MKD_STRICT
-Disable most of Discount's extended features.
-.\" .It Ar MKD_QUOT
-.\" Expand
-.\" .Ar \&"
-.\" to \&&quot;.
-.It Ar MKD_NOHEADER
-Do not attempt to parse any Pandoc-style headers.
-.It Ar MKD_TABSTOP
-When reading documents, expand tabs to 
-.Em 4
-spaces instead of whatever
-.Nm
-was originally configured for.
-.It Ar MKD_TOC
-Label all headers for use with the
-.Fn mkd_generatetoc
-and
-.Fn mkd_toc
-functions.
-.It Ar MKD_NODLIST
-Disable definition lsits.
+Disable 
+superscript and relaxed emphasis.
+.It Ar MKD_TAGTEXT
+Process text inside an html tag; no 
+.Em <em> ,
+no 
+.Em <bold> ,
+no html or
+.Em []
+expansion.
+.It Ar MKD_NO_EXT
+Don't allow pseudo-protocols.
+.It Ar MKD_CDATA
+Generate code for xml 
+.Em ![CDATA[...]] .
+.It Ar MKD_NOSUPERSCRIPT
+Don't generate superscripts.
+Emphasis happens _everywhere_
+.It Ar MKD_NOTABLES
+Disallow tables.
 .It Ar MKD_NOSTRIKETHROUGH
-Disable ~~strikethrough~~.
+Forbid 
+.Em ~~strikethrough~~ .
+.It Ar MKD_TOC
+Do table-of-contents processing.
+.It Ar MKD_1_COMPAT
+Compatability with MarkdownTest_1.0
 .It Ar MKD_AUTOLINK
-Convert all URLs into links, not just the ones that are
-surrounded by <>s.
+Make 
+.Em http://foo.com
+into a link even without
+.Em <> s.
 .It Ar MKD_SAFELINK
-Paranoid check for link protocol.   Don't make a link for
-a URL that does not either reference a local item or uses
-a well known protocol.
+Paranoid check for link protocol.
 .It Ar MKD_NOHEADER
-Don't process pandoc-style header blocks.
+Don't process header blocks.
 .It Ar MKD_TABSTOP
 Expand tabs to 4 spaces.
 .It Ar MKD_NODIVQUOTE
-Disable
-.Ar >%class%
-blocks
+Forbid 
+.Em >%class%
+blocks.
 .It Ar MKD_NOALPHALIST
-Disable alpha lists.
+Forbid alphabetic lists.
 .It Ar MKD_NODLIST
-Disable definition lists.
-.It Ar MKD_1_COMPAT
-MarkdownTest_1.0 compatability flag; trim trailing spaces from the
-first line of code blocks and disable implicit reference links.
-.It Ar MKD_AUTOLINK
-Greedily urlify links -- if
-.Em MKD_AUTOLINK
-is set, urls will be converted into hyperlinks even if they
-aren't encased in
-.Em <> .
-.It Ar MKD_SAFELINK
-Don't make hyperlinks from 
-.Em [][]
-links that have unknown url types.
-.It Ar MKD_NOTABLES
-Don't process tables.
+Forbid definition lists.
 .El
 .Sh RETURN VALUES
 .Fn markdown
