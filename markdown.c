@@ -410,19 +410,52 @@ ishdr(Line *t, int *htyp)
 
 
 static int
-isdefinition(Line *t)
+is_discount_dt(Line *t, int *clip)
 {
-    return t && t->next
-	     && (S(t->text) > 2)
-	     && (t->dle == 0)
-	     && (T(t->text)[0] == '=')
-	     && (T(t->text)[S(t->text)-1] == '=')
-	     && ( (t->next->dle >= 4) || isdefinition(t->next) );
+    if ( t && t->next
+	   && (S(t->text) > 2)
+	   && (t->dle == 0)
+	   && (T(t->text)[0] == '=')
+	   && (T(t->text)[S(t->text)-1] == '=')
+	   && ((t->next->dle >= 4) || is_discount_dt(t->next, clip)) ) {
+	*clip = 4;
+	return 1;
+    }
+    return 0;
 }
 
 
 static int
-islist(Line *t, int *trim, DWORD flags)
+is_extra_dt(Line *t, int *clip)
+{
+    if ( t && t->next && !blankline(t)
+		      && T(t->text)[0] != '='
+		      && T(t->text)[S(t->text)-1] != '=') {
+	Line *n = t->next;
+    
+	if ( is_extra_dt(n, clip) )
+	    return 1;
+	
+	if ( (n = skipempty(n)) && n->dle < 3
+				&& T(n->text)[n->dle] == ':'
+				&& isspace(T(n->text)[n->dle+1]) ) {
+	    *clip = n->dle+1;
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+
+static int
+isdefinition(Line *t, int *clip)
+{
+    return is_discount_dt(t, clip) || is_extra_dt(t, clip);
+}
+
+
+static int
+islist(Line *t, int *clip, DWORD flags, int *list_type)
 {
     int i, j;
     char *q;
@@ -430,15 +463,16 @@ islist(Line *t, int *trim, DWORD flags)
     if ( iscode(t) || blankline(t) || ishdr(t,&i) || ishr(t) )
 	return 0;
 
-    if ( !(flags & (MKD_NODLIST|MKD_STRICT)) && isdefinition(t) ) {
-	*trim = 4;
+    if ( !(flags & (MKD_NODLIST|MKD_STRICT)) && isdefinition(t, clip) ) {
+	*list_type = DL;
 	return DL;
     }
 
     if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
 	i = nextnonblank(t, t->dle+1);
-	*trim = (i > 4) ? 4 : i;
-	return UL;
+	*clip = (i > 4) ? 4 : i;
+	*list_type = UL;
+	return AL;
     }
 
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
@@ -448,14 +482,16 @@ islist(Line *t, int *trim, DWORD flags)
 	                        && (j == t->dle + 2)
 		      && isalpha(T(t->text)[t->dle]) ) {
 	    j = nextnonblank(t,j);
-	    *trim = j;
+	    *clip = j;
+	    *list_type = AL;
 	    return AL;
 	}
 	    strtoul(T(t->text)+t->dle, &q, 10);
 	    if ( (q > T(t->text)+t->dle) && (q == T(t->text) + (j-1)) ) {
 		j = nextnonblank(t,j);
-		*trim = j;
-		return OL;
+		*clip = j;
+		*list_type = OL;
+		return AL;
 	    }
 	}
     }
@@ -561,7 +597,7 @@ endoftextblock(Line *t, int toplevelblock, DWORD flags)
     /* HORRIBLE STANDARDS KLUDGE: Toplevel paragraphs eat absorb adjacent
      * list items, but sublevel blocks behave properly.
      */
-    return toplevelblock ? 0 : islist(t,&z,flags);
+    return toplevelblock ? 0 : islist(t,&z,flags, &z);
 }
 
 
@@ -746,7 +782,7 @@ listitem(Paragraph *p, int indent, DWORD flags)
 	    indent = clip ? clip : 2;
 	}
 
-	if ( (q->dle < indent) && (ishr(q) || islist(q,&z,flags)) && !issetext(q,&z) ) {
+	if ( (q->dle < indent) && (ishr(q) || islist(q,&z,flags, &z)) && !issetext(q,&z) ) {
 	    q = t->next;
 	    t->next = 0;
 	    return q;
@@ -759,39 +795,42 @@ listitem(Paragraph *p, int indent, DWORD flags)
 
 
 static Line *
-listblock(Paragraph *top, int trim, MMIOT *f)
+listblock(Paragraph *top, int clip, MMIOT *f, int list_class)
 {
     ParagraphRoot d = { 0, 0 };
     Paragraph *p;
     Line *q = top->text, *text, *label;
-    int isdl = (top->typ == DL),
-	para = 0,
-	ltype;
+    int para = 0, z;
 
     while (( text = q )) {
-	if ( top->typ == DL ) {
+	if ( list_class == DL ) {
 	    Line *lp;
 
 	    for ( lp = label = text; lp ; lp = lp->next ) {
 		text = lp->next;
-		CLIP(lp->text, 0, 1);
-		S(lp->text)--;
-		if ( !isdefinition(lp->next) )
+		if ( T(lp->text)[0] == '=' ) {
+		    CLIP(lp->text, 0, 1);
+		    S(lp->text)--;
+		}
+		if ( !isdefinition(lp->next, &z) )
 		    lp->next = 0;
 	    }
+	    /* FIXME: Need to carry out the definition type for dl,
+	     * and only clip iff markdown extra style */
+	    if ( (lp = skipempty(text)) != text )
+		CLIP(lp->text, 0, z);
 	}
 	else label = 0;
 
 	p = Pp(&d, text, LISTITEM);
-	text = listitem(p, trim, f->flags);
+	text = listitem(p, clip, f->flags);
 
 	p->down = compile(p->text, 0, f);
 	p->text = label;
 
 	if ( para && (top->typ != DL) && p->down ) p->down->align = PARA;
 
-	if ( !(q = skipempty(text)) || ((ltype = islist(q, &trim, f->flags)) == 0)
-				    || (isdl != (ltype == DL)) )
+	if ( (q = skipempty(text)) == 0 || islist(q, &clip, f->flags, &z) != list_class )
 	    break;
 
 	if ( para = (q != text) ) {
@@ -801,7 +840,7 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 	    ___mkd_freeLineRange(&anchor, q);
 	}
 
-	if ( para && (top->typ != DL) && p->down ) p->down->align = PARA;
+	if ( para && (list_class != DL) && p->down ) p->down->align = PARA;
     }
     top->text = 0;
     top->down = T(d);
@@ -989,7 +1028,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     Line *r;
     int para = toplevel;
     int blocks = 0;
-    int hdr_type, list_type, indent;
+    int hdr_type, list_type, list_class, indent;
 
     ptr = consume(ptr, &para);
 
@@ -1012,9 +1051,9 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    ptr = ptr->next;
 	    ___mkd_freeLine(r);
 	}
-	else if (( list_type = islist(ptr, &indent, f->flags) )) {
+	else if (( list_class = islist(ptr, &indent, f->flags, &list_type) )) {
 	    p = Pp(&d, ptr, list_type);
-	    ptr = listblock(p, indent, f);
+	    ptr = listblock(p, indent, f, list_class);
 	}
 	else if ( isquote(ptr) ) {
 	    p = Pp(&d, ptr, QUOTE);
