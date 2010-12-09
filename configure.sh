@@ -7,8 +7,7 @@
 
 # load in the configuration file
 #
-ac_help='--enable-dl-tag		Use the DL tag extension
---enable-amalloc	Enable memory allocation debugging
+ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --with-dl=X		Use Discount, Extra, or Both types of definition list
 --enable-all-features	Turn on all stable optional features'
@@ -131,7 +130,6 @@ fi
 
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
 
-[ "$WITH_DL_TAG" ] && AC_DEFINE 'DL_TAG_EXTENSION' '1'
 [ "$WITH_PANDOC_HEADER" ] && AC_DEFINE 'PANDOC_HEADER' '1'
 
 AC_OUTPUT Makefile version.c mkdio.h
