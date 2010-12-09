@@ -412,6 +412,7 @@ ishdr(Line *t, int *htyp)
 static Line*
 is_discount_dt(Line *t, int *clip)
 {
+#if USE_DISCOUNT_DL
     if ( t && t->next
 	   && (S(t->text) > 2)
 	   && (t->dle == 0)
@@ -424,6 +425,7 @@ is_discount_dt(Line *t, int *clip)
 	else
 	    return is_discount_dt(t->next, clip);
     }
+#endif
     return 0;
 }
 
@@ -439,6 +441,7 @@ is_extra_dd(Line *t)
 static Line*
 is_extra_dt(Line *t, int *clip)
 {
+#if USE_EXTRA_DL
     int i;
     
     if ( t && t->next && T(t->text)[0] != '='
@@ -456,6 +459,7 @@ is_extra_dt(Line *t, int *clip)
 	if ( x=is_extra_dt(t->next, clip) )
 	    return x;
     }
+#endif
     return 0;
 }
 
@@ -496,14 +500,15 @@ islist(Line *t, int *clip, DWORD flags, int *list_type)
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
 	if ( T(t->text)[j-1] == '.' ) {
 
-	if ( !(flags & (MKD_NOALPHALIST|MKD_STRICT))
-	                        && (j == t->dle + 2)
-		      && isalpha(T(t->text)[t->dle]) ) {
-	    j = nextnonblank(t,j);
-	    *clip = j;
-	    *list_type = AL;
-	    return AL;
-	}
+	    if ( !(flags & (MKD_NOALPHALIST|MKD_STRICT))
+				    && (j == t->dle + 2)
+			  && isalpha(T(t->text)[t->dle]) ) {
+		j = nextnonblank(t,j);
+		*clip = j;
+		*list_type = AL;
+		return AL;
+	    }
+
 	    strtoul(T(t->text)+t->dle, &q, 10);
 	    if ( (q > T(t->text)+t->dle) && (q == T(t->text) + (j-1)) ) {
 		j = nextnonblank(t,j);

@@ -10,6 +10,7 @@
 ac_help='--enable-dl-tag		Use the DL tag extension
 --enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
+--with-dl=X		Use Discount, Extra, or Both types of definition list
 --enable-all-features	Turn on all stable optional features'
 
 LOCAL_AC_OPTIONS='
@@ -36,6 +37,16 @@ TARGET=markdown
 . ./configure.inc
 
 AC_INIT $TARGET
+
+__DL=`echo "$WITH_DL" | $AC_UPPERCASE`
+
+case "$__DL" in
+EXTRA)         AC_DEFINE 'USE_EXTRA_DL' 1 ;;
+DISCOUNT|1|"") AC_DEFINE 'USE_DISCOUNT_DL' 1 ;;
+BOTH)          AC_DEFINE 'USE_EXTRA_DL' 1
+	       AC_DEFINE 'USE_DISCOUNT_DL' 1 ;;
+*)             AC_FAIL "Unknown value <$WITH_DL> for --with-dl (want 'discount', 'extra', or 'both')" ;;
+esac
 
 AC_PROG_CC
 
@@ -109,6 +120,7 @@ else
 fi
 AC_DEFINE 'TABSTOP' $TABSTOP
 AC_SUB    'TABSTOP' $TABSTOP
+
 
 if [ "$WITH_AMALLOC" ]; then
     AC_DEFINE	'USE_AMALLOC'	1
