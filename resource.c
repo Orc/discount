@@ -147,7 +147,9 @@ mkd_cleanup(Document *doc)
 	}
 
 	if ( doc->code) ___mkd_freeParagraph(doc->code);
-	if ( doc->headers ) ___mkd_freeLines(doc->headers);
+	if ( doc->title) ___mkd_freeLine(doc->title);
+	if ( doc->author) ___mkd_freeLine(doc->author);
+	if ( doc->date) ___mkd_freeLine(doc->date);
 	if ( T(doc->content) ) ___mkd_freeLines(T(doc->content));
 	memset(doc, 0, sizeof doc[0]);
 	free(doc);

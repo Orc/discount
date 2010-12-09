@@ -73,7 +73,7 @@ queue(Document* a, Cstring *line)
 /* trim leading blanks from a header line
  */
 static void
-snip(Line *p)
+header_dle(Line *p)
 {
     CLIP(p->text, 0, 1);
     p->dle = mkd_firstnonblank(p);
@@ -123,12 +123,13 @@ populate(getc_func getc, void* ctx, int flags)
 	 * clip the first three lines out of content and hang them
 	 * off header.
 	 */
-	a->headers = T(a->content);
-	T(a->content) = a->headers->next->next->next;
-	a->headers->next->next->next = 0;
-	snip(a->headers);
-	snip(a->headers->next);
-	snip(a->headers->next->next);
+	Line *headers = T(a->content);
+
+	a->title = headers;             header_dle(a->title);
+	a->author= headers->next;       header_dle(a->author);
+	a->date  = headers->next->next; header_dle(a->date);
+
+	T(a->content) = headers->next->next->next;
     }
 
     return a;
