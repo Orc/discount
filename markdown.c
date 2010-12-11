@@ -484,7 +484,7 @@ islist(Line *t, int *clip, DWORD flags, int *list_type)
     int i, j;
     char *q;
     
-    if ( iscode(t) || blankline(t) || ishdr(t,&i) || ishr(t) )
+    if ( /*iscode(t) ||*/ blankline(t) || ishdr(t,&i) || ishr(t) )
 	return 0;
 
     if ( !(flags & (MKD_NODLIST|MKD_STRICT)) && isdefinition(t,clip,list_type) )
@@ -504,7 +504,7 @@ islist(Line *t, int *clip, DWORD flags, int *list_type)
 				    && (j == t->dle + 2)
 			  && isalpha(T(t->text)[t->dle]) ) {
 		j = nextnonblank(t,j);
-		*clip = j;
+		*clip = (j > 4) ? 4 : j;
 		*list_type = AL;
 		return AL;
 	    }
@@ -512,7 +512,7 @@ islist(Line *t, int *clip, DWORD flags, int *list_type)
 	    strtoul(T(t->text)+t->dle, &q, 10);
 	    if ( (q > T(t->text)+t->dle) && (q == T(t->text) + (j-1)) ) {
 		j = nextnonblank(t,j);
-		*clip = j;
+		*clip = (j > 4) ? 4 : j;
 		*list_type = OL;
 		return AL;
 	    }
