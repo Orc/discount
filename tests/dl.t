@@ -2,6 +2,10 @@
 
 title "definition lists"
 
+eval `./markdown -V | tr ' ' '\n' | grep '^DL='`
+
+DL=${DL:-BOTH}
+
 rc=0
 MARKDOWN_FLAGS=
 
@@ -18,21 +22,22 @@ RSLT='<dl>
 <dd>eh?</dd>
 </dl>'
 
-try -fdefinitionlist '=tag= generates definition lists' "$SRC" "$RSLT"
+if [ "$DL" = "DISCOUNT" -o "$DL" = "BOTH" ]; then
+    try -fdefinitionlist '=tag= generates definition lists' "$SRC" "$RSLT"
 
-    try 'one item with two =tags=' \
-	'=this=
+	try 'one item with two =tags=' \
+	    '=this=
 =is=
     A test, eh?' \
-	'<dl>
+	    '<dl>
 <dt>this</dt>
 <dt>is</dt>
 <dd>A test, eh?</dd>
 </dl>'
-	
 
-    try -fnodefinitionlist '=tag= does nothing' "$SRC" \
-	'<p>=this=</p>
+
+	try -fnodefinitionlist '=tag= does nothing' "$SRC" \
+	    '<p>=this=</p>
 
 <pre><code>is an ugly
 </code></pre>
@@ -41,6 +46,38 @@ try -fdefinitionlist '=tag= generates definition lists' "$SRC" "$RSLT"
 
 <pre><code>eh?
 </code></pre>'
-	
+fi
+
+if [ "$DL" = "EXTRA" -o "$DL" = "BOTH" ]; then
+    try 'markdown extra-style definition lists' \
+'foo
+: bar' \
+'<dl>
+<dt>foo</dt>
+<dd>bar</dd>
+</dl>'
+
+    try '... with two <dt>s in a row' \
+'foo
+bar
+: baz' \
+'<dl>
+<dt>foo</dt>
+<dt>bar</dt>
+<dd>baz</dd>
+</dl>'
+
+    try '... with two <dd>s in a row' \
+'foo
+: bar
+: baz' \
+'<dl>
+<dt>foo</dt>
+<dd>bar</dd>
+<dd>baz</dd>
+</dl>'
+
+fi
+
 summary $0
 exit $rc
