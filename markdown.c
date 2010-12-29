@@ -1171,7 +1171,7 @@ mkd_initialize()
 {
     static int first = 1;
 
-    if ( first-- > 0 ) {
+    if ( first ) {
 	first = 0;
 	INITRNG(time(0));
 	mkd_prepare_tags();
