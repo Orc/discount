@@ -46,7 +46,7 @@ mkd_css(Document *d, char **res)
 {
     Cstring f;
 
-    if ( res && *res && d && d->compiled ) {
+    if ( res && d && d->compiled ) {
 	CREATE(f);
 	RESERVE(f, 100);
 	stylesheets(d->code, &f);
