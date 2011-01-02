@@ -1068,6 +1068,7 @@ compile_document(Line *ptr, MMIOT *f)
 	    if ( unclosed ) {
 		p->typ = SOURCE;
 		p->down = compile(p->text, 1, f);
+		p->text = 0;
 	    }
 	}
 	else if ( isfootnote(ptr) ) {
