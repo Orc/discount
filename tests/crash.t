@@ -24,7 +24,7 @@ try 'dangling list item' ' - ' \
 </ul>'
 
 try -bHOHO 'empty []() with baseurl' '[]()' '<p><a href=""></a></p>'
-try 'unclosed html block' '<table></table' '<table></table'
+try 'unclosed html block' '<table></table' '<p><table>&lt;/table</p>'
 
 summary $0
 exit $rc

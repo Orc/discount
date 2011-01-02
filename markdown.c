@@ -175,7 +175,7 @@ splitline(Line *t, int cutpoint)
 
 
 static Line *
-commentblock(Paragraph *p)
+commentblock(Paragraph *p, int *unclosed)
 {
     Line *t, *ret;
     char *end;
@@ -188,21 +188,24 @@ commentblock(Paragraph *p)
 	    return ret;
 	}
     }
+    *unclosed = 1;
     return t;
 
 }
 
 
 static Line *
-htmlblock(Paragraph *p, struct kw *tag)
+htmlblock(Paragraph *p, struct kw *tag, int *unclosed)
 {
     Line *ret;
     FLO f = { p->text, 0 };
     int c;
     int i, closing, depth=0;
 
+    *unclosed = 0;
+    
     if ( tag == &comment )
-	return commentblock(p);
+	return commentblock(p, unclosed);
     
     if ( tag->selfclose ) {
 	ret = f.t->next;
@@ -240,6 +243,8 @@ htmlblock(Paragraph *p, struct kw *tag)
 			    /* consume trailing gunk in close tag */
 			    c = flogetc(&f);
 			}
+			if ( c == EOF )
+			    break;
 			if ( !f.t )
 			    return 0;
 			splitline(f.t, floindex(f));
@@ -251,6 +256,7 @@ htmlblock(Paragraph *p, struct kw *tag)
 	    }
 	}
     }
+    *unclosed = 1;
     return 0;
 }
 
@@ -1044,7 +1050,7 @@ compile_document(Line *ptr, MMIOT *f)
     ANCHOR(Line) source = { 0, 0 };
     Paragraph *p = 0;
     struct kw *tag;
-    int eaten;
+    int eaten, unclosed;
 
     while ( ptr ) {
 	if ( !(f->flags & MKD_NOHTML) && (tag = isopentag(ptr)) ) {
@@ -1058,7 +1064,8 @@ compile_document(Line *ptr, MMIOT *f)
 		T(source) = E(source) = 0;
 	    }
 	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
-	    if ( (ptr = htmlblock(p, tag)) == 0 ) {
+	    ptr = htmlblock(p, tag, &unclosed);
+	    if ( unclosed ) {
 		p->typ = SOURCE;
 		p->down = compile(p->text, 1, f);
 	    }
