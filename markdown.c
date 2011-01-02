@@ -1178,19 +1178,6 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 }
 
 
-void
-mkd_initialize()
-{
-    static int first = 1;
-
-    if ( first ) {
-	first = 0;
-	INITRNG(time(0));
-	mkd_prepare_tags();
-    }
-}
-
-
 /*
  * the guts of the markdown() function, ripped out so I can do
  * debugging.
