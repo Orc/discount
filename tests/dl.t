@@ -77,6 +77,19 @@ bar
 <dd>baz</dd>
 </dl>'
 
+    try '... with blanks between list items' \
+'foo
+: bar
+
+zip
+: zap' \
+'<dl>
+<dt>foo</dt>
+<dd>bar</dd>
+<dt>zip</dt>
+<dd>zap</dd>
+</dl>'
+
 fi
 
 summary $0
