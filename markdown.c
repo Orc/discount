@@ -865,16 +865,17 @@ definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 	if ( (q = skipempty(text)) == 0 )
 	    break;
 
-	if ( kind == 2 && is_extra_dd(q) ) {
-	    if (( para = (q != text) )) {
-		Line anchor;
+	if (( para = (q != text) )) {
+	    Line anchor;
 
-		anchor.next = text;
-		___mkd_freeLineRange(&anchor,q);
-		text = q;
-	    }
-	    goto dd_block;
+	    anchor.next = text;
+	    ___mkd_freeLineRange(&anchor,q);
+	    text = q;
+	    
 	}
+
+	if ( kind == 2 && is_extra_dd(q) )
+	    goto dd_block;
     }
     top->text = 0;
     top->down = T(d);
