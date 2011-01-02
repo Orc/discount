@@ -838,7 +838,7 @@ definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 {
     ParagraphRoot d = { 0, 0 };
     Paragraph *p;
-    Line *q = top->text, *text, *labels; 
+    Line *q = top->text, *text = 0, *labels; 
     int z, para;
 
     while (( labels = q )) {
