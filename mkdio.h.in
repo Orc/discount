@@ -14,6 +14,9 @@ MMIOT *mkd_string(char*,int,mkd_flag_t);	/* assemble input from a buffer */
 
 void mkd_basename(MMIOT*,char*);
 
+void mkd_initialize();
+void mkd_shlib_destructor();
+
 /* compilation, debugging, cleanup
  */
 int mkd_compile(MMIOT*, mkd_flag_t);
