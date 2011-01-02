@@ -1058,7 +1058,10 @@ compile_document(Line *ptr, MMIOT *f)
 		T(source) = E(source) = 0;
 	    }
 	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
-	    ptr = htmlblock(p, tag);
+	    if ( (ptr = htmlblock(p, tag)) == 0 ) {
+		p->typ = SOURCE;
+		p->down = compile(p->text, 1, f);
+	    }
 	}
 	else if ( isfootnote(ptr) ) {
 	    /* footnotes, like cats, sleep anywhere; pull them
