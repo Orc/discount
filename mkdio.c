@@ -272,6 +272,7 @@ mkd_line(char *bfr, int size, char **res, DWORD flags)
 	 * should be an opaque method that transparently moves 
 	 * the pointer out of the embedded Cstring.
 	 */
+	EXPAND(f.out) = 0;
 	*res = T(f.out);
 	T(f.out) = 0;
 	S(f.out) = ALLOCATED(f.out) = 0;

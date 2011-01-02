@@ -175,7 +175,7 @@ splitline(Line *t, int cutpoint)
 
 
 static Line *
-commentblock(Paragraph *p)
+commentblock(Paragraph *p, int *unclosed)
 {
     Line *t, *ret;
     char *end;
@@ -188,21 +188,24 @@ commentblock(Paragraph *p)
 	    return ret;
 	}
     }
+    *unclosed = 1;
     return t;
 
 }
 
 
 static Line *
-htmlblock(Paragraph *p, struct kw *tag)
+htmlblock(Paragraph *p, struct kw *tag, int *unclosed)
 {
     Line *ret;
     FLO f = { p->text, 0 };
     int c;
     int i, closing, depth=0;
 
+    *unclosed = 0;
+    
     if ( tag == &comment )
-	return commentblock(p);
+	return commentblock(p, unclosed);
     
     if ( tag->selfclose ) {
 	ret = f.t->next;
@@ -240,6 +243,8 @@ htmlblock(Paragraph *p, struct kw *tag)
 			    /* consume trailing gunk in close tag */
 			    c = flogetc(&f);
 			}
+			if ( c == EOF )
+			    break;
 			if ( !f.t )
 			    return 0;
 			splitline(f.t, floindex(f));
@@ -251,6 +256,7 @@ htmlblock(Paragraph *p, struct kw *tag)
 	    }
 	}
     }
+    *unclosed = 1;
     return 0;
 }
 
@@ -865,16 +871,17 @@ definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 	if ( (q = skipempty(text)) == 0 )
 	    break;
 
-	if ( kind == 2 && is_extra_dd(q) ) {
-	    if (( para = (q != text) )) {
-		Line anchor;
+	if (( para = (q != text) )) {
+	    Line anchor;
 
-		anchor.next = text;
-		___mkd_freeLineRange(&anchor,q);
-		text = q;
-	    }
-	    goto dd_block;
+	    anchor.next = text;
+	    ___mkd_freeLineRange(&anchor,q);
+	    text = q;
+	    
 	}
+
+	if ( kind == 2 && is_extra_dd(q) )
+	    goto dd_block;
     }
     top->text = 0;
     top->down = T(d);
@@ -1043,7 +1050,7 @@ compile_document(Line *ptr, MMIOT *f)
     ANCHOR(Line) source = { 0, 0 };
     Paragraph *p = 0;
     struct kw *tag;
-    int eaten;
+    int eaten, unclosed;
 
     while ( ptr ) {
 	if ( !(f->flags & MKD_NOHTML) && (tag = isopentag(ptr)) ) {
@@ -1057,7 +1064,11 @@ compile_document(Line *ptr, MMIOT *f)
 		T(source) = E(source) = 0;
 	    }
 	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
-	    ptr = htmlblock(p, tag);
+	    ptr = htmlblock(p, tag, &unclosed);
+	    if ( unclosed ) {
+		p->typ = SOURCE;
+		p->down = compile(p->text, 1, f);
+	    }
 	}
 	else if ( isfootnote(ptr) ) {
 	    /* footnotes, like cats, sleep anywhere; pull them
@@ -1171,7 +1182,7 @@ mkd_initialize()
 {
     static int first = 1;
 
-    if ( first-- > 0 ) {
+    if ( first ) {
 	first = 0;
 	INITRNG(time(0));
 	mkd_prepare_tags();
