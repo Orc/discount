@@ -22,6 +22,7 @@ mkd_toc(Document *p, char **doc)
     Paragraph *tp, *srcp;
     int last_hnumber = 0;
     Cstring res;
+    int size;
     
     *doc = 0;
 
@@ -65,11 +66,17 @@ mkd_toc(Document *p, char **doc)
 	--last_hnumber;
 	Csprintf(&res, last_hnumber ? "%*s</ul></li>\n" : "%*s</ul>\n", last_hnumber, "");
     }
-			/* HACK ALERT! HACK ALERT! HACK ALERT! */
-    *doc = T(res);	/* we know that a T(Cstring) is a character pointer */
-			/* so we can simply pick it up and carry it away, */
-    return S(res);	/* leaving the husk of the Ctring on the stack */
-			/* END HACK ALERT */
+
+    if ( (size = S(res)) > 0 ) {
+	EXPAND(res) = 0;
+			    /* HACK ALERT! HACK ALERT! HACK ALERT! */
+	*doc = T(res);      /* we know that a T(Cstring) is a character pointer
+			     * so we can simply pick it up and carry it away,
+			     * leaving the husk of the Ctring on the stack
+			     * END HACK ALERT
+			     */
+    }
+    return size;
 }
 
 
