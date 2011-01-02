@@ -1192,8 +1192,8 @@ text(MMIOT *f)
 		    break;
 	/* A^B -> A<sup>B</sup> */
 	case '^':   if ( (f->flags & (MKD_NOSUPERSCRIPT|MKD_STRICT|MKD_TAGTEXT))
-						       || isthisspace(f,-1)
-							|| isthisspace(f,1) )
+				|| (isthisnonword(f,-1) && peek(f,-1) != ')')
+				|| isthisspace(f,1) )
 			Qchar(c,f);
 		    else {
 			char *sup = cursor(f);
