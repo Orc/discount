@@ -19,14 +19,18 @@
 #include "tags.h"
     
 static int need_to_setup = 1;
+static int need_to_initrng = 1;
 
 void
 mkd_initialize()
 {
 
+    if ( need_to_initrng ) {
+	need_to_initrng = 0;
+	INITRNG(time(0));
+    }
     if ( need_to_setup ) {
 	need_to_setup = 0;
-	INITRNG(time(0));
 	mkd_prepare_tags();
     }
 }
