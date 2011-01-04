@@ -1120,6 +1120,58 @@ EOF
     rm -f /tmp/ngc$$ /tmp/ngc$$.c
 }
 
+#
+# AC_COMPILER_PIC checks for the compiler option to produce position independent
+# code.  At the moment we assume gcc semantics.
+#
+AC_COMPILER_PIC () {
+    AC_PROG_CC
+
+    LOGN "checking for C compiler option to produce PIC "
+    echo "int some_variable = 0;" > /tmp/ngc$$.c 
+
+    if $AC_CC -c -fPIC -o /tmp/ngc$$ /tmp/ngc$$.c $LIBS; then
+	AC_PIC_FLAGS="-fPIC"
+        LOG "($AC_PIC_FLAGS)"
+	__rc=0
+    else
+        LOG "(none)"
+	__rc=1
+    fi
+    rm -f /tmp/ngc$$ /tmp/ngc$$.c
+    return $__rc
+}
+
+#
+# AC_CC_SHLIBS checks if the C compiler can produce shared libraries
+# note that we compile and link a single object only in one step
+#
+AC_CC_SHLIBS () {
+    AC_PROG_CC
+    LOGN "checking whether the C compiler can build shared libraries "
+
+    echo "int some_variable = 0;" > /tmp/ngc$$.c 
+
+    if $AC_CC $AC_PICFLAG -shared -o /tmp/ngc$$.so /tmp/ngc$$.c; then
+	AC_SHLIB_FLAGS=-shared
+	AC_LIB_EXT=so
+        LOG "(yes; $AC_SHLIB_FLAGS)"
+	__rc=0
+    elif $AC_CC $AC_PICFLAG  -dynamiclib -o /tmp/ngc$$.so /tmp/ngc$$.c; then
+	# macosx
+	AC_SHLIB_FLAGS=' -dynamiclib'
+	AC_LIB_EXT=dylib
+        LOG "(yes; macos dylib)"
+	__rc=0
+    else
+        LOG "(no)"
+	__rc=1
+    fi
+
+    rm -f /tmp/ngc$$.so /tmp/ngc$$.c
+    return $__rc
+}
+
 
 #
 # AC_PROG_INSTALL finds the install program and guesses whether it's a 

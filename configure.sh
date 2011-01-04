@@ -10,7 +10,8 @@
 ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --with-dl=X		Use Discount, Extra, or Both types of definition list
---enable-all-features	Turn on all stable optional features'
+--enable-all-features	Turn on all stable optional features
+--shared		Build shared libraries (default is static)'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
@@ -24,6 +25,9 @@ fi'
 locals() {
     K=`echo $1 | $AC_UPPERCASE`
     case "$K" in
+    --SHARED)
+                echo TRY_SHARED=T
+                ;;
     --ENABLE-ALL|--ENABLE-ALL-FEATURES)
 		echo WITH_AMALLOC=T
 		;;
@@ -48,6 +52,27 @@ BOTH)          AC_DEFINE 'USE_EXTRA_DL' 1
 esac
 
 AC_PROG_CC
+if test "$TRY_SHARED" && AC_COMPILER_PIC && AC_CC_SHLIBS; then
+    MAKE_SHARED=T
+    AC_SUB 'MKSHARED' ''
+    AC_SUB 'MKSTATIC' '#'
+
+    if [ "$AC_LIB_EXT" = "dylib" ]; then
+	# special horrible hack for macos shared library version.
+	eval `awk -F. '{ printf "COMPAT=%d.%d\n", $1, $2;
+			 printf "VERSION=%d.%d.%d\n", $1, $2, $3; }' VERSION`
+	AC_SHLIB_FLAGS="$AC_SHLIB_FLAGS -compatibility_version $COMPAT"
+	AC_SHLIB_FLAGS="$AC_SHLIB_FLAGS  -current_version $VERSION"
+    fi
+
+else
+    AC_SUB 'MKSHARED' '#'
+    AC_SUB 'MKSTATIC' ''
+fi
+
+AC_SUB 'PIC_FLAGS' "${MAKE_SHARED:+$AC_PIC_FLAGS}"
+AC_SUB 'SHARED_FLAGS' "${MAKE_SHARED:+$AC_SHLIB_FLAGS}"
+AC_SUB 'LIBEXT' "${AC_LIB_EXT:-a}"
 
 case "$AC_CC $AC_CFLAGS" in
 *-Wall*)    AC_DEFINE 'while(x)' 'while( (x) != 0 )'
