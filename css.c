@@ -48,17 +48,22 @@ mkd_css(Document *d, char **res)
     int size;
 
     if ( res && d && d->compiled ) {
+	*res = 0;
 	CREATE(f);
 	RESERVE(f, 100);
 	stylesheets(d->code, &f);
 			
-	if ( (size = S(f)) > 0 )
+	if ( (size = S(f)) > 0 ) {
 	    EXPAND(f) = 0;
 			/* HACK ALERT! HACK ALERT! HACK ALERT! */
-	*res = T(f);    /* we know that a T(Cstring) is a character pointer */
+	    *res = T(f);/* we know that a T(Cstring) is a character pointer */
 			/* so we can simply pick it up and carry it away, */
-	return size;    /* leaving the husk of the Ctring on the stack */
+			/* leaving the husk of the Ctring on the stack */
 			/* END HACK ALERT */
+	}
+	else
+	    DELETE(f);
+	return size;
     }
     return EOF;
 }
