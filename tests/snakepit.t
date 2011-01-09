@@ -1,6 +1,6 @@
 . tests/functions.sh
 
-title "The snakepit of Markdown.pl compatability"
+title "The snakepit of Markdown.pl compatibility"
 
 rc=0
 MARKDOWN_FLAGS=
