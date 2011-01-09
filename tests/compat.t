@@ -1,6 +1,6 @@
 . tests/functions.sh
 
-title "markdown 1.0 compatability"
+title "markdown 1.0 compatibility"
 
 rc=0
 MARKDOWN_FLAGS=

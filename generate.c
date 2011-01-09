@@ -352,7 +352,7 @@ linkysize(MMIOT *f, Footnote *ref)
 
 
 /* extract a <...>-encased url from the input stream.
- * (markdown 1.0.2b8 compatability; older versions
+ * (markdown 1.0.2b8 compatibility; older versions
  * of markdown treated the < and > as syntactic
  * sugar that didn't have to be there.  1.0.2b8 
  * requires a closing >, and then falls into the

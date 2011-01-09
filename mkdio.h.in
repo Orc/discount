@@ -83,7 +83,7 @@ extern char markdown_version[];
 #define MKD_NOTABLES	0x00000400	/* disallow tables */
 #define MKD_NOSTRIKETHROUGH 0x00000800	/* forbid ~~strikethrough~~ */
 #define MKD_TOC		0x00001000	/* do table-of-contents processing */
-#define MKD_1_COMPAT	0x00002000	/* compatability with MarkdownTest_1.0 */
+#define MKD_1_COMPAT	0x00002000	/* compatibility with MarkdownTest_1.0 */
 #define MKD_AUTOLINK	0x00004000	/* make http://foo.com link even without <>s */
 #define MKD_SAFELINK	0x00008000	/* paranoid check for link protocol */
 #define MKD_NOHEADER	0x00010000	/* don't process header blocks */
