@@ -1154,6 +1154,7 @@ AC_CC_SHLIBS () {
 
     if $AC_CC $AC_PICFLAG -shared -o /tmp/ngc$$.so /tmp/ngc$$.c; then
 	AC_SHLIB_FLAGS=-shared
+	AC_SONAME_FLAGS=-Wl,-soname,
 	AC_LIB_EXT=so
         LOG "(yes; $AC_SHLIB_FLAGS)"
 	__rc=0

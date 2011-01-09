@@ -1,6 +1,7 @@
 CC=@CC@ -I. -L.
 AR=@AR@
 RANLIB=@RANLIB@
+LN=ln -s
 
 BINDIR=@exedir@
 MANDIR=@mandir@
@@ -11,6 +12,8 @@ PGMS=markdown
 SAMPLE_PGMS=mkd2html makepage
 @THEME@SAMPLE_PGMS+= theme
 MKDLIB=libmarkdown.@LIBEXT@
+SONAME=$(MKDLIB).`cat VERSION | cut -b 1`
+SHLIB=$(MKDLIB).`cat VERSION`
 OBJS=mkdio.o markdown.o dumptree.o generate.o \
      resource.o docheader.o version.o toc.o css.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o \
@@ -79,7 +82,9 @@ main.o: main.c mkdio.h config.h
 $(MKDLIB): $(OBJS)
 @MKSTATIC@	$(AR) crv $(MKDLIB) $(OBJS)
 @MKSTATIC@	$(RANLIB) $(MKDLIB)
-@MKSHARED@	$(CC) $(SHARED_FLAGS) $(PIC_FLAGS) -o $(MKDLIB) $(OBJS)
+@MKSHARED@	$(CC) $(SHARED_FLAGS)$(SONAME) $(PIC_FLAGS) -o $(SHLIB) $(OBJS)
+@MKSHARED@	$(LN) -s $(SHLIB) $(SONAME)
+@MKSHARED@	$(LN) -s $(SHLIB) $(MKDLIB)
 
 verify: echo tools/checkbits.sh
 	@./echo -n "headers ... "; tools/checkbits.sh && echo "GOOD"
@@ -93,9 +98,9 @@ cols:   tools/cols.c config.h
 	$(CC) -o cols tools/cols.c
 echo:   tools/echo.c config.h
 	$(CC) -o echo tools/echo.c
-	
+
 clean:
-	rm -f $(PGMS) $(SAMPLE_PGMS) *.o $(MKDLIB)
+	rm -f $(PGMS) $(SAMPLE_PGMS) *.o $(MKDLIB) *.so.*
 
 distclean spotless: clean
 	rm -f @GENERATED_FILES@ @CONFIGURE_FILES@
