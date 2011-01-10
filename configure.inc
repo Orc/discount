@@ -1207,12 +1207,13 @@ AC_CC_SHLIBS () {
 
 ACTION=\$1; shift
 LIBRARY=\$1; shift
-LIBNAME=\$LIBRARY.so
-FULLNAME="\$LIBNAME.\$VERSION"
 	
 eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
 		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
 shift
+
+LIBNAME=\$LIBRARY.so
+FULLNAME=\$LIBNAME.\$VERSION
 
 case "\$ACTION" in
 make)   FLAGS="$AC_CFLAGS -shared"
@@ -1249,12 +1250,13 @@ EOF
 
 ACTION=\$1; shift
 LIBRARY=\$1; shift
-LIBNAME=\$LIBRARY.dylib
-FULLNAME="\$LIBNAME"
 	
 eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
 		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
 shift
+
+LIBNAME=\$LIBRARY.dylib
+FULLNAME=\$LIBNAME
 
 case "\$ACTION" in
 make)   FLAGS="$AC_CFLAGS -dynamiclib"
