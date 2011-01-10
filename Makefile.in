@@ -90,7 +90,7 @@ echo:   tools/echo.c config.h
 	
 clean:
 	rm -f $(PGMS) $(SAMPLE_PGMS) *.o
-	rm -f $(MKDLIB) `./librarian.sh name $(MKDLIB) VERSION`
+	rm -f $(MKDLIB) `./librarian.sh files $(MKDLIB) VERSION`
 
 distclean spotless: clean
 	rm -f @GENERATED_FILES@ @CONFIGURE_FILES@

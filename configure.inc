@@ -945,7 +945,7 @@ make)   ${PROG_AR} crv \$LIBRARY.a "\$@"
 	rm -f \$LIBRARY
 	${PROG_LN_S} \$LIBRARY.a \$LIBRARY
 	;;
-name)   echo "\${LIBRARY}.a"
+files)  echo "\${LIBRARY}.a"
 	;;
 install)$PROG_INSTALL -m 644 \${LIBRARY}.a \$1
 	;;
@@ -1192,7 +1192,7 @@ AC_CC_SHLIBS () {
 	AC_SHLIB_FLAGS=-shared
 	AC_LIB_EXT=so
 	AC_SUB LD_LIBRARY_PATH LD_LIBRARY_PATH
-	AC_LIB_VERSION="-Wl, -soname,"
+	AC_LIB_VERSION="-Wl,-soname,"
         LOG "(yes; -shared)"
 	__rc=0
     elif $AC_CC $AC_PICFLAG  -dynamiclib -o /tmp/ngc$$.so /tmp/ngc$$.c; then
@@ -1224,12 +1224,12 @@ AC_CC_SHLIBS () {
 
 ACTION=\$1; shift
 LIBRARY=\$1; shift
+LIBNAME=\$LIBRARY.$AC_LIB_EXT
 	
-eval \`awk -F. '{ printf "MAJOR=%d.%d\n", \$1, \$2;
+eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
 		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
 shift
 
-LIBNAME=\$LIBRARY.$AC_LIB_EXT
 if [ "$AC_LIB_EXT" = "so" ]; then
     FULLNAME="\$LIBNAME.\$VERSION"
 else
@@ -1238,17 +1238,29 @@ fi
 
 case "\$ACTION" in
 make)   FLAGS="$AC_CFLAGS $AC_SHLIB_FLAGS"
-	if [ "$AC_LIB_VERSION" ]; then
+	if [ "$AC_LIB_EXT" = "so" ]; then
+	    FLAGS="\$FLAGS -Wl,-soname,\$LIBNAME.\$MAJOR"
+	elif [ "$AC_LIB_VERSION" ]; then
 	    FLAGS="\$FLAGS $AC_LIB_VERSION \$VERSION"
-	fi
-	if [ "$AC_LIB_MAJOR" ]; then
-	    FLAGS="\$FLAGS $AC_LIB_MAJOR \$MAJOR"
+	    if [ "$AC_LIB_MAJOR" ]; then
+		FLAGS="\$FLAGS $AC_LIB_MAJOR \$MAJOR"
+	    fi
 	fi
 
-	rm -f \$LIBRARY
-	$AC_CC \$FLAGS -o \$FULLNAME "\$@" && $PROG_LN_S \$FULLNAME \$LIBRARY
+	rm -f \$LIBRARY \$LIBNAME.\$MAJOR
+	if $AC_CC \$FLAGS -o \$FULLNAME "\$@"; then
+	    $PROG_LN_S \$FULLNAME \$LIBRARY
+	    if [ "$AC_LIB_EXT" = "so" ]; then
+		$PROG_LN_S \$FULLNAME \$LIBNAME
+		$PROG_LN_S \$FULLNAME \$LIBNAME.\$MAJOR
+	    fi
+	fi
 	;;
-name)   echo "\$FULLNAME"
+files)  if [ "$AC_LIB_EXT" = "so" ]; then
+	    echo "\$FULLNAME" "\$LIBNAME" "\$LIBNAME.\$MAJOR"
+	else
+	    echo "\$FULLNAME"
+	fi
 	;;
 install)$PROG_INSTALL -c \$FULLNAME "\$1"
 	if [ "$AC_LIB_EXT" = "so" ]; then
