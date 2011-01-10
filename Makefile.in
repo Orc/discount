@@ -31,7 +31,7 @@ install.everything: install install.samples install.man
 install.samples: $(SAMPLE_PGMS) install
 	@INSTALL_PROGRAM@ $(SAMPLE_PGMS) $(DESTDIR)/$(BINDIR)
 	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man1
-	@INSTALL_DATA@ theme.1 $(DESTDIR)/$(MANDIR)/man1
+	@INSTALL_DATA@ theme.1 makepage.1 mkd2html.1 $(DESTDIR)/$(MANDIR)/man1
 
 install.man:
 	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man3
