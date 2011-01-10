@@ -677,16 +677,20 @@ AC_PROG_YACC () {
 #
 AC_PROG () {
     PN=`basename $1 | $AC_UPPERCASE | tr -dc $AC_UPPER_PAT`
-    TLOGN "looking for $1"
-    DEST=`acLookFor $1`
-    if [ "$DEST" ]; then
-	AC_SUB $PN $DEST
-	TLOG " ($DEST)"
-	return 0
+
+    if set | grep -v PROG_$PN >/dev/null; then
+	TLOGN "looking for $1"
+	DEST=`acLookFor $1`
+	if [ "$DEST" ]; then
+	    eval PROG_$PN="$DEST"
+	    AC_SUB $PN $DEST
+	    TLOG " ($DEST)"
+	    return 0
+	fi
+	AC_SUB $PN true
+	TLOG " (not found)"
+	return 1
     fi
-    AC_SUN $PN true
-    TLOG " (not found)"
-    return 1
 }
 
 
@@ -707,6 +711,7 @@ AC_PROG_LN_S () {
 	if [ "`$AC_FIND_PROG /tmp/b$$ -type l -print`" ]; then
 	    TLOG " ($DEST)"
 	    echo "$DEST exists, and ln -s works"
+	    PROG_LN_S="$DEST -s"
 	    AC_SUB 'LN_S' "$DEST -s"
 	    rm -f /tmp/b$$
 	else
@@ -918,6 +923,36 @@ AC_OUTPUT () {
     AC_SUB 'libexec' "$AC_LIBEXEC"
     AC_SUB 'confdir' "$AC_CONFDIR"
     AC_SUB 'mandir'  "$AC_MANDIR"
+
+    if echo "$__config_files" | grep -v librarian.sh >/dev/null; then
+	# write a librarian that works with static libraries
+	AC_PROG_LN_S
+	AC_PROG ar
+	AC_PROG ranlib
+	AC_SUB LD_LIBRARY_PATH HERE
+	AC
+	__config_files="$__config_files librarian.sh"
+	cat > librarian.sh << EOF
+#! /bin/sh
+
+ACTION=\$1; shift
+LIBRARY=\$1; shift
+VERSION=\$1; shift
+
+case "\$ACTION" in
+make)   ${PROG_AR} crv \$LIBRARY.a "\$@"
+	${PROG_RANLIB} \$LIBRARY.a
+	rm -f \$LIBRARY
+	${PROG_LN_S} \$LIBRARY.a \$LIBRARY
+	;;
+name)   echo "\${LIBRARY}.a"
+	;;
+install)$PROG_INSTALL -m 644 \${LIBRARY}.a \$1
+	;;
+esac
+EOF
+    fi
+    chmod +x librarian.sh
 
     if [ -r config.sub ]; then
 	test "$AC_SED_PROG" || AC_PROG_SED
@@ -1131,8 +1166,8 @@ AC_COMPILER_PIC () {
     echo "int some_variable = 0;" > /tmp/ngc$$.c 
 
     if $AC_CC -c -fPIC -o /tmp/ngc$$ /tmp/ngc$$.c $LIBS; then
-	AC_PIC_FLAGS="-fPIC"
-        LOG "($AC_PIC_FLAGS)"
+	AC_CFLAGS="$AC_CFLAGS -fPIC"
+        LOG "(-fPIC)"
 	__rc=0
     else
         LOG "(none)"
@@ -1144,7 +1179,8 @@ AC_COMPILER_PIC () {
 
 #
 # AC_CC_SHLIBS checks if the C compiler can produce shared libraries
-# note that we compile and link a single object only in one step
+# and if it can writes a `librarian.sh` that handles those libraries
+# for us.
 #
 AC_CC_SHLIBS () {
     AC_PROG_CC
@@ -1155,12 +1191,17 @@ AC_CC_SHLIBS () {
     if $AC_CC $AC_PICFLAG -shared -o /tmp/ngc$$.so /tmp/ngc$$.c; then
 	AC_SHLIB_FLAGS=-shared
 	AC_LIB_EXT=so
-        LOG "(yes; $AC_SHLIB_FLAGS)"
+	AC_SUB LD_LIBRARY_PATH LD_LIBRARY_PATH
+	AC_LIB_VERSION="-Wl, -soname,"
+        LOG "(yes; -shared)"
 	__rc=0
     elif $AC_CC $AC_PICFLAG  -dynamiclib -o /tmp/ngc$$.so /tmp/ngc$$.c; then
 	# macosx
 	AC_SHLIB_FLAGS=' -dynamiclib'
 	AC_LIB_EXT=dylib
+	AC_SUB LD_LIBRARY_PATH DYLD_LIBRARY_PATH
+	AC_LIB_VERSION="-current_version"
+	AC_LIB_MAJOR="-compatibility_version"
         LOG "(yes; macos dylib)"
 	__rc=0
     else
@@ -1169,6 +1210,57 @@ AC_CC_SHLIBS () {
     fi
 
     rm -f /tmp/ngc$$.so /tmp/ngc$$.c
+
+    if [ "$__rc" -eq 0 ]; then
+	AC_PROG_LN_S
+	AC_PROG_INSTALL
+	LDCONFIG=`AC_PATH=/sbin:/usr/sbin:/usr/local/sbin acLookFor ldconfig`
+    
+	__config_files="$__config_files librarian.sh"
+	cat > librarian.sh << EOF
+#! /bin/sh
+#
+#  Deal with shared libraries, hiding (some) ickiness from the makefile
+
+ACTION=\$1; shift
+LIBRARY=\$1; shift
+	
+eval \`awk -F. '{ printf "MAJOR=%d.%d\n", \$1, \$2;
+		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
+shift
+
+LIBNAME=\$LIBRARY.$AC_LIB_EXT
+if [ "$AC_LIB_EXT" = "so" ]; then
+    FULLNAME="\$LIBNAME.\$VERSION"
+else
+    FULLNAME="\$LIBNAME"
+fi
+
+case "\$ACTION" in
+make)   FLAGS="$AC_CFLAGS $AC_SHLIB_FLAGS"
+	if [ "$AC_LIB_VERSION" ]; then
+	    FLAGS="\$FLAGS $AC_LIB_VERSION \$VERSION"
+	fi
+	if [ "$AC_LIB_MAJOR" ]; then
+	    FLAGS="\$FLAGS $AC_LIB_MAJOR \$MAJOR"
+	fi
+
+	rm -f \$LIBRARY
+	$AC_CC \$FLAGS -o \$FULLNAME "\$@" && $PROG_LN_S \$FULLNAME \$LIBRARY
+	;;
+name)   echo "\$FULLNAME"
+	;;
+install)$PROG_INSTALL -c \$FULLNAME "\$1"
+	if [ "$AC_LIB_EXT" = "so" ]; then
+	    test "\$MAJOR" && $PROG_LN_S \$FULLNAME \$1/\$LIBNAME.\$MAJOR
+	    $PROG_LN_S \$FULLNAME \$1/\$LIBNAME
+	    test "\$LDCONFIG" && \$LDCONFIG "\$1"
+	fi
+	;;
+esac
+EOF
+	chmod +x librarian.sh
+    fi
     return $__rc
 }
 
