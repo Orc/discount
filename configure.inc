@@ -934,6 +934,8 @@ AC_OUTPUT () {
 	__config_files="$__config_files librarian.sh"
 	cat > librarian.sh << EOF
 #! /bin/sh
+#
+#  Build static libraries, hiding (some) ickiness from the makefile
 
 ACTION=\$1; shift
 LIBRARY=\$1; shift
@@ -1179,29 +1181,97 @@ AC_COMPILER_PIC () {
 
 #
 # AC_CC_SHLIBS checks if the C compiler can produce shared libraries
-# and if it can writes a `librarian.sh` that handles those libraries
-# for us.
+# and if it can writes a librarian that handles those libraries for us.
 #
 AC_CC_SHLIBS () {
     AC_PROG_CC
+    AC_PROG_LN_S
+    AC_PROG_INSTALL
     LOGN "checking whether the C compiler can build shared libraries "
 
     echo "int some_variable = 0;" > /tmp/ngc$$.c 
 
     if $AC_CC $AC_PICFLAG -shared -o /tmp/ngc$$.so /tmp/ngc$$.c; then
-	AC_SHLIB_FLAGS=-shared
-	AC_LIB_EXT=so
 	AC_SUB LD_LIBRARY_PATH LD_LIBRARY_PATH
-	AC_LIB_VERSION="-Wl,-soname,"
+	# -Wl option probably works, but be paranoid anyway
+	_VFLAGS="$AC_PICFLAG -shared -Wl,-soname,ngc$$.so.1"
+	if $AC_CC $_VFLAGS -o /tmp/ngc$$.so /tmp/ngc$$.c; then
+	    USE_SONAME=T
+	fi
+	LDCONFIG=`AC_PATH=/sbin:/usr/sbin:/usr/local/sbin acLookFor ldconfig`
+	__config_files="$__config_files librarian.sh"
+	cat > librarian.sh << EOF
+#! /bin/sh
+#
+#  Build ELF shared libraries, hiding (some) ickiness from the makefile
+
+ACTION=\$1; shift
+LIBRARY=\$1; shift
+LIBNAME=\$LIBRARY.so
+FULLNAME="\$LIBNAME.\$VERSION"
+	
+eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
+		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
+shift
+
+case "\$ACTION" in
+make)   FLAGS="$AC_CFLAGS -shared"
+	unset VFLAGS
+	test "$USE_SONAME" && VFLAGS="-Wl,-soname,\$LIBNAME.\$MAJOR"
+
+	rm -f \$LIBRARY \$LIBNAME \$LIBNAME.\$MAJOR
+	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
+	    $PROG_LN_S \$FULLNAME \$LIBRARY
+	    $PROG_LN_S \$FULLNAME \$LIBNAME
+	    $PROG_LN_S \$FULLNAME \$LIBNAME.\$MAJOR
+	fi
+	;;
+files)  echo "\$FULLNAME" "\$LIBNAME" "\$LIBNAME.\$MAJOR"
+	;;
+install)$PROG_INSTALL -c \$FULLNAME "\$1"
+	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME.\$MAJOR
+	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME
+	test "$LDCONFIG" && $LDCONFIG "\$1"
+	;;
+esac
+EOF
+	chmod +x librarian.sh
         LOG "(yes; -shared)"
 	__rc=0
     elif $AC_CC $AC_PICFLAG  -dynamiclib -o /tmp/ngc$$.so /tmp/ngc$$.c; then
 	# macosx
-	AC_SHLIB_FLAGS=' -dynamiclib'
-	AC_LIB_EXT=dylib
 	AC_SUB LD_LIBRARY_PATH DYLD_LIBRARY_PATH
-	AC_LIB_VERSION="-current_version"
-	AC_LIB_MAJOR="-compatibility_version"
+	__config_files="$__config_files librarian.sh"
+	cat > librarian.sh << EOF
+#! /bin/sh
+#
+#  Build MacOS shared libraries, hiding (some) ickiness from the makefile
+
+ACTION=\$1; shift
+LIBRARY=\$1; shift
+LIBNAME=\$LIBRARY.dylib
+FULLNAME="\$LIBNAME"
+	
+eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
+		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
+shift
+
+case "\$ACTION" in
+make)   FLAGS="$AC_CFLAGS -dynamiclib"
+	VFLAGS="-current_version \$VERSION -compatibility_version \$MAJOR"
+
+	rm -f \$LIBRARY
+	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
+	    $PROG_LN_S \$FULLNAME \$LIBRARY
+	fi
+	;;
+files)  echo "\$FULLNAME"
+	;;
+install)$PROG_INSTALL -c \$FULLNAME "\$1"
+	;;
+esac
+EOF
+	chmod +x librarian.sh
         LOG "(yes; macos dylib)"
 	__rc=0
     else
@@ -1211,68 +1281,6 @@ AC_CC_SHLIBS () {
 
     rm -f /tmp/ngc$$.so /tmp/ngc$$.c
 
-    if [ "$__rc" -eq 0 ]; then
-	AC_PROG_LN_S
-	AC_PROG_INSTALL
-	LDCONFIG=`AC_PATH=/sbin:/usr/sbin:/usr/local/sbin acLookFor ldconfig`
-    
-	__config_files="$__config_files librarian.sh"
-	cat > librarian.sh << EOF
-#! /bin/sh
-#
-#  Deal with shared libraries, hiding (some) ickiness from the makefile
-
-ACTION=\$1; shift
-LIBRARY=\$1; shift
-LIBNAME=\$LIBRARY.$AC_LIB_EXT
-	
-eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
-		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
-shift
-
-if [ "$AC_LIB_EXT" = "so" ]; then
-    FULLNAME="\$LIBNAME.\$VERSION"
-else
-    FULLNAME="\$LIBNAME"
-fi
-
-case "\$ACTION" in
-make)   FLAGS="$AC_CFLAGS $AC_SHLIB_FLAGS"
-	if [ "$AC_LIB_EXT" = "so" ]; then
-	    FLAGS="\$FLAGS -Wl,-soname,\$LIBNAME.\$MAJOR"
-	elif [ "$AC_LIB_VERSION" ]; then
-	    FLAGS="\$FLAGS $AC_LIB_VERSION \$VERSION"
-	    if [ "$AC_LIB_MAJOR" ]; then
-		FLAGS="\$FLAGS $AC_LIB_MAJOR \$MAJOR"
-	    fi
-	fi
-
-	rm -f \$LIBRARY \$LIBNAME.\$MAJOR
-	if $AC_CC \$FLAGS -o \$FULLNAME "\$@"; then
-	    $PROG_LN_S \$FULLNAME \$LIBRARY
-	    if [ "$AC_LIB_EXT" = "so" ]; then
-		$PROG_LN_S \$FULLNAME \$LIBNAME
-		$PROG_LN_S \$FULLNAME \$LIBNAME.\$MAJOR
-	    fi
-	fi
-	;;
-files)  if [ "$AC_LIB_EXT" = "so" ]; then
-	    echo "\$FULLNAME" "\$LIBNAME" "\$LIBNAME.\$MAJOR"
-	else
-	    echo "\$FULLNAME"
-	fi
-	;;
-install)$PROG_INSTALL -c \$FULLNAME "\$1"
-	if [ "$AC_LIB_EXT" = "so" ]; then
-	    test "\$MAJOR" && $PROG_LN_S \$FULLNAME \$1/\$LIBNAME.\$MAJOR
-	    $PROG_LN_S \$FULLNAME \$1/\$LIBNAME
-	    test "\$LDCONFIG" && \$LDCONFIG "\$1"
-	fi
-	;;
-esac
-EOF
-	chmod +x librarian.sh
-    fi
     return $__rc
 }
 
