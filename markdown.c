@@ -962,6 +962,12 @@ addfootnote(Line *p, MMIOT* f)
     S(foot->tag)--;
     j = nextnonblank(p, j+2);
 
+    if ( T(foot->tag)[0] == '^' ) {
+	while ( j < S(p->text) )
+	    EXPAND(foot->title) = T(p->text)[j++];
+	goto skip_to_end;
+    }
+
     while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
 	EXPAND(foot->link) = T(p->text)[j++];
     EXPAND(foot->link) = 0;
@@ -1001,6 +1007,7 @@ addfootnote(Line *p, MMIOT* f)
 	--S(foot->title);
     }
 
+skip_to_end:
     ___mkd_freeLine(p);
     return np;
 }

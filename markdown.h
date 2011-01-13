@@ -12,6 +12,10 @@ typedef struct footnote {
     Cstring title;		/* what it's called (TITLE= attribute) */
     int height, width;		/* dimensions (for image link) */
     int dealloc;		/* deallocation needed? */
+    int refnumber;
+    int flags;
+#define EXTRA_BOOKMARK	0x01
+#define REFERENCED	0x02
 } Footnote;
 
 /* each input line is read into a Line, which contains the line,
@@ -75,6 +79,7 @@ typedef struct mmiot {
     Cstring in;
     Qblock Q;
     int isp;
+    int reference;
     STRING(Footnote) *footnotes;
     DWORD flags;
 #define MKD_NOLINKS	0x00000001
