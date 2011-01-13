@@ -64,6 +64,8 @@ static struct {
     { "alphalist",     1, MKD_NOALPHALIST },
     { "definitionlist",1, MKD_NODLIST },
     { "1.0",           0, MKD_1_COMPAT },
+    { "footnotes",     0, MKD_EXTRA_FOOTNOTE },
+    { "footnote",      0, MKD_EXTRA_FOOTNOTE },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])

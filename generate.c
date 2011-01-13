@@ -676,7 +676,7 @@ linkylinky(int image, MMIOT *f)
 		mmiotseek(f, implicit_mark);
 		goodlink = !(f->flags & MKD_1_COMPAT);
 
-		if ( (!image) && S(name) && T(name)[0] == '^' )
+		if ( (f->flags & MKD_EXTRA_FOOTNOTE) && (!image) && S(name) && T(name)[0] == '^' )
 		    extra_footnote = 1;
 	    }
 	    
@@ -1684,7 +1684,8 @@ mkd_document(Document *p, char **res)
     if ( p && p->compiled ) {
 	if ( ! p->html ) {
 	    htmlify(p->code, 0, 0, p->ctx);
-	    mkd_extra_footnotes(p->ctx);
+	    if ( p->ctx->flags & MKD_EXTRA_FOOTNOTE )
+		mkd_extra_footnotes(p->ctx);
 	    p->html = 1;
 	}
 
