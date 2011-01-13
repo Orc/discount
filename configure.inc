@@ -899,7 +899,7 @@ EOF
     fi
     case "$rc" in
     0) TLOG "" ;;
-    *) TLOG " ** FAILED **" ;;
+    *) AC_FAIL " ** FAILED **" ;;
     esac
     rm -f /tmp/pd$$ /tmp/pd$$.c
 }
