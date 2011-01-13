@@ -1655,7 +1655,7 @@ mkd_extra_footnotes(MMIOT *m)
     if ( m->reference == 0 )
 	return;
 
-    Csprintf(&m->out, "<div class=\"footnotes\">\n<hr/>\n<ol>\n");
+    Csprintf(&m->out, "\n<div class=\"footnotes\">\n<hr/>\n<ol>\n");
     
     for ( i=1; i <= m->reference; i++ ) {
 	for ( j=0; j < S(*m->footnotes); j++ ) {
