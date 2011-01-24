@@ -926,7 +926,15 @@ AC_OUTPUT () {
 
     if echo "$__config_files" | grep -v librarian.sh >/dev/null; then
 	# write a librarian that works with static libraries
-	AC_PROG_LN_S
+	if AC_PROG_LN_S ; then
+	    __dolink=$PROG_LN_S
+	elif AC_PROG ln; then
+	    __dolink=$PROG_LN
+	elif AC_PROG cp; then
+	    __dolink=$PROG_CP
+	else
+	    __dolink=:
+	fi
 	AC_PROG ar
 	AC_PROG ranlib
 	AC_SUB LD_LIBRARY_PATH HERE
@@ -945,7 +953,7 @@ case "\$ACTION" in
 make)   ${PROG_AR} crv \$LIBRARY.a "\$@"
 	${PROG_RANLIB} \$LIBRARY.a
 	rm -f \$LIBRARY
-	${PROG_LN_S} \$LIBRARY.a \$LIBRARY
+	${__dolink} \$LIBRARY.a \$LIBRARY
 	;;
 files)  echo "\${LIBRARY}.a"
 	;;
@@ -1184,9 +1192,9 @@ AC_COMPILER_PIC () {
 # and if it can writes a librarian that handles those libraries for us.
 #
 AC_CC_SHLIBS () {
-    AC_PROG_CC
-    AC_PROG_LN_S
-    AC_PROG_INSTALL
+    AC_PROG_CC || AC_FAIL "Need a C compiler to build shared libraries"
+    AC_PROG_LN_S || AC_FAIL "Need to be able to make symbolic links for shared libraries"
+    AC_PROG_INSTALL || AC_FAIL "Need an install program to install shared libraries"
     LOGN "checking whether the C compiler can build shared libraries "
 
     echo "int some_variable = 0;" > /tmp/ngc$$.c 

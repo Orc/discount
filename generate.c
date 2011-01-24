@@ -571,7 +571,7 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 {
     linkytype *tag;
 
-    if ( image )
+    if ( image || (ref == 0) )
 	tag = &imaget;
     else if ( tag = pseudo(ref->link) ) {
 	if ( f->flags & (MKD_NO_EXT|MKD_SAFELINK) )
@@ -667,7 +667,7 @@ linkylinky(int image, MMIOT *f)
 					  sizeof key, (stfu)__mkd_footsort) )
 		    status = linkyformat(f, name, image, ref);
 		else if ( f->flags & IS_LABEL )
-		    status = linkyformat(f, name, image, &imaget);
+		    status = linkyformat(f, name, image, 0);
 	    }
 	}
     }
