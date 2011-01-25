@@ -24,7 +24,7 @@ try '-T -ftoc' 'toc item with link' \
  </ul></li>
 </ul>
 <a name="H2.here"></a>
-<h2><a href="H2">H2</a> here</h2>'
+<h2><a href="H2">H2</a> here</h2>'  
 
 try '-T -ftoc' 'toc item with non-alpha start' \
 '#1 header' \

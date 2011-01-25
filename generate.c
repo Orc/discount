@@ -1313,9 +1313,9 @@ static void
 printheader(Paragraph *pp, MMIOT *f)
 {
     if ( f->flags & MKD_TOC ) {
-	Qprintf(f, "<a name=\"", pp->hnumber);
+	Qstring("<a name=\"", f);
 	mkd_string_to_anchor(T(pp->text->text), S(pp->text->text), Qchar, f, 1);
-	Qprintf(f, "\"></a>\n");
+	Qstring("\"></a>\n", f);
     }
     Qprintf(f, "<h%d>", pp->hnumber);
     push(T(pp->text->text), S(pp->text->text), f);
