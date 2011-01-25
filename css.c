@@ -28,9 +28,10 @@ stylesheets(Paragraph *p, Cstring *f)
 
     for ( ; p ; p = p->next ) {
 	if ( p->typ == STYLE ) {
-	    for ( q = p->text; q ; q = q->next )
+	    for ( q = p->text; q ; q = q->next ) {
 		Cswrite(f, T(q->text), S(q->text));
 		Csputc('\n', f);
+	    }
 	}
 	if ( p->down )
 	    stylesheets(p->down, f);
@@ -44,17 +45,25 @@ int
 mkd_css(Document *d, char **res)
 {
     Cstring f;
+    int size;
 
-    if ( res && *res && d && d->compiled ) {
+    if ( res && d && d->compiled ) {
+	*res = 0;
 	CREATE(f);
 	RESERVE(f, 100);
 	stylesheets(d->code, &f);
 			
+	if ( (size = S(f)) > 0 ) {
+	    EXPAND(f) = 0;
 			/* HACK ALERT! HACK ALERT! HACK ALERT! */
-	*res = T(f);	/* we know that a T(Cstring) is a character pointer */
+	    *res = T(f);/* we know that a T(Cstring) is a character pointer */
 			/* so we can simply pick it up and carry it away, */
-	return S(f);	/* leaving the husk of the Ctring on the stack */
+			/* leaving the husk of the Ctring on the stack */
 			/* END HACK ALERT */
+	}
+	else
+	    DELETE(f);
+	return size;
     }
     return EOF;
 }
@@ -69,7 +78,7 @@ mkd_generatecss(Document *d, FILE *f)
     int written = EOF, size = mkd_css(d, &res);
 
     if ( size > 0 )
-	written = fwrite(res, size, 1, f);
+	written = fwrite(res, 1, size, f);
     if ( res )
 	free(res);
     return (written == size) ? size : EOF;

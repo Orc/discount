@@ -30,7 +30,7 @@ if [ "${TAB:-4}" -eq 8 ]; then
 </li>
 </ul>'
 
-    try -F0x0200 'markdown with TAB=4' \
+    try -F0x020000 'markdown with TAB=4' \
 	"$LIST" \
 	'<ul>
 <li>A
@@ -42,7 +42,7 @@ if [ "${TAB:-4}" -eq 8 ]; then
 </li>
 </ul>'
 
-fi
 
 summary $0
+fi
 exit $rc

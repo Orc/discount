@@ -61,6 +61,9 @@ mkd_search_tags(char *pat, int len)
 }
 
 
+static int populated = 0;
+
+
 /* load in the standard collection of html tags that markdown supports
  */
 void
@@ -69,8 +72,6 @@ mkd_prepare_tags()
 
 #define KW(x)	mkd_define_tag(x, 0)
 #define SC(x)	mkd_define_tag(x, 1)
-
-    static int populated = 0;
 
     if ( populated ) return;
     populated = 1;
@@ -108,3 +109,15 @@ mkd_prepare_tags()
 
     mkd_sort_tags();
 } /* mkd_prepare_tags */
+
+
+/* destroy the blocktags list (for shared libraries)
+ */
+void
+mkd_deallocate_tags()
+{
+    if ( S(blocktags) > 0 ) {
+	populated = 0;
+	DELETE(blocktags);
+    }
+} /* mkd_deallocate_tags */

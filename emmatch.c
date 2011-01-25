@@ -163,7 +163,7 @@ emblock(MMIOT *f, int first, int last)
 } /* emblock */
 
 
-/* ___mkd_emblock() -- emblock a string of blocks, then concatinate the
+/* ___mkd_emblock() -- emblock a string of blocks, then concatenate the
  *                     resulting text onto f->out.
  */
 void

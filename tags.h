@@ -12,6 +12,7 @@ struct kw {
 
 struct kw* mkd_search_tags(char *, int);
 void mkd_prepare_tags();
+void mkd_deallocate_tags();
 void mkd_sort_tags();
 void mkd_define_tag(char *, int);
 

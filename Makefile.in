@@ -1,4 +1,5 @@
 CC=@CC@ -I. -L.
+CFLAGS=@CFLAGS@
 AR=@AR@
 RANLIB=@RANLIB@
 
@@ -10,11 +11,11 @@ INCDIR=@prefix@/include
 PGMS=markdown
 SAMPLE_PGMS=mkd2html makepage
 @THEME@SAMPLE_PGMS+= theme
-MKDLIB=libmarkdown.a
+MKDLIB=libmarkdown
 OBJS=mkdio.o markdown.o dumptree.o generate.o \
      resource.o docheader.o version.o toc.o css.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o \
-     tags.o html5.o @AMALLOC@
+     setup.o tags.o html5.o flags.o @AMALLOC@
 
 MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 
@@ -22,7 +23,7 @@ all: $(PGMS) $(SAMPLE_PGMS)
 
 install: $(PGMS)
 	@INSTALL_PROGRAM@ $(PGMS) $(DESTDIR)/$(BINDIR)
-	@INSTALL_DATA@ $(MKDLIB) $(DESTDIR)/$(LIBDIR)
+	./librarian.sh install libmarkdown VERSION $(DESTDIR)/$(LIBDIR)
 	@INSTALL_DATA@ mkdio.h $(DESTDIR)/$(INCDIR)
 
 install.everything: install install.samples install.man
@@ -30,7 +31,7 @@ install.everything: install install.samples install.man
 install.samples: $(SAMPLE_PGMS) install
 	@INSTALL_PROGRAM@ $(SAMPLE_PGMS) $(DESTDIR)/$(BINDIR)
 	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man1
-	@INSTALL_DATA@ theme.1 $(DESTDIR)/$(MANDIR)/man1
+	@INSTALL_DATA@ theme.1 makepage.1 mkd2html.1 $(DESTDIR)/$(MANDIR)/man1
 
 install.man:
 	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man3
@@ -55,7 +56,7 @@ version.o: version.c VERSION
 	$(CC) -DVERSION=\"`cat VERSION`\" -c version.c
 
 markdown: main.o $(MKDLIB)
-	$(CC) -o markdown main.o -lmarkdown @LIBS@
+	$(CC) $(CFLAGS) -o markdown main.o -lmarkdown @LIBS@
 
 # example programs
 @THEME@theme:  theme.o $(MKDLIB) mkdio.h
@@ -72,12 +73,14 @@ main.o: main.c mkdio.h config.h
 	$(CC) -I. -c main.c
 
 $(MKDLIB): $(OBJS)
-	$(AR) crv $(MKDLIB) $(OBJS)
-	$(RANLIB) $(MKDLIB)
+	./librarian.sh make $(MKDLIB) VERSION $(OBJS)
 
-test:	$(PGMS) echo cols
+verify: echo tools/checkbits.sh
+	@./echo -n "headers ... "; tools/checkbits.sh && echo "GOOD"
+
+test:	$(PGMS) echo cols verify
 	@for x in tests/*.t; do \
-	    sh $$x || exit 1; \
+	    @LD_LIBRARY_PATH@=`pwd` sh $$x || exit 1; \
 	done
 
 cols:   tools/cols.c config.h
@@ -86,7 +89,8 @@ echo:   tools/echo.c config.h
 	$(CC) -o echo tools/echo.c
 	
 clean:
-	rm -f $(PGMS) $(SAMPLE_PGMS) *.o $(MKDLIB)
+	rm -f $(PGMS) $(SAMPLE_PGMS) *.o
+	rm -f $(MKDLIB) `./librarian.sh files $(MKDLIB) VERSION`
 
 distclean spotless: clean
 	rm -f @GENERATED_FILES@ @CONFIGURE_FILES@

@@ -41,40 +41,73 @@ tree to stdout.
 Set or clear various translation flags.   The flags
 are in a comma-delimited list, with an optional
 .Ar +
-(set) prefix on each flag.
-.Bl -tag -width "NOHEADER"
-.It Ar noimage
-Don't allow image tags.
-.It Ar nolinks
-Don't allow links.
-.It Ar nohtml
-Don't allow 
-.B any
-embedded html.
+(enable),
+.Ar -
+(disable), or
+.Ar no
+(disable) lprefix on each flag.
+.Bl -tag -width "definitionlist"
+.It Ar links
+Allow links.
+.It Ar image
+Allow images.
+.It Ar smarty
+Enable smartypants.
+.It Ar pants
+Enable smartypants.
+.It Ar html
+Allow raw html.
+.It Ar strict
+Disable superscript, strikethrough & relaxed emphasis.
+.It Ar ext
+Enable pseudo-protocols.
 .It Ar cdata
-Generate valid XML output.
-.It Ar noheader
-Do not process pandoc headers.
-.It Ar notables
-Do not process Markdown Extra-style tables.
-.It Ar tabstops
-Use markdown-standard 4-space tabstops.
-@STRICT@.It Ar strict
-@STRICT@Disable superscript and relaxed emphasis.
-@STRICT@.It Ar relax
-@STRICT@Enable superscript and relaxed emphasis (this is the default.)
+Generate code for xml 
+.Em ![CDATA[...]] .
+.It Ar superscript
+Enable superscript processing.
+.It Ar emphasis
+Emphasis happens 
+.Em everywhere .
+.It Ar tables
+Don't process PHP Markdown Extra tables.
+.It Ar del
+Enable
+.Em ~~strikethrough~~ .
+.It Ar strikethrough
+Enable 
+.Em ~~strikethrough~~ .
 .It Ar toc
-Enable table-of-contents support
+Enable table-of-contents processing.
 .It Ar 1.0
-Revert to Markdown 1.0 compatability.
+Compatibility with MarkdownTest_1.0
+.It Ar autolink
+Make
+.Pa http://foo.com
+a link even without
+.Em <> .
+.It Ar safelink
+Paranoid check for link protocol.
+.It Ar header
+Process pandoc-style header blocks.
+.It Ar tabstop
+Expand tabs to 4 spaces.
+.It Ar divquote
+Allow
+.Pa >%class%
+blocks.
+.It Ar alphalist
+Allow alphabetic lists.
+.It Ar definitionlist
+Allow definition lists.
 .El
 .Pp
 As an example, the option
-.Fl f Ar nolinks,quot
+.Fl f Ar nolinks,smarty
 tells
 .Nm
-to not allow \<a tags, and to expand
-double-quotes.
+to not allow \<a tags, and to do smarty
+pants processing.
 .It Fl F Ar bitmap
 Set translation flags.
 .Ar Bitmap
@@ -84,17 +117,20 @@ described in
 (the flag values are defined in
 .Pa mkdio.h )
 .It Fl V
-Show the version# and configuration data.
+Show the version# and compile-time configuration data.
 .Pp
 If the version includes the string
-.Em DL_TAG ,
+.Em DEBUG ,
 .Nm
-was configured with definition list support.
+was configured with memory allocation debugging.
 .Pp
 If the version includes the string
-.Em HEADER ,
+.Em TAB ,
 .Nm
-was configured to support pandoc header blocks.
+was configured to use the specified tabstop.
+.It Fl VV
+Show the version#, the compile-time configuration, and the
+run-time configuration.
 .It Fl o Pa file
 Write the generated html to 
 .Pa file .

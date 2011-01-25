@@ -70,16 +70,14 @@ queue(Document* a, Cstring *line)
 }
 
 
-#ifdef PANDOC_HEADER
 /* trim leading blanks from a header line
  */
 static void
-snip(Line *p)
+header_dle(Line *p)
 {
     CLIP(p->text, 0, 1);
     p->dle = mkd_firstnonblank(p);
 }
-#endif
 
 
 /* build a Document from any old input.
@@ -92,26 +90,22 @@ populate(getc_func getc, void* ctx, int flags)
     Cstring line;
     Document *a = new_Document();
     int c;
-#ifdef PANDOC_HEADER
     int pandoc = 0;
-#endif
 
     if ( !a ) return 0;
 
-    a->tabstop = (flags & STD_TABSTOP) ? 4 : TABSTOP;
+    a->tabstop = (flags & MKD_TABSTOP) ? 4 : TABSTOP;
 
     CREATE(line);
 
     while ( (c = (*getc)(ctx)) != EOF ) {
 	if ( c == '\n' ) {
-#ifdef PANDOC_HEADER
 	    if ( pandoc != EOF && pandoc < 3 ) {
 		if ( S(line) && (T(line)[0] == '%') )
 		    pandoc++;
 		else
 		    pandoc = EOF;
 	    }
-#endif
 	    queue(a, &line);
 	    S(line) = 0;
 	}
@@ -124,20 +118,19 @@ populate(getc_func getc, void* ctx, int flags)
 
     DELETE(line);
 
-#ifdef PANDOC_HEADER
-    if ( (pandoc == 3) && !(flags & NO_HEADER) ) {
+    if ( (pandoc == 3) && !(flags & (MKD_NOHEADER|MKD_STRICT)) ) {
 	/* the first three lines started with %, so we have a header.
 	 * clip the first three lines out of content and hang them
 	 * off header.
 	 */
-	a->headers = T(a->content);
-	T(a->content) = a->headers->next->next->next;
-	a->headers->next->next->next = 0;
-	snip(a->headers);
-	snip(a->headers->next);
-	snip(a->headers->next->next);
+	Line *headers = T(a->content);
+
+	a->title = headers;             header_dle(a->title);
+	a->author= headers->next;       header_dle(a->author);
+	a->date  = headers->next->next; header_dle(a->date);
+
+	T(a->content) = headers->next->next->next;
     }
-#endif
 
     return a;
 }
@@ -146,7 +139,7 @@ populate(getc_func getc, void* ctx, int flags)
 /* convert a file into a linked list
  */
 Document *
-mkd_in(FILE *f, int flags)
+mkd_in(FILE *f, DWORD flags)
 {
     return populate((getc_func)fgetc, f, flags & INPUT_MASK);
 }
@@ -174,7 +167,7 @@ strget(struct string_ctx *in)
 /* convert a block of text into a linked list
  */
 Document *
-mkd_string(char *buf, int len, int flags)
+mkd_string(char *buf, int len, DWORD flags)
 {
     struct string_ctx about;
 
@@ -194,7 +187,7 @@ mkd_generatehtml(Document *p, FILE *output)
     int szdoc;
 
     if ( (szdoc = mkd_document(p, &doc)) != EOF ) {
-	if ( p->ctx->flags & CDATA_OUTPUT )
+	if ( p->ctx->flags & MKD_CDATA )
 	    mkd_generatexml(doc, szdoc, output);
 	else
 	    fwrite(doc, szdoc, 1, output);
@@ -222,19 +215,32 @@ markdown(Document *document, FILE *out, int flags)
 /* write out a Cstring, mangled into a form suitable for `<a href=` or `<a id=`
  */
 void
-mkd_string_to_anchor(char *s, int len, void(*outchar)(int,void*), void *out)
+mkd_string_to_anchor(char *s, int len, void(*outchar)(int,void*),
+				       void *out, int labelformat)
 {
     unsigned char c;
+
+    int i, size;
+    char *line;
+
+    size = mkd_line(s, len, &line, IS_LABEL);
     
-    for ( ; len-- > 0; ) {
-	c = *s++;
-	if ( c == ' ' || c == '&' || c == '<' || c == '"' )
-	    (*outchar)('+', out);
-	else if ( isalnum(c) || ispunct(c) || (c & 0x80) )
-	    (*outchar)(c, out);
+    if ( labelformat && size && !isalpha(line[0]) )
+	(*outchar)('L',out);
+    for ( i=0; i < size ; i++ ) {
+	c = line[i];
+	if ( labelformat ) {
+	    if ( isalnum(c) || (c == '_') || (c == ':') || (c == '-') || (c == '.' ) )
+		(*outchar)(c, out);
+	    else
+		(*outchar)('.',out);
+	}
 	else
-	    (*outchar)('~',out);
+	    (*outchar)(c,out);
     }
+	
+    if (line)
+	free(line);
 }
 
 
@@ -253,7 +259,7 @@ mkd_parse_line(char *bfr, int size, MMIOT *f, int flags)
 /* ___mkd_reparse() a line, returning it in malloc()ed memory
  */
 int
-mkd_line(char *bfr, int size, char **res, int flags)
+mkd_line(char *bfr, int size, char **res, DWORD flags)
 {
     MMIOT f;
     int len;
@@ -266,9 +272,10 @@ mkd_line(char *bfr, int size, char **res, int flags)
 	 * should be an opaque method that transparently moves 
 	 * the pointer out of the embedded Cstring.
 	 */
+	EXPAND(f.out) = 0;
 	*res = T(f.out);
 	T(f.out) = 0;
-	S(f.out) = 0;
+	S(f.out) = ALLOCATED(f.out) = 0;
     }
     else {
 	 *res = 0;
@@ -282,12 +289,12 @@ mkd_line(char *bfr, int size, char **res, int flags)
 /* ___mkd_reparse() a line, writing it to a FILE
  */
 int
-mkd_generateline(char *bfr, int size, FILE *output, int flags)
+mkd_generateline(char *bfr, int size, FILE *output, DWORD flags)
 {
     MMIOT f;
 
     mkd_parse_line(bfr, size, &f, flags);
-    if ( flags & CDATA_OUTPUT )
+    if ( flags & MKD_CDATA )
 	mkd_generatexml(T(f.out), S(f.out), output);
     else
 	fwrite(T(f.out), S(f.out), 1, output);
