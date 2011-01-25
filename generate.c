@@ -1312,13 +1312,12 @@ text(MMIOT *f)
 static void
 printheader(Paragraph *pp, MMIOT *f)
 {
-    Qprintf(f, "<h%d", pp->hnumber);
     if ( f->flags & MKD_TOC ) {
-	Qprintf(f, " id=\"", pp->hnumber);
+	Qstring("<a name=\"", f);
 	mkd_string_to_anchor(T(pp->text->text), S(pp->text->text), Qchar, f, 1);
-	Qchar('"', f);
+	Qstring("\"></a>\n", f);
     }
-    Qchar('>', f);
+    Qprintf(f, "<h%d>", pp->hnumber);
     push(T(pp->text->text), S(pp->text->text), f);
     text(f);
     Qprintf(f, "</h%d>", pp->hnumber);
