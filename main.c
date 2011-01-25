@@ -41,24 +41,29 @@ static struct {
     int off;
     int flag;
 } opts[] = {
-    { "tabstop", 0, MKD_TABSTOP  },
-    { "image",   1, MKD_NOIMAGE  },
-    { "links",   1, MKD_NOLINKS  },
-    { "relax",   1, MKD_STRICT   },
-    { "strict",  0, MKD_STRICT   },
-    { "tables",  1, MKD_NOTABLES },
-    { "header",  1, MKD_NOHEADER },
-    { "html",    1, MKD_NOHTML   },
-    { "ext",     1, MKD_NO_EXT   },
-    { "cdata",   0, MKD_CDATA    },
-    { "pants",   1, MKD_NOPANTS  },
-    { "smarty",  1, MKD_NOPANTS  },
-    { "toc",     0, MKD_TOC      },
-    { "autolink",0, MKD_AUTOLINK },
-    { "safelink",0, MKD_SAFELINK },
-    { "del",     1, MKD_NOSTRIKETHROUGH },
+    { "tabstop",       0, MKD_TABSTOP  },
+    { "image",         1, MKD_NOIMAGE  },
+    { "links",         1, MKD_NOLINKS  },
+    { "relax",         1, MKD_STRICT   },
+    { "strict",        0, MKD_STRICT   },
+    { "tables",        1, MKD_NOTABLES },
+    { "header",        1, MKD_NOHEADER },
+    { "html",          1, MKD_NOHTML   },
+    { "ext",           1, MKD_NO_EXT   },
+    { "cdata",         0, MKD_CDATA    },
+    { "pants",         1, MKD_NOPANTS  },
+    { "smarty",        1, MKD_NOPANTS  },
+    { "toc",           0, MKD_TOC      },
+    { "autolink",      0, MKD_AUTOLINK },
+    { "safelink",      0, MKD_SAFELINK },
+    { "del",           1, MKD_NOSTRIKETHROUGH },
     { "strikethrough", 1, MKD_NOSTRIKETHROUGH },
-    { "1.0",     0, MKD_1_COMPAT },
+    { "superscript",   1, MKD_NOSUPERSCRIPT },
+    { "emphasis",      0, MKD_NORELAXED },
+    { "divquote",      1, MKD_NODIVQUOTE },
+    { "alphalist",     1, MKD_NOALPHALIST },
+    { "definitionlist",1, MKD_NODLIST },
+    { "1.0",           0, MKD_1_COMPAT },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])
@@ -115,6 +120,7 @@ main(int argc, char **argv)
     int flags = 0;
     int debug = 0;
     int toc = 0;
+    int version = 0;
     int with_html5 = 0;
     int use_mkd_line = 0;
     char *urlflags = 0;
@@ -138,9 +144,8 @@ main(int argc, char **argv)
 		    break;
 	case 'd':   debug = 1;
 		    break;
-	case 'V':   printf("%s: discount %s%s\n", pgm, markdown_version,
-				with_html5 ? " +html5":"");
-		    exit(0);
+	case 'V':   version++;
+		    break;
 	case 'E':   urlflags = optarg;
 		    break;
 	case 'F':   flags = strtol(optarg, 0, 0);
@@ -170,6 +175,16 @@ main(int argc, char **argv)
 		    exit(1);
 	}
     }
+
+    if ( version ) {
+	printf("%s: discount %s%s", pgm, markdown_version,
+				  with_html5 ? " +html5":"");
+	if ( version > 1 )
+	    mkd_flags_are(stdout, flags, 0);
+	putchar('\n');
+	exit(0);
+    }
+
     argc -= optind;
     argv += optind;
 

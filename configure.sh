@@ -7,15 +7,11 @@
 
 # load in the configuration file
 #
-ac_help='--enable-dl-tag		Use the DL tag extension
---enable-pandoc-header	Use pandoc-style header blocks
---enable-superscript	A^B becomes A<sup>B</sup>
---enable-amalloc	Enable memory allocation debugging
---relaxed-emphasis	underscores aren'\''t special in the middle of words
+ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
---enable-div		Enable >%id% divisions
---enable-alpha-list	Enable (a)/(b)/(c) lists
---enable-all-features	Turn on all stable optional features'
+--with-dl=X		Use Discount, Extra, or Both types of definition list
+--enable-all-features	Turn on all stable optional features
+--shared		Build shared libraries (default is static)'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
@@ -29,17 +25,11 @@ fi'
 locals() {
     K=`echo $1 | $AC_UPPERCASE`
     case "$K" in
-    --RELAXED-EMPHAS*)
-		echo RELAXED_EMPHASIS=T
-		;;
+    --SHARED)
+                echo TRY_SHARED=T
+                ;;
     --ENABLE-ALL|--ENABLE-ALL-FEATURES)
-		echo WITH_DL_TAG=T
-		echo RELAXED_EMPHASIS=T
-		echo WITH_PANDOC_HEADER=T
-		echo WITH_SUPERSCRIPT=T
 		echo WITH_AMALLOC=T
-		echo WITH_DIV=T
-		#echo WITH_ALPHA_LIST=T
 		;;
     --ENABLE-*)	enable=`echo $K | sed -e 's/--ENABLE-//' | tr '-' '_'`
 		echo WITH_${enable}=T ;;
@@ -51,7 +41,19 @@ TARGET=markdown
 
 AC_INIT $TARGET
 
+__DL=`echo "$WITH_DL" | $AC_UPPERCASE`
+
+case "$__DL" in
+EXTRA)         AC_DEFINE 'USE_EXTRA_DL' 1 ;;
+DISCOUNT|1|"") AC_DEFINE 'USE_DISCOUNT_DL' 1 ;;
+BOTH)          AC_DEFINE 'USE_EXTRA_DL' 1
+	       AC_DEFINE 'USE_DISCOUNT_DL' 1 ;;
+*)             AC_FAIL "Unknown value <$WITH_DL> for --with-dl (want 'discount', 'extra', or 'both')" ;;
+esac
+
 AC_PROG_CC
+
+test "$TRY_SHARED" && AC_COMPILER_PIC && AC_CC_SHLIBS
 
 case "$AC_CC $AC_CFLAGS" in
 *-Wall*)    AC_DEFINE 'while(x)' 'while( (x) != 0 )'
@@ -63,7 +65,7 @@ AC_PROG ranlib
 
 AC_C_VOLATILE
 AC_C_CONST
-AC_SCALAR_TYPES sub
+AC_SCALAR_TYPES sub hdr
 AC_CHECK_BASENAME
 
 AC_CHECK_HEADERS sys/types.h pwd.h && AC_CHECK_FUNCS getpwuid
@@ -124,11 +126,6 @@ fi
 AC_DEFINE 'TABSTOP' $TABSTOP
 AC_SUB    'TABSTOP' $TABSTOP
 
-test -z "$WITH_SUPERSCRIPT" || AC_DEFINE 'SUPERSCRIPT'	1
-test -z "$RELAXED_EMPHASIS" || AC_DEFINE 'RELAXED_EMPHASIS'	1
-test -z "$WITH_DIV"         || AC_DEFINE 'DIV_QUOTE'	1
-test -z "$WITH_ALPHA_LIST"  || AC_DEFINE 'ALPHA_LIST'	1
-
 
 if [ "$WITH_AMALLOC" ]; then
     AC_DEFINE	'USE_AMALLOC'	1
@@ -137,16 +134,8 @@ else
     AC_SUB	'AMALLOC'	''
 fi
 
-if [ "$RELAXED_EMPHASIS" -o "$WITH_SUPERSCRIPT" ]; then
-    AC_SUB      'STRICT'	''
-else
-    AC_SUB	'STRICT'	'.\"'
-fi
-
-
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
 
-[ "$WITH_DL_TAG" ] && AC_DEFINE 'DL_TAG_EXTENSION' '1'
 [ "$WITH_PANDOC_HEADER" ] && AC_DEFINE 'PANDOC_HEADER' '1'
 
-AC_OUTPUT Makefile version.c markdown.1
+AC_OUTPUT Makefile version.c mkdio.h

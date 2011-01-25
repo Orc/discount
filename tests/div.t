@@ -1,5 +1,3 @@
-./markdown -V | grep DIV >/dev/null || exit 0
-
 . tests/functions.sh
 
 title "%div% blocks"

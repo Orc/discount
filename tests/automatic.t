@@ -7,6 +7,10 @@ MARKDOWN_FLAGS=
 
 try 'http url' '<http://here>' '<p><a href="http://here">http://here</a></p>'
 try 'ftp url' '<ftp://here>' '<p><a href="ftp://here">ftp://here</a></p>'
+try 'http://foo/bar' '<http://foo/bar>' '<p><a href="http://foo/bar">http://foo/bar</a></p>'
+try 'http:/foo/bar'  '<http:/foo/bar>'  '<p><a href="http:/foo/bar">http:/foo/bar</a></p>'
+try 'http:foo/bar'   '<http:foo/bar>'   '<p><a href="http:foo/bar">http:foo/bar</a></p>'
+try '</foo/bar>'     '</foo/bar>'       '<p></foo/bar></p>'
 match '<orc@pell.portland.or.us>' '<orc@pell.portland.or.us>' '<a href='
 match '<orc@pell.com.>' '<orc@pell.com.>' '<a href='
 try 'invalid <orc@>' '<orc@>' '<p>&lt;orc@></p>'

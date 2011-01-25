@@ -677,16 +677,20 @@ AC_PROG_YACC () {
 #
 AC_PROG () {
     PN=`basename $1 | $AC_UPPERCASE | tr -dc $AC_UPPER_PAT`
-    TLOGN "looking for $1"
-    DEST=`acLookFor $1`
-    if [ "$DEST" ]; then
-	AC_SUB $PN $DEST
-	TLOG " ($DEST)"
-	return 0
+
+    if set | grep -v PROG_$PN >/dev/null; then
+	TLOGN "looking for $1"
+	DEST=`acLookFor $1`
+	if [ "$DEST" ]; then
+	    eval PROG_$PN="$DEST"
+	    AC_SUB $PN $DEST
+	    TLOG " ($DEST)"
+	    return 0
+	fi
+	AC_SUB $PN true
+	TLOG " (not found)"
+	return 1
     fi
-    AC_SUN $PN true
-    TLOG " (not found)"
-    return 1
 }
 
 
@@ -707,6 +711,7 @@ AC_PROG_LN_S () {
 	if [ "`$AC_FIND_PROG /tmp/b$$ -type l -print`" ]; then
 	    TLOG " ($DEST)"
 	    echo "$DEST exists, and ln -s works"
+	    PROG_LN_S="$DEST -s"
 	    AC_SUB 'LN_S' "$DEST -s"
 	    rm -f /tmp/b$$
 	else
@@ -875,18 +880,26 @@ EOF
     rc=1
     LOGN "defining WORD & DWORD scalar types"
     if $AC_CC /tmp/pd$$.c -o /tmp/pd$$; then
-	case "$1" in
-	sub)if /tmp/pd$$ sub >> $__cwd/config.sub; then
-		rc=0
-	    fi;;
-	*)  if /tmp/pd$$ >> $__cwd/config.h; then
-		rc=0
-	    fi ;;
-	esac
+	while [ "$1" ]; do
+	    case "$1" in
+	    sub)if /tmp/pd$$ sub >> $__cwd/config.sub; then
+		    rc=0
+		fi;;
+	    *)  if /tmp/pd$$ >> $__cwd/config.h; then
+		    rc=0
+		fi ;;
+	    esac
+	    shift
+	done
+	if [ "$rc" != 0 ]; then
+	    if /tmp/pd$$ >> $__cwd/config.h; then
+		rc=1
+	    fi
+	fi
     fi
     case "$rc" in
     0) TLOG "" ;;
-    *) TLOG " ** FAILED **" ;;
+    *) AC_FAIL " ** FAILED **" ;;
     esac
     rm -f /tmp/pd$$ /tmp/pd$$.c
 }
@@ -910,6 +923,38 @@ AC_OUTPUT () {
     AC_SUB 'libexec' "$AC_LIBEXEC"
     AC_SUB 'confdir' "$AC_CONFDIR"
     AC_SUB 'mandir'  "$AC_MANDIR"
+
+    if echo "$__config_files" | grep -v librarian.sh >/dev/null; then
+	# write a librarian that works with static libraries
+	AC_PROG_LN_S
+	AC_PROG ar
+	AC_PROG ranlib
+	AC_SUB LD_LIBRARY_PATH HERE
+	AC
+	__config_files="$__config_files librarian.sh"
+	cat > librarian.sh << EOF
+#! /bin/sh
+#
+#  Build static libraries, hiding (some) ickiness from the makefile
+
+ACTION=\$1; shift
+LIBRARY=\$1; shift
+VERSION=\$1; shift
+
+case "\$ACTION" in
+make)   ${PROG_AR} crv \$LIBRARY.a "\$@"
+	${PROG_RANLIB} \$LIBRARY.a
+	rm -f \$LIBRARY
+	${PROG_LN_S} \$LIBRARY.a \$LIBRARY
+	;;
+files)  echo "\${LIBRARY}.a"
+	;;
+install)$PROG_INSTALL -m 644 \${LIBRARY}.a \$1
+	;;
+esac
+EOF
+    fi
+    chmod +x librarian.sh
 
     if [ -r config.sub ]; then
 	test "$AC_SED_PROG" || AC_PROG_SED
@@ -1110,6 +1155,135 @@ EOF
 	TLOG "(not found)"
     fi
     rm -f /tmp/ngc$$ /tmp/ngc$$.c
+}
+
+#
+# AC_COMPILER_PIC checks for the compiler option to produce position independent
+# code.  At the moment we assume gcc semantics.
+#
+AC_COMPILER_PIC () {
+    AC_PROG_CC
+
+    LOGN "checking for C compiler option to produce PIC "
+    echo "int some_variable = 0;" > /tmp/ngc$$.c 
+
+    if $AC_CC -c -fPIC -o /tmp/ngc$$ /tmp/ngc$$.c $LIBS; then
+	AC_CFLAGS="$AC_CFLAGS -fPIC"
+        LOG "(-fPIC)"
+	__rc=0
+    else
+        LOG "(none)"
+	__rc=1
+    fi
+    rm -f /tmp/ngc$$ /tmp/ngc$$.c
+    return $__rc
+}
+
+#
+# AC_CC_SHLIBS checks if the C compiler can produce shared libraries
+# and if it can writes a librarian that handles those libraries for us.
+#
+AC_CC_SHLIBS () {
+    AC_PROG_CC
+    AC_PROG_LN_S
+    AC_PROG_INSTALL
+    LOGN "checking whether the C compiler can build shared libraries "
+
+    echo "int some_variable = 0;" > /tmp/ngc$$.c 
+
+    if $AC_CC $AC_PICFLAG -shared -o /tmp/ngc$$.so /tmp/ngc$$.c; then
+	AC_SUB LD_LIBRARY_PATH LD_LIBRARY_PATH
+	# -Wl option probably works, but be paranoid anyway
+	_VFLAGS="$AC_PICFLAG -shared -Wl,-soname,ngc$$.so.1"
+	if $AC_CC $_VFLAGS -o /tmp/ngc$$.so /tmp/ngc$$.c; then
+	    USE_SONAME=T
+	fi
+	LDCONFIG=`AC_PATH=/sbin:/usr/sbin:/usr/local/sbin acLookFor ldconfig`
+	__config_files="$__config_files librarian.sh"
+	cat > librarian.sh << EOF
+#! /bin/sh
+#
+#  Build ELF shared libraries, hiding (some) ickiness from the makefile
+
+ACTION=\$1; shift
+LIBRARY=\$1; shift
+	
+eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
+		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
+shift
+
+LIBNAME=\$LIBRARY.so
+FULLNAME=\$LIBNAME.\$VERSION
+
+case "\$ACTION" in
+make)   FLAGS="$AC_CFLAGS -shared"
+	unset VFLAGS
+	test "$USE_SONAME" && VFLAGS="-Wl,-soname,\$LIBNAME.\$MAJOR"
+
+	rm -f \$LIBRARY \$LIBNAME \$LIBNAME.\$MAJOR
+	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
+	    $PROG_LN_S \$FULLNAME \$LIBRARY
+	    $PROG_LN_S \$FULLNAME \$LIBNAME
+	    $PROG_LN_S \$FULLNAME \$LIBNAME.\$MAJOR
+	fi
+	;;
+files)  echo "\$FULLNAME" "\$LIBNAME" "\$LIBNAME.\$MAJOR"
+	;;
+install)$PROG_INSTALL -c \$FULLNAME "\$1"
+	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME.\$MAJOR
+	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME
+	test "$LDCONFIG" && $LDCONFIG "\$1"
+	;;
+esac
+EOF
+	chmod +x librarian.sh
+        LOG "(yes; -shared)"
+	__rc=0
+    elif $AC_CC $AC_PICFLAG  -dynamiclib -o /tmp/ngc$$.so /tmp/ngc$$.c; then
+	# macosx
+	AC_SUB LD_LIBRARY_PATH DYLD_LIBRARY_PATH
+	__config_files="$__config_files librarian.sh"
+	cat > librarian.sh << EOF
+#! /bin/sh
+#
+#  Build MacOS shared libraries, hiding (some) ickiness from the makefile
+
+ACTION=\$1; shift
+LIBRARY=\$1; shift
+	
+eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
+		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
+shift
+
+LIBNAME=\$LIBRARY.dylib
+FULLNAME=\$LIBNAME
+
+case "\$ACTION" in
+make)   FLAGS="$AC_CFLAGS -dynamiclib"
+	VFLAGS="-current_version \$VERSION -compatibility_version \$MAJOR"
+
+	rm -f \$LIBRARY
+	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
+	    $PROG_LN_S \$FULLNAME \$LIBRARY
+	fi
+	;;
+files)  echo "\$FULLNAME"
+	;;
+install)$PROG_INSTALL -c \$FULLNAME "\$1"
+	;;
+esac
+EOF
+	chmod +x librarian.sh
+        LOG "(yes; macos dylib)"
+	__rc=0
+    else
+        LOG "(no)"
+	__rc=1
+    fi
+
+    rm -f /tmp/ngc$$.so /tmp/ngc$$.c
+
+    return $__rc
 }
 
 

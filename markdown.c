@@ -175,7 +175,7 @@ splitline(Line *t, int cutpoint)
 
 
 static Line *
-commentblock(Paragraph *p)
+commentblock(Paragraph *p, int *unclosed)
 {
     Line *t, *ret;
     char *end;
@@ -188,21 +188,24 @@ commentblock(Paragraph *p)
 	    return ret;
 	}
     }
+    *unclosed = 1;
     return t;
 
 }
 
 
 static Line *
-htmlblock(Paragraph *p, struct kw *tag)
+htmlblock(Paragraph *p, struct kw *tag, int *unclosed)
 {
     Line *ret;
     FLO f = { p->text, 0 };
     int c;
     int i, closing, depth=0;
 
+    *unclosed = 0;
+    
     if ( tag == &comment )
-	return commentblock(p);
+	return commentblock(p, unclosed);
     
     if ( tag->selfclose ) {
 	ret = f.t->next;
@@ -240,6 +243,8 @@ htmlblock(Paragraph *p, struct kw *tag)
 			    /* consume trailing gunk in close tag */
 			    c = flogetc(&f);
 			}
+			if ( c == EOF )
+			    break;
 			if ( !f.t )
 			    return 0;
 			splitline(f.t, floindex(f));
@@ -251,6 +256,7 @@ htmlblock(Paragraph *p, struct kw *tag)
 	    }
 	}
     }
+    *unclosed = 1;
     return 0;
 }
 
@@ -409,56 +415,112 @@ ishdr(Line *t, int *htyp)
 }
 
 
-static int
-isdefinition(Line *t)
+static Line*
+is_discount_dt(Line *t, int *clip)
 {
-#if DL_TAG_EXTENSION
-    return t && t->next
-	     && (S(t->text) > 2)
-	     && (t->dle == 0)
-	     && (T(t->text)[0] == '=')
-	     && (T(t->text)[S(t->text)-1] == '=')
-	     && ( (t->next->dle >= 4) || isdefinition(t->next) );
-#else
-    return 0;
+#if USE_DISCOUNT_DL
+    if ( t && t->next
+	   && (S(t->text) > 2)
+	   && (t->dle == 0)
+	   && (T(t->text)[0] == '=')
+	   && (T(t->text)[S(t->text)-1] == '=') ) {
+	if ( t->next->dle >= 4 ) {
+	    *clip = 4;
+	    return t;
+	}
+	else
+	    return is_discount_dt(t->next, clip);
+    }
 #endif
+    return 0;
 }
 
 
 static int
-islist(Line *t, int *trim)
+is_extra_dd(Line *t)
+{
+    return (t->dle < 4) && (T(t->text)[t->dle] == ':')
+			&& isspace(T(t->text)[t->dle+1]);
+}
+
+
+static Line*
+is_extra_dt(Line *t, int *clip)
+{
+#if USE_EXTRA_DL
+    int i;
+    
+    if ( t && t->next && T(t->text)[0] != '='
+		      && T(t->text)[S(t->text)-1] != '=') {
+	Line *x;
+    
+	if ( iscode(t) || blankline(t) || ishdr(t,&i) || ishr(t) )
+	    return 0;
+
+	if ( (x = skipempty(t->next)) && is_extra_dd(x) ) {
+	    *clip = x->dle+2;
+	    return t;
+	}
+	
+	if ( x=is_extra_dt(t->next, clip) )
+	    return x;
+    }
+#endif
+    return 0;
+}
+
+
+static Line*
+isdefinition(Line *t, int *clip, int *kind)
+{
+    Line *ret;
+
+    *kind = 1;
+    if ( ret = is_discount_dt(t,clip) )
+	return ret;
+
+    *kind=2;
+    return is_extra_dt(t,clip);
+}
+
+
+static int
+islist(Line *t, int *clip, DWORD flags, int *list_type)
 {
     int i, j;
     char *q;
     
-    if ( iscode(t) || blankline(t) || ishdr(t,&i) || ishr(t) )
+    if ( /*iscode(t) ||*/ blankline(t) || ishdr(t,&i) || ishr(t) )
 	return 0;
 
-    if ( isdefinition(t) ) {
-	*trim = 4;
+    if ( !(flags & (MKD_NODLIST|MKD_STRICT)) && isdefinition(t,clip,list_type) )
 	return DL;
-    }
 
     if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
 	i = nextnonblank(t, t->dle+1);
-	*trim = (i > 4) ? 4 : i;
-	return UL;
+	*clip = (i > 4) ? 4 : i;
+	*list_type = UL;
+	return AL;
     }
 
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
 	if ( T(t->text)[j-1] == '.' ) {
-#if ALPHA_LIST
-	if ( (j == t->dle + 2) && isalpha(T(t->text)[t->dle]) ) {
-	    j = nextnonblank(t,j);
-	    *trim = j;
-	    return AL;
-	}
-#endif
+
+	    if ( !(flags & (MKD_NOALPHALIST|MKD_STRICT))
+				    && (j == t->dle + 2)
+			  && isalpha(T(t->text)[t->dle]) ) {
+		j = nextnonblank(t,j);
+		*clip = (j > 4) ? 4 : j;
+		*list_type = AL;
+		return AL;
+	    }
+
 	    strtoul(T(t->text)+t->dle, &q, 10);
 	    if ( (q > T(t->text)+t->dle) && (q == T(t->text) + (j-1)) ) {
 		j = nextnonblank(t,j);
-		*trim = j;
-		return OL;
+		*clip = (j > 4) ? 4 : j;
+		*list_type = OL;
+		return AL;
 	    }
 	}
     }
@@ -554,27 +616,33 @@ centered(Line *first, Line *last)
 
 
 static int
-endoftextblock(Line *t, int toplevelblock)
+endoftextblock(Line *t, int toplevelblock, DWORD flags)
 {
     int z;
 
-    if ( blankline(t)||isquote(t)||iscode(t)||ishdr(t,&z)||ishr(t) )
+    if ( blankline(t)||isquote(t)||ishdr(t,&z)||ishr(t) )
+	return 1;
+
+    /* HORRIBLE STANDARDS KLUDGE: non-toplevel paragraphs absorb adjacent
+     * code blocks
+     */
+    if ( toplevelblock && iscode(t) )
 	return 1;
 
     /* HORRIBLE STANDARDS KLUDGE: Toplevel paragraphs eat absorb adjacent
      * list items, but sublevel blocks behave properly.
      */
-    return toplevelblock ? 0 : islist(t,&z);
+    return toplevelblock ? 0 : islist(t,&z,flags, &z);
 }
 
 
 static Line *
-textblock(Paragraph *p, int toplevel)
+textblock(Paragraph *p, int toplevel, DWORD flags)
 {
     Line *t, *next;
 
     for ( t = p->text; t ; t = next ) {
-	if ( ((next = t->next) == 0) || endoftextblock(next, toplevel) ) {
+	if ( ((next = t->next) == 0) || endoftextblock(next, toplevel, flags) ) {
 	    p->align = centered(p->text, t);
 	    t->next = 0;
 	    return next;
@@ -602,12 +670,16 @@ szmarkerclass(char *p)
  * marker %[kind:]name%
  */
 static int
-isdivmarker(Line *p, int start)
+isdivmarker(Line *p, int start, DWORD flags)
 {
-#if DIV_QUOTE
-    char *s = T(p->text);
-    int len = S(p->text);
-    int i;
+    char *s;
+    int len, i;
+
+    if ( flags & (MKD_NODIVQUOTE|MKD_STRICT) )
+	return 0;
+
+    len = S(p->text);
+    s   = T(p->text);
 
     if ( !(len && s[start] == '%' && s[len-1] == '%') ) return 0;
 
@@ -619,9 +691,6 @@ isdivmarker(Line *p, int start)
 	    return 0;
 
     return 1;
-#else
-    return 0;
-#endif
 }
 
 
@@ -637,7 +706,7 @@ isdivmarker(Line *p, int start)
  * way the markdown sample web form at Daring Fireball works.
  */
 static Line *
-quoteblock(Paragraph *p)
+quoteblock(Paragraph *p, DWORD flags)
 {
     Line *t, *q;
     int qp;
@@ -660,13 +729,13 @@ quoteblock(Paragraph *p)
 
 	q = skipempty(t->next);
 
-	if ( (q == 0) || ((q != t->next) && (!isquote(q) || isdivmarker(q,1))) ) {
+	if ( (q == 0) || ((q != t->next) && (!isquote(q) || isdivmarker(q,1,flags))) ) {
 	    ___mkd_freeLineRange(t, q);
 	    t = q;
 	    break;
 	}
     }
-    if ( isdivmarker(p->text,0) ) {
+    if ( isdivmarker(p->text,0,flags) ) {
 	char *prefix = "class";
 	int i;
 	
@@ -709,6 +778,8 @@ tableblock(Paragraph *p)
 static Paragraph *Pp(ParagraphRoot *, Line *, int);
 static Paragraph *compile(Line *, int, MMIOT *);
 
+typedef int (*linefn)(Line *);
+
 
 /*
  * pull in a list block.  A list block starts with a list marker and
@@ -717,7 +788,7 @@ static Paragraph *compile(Line *, int, MMIOT *);
  * marker, but multiple paragraphs need to start with a 4-space indent.
  */
 static Line *
-listitem(Paragraph *p, int indent)
+listitem(Paragraph *p, int indent, DWORD flags, linefn check)
 {
     Line *t, *q;
     int clip = indent;
@@ -748,7 +819,9 @@ listitem(Paragraph *p, int indent)
 	    indent = clip ? clip : 2;
 	}
 
-	if ( (q->dle < indent) && (ishr(q) || islist(q,&z)) && !issetext(q,&z) ) {
+	if ( (q->dle < indent) && (ishr(q) || islist(q,&z,flags,&z)
+					   || (check && (*check)(q)))
+			       && !issetext(q,&z) ) {
 	    q = t->next;
 	    t->next = 0;
 	    return q;
@@ -761,39 +834,81 @@ listitem(Paragraph *p, int indent)
 
 
 static Line *
-listblock(Paragraph *top, int trim, MMIOT *f)
+definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 {
     ParagraphRoot d = { 0, 0 };
     Paragraph *p;
-    Line *q = top->text, *text, *label;
-    int isdl = (top->typ == DL),
-	para = 0,
-	ltype;
+    Line *q = top->text, *text = 0, *labels; 
+    int z, para;
+
+    while (( labels = q )) {
+
+	if ( (q = isdefinition(labels, &z, &kind)) == 0 )
+	    break;
+
+	if ( (text = skipempty(q->next)) == 0 )
+	    break;
+
+	if (( para = (text != q->next) ))
+	    ___mkd_freeLineRange(q, text);
+	
+	q->next = 0; 
+	if ( kind == 1 /* discount dl */ )
+	    for ( q = labels; q; q = q->next ) {
+		CLIP(q->text, 0, 1);
+		S(q->text)--;
+	    }
+
+    dd_block:
+	p = Pp(&d, text, LISTITEM);
+
+	text = listitem(p, clip, f->flags, (kind==2) ? is_extra_dd : 0);
+	p->down = compile(p->text, 0, f);
+	p->text = labels; labels = 0;
+
+	if ( para && p->down ) p->down->align = PARA;
+
+	if ( (q = skipempty(text)) == 0 )
+	    break;
+
+	if (( para = (q != text) )) {
+	    Line anchor;
+
+	    anchor.next = text;
+	    ___mkd_freeLineRange(&anchor,q);
+	    text = q;
+	    
+	}
+
+	if ( kind == 2 && is_extra_dd(q) )
+	    goto dd_block;
+    }
+    top->text = 0;
+    top->down = T(d);
+    return text;
+}
+
+
+static Line *
+enumerated_block(Paragraph *top, int clip, MMIOT *f, int list_class)
+{
+    ParagraphRoot d = { 0, 0 };
+    Paragraph *p;
+    Line *q = top->text, *text;
+    int para = 0, z;
 
     while (( text = q )) {
-	if ( top->typ == DL ) {
-	    Line *lp;
-
-	    for ( lp = label = text; lp ; lp = lp->next ) {
-		text = lp->next;
-		CLIP(lp->text, 0, 1);
-		S(lp->text)--;
-		if ( !isdefinition(lp->next) )
-		    lp->next = 0;
-	    }
-	}
-	else label = 0;
-
+	
 	p = Pp(&d, text, LISTITEM);
-	text = listitem(p, trim);
+	text = listitem(p, clip, f->flags, 0);
 
 	p->down = compile(p->text, 0, f);
-	p->text = label;
+	p->text = 0;
 
-	if ( para && (top->typ != DL) && p->down ) p->down->align = PARA;
+	if ( para && p->down ) p->down->align = PARA;
 
-	if ( !(q = skipempty(text)) || ((ltype = islist(q, &trim)) == 0)
-				    || (isdl != (ltype == DL)) )
+	if ( (q = skipempty(text)) == 0
+			     || islist(q, &clip, f->flags, &z) != list_class )
 	    break;
 
 	if ( para = (q != text) ) {
@@ -801,9 +916,9 @@ listblock(Paragraph *top, int trim, MMIOT *f)
 
 	    anchor.next = text;
 	    ___mkd_freeLineRange(&anchor, q);
-	}
 
-	if ( para && (top->typ != DL) && p->down ) p->down->align = PARA;
+	    if ( p->down ) p->down->align = PARA;
+	}
     }
     top->text = 0;
     top->down = T(d);
@@ -935,10 +1050,10 @@ compile_document(Line *ptr, MMIOT *f)
     ANCHOR(Line) source = { 0, 0 };
     Paragraph *p = 0;
     struct kw *tag;
-    int eaten;
+    int eaten, unclosed;
 
     while ( ptr ) {
-	if ( !(f->flags & DENY_HTML) && (tag = isopentag(ptr)) ) {
+	if ( !(f->flags & MKD_NOHTML) && (tag = isopentag(ptr)) ) {
 	    /* If we encounter a html/style block, compile and save all
 	     * of the cached source BEFORE processing the html/style.
 	     */
@@ -949,7 +1064,12 @@ compile_document(Line *ptr, MMIOT *f)
 		T(source) = E(source) = 0;
 	    }
 	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
-	    ptr = htmlblock(p, tag);
+	    ptr = htmlblock(p, tag, &unclosed);
+	    if ( unclosed ) {
+		p->typ = SOURCE;
+		p->down = compile(p->text, 1, f);
+		p->text = 0;
+	    }
 	}
 	else if ( isfootnote(ptr) ) {
 	    /* footnotes, like cats, sleep anywhere; pull them
@@ -991,7 +1111,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     Line *r;
     int para = toplevel;
     int blocks = 0;
-    int hdr_type, list_type, indent;
+    int hdr_type, list_type, list_class, indent;
 
     ptr = consume(ptr, &para);
 
@@ -1014,13 +1134,19 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    ptr = ptr->next;
 	    ___mkd_freeLine(r);
 	}
-	else if (( list_type = islist(ptr, &indent) )) {
-	    p = Pp(&d, ptr, list_type);
-	    ptr = listblock(p, indent, f);
+	else if (( list_class = islist(ptr, &indent, f->flags, &list_type) )) {
+	    if ( list_class == DL ) {
+		p = Pp(&d, ptr, DL);
+		ptr = definition_block(p, indent, f, list_type);
+	    }
+	    else {
+		p = Pp(&d, ptr, list_type);
+		ptr = enumerated_block(p, indent, f, list_class);
+	    }
 	}
 	else if ( isquote(ptr) ) {
 	    p = Pp(&d, ptr, QUOTE);
-	    ptr = quoteblock(p);
+	    ptr = quoteblock(p, f->flags);
 	    p->down = compile(p->text, 1, f);
 	    p->text = 0;
 	}
@@ -1028,13 +1154,13 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p = Pp(&d, ptr, HDR);
 	    ptr = headerblock(p, hdr_type);
 	}
-	else if ( istable(ptr) && !(f->flags & (STRICT|NOTABLES)) ) {
+	else if ( istable(ptr) && !(f->flags & (MKD_STRICT|MKD_NOTABLES)) ) {
 	    p = Pp(&d, ptr, TABLE);
 	    ptr = tableblock(p);
 	}
 	else {
 	    p = Pp(&d, ptr, MARKUP);
-	    ptr = textblock(p, toplevel);
+	    ptr = textblock(p, toplevel, f->flags);
 	}
 
 	if ( (para||toplevel) && !p->align )
@@ -1052,19 +1178,6 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 }
 
 
-void
-mkd_initialize()
-{
-    static int first = 1;
-
-    if ( first-- > 0 ) {
-	first = 0;
-	INITRNG(time(0));
-	mkd_prepare_tags();
-    }
-}
-
-
 /*
  * the guts of the markdown() function, ripped out so I can do
  * debugging.
@@ -1074,7 +1187,7 @@ mkd_initialize()
  * prepare and compile `text`, returning a Paragraph tree.
  */
 int
-mkd_compile(Document *doc, int flags)
+mkd_compile(Document *doc, DWORD flags)
 {
     if ( !doc )
 	return 0;

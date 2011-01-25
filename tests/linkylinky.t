@@ -12,6 +12,10 @@ try 'url contains <' '[hehehe](u<rl)' '<p><a href="u&lt;rl">hehehe</a></p>'
 try 'url contains whitespace' '[ha](r u)' '<p><a href="r%20u">ha</a></p>'
 try 'label contains escaped []s' '[a\[b\]c](d)' '<p><a href="d">a[b]c</a></p>'
 
+try '<label> w/o title' '[hello](<sailor>)' '<p><a href="sailor">hello</a></p>'
+try '<label> with title' '[hello](<sailor> "boy")' '<p><a href="sailor" title="boy">hello</a></p>'
+try '<label> with whitespace' '[hello](  <sailor> )' '<p><a href="sailor">hello</a></p>'
+
 try 'url contains whitespace & title' \
     '[hehehe](r u "there")' \
     '<p><a href="r%20u" title="there">hehehe</a></p>'
@@ -44,7 +48,7 @@ try 'linky-like []s work' \
 
 try 'pseudo-protocol "id:"'\
     '[foo](id:bar)' \
-    '<p><a id="bar">foo</a></p>'
+    '<p><span id="bar">foo</span></p>'
 
 try 'pseudo-protocol "class:"' \
     '[foo](class:bar)' \
@@ -101,6 +105,26 @@ blockquote!</p></blockquote>'
 try '[text] (text) not a link' \
 '[test] (me)' \
 '<p>[test] (me)</p>'
+
+try '[test] [this] w/ one space between' \
+'[test] [this]
+[test]: yay!
+[this]: nay!' \
+'<p><a href="nay!">test</a></p>'
+
+try '[test] [this] w/ two spaces between' \
+'[test]  [this]
+[test]: yay!
+[this]: nay!' \
+'<p><a href="yay!">test</a>  <a href="nay!">this</a></p>'
+
+try -f1.0 'link with <> (-f1.0)' \
+	  '[this](<is a (test)>)' \
+	  '<p><a href="is%20a%20(test">this</a>>)</p>'
+
+try       'link with <>' \
+	  '[this](<is a (test)>)' \
+	  '<p><a href="is%20a%20(test)">this</a></p>'
 
 summary $0
 exit $rc

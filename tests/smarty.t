@@ -20,11 +20,5 @@ try "don<b>'t -> don<b>&rsquo;t" "don<b>'t" '<p>don<b>&rsquo;t</p>'
 try "don't -> don&rsquo;t" "don't" '<p>don&rsquo;t</p>'
 try "it's -> it&rsquo;s" "it's" '<p>it&rsquo;s</p>'
 
-if ./markdown -V | grep SUPERSCRIPT >/dev/null; then
-    try -frelax  'A^B -> A<sup>B</sup> (-frelax)' 'A^B' '<p>A<sup>B</sup></p>'
-    try -fstrict 'A^B != A<sup>B</sup> (-fstrict)' 'A^B' '<p>A^B</p>'
-    try -frelax 'A^B in link title' '[link](here "A^B")' '<p><a href="here" title="A^B">link</a></p>'
-fi
-
 summary $0
 exit $rc

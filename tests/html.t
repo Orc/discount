@@ -135,5 +135,7 @@ try 'two adjacent comments' "$COMMENTS" \
 
 try 'comment, no white space' '<!--foo-->' '<!--foo-->'
 
+try 'unclosed block' '<p>here we go!' '<p><p>here we go!</p>'
+
 summary $0
 exit $rc
