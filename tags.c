@@ -83,6 +83,7 @@ mkd_prepare_tags()
     KW("CENTER");
     KW("DFN");
     KW("DIV");
+    KW("OBJECT");
     KW("H1");
     KW("H2");
     KW("H3");

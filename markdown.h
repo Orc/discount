@@ -86,6 +86,7 @@ typedef struct mmiot {
 #define NO_PSEUDO_PROTO	0x0040
 #define CDATA_OUTPUT	0x0080
 #define NOTABLES	0x0400
+#define NOSTRIKETHROUGH	0x0800
 #define TOC		0x1000
 #define MKD_1_COMPAT	0x2000
 #define AUTOLINK	0x4000
