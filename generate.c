@@ -564,6 +564,26 @@ printlinkyref(MMIOT *f, linkytype *tag, char *link, int size)
 } /* printlinkyref */
 
 
+/* php markdown extra/daring fireball style print footnotes
+ */
+static int
+extra_linky(MMIOT *f, Cstring text, Footnote *ref)
+{
+    if ( ref->flags & REFERENCED )
+	return 0;
+	
+    if ( f->flags & IS_LABEL )
+    	___mkd_reparse(T(text), S(text), linkt.flags, f);
+    else {
+	ref->flags |= REFERENCED;
+	ref->refnumber = ++ f->reference;
+	Qprintf(f, "<sup id=\"fnref:%d\"><a href=\"#fn:%d\" rel=\"footnote\">%d</a></sup>",
+		ref->refnumber, ref->refnumber, ref->refnumber);
+    }
+    return 1;
+} /* extra_linky */
+
+
 /* print out a linky (or fail if it's Not Allowed)
  */
 static int
@@ -628,6 +648,7 @@ linkylinky(int image, MMIOT *f)
     Footnote key, *ref;
 		
     int status = 0;
+    int extra_footnote = 0;
 
     CREATE(name);
     memset(&key, 0, sizeof key);
@@ -654,6 +675,9 @@ linkylinky(int image, MMIOT *f)
 		 */
 		mmiotseek(f, implicit_mark);
 		goodlink = !(f->flags & MKD_1_COMPAT);
+
+		if ( (f->flags & MKD_EXTRA_FOOTNOTE) && (!image) && S(name) && T(name)[0] == '^' )
+		    extra_footnote = 1;
 	    }
 	    
 	    if ( goodlink ) {
@@ -664,8 +688,12 @@ linkylinky(int image, MMIOT *f)
 		}
 
 		if ( ref = bsearch(&key, T(*f->footnotes), S(*f->footnotes),
-					  sizeof key, (stfu)__mkd_footsort) )
-		    status = linkyformat(f, name, image, ref);
+					  sizeof key, (stfu)__mkd_footsort) ) {
+		    if ( extra_footnote )
+			status = extra_linky(f,name,ref);
+		    else
+			status = linkyformat(f, name, image, ref);
+		}
 		else if ( f->flags & IS_LABEL )
 		    status = linkyformat(f, name, image, 0);
 	    }
@@ -1615,6 +1643,35 @@ display(Paragraph *p, MMIOT *f)
 }
 
 
+/* dump out a list of footnotes
+ */
+static void
+mkd_extra_footnotes(MMIOT *m)
+{
+    int j, i, prefix=0;
+    Footnote *t;
+
+    if ( m->reference == 0 )
+	return;
+
+    Csprintf(&m->out, "\n<div class=\"footnotes\">\n<hr/>\n<ol>\n");
+    
+    for ( i=1; i <= m->reference; i++ ) {
+	for ( j=0; j < S(*m->footnotes); j++ ) {
+	    t = &T(*m->footnotes)[j];
+	    if ( (t->refnumber == i) && (t->flags & REFERENCED) ) {
+		Csprintf(&m->out, "<li id=\"fn:%d\">\n<p>", t->refnumber);
+		Csreparse(&m->out, T(t->title), S(t->title), 0);
+		Csprintf(&m->out, "<a href=\"#fnref:%d\" rev=\"footnote\">&#8617;</a>",
+			    t->refnumber);
+		Csprintf(&m->out, "</p></li>\n");
+	    }
+	}
+    }
+    Csprintf(&m->out, "</ol>\n</div>\n");
+}
+
+
 /* return a pointer to the compiled markdown
  * document.
  */
@@ -1626,6 +1683,8 @@ mkd_document(Document *p, char **res)
     if ( p && p->compiled ) {
 	if ( ! p->html ) {
 	    htmlify(p->code, 0, 0, p->ctx);
+	    if ( p->ctx->flags & MKD_EXTRA_FOOTNOTE )
+		mkd_extra_footnotes(p->ctx);
 	    p->html = 1;
 	}
 
