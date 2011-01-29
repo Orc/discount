@@ -39,7 +39,7 @@ char *pgm = "markdown";
 static struct {
     char *name;
     int off;
-    int flag;
+    mkd_flag_t flag;
 } opts[] = {
     { "tabstop",       0, MKD_TABSTOP  },
     { "image",         1, MKD_NOIMAGE  },
@@ -72,7 +72,7 @@ static struct {
     
 
 void
-set(int *flags, char *optionstring)
+set(mkd_flag_t *flags, char *optionstring)
 {
     int i;
     int enable;
@@ -119,7 +119,7 @@ main(int argc, char **argv)
 {
     int opt;
     int rc;
-    int flags = 0;
+    mkd_flag_t flags = 0;
     int debug = 0;
     int toc = 0;
     int version = 0;

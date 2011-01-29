@@ -149,7 +149,9 @@ extern int  mkd_line(char *, int, char **, DWORD);
 extern int  mkd_generateline(char *, int, FILE*, DWORD);
 #define mkd_text mkd_generateline
 extern void mkd_basename(Document*, char *);
-extern void mkd_string_to_anchor(char*,int, void(*)(int,void*), void*, int);
+
+typedef int (*mkd_sta_function_t)(const int,const void*);
+extern void mkd_string_to_anchor(char*,int, mkd_sta_function_t, void*, int);
 
 extern Document *mkd_in(FILE *, DWORD);
 extern Document *mkd_string(char*,int, DWORD);

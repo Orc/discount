@@ -215,7 +215,7 @@ markdown(Document *document, FILE *out, int flags)
 /* write out a Cstring, mangled into a form suitable for `<a href=` or `<a id=`
  */
 void
-mkd_string_to_anchor(char *s, int len, void(*outchar)(int,void*),
+mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 				       void *out, int labelformat)
 {
     unsigned char c;

@@ -1342,7 +1342,9 @@ printheader(Paragraph *pp, MMIOT *f)
 {
     if ( f->flags & MKD_TOC ) {
 	Qstring("<a name=\"", f);
-	mkd_string_to_anchor(T(pp->text->text), S(pp->text->text), Qchar, f, 1);
+	mkd_string_to_anchor(T(pp->text->text),
+			     S(pp->text->text),
+			     (mkd_sta_function_t)Qchar, f, 1);
 	Qstring("\"></a>\n", f);
     }
     Qprintf(f, "<h%d>", pp->hnumber);
@@ -1648,7 +1650,7 @@ display(Paragraph *p, MMIOT *f)
 static void
 mkd_extra_footnotes(MMIOT *m)
 {
-    int j, i, prefix=0;
+    int j, i;
     Footnote *t;
 
     if ( m->reference == 0 )

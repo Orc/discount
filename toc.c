@@ -52,10 +52,12 @@ mkd_toc(Document *p, char **doc)
 		    }
 		    Csprintf(&res, "%*s<li><a href=\"#", srcp->hnumber, "");
 		    mkd_string_to_anchor(T(srcp->text->text),
-					 S(srcp->text->text), Csputc, &res,1);
+					 S(srcp->text->text),
+					 (mkd_sta_function_t)Csputc, &res,1);
 		    Csprintf(&res, "\">");
 		    mkd_string_to_anchor(T(srcp->text->text),
-					 S(srcp->text->text), Csputc, &res,0);
+					 S(srcp->text->text),
+					 (mkd_sta_function_t)Csputc, &res,0);
 		    Csprintf(&res, "</a>");
 		    Csprintf(&res, "</li>\n");
 		}
