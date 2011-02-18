@@ -957,7 +957,7 @@ addfootnote(Line *p, MMIOT* f)
     CREATE(foot->tag);
     CREATE(foot->link);
     CREATE(foot->title);
-    foot->height = foot->width = 0;
+    foot->flags = foot->height = foot->width = 0;
 
     for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
 	EXPAND(foot->tag) = T(p->text)[j];
