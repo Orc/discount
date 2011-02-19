@@ -342,3 +342,13 @@ mkd_e_data(Document *f, void *data)
     if ( f )
 	f->cb.e_data = data;
 }
+
+
+/* set the href prefix for markdown extra style footnotes
+ */
+void
+mkd_ref_prefix(Document *f, char *data)
+{
+    if ( f )
+	f->ref_prefix = data;
+}

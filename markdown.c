@@ -1208,6 +1208,7 @@ mkd_compile(Document *doc, DWORD flags)
 
     doc->compiled = 1;
     memset(doc->ctx, 0, sizeof(MMIOT) );
+    doc->ctx->ref_prefix= doc->ref_prefix;
     doc->ctx->cb        = &(doc->cb);
     doc->ctx->flags     = flags & USER_FLAGS;
     CREATE(doc->ctx->in);

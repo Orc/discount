@@ -191,6 +191,7 @@ ___mkd_reparse(char *bfr, int size, int flags, MMIOT *f)
     
     sub.flags = f->flags | flags;
     sub.cb = f->cb;
+    sub.ref_prefix = f->ref_prefix;
 
     push(bfr, size, &sub);
     EXPAND(sub.in) = 0;
@@ -564,6 +565,17 @@ printlinkyref(MMIOT *f, linkytype *tag, char *link, int size)
 } /* printlinkyref */
 
 
+/* helper function for php markdown extra footnotes; allow the user to
+ * define a prefix tag instead of just `fn`
+ */
+static char *
+p_or_nothing(p)
+MMIOT *p;
+{
+    return p->ref_prefix ? p->ref_prefix : "fn";
+}
+
+
 /* php markdown extra/daring fireball style print footnotes
  */
 static int
@@ -577,8 +589,9 @@ extra_linky(MMIOT *f, Cstring text, Footnote *ref)
     else {
 	ref->flags |= REFERENCED;
 	ref->refnumber = ++ f->reference;
-	Qprintf(f, "<sup id=\"fnref:%d\"><a href=\"#fn:%d\" rel=\"footnote\">%d</a></sup>",
-		ref->refnumber, ref->refnumber, ref->refnumber);
+	Qprintf(f, "<sup id=\"%sref:%d\"><a href=\"#%s:%d\" rel=\"footnote\">%d</a></sup>",
+		p_or_nothing(f), ref->refnumber,
+		p_or_nothing(f), ref->refnumber, ref->refnumber);
     }
     return 1;
 } /* extra_linky */
@@ -1662,10 +1675,11 @@ mkd_extra_footnotes(MMIOT *m)
 	for ( j=0; j < S(*m->footnotes); j++ ) {
 	    t = &T(*m->footnotes)[j];
 	    if ( (t->refnumber == i) && (t->flags & REFERENCED) ) {
-		Csprintf(&m->out, "<li id=\"fn:%d\">\n<p>", t->refnumber);
+		Csprintf(&m->out, "<li id=\"%s:%d\">\n<p>",
+			    p_or_nothing(m), t->refnumber);
 		Csreparse(&m->out, T(t->title), S(t->title), 0);
-		Csprintf(&m->out, "<a href=\"#fnref:%d\" rev=\"footnote\">&#8617;</a>",
-			    t->refnumber);
+		Csprintf(&m->out, "<a href=\"#%sref:%d\" rev=\"footnote\">&#8617;</a>",
+			    p_or_nothing(m), t->refnumber);
 		Csprintf(&m->out, "</p></li>\n");
 	    }
 	}

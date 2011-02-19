@@ -71,6 +71,8 @@ extern char markdown_version[];
 void mkd_mmiot_flags(FILE *, MMIOT *, int);
 void mkd_flags_are(FILE*, mkd_flag_t, int);
 
+void mkd_ref_prefix(MMIOT*, char*);
+
 
 /* special flags for markdown() and mkd_text()
  */

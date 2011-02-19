@@ -80,6 +80,7 @@ typedef struct mmiot {
     Qblock Q;
     int isp;
     int reference;
+    char *ref_prefix;
     STRING(Footnote) *footnotes;
     DWORD flags;
 #define MKD_NOLINKS	0x00000001
@@ -130,6 +131,7 @@ typedef struct document {
     int compiled;		/* set after mkd_compile() */
     int html;			/* set after (internal) htmlify() */
     int tabstop;		/* for properly expanding tabs (ick) */
+    char *ref_prefix;
     MMIOT *ctx;			/* backend buffers, flags, and structures */
     Callback_data cb;		/* callback functions & private data */
 } Document;
@@ -158,6 +160,8 @@ extern Document *mkd_string(char*,int, DWORD);
 
 extern void mkd_initialize();
 extern void mkd_shlib_destructor();
+
+extern void mkd_ref_prefix(Document*, char*);
 
 /* internal resource handling functions.
  */
