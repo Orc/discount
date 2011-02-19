@@ -87,6 +87,15 @@ followed by text, another
 .Ar = ,
 a newline, 4 spaces of intent, and then more text.)
 .Pp
+Alternatively, definition list items are defined as
+.nf
+tag
+: description
+.fi
+(This is the format that
+.Ar "PHP Markdown Extra"
+uses.)
+.Pp
 .Ss embedded stylesheets
 Stylesheets may be defined and modified in a
 .Em <style>
@@ -174,6 +183,13 @@ Like code sections, you may use as many
 .Ar ~
 as you want, but there must be as many starting tildes as closing
 tildes.
+.Ss markdown extra-style footnotes
+.Ar "PHP Markdown Extra"
+footnotes are supported.   If a footnote link begins with a 
+.Ar ^ ,
+the first use of that footnote will generate a link down to the 
+bottom of the rendered document, which will contain a numbered footnote
+with a link back to where the footnote was called.
 .Sh AUTHOR
 David Parsons
 .%T http://www.pell.portland.or.us/~orc/
@@ -182,8 +198,7 @@ David Parsons
 .Xr markdown 3 ,
 .Xr mkd-callbacks 3 ,
 .Xr mkd-functions 3 ,
-.Xr mkd-line 3 ,
-.Xr mkd-extensions 7 .
+.Xr mkd-line 3 .
 .Pp
 .%T http://daringfireball.net/projects/markdown
 .Pp
