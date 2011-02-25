@@ -29,10 +29,13 @@ summary() {
 
 try() {
     unset FLAGS
-    case "$1" in
-    -*) FLAGS=$1
-	shift ;;
-    esac
+    while [ "$1" ]; do
+	case "$1" in
+	-*) FLAGS="$FLAGS $1"
+	    shift ;;
+	*) break ;;
+	esac
+    done
 
     testcase=`./echo -n "  $1" '........................................................' | ./cols 50`
     __tests=`expr $__tests + 1`

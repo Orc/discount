@@ -15,6 +15,7 @@ MMIOT *mkd_string(char*,int,mkd_flag_t);	/* assemble input from a buffer */
 void mkd_basename(MMIOT*,char*);
 
 void mkd_initialize();
+void mkd_with_html5_tags();
 void mkd_shlib_destructor();
 
 /* compilation, debugging, cleanup
@@ -27,7 +28,8 @@ int mkd_cleanup(MMIOT*);
 int mkd_dump(MMIOT*, FILE*, int, char*);
 int markdown(MMIOT*, FILE*, mkd_flag_t);
 int mkd_line(char *, int, char **, mkd_flag_t);
-void mkd_string_to_anchor(char *, int, int (*)(int,void*), void*, int);
+typedef int (*mkd_sta_function_t)(const int,const void*);
+void mkd_string_to_anchor(char *, int, mkd_sta_function_t, void*, int);
 int mkd_xhtmlpage(MMIOT*,int,FILE*);
 
 /* header block access
@@ -66,6 +68,11 @@ void mkd_e_data(void *, void *);
 /* version#.
  */
 extern char markdown_version[];
+void mkd_mmiot_flags(FILE *, MMIOT *, int);
+void mkd_flags_are(FILE*, mkd_flag_t, int);
+
+void mkd_ref_prefix(MMIOT*, char*);
+
 
 /* special flags for markdown() and mkd_text()
  */
@@ -91,6 +98,7 @@ extern char markdown_version[];
 #define MKD_NODIVQUOTE	0x00040000	/* forbid >%class% blocks */
 #define MKD_NOALPHALIST	0x00080000	/* forbid alphabetic lists */
 #define MKD_NODLIST	0x00100000	/* forbid definition lists */
+#define MKD_EXTRA_FOOTNOTE 0x00200000	/* enable markdown extra-style footnotes */
 #define MKD_EMBED	MKD_NOLINKS|MKD_NOIMAGE|MKD_TAGTEXT
 
 /* special flags for mkd_in() and mkd_string()

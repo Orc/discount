@@ -41,5 +41,9 @@ more' \
 
 <div class="more"><p>more</p></div>'
 
+try '%class% with _' '>%class:this_that%' '<div class="this_that"></div>'
+try '%class% with -' '>%class:this-that%' '<div class="this-that"></div>'
+try 'illegal %class%' '>%class:0zip%' '<blockquote><p>%class:0zip%</p></blockquote>'
+
 summary $0
 exit $rc

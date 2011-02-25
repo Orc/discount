@@ -12,6 +12,7 @@
 .Op Fl T
 .Op Fl V
 .Op Fl b Ar url-base
+.Op Fl C Ar prefix
 .Op Fl F Pa bitmap
 .Op Fl f Ar flags
 .Op Fl o Pa file
@@ -31,9 +32,13 @@ to stdout.
 The options are as follows:
 .Bl -tag -width "-o file"
 .It Fl b Ar url-base
-Links in source begining with / will be prefixed with
+Links in source beginning with / will be prefixed with
 .Ar url-base
 in the output.
+.It Fl C
+When processing markdown extra-style footnotes, use the
+given prefix instead of the default of
+.Ar fn .
 .It Fl d
 Instead of writing the html file, dump a parse
 tree to stdout.
@@ -100,6 +105,8 @@ blocks.
 Allow alphabetic lists.
 .It Ar definitionlist
 Allow definition lists.
+.It Ar footnote
+Allow markdown extra-style footnotes.
 .El
 .Pp
 As an example, the option

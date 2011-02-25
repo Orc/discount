@@ -215,7 +215,7 @@ markdown(Document *document, FILE *out, int flags)
 /* write out a Cstring, mangled into a form suitable for `<a href=` or `<a id=`
  */
 void
-mkd_string_to_anchor(char *s, int len, void(*outchar)(int,void*),
+mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 				       void *out, int labelformat)
 {
     unsigned char c;
@@ -341,4 +341,14 @@ mkd_e_data(Document *f, void *data)
 {
     if ( f )
 	f->cb.e_data = data;
+}
+
+
+/* set the href prefix for markdown extra style footnotes
+ */
+void
+mkd_ref_prefix(Document *f, char *data)
+{
+    if ( f )
+	f->ref_prefix = data;
 }

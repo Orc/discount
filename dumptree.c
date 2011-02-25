@@ -111,7 +111,7 @@ dumptree(Paragraph *pp, Stack *sp, FILE *f)
 	d = fprintf(f, "[%s", Pptype(pp->typ));
 	if ( pp->ident )
 	    d += fprintf(f, " %s", pp->ident);
-	if ( pp->align )
+	if ( pp->align > 1 )
 	    d += fprintf(f, ", <%s>", Begin[pp->align]);
 
 	for (count=0, p=pp->text; p; ++count, (p = p->next) )

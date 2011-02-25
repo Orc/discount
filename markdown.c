@@ -669,25 +669,29 @@ szmarkerclass(char *p)
  * check if the first line of a quoted block is the special div-not-quote
  * marker %[kind:]name%
  */
+#define iscsschar(c) (isalpha(c) || (c == '-') || (c == '_') )
+
 static int
 isdivmarker(Line *p, int start, DWORD flags)
 {
     char *s;
-    int len, i;
+    int last, i;
 
     if ( flags & (MKD_NODIVQUOTE|MKD_STRICT) )
 	return 0;
 
-    len = S(p->text);
-    s   = T(p->text);
+    last= S(p->text) - (1 + start);
+    s   = T(p->text) + start;
 
-    if ( !(len && s[start] == '%' && s[len-1] == '%') ) return 0;
+    if ( (last <= 0) || (*s != '%') || (s[last] != '%') )
+	return 0;
 
-    i = szmarkerclass(s+start+1)+start;
-    len -= start+1;
+    i = szmarkerclass(s+1);
 
-    while ( ++i < len )
-	if ( !isalnum(s[i]) )
+    if ( !iscsschar(s[i+1]) )
+	return 0;
+    while ( ++i < last )
+	if ( !(isdigit(s[i]) || iscsschar(s[i])) )
 	    return 0;
 
     return 1;
@@ -953,7 +957,7 @@ addfootnote(Line *p, MMIOT* f)
     CREATE(foot->tag);
     CREATE(foot->link);
     CREATE(foot->title);
-    foot->height = foot->width = 0;
+    foot->flags = foot->height = foot->width = 0;
 
     for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
 	EXPAND(foot->tag) = T(p->text)[j];
@@ -961,6 +965,12 @@ addfootnote(Line *p, MMIOT* f)
     EXPAND(foot->tag) = 0;
     S(foot->tag)--;
     j = nextnonblank(p, j+2);
+
+    if ( (f->flags & MKD_EXTRA_FOOTNOTE) && (T(foot->tag)[0] == '^') ) {
+	while ( j < S(p->text) )
+	    EXPAND(foot->title) = T(p->text)[j++];
+	goto skip_to_end;
+    }
 
     while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
 	EXPAND(foot->link) = T(p->text)[j++];
@@ -1001,6 +1011,7 @@ addfootnote(Line *p, MMIOT* f)
 	--S(foot->title);
     }
 
+skip_to_end:
     ___mkd_freeLine(p);
     return np;
 }
@@ -1197,6 +1208,7 @@ mkd_compile(Document *doc, DWORD flags)
 
     doc->compiled = 1;
     memset(doc->ctx, 0, sizeof(MMIOT) );
+    doc->ctx->ref_prefix= doc->ref_prefix;
     doc->ctx->cb        = &(doc->cb);
     doc->ctx->flags     = flags & USER_FLAGS;
     CREATE(doc->ctx->in);
