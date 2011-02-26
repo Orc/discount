@@ -11,7 +11,6 @@ ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --with-dl=X		Use Discount, Extra, or Both types of definition list
 --with-id-anchor	Use id= anchors for table-of-contents links
---with-anchor-default=C	Use C instead of illegal characters in anchors
 --with-github-tags	Allow `_` and `-` in <> tags
 --enable-all-features	Turn on all stable optional features
 --shared		Build shared libraries (default is static)'
@@ -55,7 +54,6 @@ BOTH)          AC_DEFINE 'USE_EXTRA_DL' 1
 esac
 
 test "$WITH_ID_ANCHOR" && AC_DEFINE 'WITH_ID_ANCHOR' 1
-AC_DEFINE 'ANCHOR_DEFAULT_CHAR' "'${WITH_ANCHOR_DEFAULT:-.}'"
 test "$WITH_GITHUB_TAGS" && AC_DEFINE 'WITH_GITHUB_TAGS' 1
 
 AC_PROG_CC

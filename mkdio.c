@@ -233,7 +233,7 @@ mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 	    if ( isalnum(c) || (c == '_') || (c == ':') || (c == '-') || (c == '.' ) )
 		(*outchar)(c, out);
 	    else
-		(*outchar)(ANCHOR_DEFAULT_CHAR, out);
+		(*outchar)('.', out);
 	}
 	else
 	    (*outchar)(c,out);
