@@ -1,5 +1,10 @@
 . tests/functions.sh
 
+# don't bother to test the table of contents code
+# if we're using id= for labelling things
+#
+./markdown -V | grep ID-ANCHOR >/dev/null && exit 0
+
 title "table-of-contents support"
 
 rc=0
