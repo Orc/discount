@@ -21,4 +21,7 @@ char markdown_version[] = VERSION
 #if WITH_ID_ANCHOR
 		" ID-ANCHOR"
 #endif
+#if WITH_GITHUB_TAGS
+		" GITHUB-TAGS"
+#endif
 		;
