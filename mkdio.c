@@ -148,7 +148,7 @@ mkd_in(FILE *f, DWORD flags)
 /* return a single character out of a buffer
  */
 struct string_ctx {
-    char *data;		/* the unread data */
+    const char *data;	/* the unread data */
     int   size;		/* and how much is there? */
 } ;
 
@@ -167,7 +167,7 @@ strget(struct string_ctx *in)
 /* convert a block of text into a linked list
  */
 Document *
-mkd_string(char *buf, int len, DWORD flags)
+mkd_string(const char *buf, int len, DWORD flags)
 {
     struct string_ctx about;
 
