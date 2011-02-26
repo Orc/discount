@@ -1353,6 +1353,17 @@ text(MMIOT *f)
 static void
 printheader(Paragraph *pp, MMIOT *f)
 {
+#if WITH_ID_ANCHOR
+    Qprintf(f, "<h%d", pp->hnumber);
+    if ( f->flags & MKD_TOC ) {
+	Qstring(" id=\"", f);
+	mkd_string_to_anchor(T(pp->text->text),
+			     S(pp->text->text),
+			     (mkd_sta_function_t)Qchar, f, 1);
+	Qchar('"', f);
+    }
+    Qchar('>', f);
+#else
     if ( f->flags & MKD_TOC ) {
 	Qstring("<a name=\"", f);
 	mkd_string_to_anchor(T(pp->text->text),
@@ -1361,6 +1372,7 @@ printheader(Paragraph *pp, MMIOT *f)
 	Qstring("\"></a>\n", f);
     }
     Qprintf(f, "<h%d>", pp->hnumber);
+#endif
     push(T(pp->text->text), S(pp->text->text), f);
     text(f);
     Qprintf(f, "</h%d>", pp->hnumber);

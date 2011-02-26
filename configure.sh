@@ -10,6 +10,8 @@
 ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --with-dl=X		Use Discount, Extra, or Both types of definition list
+--with-id-anchor	Use id= anchors for table-of-contents links
+--with-anchor-default=C	Use C instead of illegal characters in anchors
 --enable-all-features	Turn on all stable optional features
 --shared		Build shared libraries (default is static)'
 
@@ -50,6 +52,9 @@ BOTH)          AC_DEFINE 'USE_EXTRA_DL' 1
 	       AC_DEFINE 'USE_DISCOUNT_DL' 1 ;;
 *)             AC_FAIL "Unknown value <$WITH_DL> for --with-dl (want 'discount', 'extra', or 'both')" ;;
 esac
+
+test "$WITH_ID_ANCHOR" && AC_DEFINE 'WITH_ID_ANCHOR' 1
+AC_DEFINE 'ANCHOR_DEFAULT_CHAR' "'${WITH_ANCHOR_DEFAULT:-.}'"
 
 AC_PROG_CC
 
