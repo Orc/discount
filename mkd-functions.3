@@ -163,12 +163,16 @@ first line of code blocks and disable implicit reference links.
 Disable strikethrough support.
 .El
 .Sh RETURN VALUES
-The functions
-.Fn mkd_compile ,
-.Fn mkd_style ,
-and
+The function
+.Fn mkd_compile
+returns 1 in the case of success, or 0 if the document is already compiled.
+The function
+.Fn mkd_generatecss
+returns the number of bytes written in the case of success, or EOF if an error
+occurred.  
+The function
 .Fn mkd_generatehtml
-return 0 on success, \-1 on failure.
+returns 0 on success, \-1 on failure.
 .Sh SEE ALSO
 .Xr markdown 1 ,
 .Xr markdown 3 ,
