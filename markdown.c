@@ -270,35 +270,35 @@ static int
 istable(Line *t)
 {
     char *p;
-    Line *dashes = t->next;
-    Line *body;
+    Line *dashes, *body;
     int l;
-    int contains = 0;	/* found character bits; 0x01 is |, 0x02 is - */
+    int dashed = 0;
     
     /* three lines, first must contain |,
 		    second must be ---|---,
 		    third must contain |
      */
-    if ( !(dashes && memchr(T(t->text), '|', S(t->text))) )
+    if ( !(t->flags & PIPECHAR) )
+	return 0;
+	
+    dashes = t->next;
+    if ( !(dashes && (dashes->flags & PIPECHAR)) )
 	return 0;
 
     body = dashes->next;
-
-    if ( !(body && memchr(T(body->text), '|', S(body->text))) )
+    if ( !(body && (body->flags & PIPECHAR)) )
 	return 0;
 
     /* second line must contain - or | and nothing
      * else except for whitespace or :
      */
     for ( p = T(dashes->text), l = S(dashes->text); l > 0; ++p, --l)
-	if ( *p == '|' )
-	    contains |= 0x01;
-	else if ( *p == '-' )
-	    contains |= 0x02;
-	else if ( ! ((*p == ':') || isspace(*p)) )
+	if ( *p == '-' )
+	    dashed = 1;
+	else if ( ! ((*p == '|') || (*p == ':') || isspace(*p)) )
 	    return 0;
 
-    return (contains & 0x03);
+    return dashed;
 }
 
 
@@ -780,7 +780,7 @@ tableblock(Paragraph *p)
     Line *t, *q;
 
     for ( t = p->text; t && (q = t->next); t = t->next ) {
-	if ( !memchr(T(q->text), '|', S(q->text)) ) {
+	if ( !(t->flags & PIPECHAR) ) {
 	    t->next = 0;
 	    return q;
 	}

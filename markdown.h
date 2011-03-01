@@ -26,7 +26,9 @@ typedef struct footnote {
 typedef struct line {
     Cstring text;
     struct line *next;
-    int dle;
+    int dle;			/* leading indent on the line */
+    int flags;			/* special attributes for this line */
+#define PIPECHAR	0x01		/* line contains a | */
 } Line;
 
 

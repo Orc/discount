@@ -34,7 +34,8 @@ new_Document()
 }
 
 
-/* add a line to the markdown input chain
+/* add a line to the markdown input chain, expanding tabs and
+ * noting the presence of special characters as we go.
  */
 static void
 queue(Document* a, Cstring *line)
@@ -60,6 +61,8 @@ queue(Document* a, Cstring *line)
 	    } while ( ++xp % a->tabstop );
 	}
 	else if ( c >= ' ' ) {
+	    if ( c == '|' )
+		p->flags |= PIPECHAR;
 	    EXPAND(p->text) = c;
 	    ++xp;
 	}
