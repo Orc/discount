@@ -151,17 +151,61 @@ text' \
 try 'table headers only' \
     'a|b|c
 -|-|-' \
+    '<p>a|b|c
+&ndash;|&ndash;|&ndash;</p>'
+
+try 'escaped title line' \
+    'A\|B
+--|-
+C |D' \
     '<table>
 <thead>
 <tr>
-<th>a</th>
-<th>b</th>
-<th>c</th>
+<th>A|B</th>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>C |D</td>
+</tr>
 </tbody>
 </table>'
+
+
+try 'escaped dashes line' \
+    'A |B
+-\|-
+C |D' \
+    '<p>A |B
+&ndash;|&ndash;
+C |D</p>'
+
+try 'escaped content line' \
+    'A |B
+--|-
+C\|D' \
+    '<table>
+<thead>
+<tr>
+<th>A </th>
+<th>B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C|D</td>
+<td></td>
+</tr>
+</tbody>
+</table>'
+
+try 'content line w/o dashes' \
+    'A |B
+--|-
+CD' \
+    '<p>A |B
+&mdash;|&ndash;
+CD</p>'
 
 summary $0
 exit $rc

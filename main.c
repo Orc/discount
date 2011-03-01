@@ -287,6 +287,7 @@ main(int argc, char **argv)
 	    }
 	}
     }
+    mkd_deallocate_tags();
     adump();
     exit( (rc == 0) ? 0 : errno );
 }

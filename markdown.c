@@ -271,16 +271,26 @@ istable(Line *t)
 {
     char *p;
     Line *dashes = t->next;
+    Line *body;
+    int l;
     int contains = 0;	/* found character bits; 0x01 is |, 0x02 is - */
     
-    /* two lines, first must contain | */
+    /* three lines, first must contain |,
+		    second must be ---|---,
+		    third must contain |
+     */
     if ( !(dashes && memchr(T(t->text), '|', S(t->text))) )
+	return 0;
+
+    body = dashes->next;
+
+    if ( !(body && memchr(T(body->text), '|', S(body->text))) )
 	return 0;
 
     /* second line must contain - or | and nothing
      * else except for whitespace or :
      */
-    for ( p = T(dashes->text)+S(dashes->text)-1; p >= T(dashes->text); --p)
+    for ( p = T(dashes->text), l = S(dashes->text); l > 0; ++p, --l)
 	if ( *p == '|' )
 	    contains |= 0x01;
 	else if ( *p == '-' )
