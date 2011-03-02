@@ -39,35 +39,36 @@ char *pgm = "markdown";
 static struct _opt {
     char *name;
     char *desc;
-    int off;
-    int skip;
+    int off:1;
+    int skip:1;
+    int sayenable:1;
     mkd_flag_t flag;
 } opts[] = {
-    { "tabstop",       "default (4-space) tabstops", 0, 0, MKD_TABSTOP  },
-    { "image",         "images",                     1, 0, MKD_NOIMAGE  },
-    { "links",         "links",                      1, 0, MKD_NOLINKS  },
-    { "relax",         "emphasis inside words",      1, 1, MKD_STRICT   },
-    { "strict",        "emphasis inside words",      0, 0, MKD_STRICT   },
-    { "tables",        "tables",                     1, 0, MKD_NOTABLES },
-    { "header",        "pandoc-style headers",       1, 0, MKD_NOHEADER },
-    { "html",          "html",                       1, 0, MKD_NOHTML   },
-    { "ext",           "extended protocols",         1, 0, MKD_NO_EXT   },
-    { "cdata",         "generate cdata",             0, 0, MKD_CDATA    },
-    { "smarty",        "smartypants",                1, 0, MKD_NOPANTS  },
-    { "pants",         "smartypants",                1, 1, MKD_NOPANTS  },
-    { "toc",           "tables of contents",         0, 0, MKD_TOC      },
-    { "autolink",      "autolinking",                0, 0, MKD_AUTOLINK },
-    { "safelink",      "safe links",                 0, 0, MKD_SAFELINK },
-    { "strikethrough", "strikethrough",              1, 0, MKD_NOSTRIKETHROUGH },
-    { "del",           "strikethrough",              1, 1, MKD_NOSTRIKETHROUGH },
-    { "superscript",   "superscript",                1, 0, MKD_NOSUPERSCRIPT },
-    { "emphasis",      "emphasis inside words",      0, 0, MKD_NORELAXED },
-    { "divquote",      ">%class% blockquotes",       1, 0, MKD_NODIVQUOTE },
-    { "alphalist",     "alpha lists",                1, 0, MKD_NOALPHALIST },
-    { "definitionlist","definition lists",           1, 0, MKD_NODLIST },
-    { "1.0",           "markdown 1.0 compatability", 0, 0, MKD_1_COMPAT },
-    { "footnotes",     "markdown extra footnotes",   0, 0, MKD_EXTRA_FOOTNOTE },
-    { "footnote",      "markdown extra footnotes",   0, 1, MKD_EXTRA_FOOTNOTE },
+    { "tabstop",       "default (4-space) tabstops", 0, 0, 1, MKD_TABSTOP  },
+    { "image",         "images",                     1, 0, 1, MKD_NOIMAGE  },
+    { "links",         "links",                      1, 0, 1, MKD_NOLINKS  },
+    { "relax",         "emphasis inside words",      1, 1, 1, MKD_STRICT   },
+    { "strict",        "emphasis inside words",      0, 0, 1, MKD_STRICT   },
+    { "tables",        "tables",                     1, 0, 1, MKD_NOTABLES },
+    { "header",        "pandoc-style headers",       1, 0, 1, MKD_NOHEADER },
+    { "html",          "raw html",                   1, 0, 1, MKD_NOHTML   },
+    { "ext",           "extended protocols",         1, 0, 1, MKD_NO_EXT   },
+    { "cdata",         "generate cdata",             0, 0, 0, MKD_CDATA    },
+    { "smarty",        "smartypants",                1, 0, 1, MKD_NOPANTS  },
+    { "pants",         "smartypants",                1, 1, 1, MKD_NOPANTS  },
+    { "toc",           "tables of contents",         0, 0, 1, MKD_TOC      },
+    { "autolink",      "autolinking",                0, 0, 1, MKD_AUTOLINK },
+    { "safelink",      "safe links",                 0, 0, 1, MKD_SAFELINK },
+    { "strikethrough", "strikethrough",              1, 0, 1, MKD_NOSTRIKETHROUGH },
+    { "del",           "strikethrough",              1, 1, 1, MKD_NOSTRIKETHROUGH },
+    { "superscript",   "superscript",                1, 0, 1, MKD_NOSUPERSCRIPT },
+    { "emphasis",      "emphasis inside words",      0, 0, 1, MKD_NORELAXED },
+    { "divquote",      ">%class% blockquotes",       1, 0, 1, MKD_NODIVQUOTE },
+    { "alphalist",     "alpha lists",                1, 0, 1, MKD_NOALPHALIST },
+    { "definitionlist","definition lists",           1, 0, 1, MKD_NODLIST },
+    { "1.0",           "markdown 1.0 compatability", 0, 0, 1, MKD_1_COMPAT },
+    { "footnotes",     "markdown extra footnotes",   0, 0, 1, MKD_EXTRA_FOOTNOTE },
+    { "footnote",      "markdown extra footnotes",   0, 1, 1, MKD_EXTRA_FOOTNOTE },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])
@@ -104,7 +105,8 @@ show_flags(int byname)
 	for (i=0; i < NR(opts); i++)
 	    if ( ! opts[i].skip ) {
 		fprintf(stderr, "%08lx : ", (long)opts[i].flag);
-		fprintf(stderr, opts[i].off ? "disable " : "enable ");
+		if ( opts[i].sayenable )
+		    fprintf(stderr, opts[i].off ? "disable " : "enable ");
 		fprintf(stderr, "%s\n", opts[i].desc);
 	    }
     }
