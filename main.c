@@ -66,7 +66,7 @@ static struct _opt {
     { "divquote",      ">%class% blockquotes",       1, 0, 1, MKD_NODIVQUOTE },
     { "alphalist",     "alpha lists",                1, 0, 1, MKD_NOALPHALIST },
     { "definitionlist","definition lists",           1, 0, 1, MKD_NODLIST },
-    { "1.0",           "markdown 1.0 compatability", 0, 0, 1, MKD_1_COMPAT },
+    { "1.0",           "markdown 1.0 compatibility", 0, 0, 1, MKD_1_COMPAT },
     { "footnotes",     "markdown extra footnotes",   0, 0, 1, MKD_EXTRA_FOOTNOTE },
     { "footnote",      "markdown extra footnotes",   0, 1, 1, MKD_EXTRA_FOOTNOTE },
 } ;
