@@ -235,9 +235,15 @@ mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 	c = line[i];
 	if ( labelformat ) {
 	    if ( isalnum(c) || (c == '_') || (c == ':') || (c == '-') || (c == '.' ) )
-		(*outchar)(c, out);
+        {
+            (*outchar)(c, out);
+        }
 	    else
-		(*outchar)('.', out);
+        {
+            static char hex[] = "0123456789abcdef";
+            (*outchar)( hex[c / 16],out);
+            (*outchar)( hex[c % 16],out);
+        }
 	}
 	else
 	    (*outchar)(c,out);
