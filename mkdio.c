@@ -228,7 +228,7 @@ mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 
     size = mkd_line(s, len, &line, IS_LABEL);
     
-    if ( labelformat && size && !isalpha(line[0]) )
+    if ( labelformat && (size>0) && !isalpha(line[0]) )
 	(*outchar)('L',out);
     for ( i=0; i < size ; i++ ) {
 	c = line[i];
