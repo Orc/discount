@@ -142,6 +142,7 @@ typedef struct document {
 extern int  mkd_firstnonblank(Line *);
 extern int  mkd_compile(Document *, DWORD);
 extern int  mkd_document(Document *, char **);
+extern int  mkd_toc(Document *, char **);
 extern int  mkd_generatehtml(Document *, FILE *);
 extern int  mkd_css(Document *, char **);
 extern int  mkd_generatecss(Document *, FILE *);
