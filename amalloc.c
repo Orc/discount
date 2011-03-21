@@ -51,22 +51,30 @@ amalloc(int size)
 void
 afree(void *ptr)
 {
-    struct alist *p2 = ((struct alist*)ptr)-1;
+    if( ptr != NULL )
+    {
+        struct alist *p2 = ((struct alist*)ptr)-1;
 
-    if ( p2->magic == MAGIC ) {
-	p2->last->next = p2->next;
-	p2->next->last = p2->last;
-	++frees;
-	free(p2);
+        if ( p2->magic == MAGIC ) {
+        p2->last->next = p2->next;
+        p2->next->last = p2->last;
+        ++frees;
+        free(p2);
+        }
+        else
+        free(ptr);
     }
-    else
-	free(ptr);
 }
 
 
 void *
 arealloc(void *ptr, int size)
 {
+    if( ptr == NULL )
+    {
+        return amalloc(size);
+    }
+
     struct alist *p2 = ((struct alist*)ptr)-1;
     struct alist save;
 
