@@ -16,10 +16,11 @@ OBJS=mkdio.o markdown.o dumptree.o generate.o \
      resource.o docheader.o version.o toc.o css.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o \
      setup.o tags.o html5.o flags.o @AMALLOC@
+TESTFRAMEWORK=echo cols
 
 MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 
-all: $(PGMS) $(SAMPLE_PGMS)
+all: $(PGMS) $(SAMPLE_PGMS) $(TESTFRAMEWORK)
 
 install: $(PGMS)
 	@INSTALL_PROGRAM@ $(PGMS) $(DESTDIR)/$(BINDIR)
@@ -78,7 +79,7 @@ $(MKDLIB): $(OBJS)
 verify: echo tools/checkbits.sh
 	@./echo -n "headers ... "; tools/checkbits.sh && echo "GOOD"
 
-test:	$(PGMS) echo cols verify
+test:	$(PGMS) $(TESTFRAMEWORK) verify
 	@for x in tests/*.t; do \
 	    @LD_LIBRARY_PATH@=`pwd` sh $$x || exit 1; \
 	done
@@ -89,7 +90,7 @@ echo:   tools/echo.c config.h
 	$(CC) -o echo tools/echo.c
 	
 clean:
-	rm -f $(PGMS) $(SAMPLE_PGMS) *.o
+	rm -f $(PGMS) $(TESTFRAMEWORK) $(SAMPLE_PGMS) *.o
 	rm -f $(MKDLIB) `./librarian.sh files $(MKDLIB) VERSION`
 
 distclean spotless: clean
