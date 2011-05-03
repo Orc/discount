@@ -879,29 +879,29 @@ char **argv;
 EOF
     rc=1
     LOGN "defining WORD & DWORD scalar types"
-    if $AC_CC /tmp/pd$$.c -o /tmp/pd$$; then
+    if $AC_CC /tmp/pd$$.c -o $__cwd/pd$$; then
 	while [ "$1" ]; do
 	    case "$1" in
-	    sub)if /tmp/pd$$ sub >> $__cwd/config.sub; then
+	    sub)if $__cwd/pd$$ sub >> $__cwd/config.sub; then
 		    rc=0
 		fi;;
-	    *)  if /tmp/pd$$ >> $__cwd/config.h; then
+	    *)  if $__cwd/pd$$ >> $__cwd/config.h; then
 		    rc=0
 		fi ;;
 	    esac
 	    shift
 	done
 	if [ "$rc" != 0 ]; then
-	    if /tmp/pd$$ >> $__cwd/config.h; then
+	    if $__cwd/pd$$ >> $__cwd/config.h; then
 		rc=1
 	    fi
 	fi
     fi
+    rm -f $__cwd/pd$$ /tmp/pd$$.c
     case "$rc" in
     0) TLOG "" ;;
     *) AC_FAIL " ** FAILED **" ;;
     esac
-    rm -f /tmp/pd$$ /tmp/pd$$.c
 }
 
 
@@ -1151,8 +1151,8 @@ main()
 }
 EOF
 
-    if $AC_CC -o /tmp/ngc$$ /tmp/ngc$$.c $LIBS; then
-	if /tmp/ngc$$; then
+    if $AC_CC -o $__cwd/ngc$$ /tmp/ngc$$.c $LIBS; then
+	if $__cwd/ngc$$; then
 	    TLOG "(found)"
 	    AC_DEFINE 'HAVE_BASENAME' 1
 	    AC_CHECK_HEADERS libgen.h
@@ -1162,7 +1162,7 @@ EOF
     else
 	TLOG "(not found)"
     fi
-    rm -f /tmp/ngc$$ /tmp/ngc$$.c
+    rm -f $__cwd/ngc$$ /tmp/ngc$$.c
 }
 
 #
