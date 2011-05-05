@@ -39,9 +39,9 @@ char *pgm = "markdown";
 static struct _opt {
     char *name;
     char *desc;
-    int off:1;
-    int skip:1;
-    int sayenable:1;
+    int off;
+    int skip;
+    int sayenable;
     mkd_flag_t flag;
 } opts[] = {
     { "tabstop",       "default (4-space) tabstops", 0, 0, 1, MKD_TABSTOP  },
