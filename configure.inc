@@ -55,6 +55,13 @@ __ac_dirname() {
 }
 fi
 
+__remove() {
+    if [ \( -x "$1" \) -a "$__MACOS_DSYM" ]; then
+	rm -rf "$1".dSYM
+    fi
+    rm -f "$@"
+}
+
 ac_progname=$0
 ac_configure_command=
 Q=\'
@@ -134,16 +141,16 @@ __MAKEDOTO() {
     AC_PROG_CC
 
     if $AC_CC -c -o /tmp/doto$$.o "$@" $AC_LIBS 2>/tmp/doto$$.err; then
-	rm -f /tmp/doto$$.o /tmp/doto$$.err
+	__remove /tmp/doto$$.o /tmp/doto$$.err
 	TLOG " (found)"
 	return 0
     fi
-    rm -f /tmp/doto$$.o
+    __remove /tmp/doto$$.o
     TLOG " (not found)"
     echo "test failed:  command was $AC_CC -c -o /tmp/doto$$.o" "$@" $AC_LIBS
     echo "output:"
     cat /tmp/doto$$.err
-    rm -f /tmp/doto$$.err
+    __remove /tmp/doto$$.err
     echo "offending sources:"
     for x in "$@"; do
 	echo "$x:"
@@ -158,21 +165,21 @@ __MAKEDOTO() {
 #
 AC_CHECK_HEADERS () {
 
-    echo "/* AC_CHECK_HEADERS */" > /tmp/ngc$$.c
+    echo "/* AC_CHECK_HEADERS */" > ngc$$.c
     for hdr in $*; do
-	echo "#include <$hdr>" >> /tmp/ngc$$.c
+	echo "#include <$hdr>" >> ngc$$.c
     done
-    echo "main() { }" >> /tmp/ngc$$.c
+    echo "main() { }" >> ngc$$.c
 
     LOGN "looking for header $hdr"
 
-    if __MAKEDOTO /tmp/ngc$$.c; then
+    if __MAKEDOTO ngc$$.c; then
 	AC_DEFINE 'HAVE_'`echo $hdr | $AC_UPPERCASE | tr './' '_'` 1
 	rc=0
     else
 	rc=1
     fi
-    rm -f /tmp/ngc$$.c
+    __remove ngc$$.c
     return $rc
 }
 
@@ -191,14 +198,14 @@ AC_CHECK_FUNCS () {
     esac
 
     shift
-    rm -f /tmp/ngc$$.c
+    __remove ngc$$.c
 
     while [ "$1" ]; do
-	echo "#include <$1>" >> /tmp/ngc$$.c
+	echo "#include <$1>" >> ngc$$.c
 	shift
     done
 
-    cat >> /tmp/ngc$$.c << EOF
+    cat >> ngc$$.c << EOF
 main()
 {
 
@@ -208,18 +215,18 @@ EOF
 
     LOGN "looking for the $B function"
 
-    if $AC_CC -o /tmp/ngc$$ /tmp/ngc$$.c $LIBS; then
+    if $AC_CC -o ngc$$ ngc$$.c $LIBS; then
 	AC_DEFINE `echo ${2:-HAVE_$B} | $AC_UPPERCASE` 1
 	TLOG " (found)"
 	rc=0
     else
 	echo "offending command was:"
-	cat /tmp/ngc$$.c
-	echo "$AC_CC -o /tmp/ngc$$ /tmp/ngc$$.c $LIBS"
+	cat ngc$$.c
+	echo "$AC_CC -o ngc$$ ngc$$.c $LIBS"
 	TLOG " (not found)"
 	rc=1
     fi
-    rm -f /tmp/ngc$$.c /tmp/ngc$$
+    __remove ngc$$ ngc$$.c
     return $rc
 }
 
@@ -233,13 +240,13 @@ AC_CHECK_STRUCT () {
     struct=$1
     shift
 
-    rm -f /tmp/ngc$$.c
+    __remove ngc$$.c
 
     for include in $*; do
-	echo "#include <$include>" >> /tmp/ngc$$.c
+	echo "#include <$include>" >> ngc$$.c
     done
 
-    cat >> /tmp/ngc$$.c << EOF
+    cat >> ngc$$.c << EOF
 main()
 {
     struct $struct foo;
@@ -248,13 +255,13 @@ EOF
 
     LOGN "looking for struct $struct"
 
-    if __MAKEDOTO /tmp/ngc$$.c; then
+    if __MAKEDOTO ngc$$.c; then
 	AC_DEFINE HAVE_STRUCT_`echo ${struct} | $AC_UPPERCASE`
 	rc=0
     else
 	rc=1
     fi
-    rm -f /tmp/ngc$$.c
+    __remove ngc$$.c
     return $rc
 }
 
@@ -268,13 +275,13 @@ AC_CHECK_TYPE () {
     type=$1
     shift
 
-    rm -f /tmp/ngc$$.c
+    __remove ngc$$.c
 
     for include in $*; do
-	echo "#include <$include>" >> /tmp/ngc$$.c
+	echo "#include <$include>" >> ngc$$.c
     done
 
-    cat >> /tmp/ngc$$.c << EOF
+    cat >> ngc$$.c << EOF
 main()
 {
     $type foo;
@@ -283,13 +290,13 @@ EOF
 
     LOGN "looking for $type type"
 
-    if __MAKEDOTO /tmp/ngc$$.c; then
+    if __MAKEDOTO ngc$$.c; then
 	AC_DEFINE HAVE_TYPE_`echo ${type} | $AC_UPPERCASE`
 	rc=0
     else
 	rc=1
     fi
-    rm -f /tmp/ngc$$.c
+    __remove ngc$$.c
     return $rc
 }
 
@@ -305,13 +312,13 @@ AC_CHECK_FIELD () {
     field=$2
     shift 2
 
-    rm -f /tmp/ngc$$.c
+    __remove ngc$$.c
 
     for include in $*;do
-	echo "#include <$include>" >> /tmp/ngc$$.c
+	echo "#include <$include>" >> ngc$$.c
     done
 
-    cat >> /tmp/ngc$$.c << EOF
+    cat >> ngc$$.c << EOF
 main()
 {
     struct $struct foo;
@@ -322,13 +329,13 @@ EOF
 
     LOGN "checking that struct $struct has a $field field"
 
-    if __MAKEDOTO /tmp/ngc$$.c; then
+    if __MAKEDOTO ngc$$.c; then
 	AC_DEFINE HAVE_`echo ${struct}_$field | $AC_UPPERCASE`
 	rc=0
     else
 	rc=1
     fi
-    rm -f /tmp/ngc$$.c
+    __remove ngc$$.c
     return $rc
 }
 
@@ -339,7 +346,7 @@ EOF
 AC_PROG_CC () {
     test "$AC_CC" && return 0
 
-    cat > /tmp/ngc$$.c << \EOF
+    cat > ngc$$.c << \EOF
 #include <stdio.h>
 main()
 {
@@ -370,10 +377,13 @@ EOF
     fi
     echo "checking out the C compiler"
 
-    $AC_CC -o /tmp/ngc$$ /tmp/ngc$$.c
+    unset __MACOS_DSYM
+    $AC_CC -o ngc$$ ngc$$.c
     status=$?
+    test -d ngc$$.dSYM && __MACOS_DSYM=1
 
     TLOGN " ($AC_CC)"
+
     if [ $status -eq 0 ]; then
 	if $AC_CC -v 2>&1 | grep 'gcc version' >/dev/null; then
 	    TLOG " oh ick, it looks like gcc"
@@ -388,7 +398,7 @@ EOF
 
 	if [ "$CFLAGS" ]; then
 	    test "$CFLAGS" && echo "validating CFLAGS=${CFLAGS}"
-	    if $AC_CC $CFLAGS -o /tmp/ngc$$.o /tmp/ngc$$.c ; then
+	    if $AC_CC $CFLAGS -o ngc$$.o ngc$$.c ; then
 		AC_CFLAGS=${CFLAGS:-"-g"}
 		test "$CFLAGS" && echo "CFLAGS=\"${CFLAGS}\" are okay"
 	    elif [ "$CFLAGS" ]; then
@@ -399,7 +409,7 @@ EOF
 	fi
 	if [ "$LDFLAGS" ]; then
 	    test "$LDFLAGS" && echo "validating LDFLAGS=${LDFLAGS}"
-	    if $AC_CC $LDFLAGS -o /tmp/ngc$$ /tmp/ngc$$.o; then
+	    if $AC_CC $LDFLAGS -o ngc$$ ngc$$.o; then
 		AC_LDFLAGS=${LDFLAGS:-"-g"}
 		test "$LDFLAGS" && TLOG "LDFLAGS=\"${LDFLAGS}\" are okay"
 	    elif [ "$LDFLAGS" ]; then
@@ -414,7 +424,7 @@ EOF
 
     AC_SUB 'CC' "$AC_CC"
 
-    rm -f /tmp/ngc$$ /tmp/ngc$$.c /tmp/ngc$$.o
+    __remove ngc$$ ngc$$.c ngc$$.o
 
     return $status
 }
@@ -796,18 +806,18 @@ AC_TYPE_PID_T () {
 # AC_C_CONST checks to see if the compiler supports the const keyword
 #
 AC_C_CONST () {
-    cat > /tmp/pd$$.c << EOF
+    cat > ngc$$.c << EOF
 const char me=1;
 EOF
     LOGN "checking for \"const\" keyword"
 
-    if __MAKEDOTO /tmp/pd$$.c; then
+    if __MAKEDOTO ngc$$.c; then
 	rc=0
     else
 	AC_DEFINE 'const' '/**/'
 	rc=1
     fi
-    rm -f /tmp/pd$$.c
+    __remove ngc$$.c
     return $rc
 }
 
@@ -816,18 +826,18 @@ EOF
 # AC_C_VOLATILE checks to see if the compiler supports the volatile keyword
 #
 AC_C_VOLATILE () {
-    cat > /tmp/pd$$.c << EOF
+    cat > ngc$$.c << EOF
 f() { volatile char me=1; }
 EOF
     LOGN "checking for \"volatile\" keyword"
 
-    if __MAKEDOTO /tmp/pd$$.c; then
+    if __MAKEDOTO ngc$$.c; then
 	rc=0
     else
 	AC_DEFINE 'volatile' '/**/'
 	rc=1
     fi
-    rm -f /tmp/pd$$.c
+    __remove ngc$$.c
     return $rc
 }
 
@@ -836,7 +846,7 @@ EOF
 # AC_SCALAR_TYPES checks to see if the compiler can generate 2 and 4 byte ints.
 #
 AC_SCALAR_TYPES () {
-    cat > /tmp/pd$$.c << EOF
+    cat > ngc$$.c << EOF
 #include <stdio.h>
 #include <string.h>
 
@@ -879,25 +889,25 @@ char **argv;
 EOF
     rc=1
     LOGN "defining WORD & DWORD scalar types"
-    if $AC_CC /tmp/pd$$.c -o $__cwd/pd$$; then
+    if $AC_CC ngc$$.c -o ngc$$; then
 	while [ "$1" ]; do
 	    case "$1" in
-	    sub)if $__cwd/pd$$ sub >> $__cwd/config.sub; then
+	    sub)if ./ngc$$ sub >> $__cwd/config.sub; then
 		    rc=0
 		fi;;
-	    *)  if $__cwd/pd$$ >> $__cwd/config.h; then
+	    *)  if ./ngc$$ >> $__cwd/config.h; then
 		    rc=0
 		fi ;;
 	    esac
 	    shift
 	done
 	if [ "$rc" != 0 ]; then
-	    if $__cwd/pd$$ >> $__cwd/config.h; then
+	    if ./ngc$$ >> $__cwd/config.h; then
 		rc=1
 	    fi
 	fi
     fi
-    rm -f $__cwd/pd$$ /tmp/pd$$.c
+    __remove ngc$$ ngc$$.c
     case "$rc" in
     0) TLOG "" ;;
     *) AC_FAIL " ** FAILED **" ;;
@@ -1005,7 +1015,7 @@ AC_CHECK_FLOCK() {
 
     AC_CHECK_HEADERS sys/types.h sys/file.h fcntl.h
 
-    cat << EOF > $$.c
+    cat << EOF > ngc$$.c
 #include <stdio.h>
 #include <sys/file.h>
 #include <sys/types.h>
@@ -1026,7 +1036,7 @@ EOF
 
     LOGN "checking flock() sanity"
     HAS_FLOCK=0
-    if $AC_CC -o flock $$.c ; then
+    if $AC_CC -o ngc$$ ngc$$.c ; then
 	if ./flock ; then
 	    LOG " (good)"
 	    HAS_FLOCK=1
@@ -1038,7 +1048,7 @@ EOF
 	LOG " (not found)"
     fi
 
-    rm -f flock $$.c
+    __remove ngc$$ ngc$$.c
 
     case "$HAS_FLOCK" in
     0) return 1 ;;
@@ -1058,7 +1068,7 @@ AC_CHECK_RESOLVER () {
 
     __ACR_rc=0
 
-    cat > /tmp/ngc$$.c << EOF
+    cat > ngc$$.c << EOF
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
@@ -1073,22 +1083,22 @@ main()
 }
 EOF
 
-    if $AC_CC -o /tmp/ngc$$ /tmp/ngc$$.c; then
+    if $AC_CC -o ngc$$ ngc$$.c; then
 	TLOG " (found)"
-    elif $AC_CC -o /tmp/ngc$$ /tmp/ngc$$.c -lresolv; then
+    elif $AC_CC -o ngc$$ ngc$$.c -lresolv; then
 	TLOG " (found, needs -lresolv)"
 	AC_LIBS="$AC_LIBS -lresolv"
-    elif $AC_CC -DBIND_8_COMPAT -o /tmp/ngc$$ /tmp/ngc$$.c; then
+    elif $AC_CC -DBIND_8_COMPAT -o ngc$$ ngc$$.c; then
 	TLOG " (found, needs BIND_8_COMPAT)"
 	AC_DEFINE BIND_8_COMPAT 1
-    elif $AC_CC -DBIND_8_COMPAT -o /tmp/ngc$$ /tmp/ngc$$.c -lresolv; then
+    elif $AC_CC -DBIND_8_COMPAT -o ngc$$ ngc$$.c -lresolv; then
 	TLOG " (found, needs BIND_8_COMPAT & -lresolv)"
 	AC_DEFINE BIND_8_COMPAT 1
     else
 	TLOG " (not found)"
 	__ACR_rc=1
     fi
-    rm -f /tmp/ngc$$.c
+    __remove ngc$$ ngc$$.c
     return $__ACR_rc
 }
 
@@ -1101,7 +1111,7 @@ AC_CHECK_ALLOCA () {
     AC_PROG_CC
     AC_CHECK_HEADERS stdlib.h
 
-    cat - > /tmp/ngc$$.c << EOF
+    cat - > ngc$$.c << EOF
 #if T
 # include <alloca.h>
 #else
@@ -1114,18 +1124,18 @@ main()
 EOF
 
     LOGN "looking for the alloca function"
-    if $AC_CC -DT /tmp/ngc$$.c -o /tmp/ngc$$; then
+    if $AC_CC -DT ngc$$.c -o ngc$$; then
 	AC_DEFINE 'HAVE_ALLOCA_H' 1
 	status=0
 	TLOG " (found in alloca.h)"
-    elif $AC_CC /tmp/ngc$$.c -o /tmp/ngc$$; then
+    elif $AC_CC ngc$$.c -o ngc$$; then
 	TLOG " (found)"
 	status=0
     else
 	TLOG " (not found)"
 	status=1
     fi
-    rm -f /tmp/ngc$$.c /tmp/ngc
+    __remove ngc$$ ngc$$.c
     return $status
 
 }
@@ -1138,7 +1148,7 @@ EOF
 AC_CHECK_BASENAME() {
     TLOGN "looking for a reentrant basename "
 
-    cat > /tmp/ngc$$.c << EOF
+    cat > ngc$$.c << EOF
 #include <string.h>
 
 main()
@@ -1151,8 +1161,8 @@ main()
 }
 EOF
 
-    if $AC_CC -o $__cwd/ngc$$ /tmp/ngc$$.c $LIBS; then
-	if $__cwd/ngc$$; then
+    if $AC_CC -o ngc$$ ngc$$.c $LIBS; then
+	if ngc$$; then
 	    TLOG "(found)"
 	    AC_DEFINE 'HAVE_BASENAME' 1
 	    AC_CHECK_HEADERS libgen.h
@@ -1162,7 +1172,7 @@ EOF
     else
 	TLOG "(not found)"
     fi
-    rm -f $__cwd/ngc$$ /tmp/ngc$$.c
+    __remove ngc$$ ngc$$.c
 }
 
 #
@@ -1173,9 +1183,9 @@ AC_COMPILER_PIC () {
     AC_PROG_CC
 
     LOGN "checking for C compiler option to produce PIC "
-    echo "int some_variable = 0;" > /tmp/ngc$$.c 
+    echo "int some_variable = 0;" > ngc$$.c 
 
-    if $AC_CC -c -fPIC -o /tmp/ngc$$ /tmp/ngc$$.c $LIBS; then
+    if $AC_CC -c -fPIC -o ngc$$ ngc$$.c $LIBS; then
 	AC_CFLAGS="$AC_CFLAGS -fPIC"
         LOG "(-fPIC)"
 	__rc=0
@@ -1183,7 +1193,7 @@ AC_COMPILER_PIC () {
         LOG "(none)"
 	__rc=1
     fi
-    rm -f /tmp/ngc$$ /tmp/ngc$$.c
+    __remove ngc$$ ngc$$.c
     return $__rc
 }
 
@@ -1197,13 +1207,13 @@ AC_CC_SHLIBS () {
     AC_PROG_INSTALL || AC_FAIL "Need an install program to install shared libraries"
     LOGN "checking whether the C compiler can build shared libraries "
 
-    echo "int some_variable = 0;" > /tmp/ngc$$.c 
+    echo "int some_variable = 0;" > ngc$$.c 
 
-    if $AC_CC $AC_PICFLAG -shared -o /tmp/ngc$$.so /tmp/ngc$$.c; then
+    if $AC_CC $AC_PICFLAG -shared -o ngc$$.so ngc$$.c; then
 	AC_SUB LD_LIBRARY_PATH LD_LIBRARY_PATH
 	# -Wl option probably works, but be paranoid anyway
 	_VFLAGS="$AC_PICFLAG -shared -Wl,-soname,ngc$$.so.1"
-	if $AC_CC $_VFLAGS -o /tmp/ngc$$.so /tmp/ngc$$.c; then
+	if $AC_CC $_VFLAGS -o ngc$$.so ngc$$.c; then
 	    USE_SONAME=T
 	fi
 	LDCONFIG=`AC_PATH=/sbin:/usr/sbin:/usr/local/sbin acLookFor ldconfig`
@@ -1247,7 +1257,7 @@ EOF
 	chmod +x librarian.sh
         LOG "(yes; -shared)"
 	__rc=0
-    elif $AC_CC $AC_PICFLAG  -dynamiclib -o /tmp/ngc$$.so /tmp/ngc$$.c; then
+    elif $AC_CC $AC_PICFLAG  -dynamiclib -o ngc$$.so ngc$$.c; then
 	# macosx
 	AC_SUB LD_LIBRARY_PATH DYLD_LIBRARY_PATH
 	__config_files="$__config_files librarian.sh"
@@ -1289,7 +1299,7 @@ EOF
 	__rc=1
     fi
 
-    rm -f /tmp/ngc$$.so /tmp/ngc$$.c
+    __remove ngc$$.so ngc$$.c
 
     return $__rc
 }
@@ -1383,22 +1393,22 @@ EOD
 # compiler options
 #
 acCheckCPP () {
-	cat > /tmp/ngc$$.c << EOF
+	cat > ngc$$.c << EOF
 #define FOO BAR
 
 FOO
 EOF
 
-    if $1 $2 /tmp/ngc$$.c > /tmp/ngc$$.o; then
-	if grep -v '#define' /tmp/ngc$$.o | grep -s BAR >/dev/null; then
+    if $1 $2 ngc$$.c > ngc$$.o; then
+	if grep -v '#define' ngc$$.o | grep -s BAR >/dev/null; then
 	    echo "CPP=[$1], CPPFLAGS=[$2]"
 	    AC_SUB 'CPP' "$1"
 	    AC_SUB 'CPPFLAGS' "$2"
-	    rm /tmp/ngc$$.c /tmp/ngc$$.o
+	    rm ngc$$.c ngc$$.o
 	    return 0
 	fi
     fi
-    rm /tmp/ngc$$.c /tmp/ngc$$.o
+    rm ngc$$.c ngc$$.o
     return 1
 }
 
