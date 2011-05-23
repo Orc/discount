@@ -56,9 +56,6 @@ install.everything: install install.man
 version.o: version.c VERSION
 	$(CC) -DVERSION=\"`cat VERSION`\" -c version.c
 
-markdown: main.o $(MKDLIB)
-	$(CC) $(CFLAGS) -o markdown main.o -lmarkdown @LIBS@
-
 # example programs
 @THEME@theme:  theme.o $(MKDLIB) mkdio.h
 @THEME@	$(CC) -o theme theme.o -lmarkdown @LIBS@
@@ -67,8 +64,14 @@ markdown: main.o $(MKDLIB)
 mkd2html:  mkd2html.o $(MKDLIB) mkdio.h
 	$(CC) -o mkd2html mkd2html.o -lmarkdown @LIBS@
 
-makepage:  makepage.c $(MKDLIB) mkdio.h
-	$(CC) -o makepage makepage.c -lmarkdown @LIBS@
+markdown: main.o pgm_options.o $(MKDLIB)
+	$(CC) $(CFLAGS) -o markdown main.o pgm_options.o -lmarkdown @LIBS@
+	
+makepage:  makepage.c pgm_options.o $(MKDLIB) mkdio.h
+	$(CC) $(CFLAGS) -o makepage makepage.c pgm_options.o -lmarkdown @LIBS@
+
+pgm_options.o: pgm_options.c mkdio.h config.h
+	$(CC) -I. -c pgm_options.c
 
 main.o: main.c mkdio.h config.h
 	$(CC) -I. -c main.c
@@ -105,6 +108,7 @@ dumptree.o: dumptree.c markdown.h cstring.h amalloc.h config.h
 emmatch.o: emmatch.c config.h cstring.h amalloc.h markdown.h
 generate.o: generate.c config.h cstring.h amalloc.h markdown.h
 main.o: main.c config.h amalloc.h
+pgm_options.o: pgm_options.c pgm_options.h config.h amalloc.h
 makepage.o: makepage.c
 markdown.o: markdown.c config.h cstring.h amalloc.h markdown.h
 mkd2html.o: mkd2html.c config.h mkdio.h cstring.h amalloc.h
