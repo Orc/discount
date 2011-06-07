@@ -140,17 +140,17 @@ AC_CONTINUE () {
 __MAKEDOTO() {
     AC_PROG_CC
 
-    if $AC_CC -c -o /tmp/doto$$.o "$@" $AC_LIBS 2>/tmp/doto$$.err; then
-	__remove /tmp/doto$$.o /tmp/doto$$.err
+    if $AC_CC -c -o ngc$$.o "$@" $AC_LIBS 2>ngc$$.err; then
+	__remove ngc$$.o ngc$$.err
 	TLOG " (found)"
 	return 0
     fi
-    __remove /tmp/doto$$.o
+    __remove ngc$$.o
     TLOG " (not found)"
-    echo "test failed:  command was $AC_CC -c -o /tmp/doto$$.o" "$@" $AC_LIBS
+    echo "test failed:  command was $AC_CC -c -o ngc$$.o" "$@" $AC_LIBS
     echo "output:"
-    cat /tmp/doto$$.err
-    __remove /tmp/doto$$.err
+    cat ngc$$.err
+    __remove ngc$$.err
     echo "offending sources:"
     for x in "$@"; do
 	echo "$x:"
