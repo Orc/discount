@@ -22,14 +22,14 @@ MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 
 all: $(PGMS) $(SAMPLE_PGMS) $(TESTFRAMEWORK)
 
-install: $(PGMS)
+install: $(PGMS) $(DESTDIR)/$(BINDIR) $(DESTDIR)/$(LIBDIR) $(DESTDIR)/$(INCDIR)
 	@INSTALL_PROGRAM@ $(PGMS) $(DESTDIR)/$(BINDIR)
 	./librarian.sh install libmarkdown VERSION $(DESTDIR)/$(LIBDIR)
 	@INSTALL_DATA@ mkdio.h $(DESTDIR)/$(INCDIR)
 
 install.everything: install install.samples install.man
 
-install.samples: $(SAMPLE_PGMS) install
+install.samples: $(SAMPLE_PGMS) install $(DESTDIR)/$(BINDIR)
 	@INSTALL_PROGRAM@ $(SAMPLE_PGMS) $(DESTDIR)/$(BINDIR)
 	@INSTALL_DIR@ $(DESTDIR)/$(MANDIR)/man1
 	@INSTALL_DATA@ theme.1 makepage.1 mkd2html.1 $(DESTDIR)/$(MANDIR)/man1
@@ -52,6 +52,15 @@ install.man:
 	@INSTALL_DATA@ markdown.1 $(DESTDIR)/$(MANDIR)/man1
 
 install.everything: install install.man
+
+$(DESTDIR)/$(BINDIR):
+	@INSTALL_DIR@ $(DESTDIR)/$(BINDIR)
+
+$(DESTDIR)/$(INCDIR):
+	@INSTALL_DIR@ $(DESTDIR)/$(INCDIR)
+
+$(DESTDIR)/$(LIBDIR):
+	@INSTALL_DIR@ $(DESTDIR)/$(LIBDIR)
 
 version.o: version.c VERSION
 	$(CC) -DVERSION=\"`cat VERSION`\" -c version.c
