@@ -9,6 +9,7 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl d Pa root
+.Op Fl E
 .Op Fl f
 .Op Fl o Pa file
 .Op Fl p Pa pagename
@@ -94,7 +95,7 @@ that this copy of theme was compiled with.
 .El
 .Pp
 If input is coming from a file and the output was not set with the
-.Ar o
+.Fl o
 option, 
 .Nm writes the output to
 .Pa file-sans-text.html
@@ -115,6 +116,21 @@ Set the
 .Em "document root"
 to
 .Ar root
+.It Fl E
+Normally
+theme will not expand
+.Pa "<?theme body?>"
+or
+.Pa "<?theme toc?>"
+in the
+.Pa "<head>"
+section, or
+.Pa "<?theme style?>"
+in the
+.Pa "<body>"
+section, but the
+.Fl E
+option overrides this and allows expansions everywhere.
 .It Fl f
 Forcibly overwrite existing html files.
 .It Fl o Pa filename
