@@ -84,6 +84,7 @@ void mkd_ref_prefix(MMIOT*, char*);
 #define MKD_TAGTEXT	0x00000020	/* process text inside an html tag; no
 					 * <em>, no <bold>, no html or [] expansion */
 #define MKD_NO_EXT	0x00000040	/* don't allow pseudo-protocols */
+#define MKD_NOEXT	MKD_NO_EXT	/* ^^^ (aliased for user convenience) */
 #define MKD_CDATA	0x00000080	/* generate code for xml ![CDATA[...]] */
 #define MKD_NOSUPERSCRIPT 0x00000100	/* no A^B */
 #define MKD_NORELAXED	0x00000200	/* emphasis happens /everywhere/ */
