@@ -29,6 +29,12 @@ typedef struct line {
     int dle;			/* leading indent on the line */
     int flags;			/* special attributes for this line */
 #define PIPECHAR	0x01		/* line contains a | */
+#define CHECKED		0x02
+
+    enum { chk_text, chk_code,
+	   chk_hr, chk_dash,
+	   chk_tilde, chk_equal } kind;
+    int count;
 } Line;
 
 

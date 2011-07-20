@@ -173,6 +173,63 @@ splitline(Line *t, int cutpoint)
     }
 }
 
+#define UNCHECK(l) ((l)->flags &= ~CHECKED)
+
+/*
+ * walk a line, seeing if it's any of half a dozen interesting regular
+ * types.
+ */
+static void
+checkline(Line *l)
+{
+    int eol, i;
+    int dashes = 0, spaces = 0,
+	equals = 0, underscores = 0,
+	stars = 0, tildes = 0;
+
+    if ( l->flags & CHECKED )
+	return;
+    l->flags |= CHECKED;
+    l->kind = chk_text;
+    l->count = 0;
+    
+    if (l->dle > 4) { l->kind=chk_code; return; }
+
+    for ( eol = S(l->text); eol > l->dle && isspace(T(l->text)[eol-1]); --eol )
+	;
+
+    for (i=l->dle; i<eol; i++) {
+	register int c = T(l->text)[i];
+
+	if ( c != ' ' ) l->count++;
+
+	switch (c) {
+	case '-':  dashes = 1; break;
+	case ' ':  spaces = 1; break;
+	case '=':  equals = 1; break;
+	case '_':  underscores = 1; break;
+	case '*':  stars = 1; break;
+	case '~':  tildes = 1; break;
+	default:   return;
+	}
+    }
+
+    if ( dashes + equals + underscores + stars + tildes > 1 )
+	return;
+
+    if ( spaces ) {
+	if ( (underscores || stars || dashes) )
+	    l->kind = chk_hr;
+	return;
+    }
+
+    if ( stars || underscores ) { l->kind = chk_hr; }
+    else if ( dashes ) { l->kind = chk_dash; }
+    else if ( tildes ) { l->kind = chk_tilde; }
+    else if ( equals ) { l->kind = chk_equal; }
+}
+
+
 
 static Line *
 commentblock(Paragraph *p, int *unclosed)
@@ -325,21 +382,7 @@ isfootnote(Line *t)
 static int
 isquote(Line *t)
 {
-    int j;
-
-    for ( j=0; j < 4; j++ )
-	if ( T(t->text)[j] == '>' )
-	    return 1;
-	else if ( !isspace(T(t->text)[j]) )
-	    return 0;
-    return 0;
-}
-
-
-static int
-dashchar(char c)
-{
-    return (c == '*') || (c == '-') || (c == '_');
+    return (t->dle < 4 && T(t->text)[t->dle] == '>');
 }
 
 
@@ -353,45 +396,29 @@ iscode(Line *t)
 static int
 ishr(Line *t)
 {
-    int i, count=0;
-    char dash = 0;
-    char c;
+    if ( ! (t->flags & CHECKED) )
+	checkline(t);
 
-    if ( iscode(t) ) return 0;
-
-    for ( i = 0; i < S(t->text); i++) {
-	c = T(t->text)[i];
-	if ( (dash == 0) && dashchar(c) )
-	    dash = c;
-
-	if ( c == dash ) ++count;
-	else if ( !isspace(c) )
-	    return 0;
-    }
-    return (count >= 3);
+    if ( t->count > 2 )
+	return t->kind == chk_hr || t->kind == chk_dash || t->kind == chk_equal;
+    return 0;
 }
 
 
 static int
 issetext(Line *t, int *htyp)
 {
-    int i;
+    Line *n;
+    
     /* then check for setext-style HEADER
      *                             ======
      */
 
-    if ( t->next ) {
-	char *q = T(t->next->text);
-	int last = S(t->next->text);
+    if ( (n = t->next) ) {
+	if ( !(n->flags & CHECKED) )
+	    checkline(n);
 
-	if ( (*q == '=') || (*q == '-') ) {
-	    /* ignore trailing whitespace */
-	    while ( (last > 1) && isspace(q[last-1]) )
-		--last;
-
-	    for (i=1; i < last; i++)
-		if ( q[0] != q[i] )
-		    return 0;
+	if ( n->kind == chk_dash || n->kind == chk_equal ) {
 	    *htyp = SETEXT;
 	    return 1;
 	}
@@ -571,6 +598,7 @@ headerblock(Paragraph *pp, int htyp)
 		++i;
 
 	    CLIP(p->text, 0, i);
+	    UNCHECK(p);
 
 	    for (j=S(p->text); (j > 1) && (T(p->text)[j-1] == '#'); --j)
 		;
@@ -738,6 +766,7 @@ quoteblock(Paragraph *p, DWORD flags)
 	    if ( T(t->text)[qp] == ' ' )
 		qp++;
 	    CLIP(t->text, 0, qp);
+	    UNCHECK(t);
 	    t->dle = mkd_firstnonblank(t);
 	}
 
@@ -810,6 +839,7 @@ listitem(Paragraph *p, int indent, DWORD flags, linefn check)
 
     for ( t = p->text; t ; t = q) {
 	CLIP(t->text, 0, clip);
+	UNCHECK(t);
 	t->dle = mkd_firstnonblank(t);
 
 	if ( (q = skipempty(t->next)) == 0 ) {
@@ -870,6 +900,7 @@ definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 	if ( kind == 1 /* discount dl */ )
 	    for ( q = labels; q; q = q->next ) {
 		CLIP(q->text, 0, 1);
+		UNCHECK(q);
 		S(q->text)--;
 	    }
 
