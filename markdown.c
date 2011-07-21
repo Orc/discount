@@ -636,6 +636,34 @@ codeblock(Paragraph *p)
 
 
 static int
+iscodefence(Line *r)
+{
+    if ( !(r->flags & CHECKED) )
+	checkline(r);
+
+    return (r->kind == chk_tilde) && (r->count > 2);
+}
+
+static Line *
+fencedcodeblock(Paragraph *p)
+{
+    Line *r, *b=0, *ret;
+
+    for (r = p->text; r && !iscodefence(r); b = r, r = r->next )
+	;
+
+    ret = r ? r->next : 0;
+
+    if ( r ) ___mkd_freeLine(r);
+
+    if ( b ) b->next = 0;
+    else p->text = 0;
+
+    return ret;
+}
+
+
+static int
 centered(Line *first, Line *last)
 {
 
@@ -1179,6 +1207,11 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    }
 	    
 	    ptr = codeblock(p);
+	}
+	else if ( iscodefence(ptr) ) {
+	    p = Pp(&d, ptr->next, CODE);
+	    ___mkd_freeLine(ptr);
+	    ptr = fencedcodeblock(p);
 	}
 	else if ( ishr(ptr) ) {
 	    p = Pp(&d, 0, HR);
