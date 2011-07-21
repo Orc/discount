@@ -626,6 +626,7 @@ codeblock(Paragraph *p)
 }
 
 
+#ifdef WITH_FENCED_CODE
 static int
 iscodefence(Line *r)
 {
@@ -652,6 +653,7 @@ fencedcodeblock(Paragraph *p)
 
     return ret;
 }
+#endif
 
 
 static int
@@ -1199,11 +1201,13 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    
 	    ptr = codeblock(p);
 	}
+#if WITH_FENCED_CODE
 	else if ( iscodefence(ptr) ) {
 	    p = Pp(&d, ptr->next, CODE);
 	    ___mkd_freeLine(ptr);
 	    ptr = fencedcodeblock(p);
 	}
+#endif
 	else if ( ishr(ptr) ) {
 	    p = Pp(&d, 0, HR);
 	    r = ptr;
