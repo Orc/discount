@@ -649,7 +649,7 @@ fencedcodeblock(ParagraphRoot *d, Line **ptr)
     
     /* don't allow zero-length code fences
      */
-    if ( iscodefence(first->next) )
+    if ( (first->next == 0) || iscodefence(first->next) )
 	return 0;
 
     /* find the closing fence, discard the fences,
