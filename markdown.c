@@ -190,13 +190,11 @@ checkline(Line *l)
 	equals = 0, underscores = 0,
 	stars = 0, tildes = 0;
 
-    if ( l->flags & CHECKED )
-	return;
     l->flags |= CHECKED;
     l->kind = chk_text;
     l->count = 0;
     
-    if (l->dle > 4) { l->kind=chk_code; return; }
+    if (l->dle >= 4) { l->kind=chk_code; return; }
 
     for ( eol = S(l->text); eol > l->dle && isspace(T(l->text)[eol-1]); --eol )
 	;
@@ -413,8 +411,8 @@ issetext(Line *t, int *htyp)
 {
     Line *n;
     
-    /* then check for setext-style HEADER
-     *                             ======
+    /* check for setext-style HEADER
+     *                        ======
      */
 
     if ( (n = t->next) ) {
@@ -775,7 +773,7 @@ isdivmarker(Line *p, int start, DWORD flags)
  *
  * one sick horrible thing about blockquotes is that even though
  * it just takes ^> to start a quote, following lines, if quoted,
- * assume that the prefix is ``>''.   This means that code needs
+ * assume that the prefix is ``> ''.   This means that code needs
  * to be indented *5* spaces from the leading '>', but *4* spaces
  * from the start of the line.   This does not appear to be 
  * documented in the reference implementation, but it's the
