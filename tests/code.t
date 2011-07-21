@@ -31,5 +31,16 @@ try 'backslashes in code(1)' '    printf "%s: \n", $1;' \
 try 'backslashes in code(2)' '`printf "%s: \n", $1;`' \
 '<p><code>printf "%s: \n", $1;</code></p>'
 
+if ./markdown -V | grep FENCED-CODE >/dev/null; then
+
+try 'fenced code block' \
+'~~~
+code!
+~~~' \
+    '<pre><code>code!
+</code></pre>'
+
+fi
+
 summary $0
 exit $rc
