@@ -40,6 +40,28 @@ code!
     '<pre><code>code!
 </code></pre>'
 
+try 'fenced code block in list' \
+'1. ~~~
+code block
+~~~' \
+'<ol>
+<li><pre><code>code block
+</code></pre></li>
+</ol>'
+
+try 'fenced code block in blockquote' \
+'>~~~
+code
+~~~' \
+'<blockquote><pre><code>code
+</code></pre></blockquote>'
+
+try 'unterminated fenced code block' \
+'~~~
+code' \
+'<p>~~~
+code</p>'
+
 fi
 
 summary $0
