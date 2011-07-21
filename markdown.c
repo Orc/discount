@@ -22,6 +22,9 @@ typedef int (*stfu)(const void*,const void*);
 
 typedef ANCHOR(Paragraph) ParagraphRoot;
 
+static Paragraph *Pp(ParagraphRoot *, Line *, int);
+static Paragraph *compile(Line *, int, MMIOT *);
+
 /* case insensitive string sort for Footnote tags.
  */
 int
@@ -636,22 +639,32 @@ iscodefence(Line *r)
     return (r->kind == chk_tilde) && (r->count > 2);
 }
 
-static Line *
-fencedcodeblock(Paragraph *p)
+static Paragraph *
+fencedcodeblock(ParagraphRoot *d, Line **ptr)
 {
-    Line *r, *b=0, *ret;
+    Line *first, *r;
+    Paragraph *ret;
 
-    for (r = p->text; r && !iscodefence(r); b = r, r = r->next )
-	;
+    first = (*ptr);
+    
+    /* don't allow zero-length code fences
+     */
+    if ( iscodefence(first->next) )
+	return 0;
 
-    ret = r ? r->next : 0;
-
-    if ( r ) ___mkd_freeLine(r);
-
-    if ( b ) b->next = 0;
-    else p->text = 0;
-
-    return ret;
+    /* find the closing fence, discard the fences,
+     * return a Paragraph with the contents
+     */
+    for ( r = first; r && r->next; r = r->next )
+	if ( iscodefence(r->next) ) {
+	    (*ptr) = r->next->next;
+	    ret = Pp(d, first->next, CODE);
+	    ___mkd_freeLine(first);
+	    ___mkd_freeLine(r->next);
+	    r->next = 0;
+	    return ret;
+	}
+    return 0;
 }
 #endif
 
@@ -838,9 +851,6 @@ tableblock(Paragraph *p)
     return 0;
 }
 
-
-static Paragraph *Pp(ParagraphRoot *, Line *, int);
-static Paragraph *compile(Line *, int, MMIOT *);
 
 typedef int (*linefn)(Line *);
 
@@ -1202,11 +1212,8 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    ptr = codeblock(p);
 	}
 #if WITH_FENCED_CODE
-	else if ( iscodefence(ptr) ) {
-	    p = Pp(&d, ptr->next, CODE);
-	    ___mkd_freeLine(ptr);
-	    ptr = fencedcodeblock(p);
-	}
+	else if ( iscodefence(ptr) && (p=fencedcodeblock(&d, &ptr)) )
+	    /* yay, it's already done */ ;
 #endif
 	else if ( ishr(ptr) ) {
 	    p = Pp(&d, 0, HR);
