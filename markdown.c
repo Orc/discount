@@ -430,24 +430,15 @@ issetext(Line *t, int *htyp)
 static int
 ishdr(Line *t, int *htyp)
 {
-    int i;
-
-
-    /* first check for etx-style ###HEADER###
-     */
-
-    /* leading run of `#`'s ?
-     */
-    for ( i=0; T(t->text)[i] == '#'; ++i)
-	;
-
     /* ANY leading `#`'s make this into an ETX header
      */
-    if ( i && (i < S(t->text) || i > 1) ) {
+    if ( (t->dle == 0) && (S(t->text) > 1) && (T(t->text)[0] == '#') ) {
 	*htyp = ETX;
 	return 1;
     }
 
+    /* And if not, maybe it's a SETEXT header instead
+     */
     return issetext(t, htyp);
 }
 
