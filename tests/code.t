@@ -62,6 +62,29 @@ code' \
 '<p>~~~
 code</p>'
 
+try 'fenced code block with tildes' \
+'~~~~~
+~~~
+code with tildes
+~~~
+~~~~~' \
+'<pre><code>~~~
+code with tildes
+~~~
+</code></pre>'
+
+try 'paragraph with trailing fenced block' \
+'text text text
+text text text
+~~~
+code code code?
+~~~' \
+'<p>text text text
+text text text
+~~~
+code code code?
+~~~</p>'
+
 fi
 
 summary $0
