@@ -11,8 +11,8 @@ STRING(struct kw) blocktags;
 
 /* define a html block tag
  */
-void
-mkd_define_tag(char *id, int selfclose)
+static void
+define_one_tag(char *id, int selfclose)
 {
     struct kw *p = &EXPAND(blocktags);
 
@@ -39,24 +39,15 @@ casort(struct kw *a, struct kw *b)
 typedef int (*stfu)(const void*,const void*);
 
 
-/* sort the list of html block tags for later searching
- */
-void
-mkd_sort_tags()
-{
-    qsort(T(blocktags), S(blocktags), sizeof(struct kw), (stfu)casort);
-}
-
-
-
 /* load in the standard collection of html tags that markdown supports
  */
-static void
-pile_of_tags()
+int
+main()
 {
+    int i;
 
-#define KW(x)	mkd_define_tag(x, 0)
-#define SC(x)	mkd_define_tag(x, 1)
+#define KW(x)	define_one_tag(x, 0)
+#define SC(x)	define_one_tag(x, 1)
 
     KW("STYLE");
     KW("SCRIPT");
@@ -89,15 +80,7 @@ pile_of_tags()
     KW("IFRAME");
     KW("MAP");
 
-    mkd_sort_tags();
-} /* pile_of_tags */
-
-
-main()
-{
-
-    int i;
-    pile_of_tags();
+    qsort(T(blocktags), S(blocktags), sizeof(struct kw), (stfu)casort);
 
     printf("struct kw blocktags[] = {\n");
     for (i=0; i < S(blocktags); i++)
