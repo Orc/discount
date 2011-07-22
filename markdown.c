@@ -1223,7 +1223,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    ptr = codeblock(p);
 	}
 #if WITH_FENCED_CODE
-	else if ( iscodefence(ptr,2) && (p=fencedcodeblock(&d, &ptr)) )
+	else if ( iscodefence(ptr,3) && (p=fencedcodeblock(&d, &ptr)) )
 	    /* yay, it's already done */ ;
 #endif
 	else if ( ishr(ptr) ) {
