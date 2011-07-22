@@ -1166,10 +1166,13 @@ smartypants(int c, int *flags, MMIOT *f)
  * let the caller figure it out.
  */
 static int
-tickhandler(MMIOT *f, int tickchar, int minticks, spanhandler spanner)
+tickhandler(MMIOT *f, int tickchar, int minticks, int allow_space, spanhandler spanner)
 {
     int endticks, size;
     int tick = nrticks(0, tickchar, f);
+
+    if ( !allow_space && isspace(peek(f,tick)) )
+	return 0;
 
     if ( (tick >= minticks) && (size = matchticks(f,tickchar,tick,&endticks)) ) {
 	if ( endticks < tick ) {
@@ -1294,11 +1297,11 @@ text(MMIOT *f)
 		    }
 		    break;
 	
-	case '~':   if ( (f->flags & (MKD_NOSTRIKETHROUGH|MKD_TAGTEXT|MKD_STRICT)) || !tickhandler(f,c,2,delspan) )
+	case '~':   if ( (f->flags & (MKD_NOSTRIKETHROUGH|MKD_TAGTEXT|MKD_STRICT)) || ! tickhandler(f,c,2,0, delspan) )
 			Qchar(c, f);
 		    break;
 
-	case '`':   if ( tag_text(f) || !tickhandler(f,c,1,codespan) )
+	case '`':   if ( tag_text(f) || !tickhandler(f,c,1,1,codespan) )
 			Qchar(c, f);
 		    break;
 
