@@ -82,7 +82,7 @@ main()
 
     qsort(T(blocktags), S(blocktags), sizeof(struct kw), (stfu)casort);
 
-    printf("struct kw blocktags[] = {\n");
+    printf("static struct kw blocktags[] = {\n");
     for (i=0; i < S(blocktags); i++)
 	printf("   { \"%s\", %d, %d },\n", T(blocktags)[i].id, T(blocktags)[i].size, T(blocktags)[i].selfclose );
     printf("};\n\n");
