@@ -640,12 +640,12 @@ codeblock(Paragraph *p)
 
 #ifdef WITH_FENCED_CODE
 static int
-iscodefence(Line *r)
+iscodefence(Line *r, int size)
 {
     if ( !(r->flags & CHECKED) )
 	checkline(r);
 
-    return (r->kind == chk_tilde) && (r->count > 2);
+    return (r->kind == chk_tilde) && (r->count >= size);
 }
 
 static Paragraph *
@@ -658,14 +658,14 @@ fencedcodeblock(ParagraphRoot *d, Line **ptr)
     
     /* don't allow zero-length code fences
      */
-    if ( (first->next == 0) || iscodefence(first->next) )
+    if ( (first->next == 0) || iscodefence(first->next, first->count) )
 	return 0;
 
     /* find the closing fence, discard the fences,
      * return a Paragraph with the contents
      */
     for ( r = first; r && r->next; r = r->next )
-	if ( iscodefence(r->next) ) {
+	if ( iscodefence(r->next, first->count) ) {
 	    (*ptr) = r->next->next;
 	    ret = Pp(d, first->next, CODE);
 	    ___mkd_freeLine(first);
@@ -1223,7 +1223,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    ptr = codeblock(p);
 	}
 #if WITH_FENCED_CODE
-	else if ( iscodefence(ptr) && (p=fencedcodeblock(&d, &ptr)) )
+	else if ( iscodefence(ptr,2) && (p=fencedcodeblock(&d, &ptr)) )
 	    /* yay, it's already done */ ;
 #endif
 	else if ( ishr(ptr) ) {
