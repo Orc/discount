@@ -826,15 +826,30 @@ EOF
 # AC_C_VOLATILE checks to see if the compiler supports the volatile keyword
 #
 AC_C_VOLATILE () {
-    cat > ngc$$.c << EOF
-f() { volatile char me=1; }
-EOF
+    echo 'f() { volatile char me=1; }' > ngc$$.c
     LOGN "checking for \"volatile\" keyword"
 
     if __MAKEDOTO ngc$$.c; then
 	rc=0
     else
 	AC_DEFINE 'volatile' '/**/'
+	rc=1
+    fi
+    __remove ngc$$.c
+    return $rc
+}
+
+
+#
+# AC_C_INLINE checks to see if compiler supports the inline keyword
+#
+AC_C_INLINE() {
+    echo 'inline int foo() { return 1; }' > ngc$$.c
+    LOGN 'Checking for "inline" keyword'
+    if __MAKEDOTO ngc$$.c; then
+	rc=0
+    else
+	AC_DEFINE inline '/**/'
 	rc=1
     fi
     __remove ngc$$.c

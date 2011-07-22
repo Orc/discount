@@ -80,7 +80,7 @@ mkd_firstnonblank(Line *p)
 }
 
 
-static int
+static inline int
 blankline(Line *p)
 {
     return ! (p && (S(p->text) > p->dle) );
@@ -380,21 +380,21 @@ isfootnote(Line *t)
 }
 
 
-static int
+static inline int
 isquote(Line *t)
 {
     return (t->dle < 4 && T(t->text)[t->dle] == '>');
 }
 
 
-static int
+static inline int
 iscode(Line *t)
 {
     return (t->dle >= 4);
 }
 
 
-static int
+static inline int
 ishr(Line *t)
 {
     if ( ! (t->flags & CHECKED) )
@@ -444,6 +444,18 @@ ishdr(Line *t, int *htyp)
 }
 
 
+static inline int
+end_of_block(Line *t)
+{
+    int dummy;
+    
+    if ( !t )
+	return 0;
+	
+    return ( (S(t->text) <= t->dle) || ishr(t) || ishdr(t, &dummy) );
+}
+
+
 static Line*
 is_discount_dt(Line *t, int *clip)
 {
@@ -477,13 +489,12 @@ static Line*
 is_extra_dt(Line *t, int *clip)
 {
 #if USE_EXTRA_DL
-    int i;
     
     if ( t && t->next && T(t->text)[0] != '='
 		      && T(t->text)[S(t->text)-1] != '=') {
 	Line *x;
     
-	if ( iscode(t) || blankline(t) || ishdr(t,&i) || ishr(t) )
+	if ( iscode(t) || end_of_block(t) )
 	    return 0;
 
 	if ( (x = skipempty(t->next)) && is_extra_dd(x) ) {
@@ -519,7 +530,7 @@ islist(Line *t, int *clip, DWORD flags, int *list_type)
     int i, j;
     char *q;
     
-    if ( /*iscode(t) ||*/ blankline(t) || ishdr(t,&i) || ishr(t) )
+    if ( end_of_block(t) )
 	return 0;
 
     if ( !(flags & (MKD_NODLIST|MKD_STRICT)) && isdefinition(t,clip,list_type) )
@@ -690,7 +701,7 @@ endoftextblock(Line *t, int toplevelblock, DWORD flags)
 {
     int z;
 
-    if ( blankline(t)||isquote(t)||ishdr(t,&z)||ishr(t) )
+    if ( end_of_block(t) || isquote(t) )
 	return 1;
 
     /* HORRIBLE STANDARDS KLUDGE: non-toplevel paragraphs absorb adjacent

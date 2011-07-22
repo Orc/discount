@@ -40,7 +40,7 @@ push(char *bfr, int size, MMIOT *f)
 
 /* look <i> characters ahead of the cursor.
  */
-static int
+static inline int
 peek(MMIOT *f, int i)
 {
 
@@ -52,7 +52,7 @@ peek(MMIOT *f, int i)
 
 /* pull a byte from the input buffer
  */
-static int
+static inline int
 pull(MMIOT *f)
 {
     return ( f->isp < S(f->in) ) ? T(f->in)[f->isp++] : EOF;
@@ -61,14 +61,14 @@ pull(MMIOT *f)
 
 /* return a pointer to the current position in the input buffer.
  */
-static char*
+static inline char*
 cursor(MMIOT *f)
 {
     return T(f->in) + f->isp;
 }
 
 
-static int
+static inline int
 isthisspace(MMIOT *f, int i)
 {
     int c = peek(f, i);
@@ -77,7 +77,7 @@ isthisspace(MMIOT *f, int i)
 }
 
 
-static int
+static inline int
 isthisalnum(MMIOT *f, int i)
 {
     int c = peek(f, i);
@@ -86,7 +86,7 @@ isthisalnum(MMIOT *f, int i)
 }
 
 
-static int
+static inline int
 isthisnonword(MMIOT *f, int i)
 {
     return isthisspace(f, i) || ispunct(peek(f,i));
