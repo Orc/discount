@@ -704,16 +704,18 @@ endoftextblock(Line *t, int toplevelblock, DWORD flags)
     if ( end_of_block(t) || isquote(t) )
 	return 1;
 
-    /* HORRIBLE STANDARDS KLUDGE: non-toplevel paragraphs absorb adjacent
-     * code blocks
+    /* HORRIBLE STANDARDS KLUDGES:
+     * 1. non-toplevel paragraphs absorb adjacent code blocks
+     * 2. Toplevel paragraphs eat absorb adjacent list items,
+     *    but sublevel blocks behave properly.
+     * (What this means is that we only need to check for code
+     *  blocks at toplevel, and only check for list items at
+     *  nested levels.)
      */
-    if ( toplevelblock && iscode(t) )
-	return 1;
-
-    /* HORRIBLE STANDARDS KLUDGE: Toplevel paragraphs eat absorb adjacent
-     * list items, but sublevel blocks behave properly.
-     */
-    return toplevelblock ? 0 : islist(t,&z,flags, &z);
+    if ( toplevelblock )
+	return iscode(t);
+    else
+	return islist(t,&z,flags,&z);
 }
 
 
