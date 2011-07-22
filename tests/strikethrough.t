@@ -10,6 +10,7 @@ try -fnodel '... with -fnodel' '~~deleted~~' '<p>~~deleted~~</p>'
 try 'mismatched tildes' '~~~tick~~' '<p><del>~tick</del></p>'
 try 'mismatched tildes(2)' '~~tick~~~' '<p>~~tick~~~</p>'
 try 'single tildes' '~tick~' '<p>~tick~</p>'
+try 'tildes wrapped in spaces' '~~~ ~~~' '<p>~~~ ~~~</p>'
 
 summary $0
 exit $rc
