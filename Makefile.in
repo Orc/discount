@@ -65,6 +65,11 @@ $(DESTDIR)/$(LIBDIR):
 version.o: version.c VERSION
 	$(CC) -DVERSION=\"`cat VERSION`\" -c version.c
 
+tags.o: tags.c blocktags
+
+blocktags: mktags
+	./mktags > blocktags
+
 # example programs
 @THEME@theme:  theme.o $(MKDLIB) mkdio.h
 @THEME@	$(CC) -o theme theme.o -lmarkdown @LIBS@

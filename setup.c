@@ -18,7 +18,6 @@
 #include "amalloc.h"
 #include "tags.h"
     
-static int need_to_setup = 1;
 static int need_to_initrng = 1;
 
 void
@@ -29,19 +28,12 @@ mkd_initialize()
 	need_to_initrng = 0;
 	INITRNG(time(0));
     }
-    if ( need_to_setup ) {
-	need_to_setup = 0;
-	mkd_prepare_tags();
-    }
 }
 
 
 void
 mkd_shlib_destructor()
 {
-    if ( !need_to_setup ) {
-	need_to_setup = 1;
-	mkd_deallocate_tags();
-    }
+    mkd_deallocate_tags();
 }
 

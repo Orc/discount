@@ -10,8 +10,6 @@ mkd_with_html5_tags()
     if ( populated ) return;
     populated = 1;
 
-    mkd_prepare_tags();
-				 
     mkd_define_tag("ASIDE", 0);
     mkd_define_tag("FOOTER", 0);
     mkd_define_tag("HEADER", 0);

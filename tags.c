@@ -4,19 +4,33 @@
 #include "cstring.h"
 #include "tags.h"
 
-STRING(struct kw) blocktags;
+STRING(struct kw) extratags;
+
+/* the standard collection of tags are built and sorted when
+ * discount is configured, so all we need to do is pull them
+ * in and use them.
+ *
+ * Additional tags still need to be allocated, sorted, and deallocated.
+ */
+#include "blocktags"
 
 
-/* define a html block tag
+/* define an additional html block tag
  */
 void
 mkd_define_tag(char *id, int selfclose)
 {
-    struct kw *p = &EXPAND(blocktags);
+    struct kw *p;
 
-    p->id = id;
-    p->size = strlen(id);
-    p->selfclose = selfclose;
+    /* only add the new tag if it doesn't exist in
+     * either the standard or extra tag tables.
+     */
+    if ( !(p = mkd_search_tags(id, strlen(id))) ) {
+	p = &EXPAND(extratags);
+	p->id = id;
+	p->size = strlen(id);
+	p->selfclose = selfclose;
+    }
 }
 
 
@@ -37,14 +51,13 @@ casort(struct kw *a, struct kw *b)
 typedef int (*stfu)(const void*,const void*);
 
 
-/* sort the list of html block tags for later searching
+/* sort the list of extra html block tags for later searching
  */
 void
 mkd_sort_tags()
 {
-    qsort(T(blocktags), S(blocktags), sizeof(struct kw), (stfu)casort);
+    qsort(T(extratags), S(extratags), sizeof(struct kw), (stfu)casort);
 }
-
 
 
 /* look for a token in the html block tag list
@@ -53,71 +66,26 @@ struct kw*
 mkd_search_tags(char *pat, int len)
 {
     struct kw key;
+    struct kw *ret;
     
     key.id = pat;
     key.size = len;
     
-    return bsearch(&key, T(blocktags), S(blocktags), sizeof key, (stfu)casort);
+    if ( (ret=bsearch(&key,blocktags,NR_blocktags,sizeof key,(stfu)casort)) )
+	return ret;
+
+    if ( S(extratags) )
+	return bsearch(&key,T(extratags),S(extratags),sizeof key,(stfu)casort);
+    
+    return 0;
 }
 
 
-static int populated = 0;
-
-
-/* load in the standard collection of html tags that markdown supports
- */
-void
-mkd_prepare_tags()
-{
-
-#define KW(x)	mkd_define_tag(x, 0)
-#define SC(x)	mkd_define_tag(x, 1)
-
-    if ( populated ) return;
-    populated = 1;
-    
-    KW("STYLE");
-    KW("SCRIPT");
-    KW("ADDRESS");
-    KW("BDO");
-    KW("BLOCKQUOTE");
-    KW("CENTER");
-    KW("DFN");
-    KW("DIV");
-    KW("OBJECT");
-    KW("H1");
-    KW("H2");
-    KW("H3");
-    KW("H4");
-    KW("H5");
-    KW("H6");
-    KW("LISTING");
-    KW("NOBR");
-    KW("UL");
-    KW("P");
-    KW("OL");
-    KW("DL");
-    KW("PLAINTEXT");
-    KW("PRE");
-    KW("TABLE");
-    KW("WBR");
-    KW("XMP");
-    SC("HR");
-    SC("BR");
-    KW("IFRAME");
-    KW("MAP");
-
-    mkd_sort_tags();
-} /* mkd_prepare_tags */
-
-
-/* destroy the blocktags list (for shared libraries)
+/* destroy the extratags list (for shared libraries)
  */
 void
 mkd_deallocate_tags()
 {
-    if ( S(blocktags) > 0 ) {
-	populated = 0;
-	DELETE(blocktags);
-    }
+    if ( S(extratags) > 0 )
+	DELETE(extratags);
 } /* mkd_deallocate_tags */
