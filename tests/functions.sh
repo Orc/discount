@@ -57,8 +57,13 @@ try() {
 	    ./echo
 	    ./echo "$1"
 	fi
-	./echo "wanted: $3"
-	./echo "got   : $Q"
+	./echo "source:"
+	./echo "$2" | sed -e 's/^/	/'
+	./echo "diff:"
+	(./echo "$3"  >> $$.w
+	./echo "$Q"  >> $$.g
+	diff  $$.w $$.g ) | sed -e 's/^/	/'
+	rm -f $$.w $$.g
 	rc=1
     fi
 }
