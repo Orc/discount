@@ -8,10 +8,8 @@ MARKDOWN_FLAGS=
 try 'paragraph followed by code' \
     'a
     b' \
-    '<p>a</p>
-
-<pre><code>b
-</code></pre>'
+    '<p>a
+    b</p>'
 
 try 'single-line paragraph' 'a' '<p>a</p>'
 

@@ -37,15 +37,10 @@ if [ "$DL" = "DISCOUNT" -o "$DL" = "BOTH" ]; then
 
 
 	try -fnodefinitionlist '=tag= does nothing' "$SRC" \
-	    '<p>=this=</p>
-
-<pre><code>is an ugly
-</code></pre>
-
-<p>=test=</p>
-
-<pre><code>eh?
-</code></pre>'
+	    '<p>=this=
+    is an ugly
+=test=
+    eh?</p>'
 fi
 
 if [ "$DL" = "EXTRA" -o "$DL" = "BOTH" ]; then

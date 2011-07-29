@@ -712,10 +712,7 @@ endoftextblock(Line *t, int toplevelblock, DWORD flags)
      *  blocks at toplevel, and only check for list items at
      *  nested levels.)
      */
-    if ( toplevelblock )
-	return iscode(t);
-    else
-	return islist(t,&z,flags,&z);
+    return toplevelblock ? 0 : islist(t,&z,flags,&z);
 }
 
 
