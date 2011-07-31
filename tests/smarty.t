@@ -10,9 +10,10 @@ try '(r) -> &reg;' '(r)' '<p>&reg;</p>'
 try '(tm) -> &trade;' '(tm)' '<p>&trade;</p>'
 try '... -> &hellip;' '...' '<p>&hellip;</p>'
 
-try '"--" -> &mdash;' '--' '<p>&mdash;</p>'
+try '"?--" -> &ndash;' '?--' '<p>?&ndash;</p>'
+try '"?---" -> &mdash;' '?---' '<p>?&mdash;</p>'
 
-try '"-" -> &ndash;' 'regular -' '<p>regular &ndash;</p>'
+try '"--" -> &ndash;' 'regular --' '<p>regular &ndash;</p>'
 try 'A-B -> A-B' 'A-B' '<p>A-B</p>'
 try '"fancy" -> &ldquo;fancy&rdquo;' '"fancy"' '<p>&ldquo;fancy&rdquo;</p>'
 try "'fancy'" "'fancy'" '<p>&lsquo;fancy&rsquo;</p>'

@@ -6,7 +6,7 @@ rc=0
 MARKDOWN_FLAGS=
 
 try 'smiley faces?' '[8-9] <]:-( x ---> [4]' \
-		    '<p>[8-9] &lt;]:&ndash;( x &mdash;&ndash;> [4]</p>'
+		    '<p>[8-9] &lt;]:-( x &mdash;> [4]</p>'
 
 try 'really long ETX headers' \
     '#####################################################hi' \

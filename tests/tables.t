@@ -137,7 +137,7 @@ try -fnotables 'tables with -fnotables' \
 -|-
 hello|sailor' \
     '<p>a|b
-&ndash;|&ndash;
+-|-
 hello|sailor</p>'
 
 try 'deceptive non-table text' \
@@ -152,7 +152,7 @@ try 'table headers only' \
     'a|b|c
 -|-|-' \
     '<p>a|b|c
-&ndash;|&ndash;|&ndash;</p>'
+-|-|-</p>'
 
 try 'escaped title line' \
     'A\|B
@@ -177,7 +177,7 @@ try 'escaped dashes line' \
 -\|-
 C |D' \
     '<p>A |B
-&ndash;|&ndash;
+-|-
 C |D</p>'
 
 try 'escaped content line' \
@@ -204,7 +204,7 @@ try 'content line w/o dashes' \
 --|-
 CD' \
     '<p>A |B
-&mdash;|&ndash;
+&ndash;|-
 CD</p>'
 
 summary $0

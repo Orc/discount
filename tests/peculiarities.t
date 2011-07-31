@@ -13,7 +13,7 @@ try 'list followed by header .......... ' \
     '<ul>
 <li>AAA
 
-<h2>&ndash; BBB</h2></li>
+<h2>- BBB</h2></li>
 </ul>'
 
 try 'ul with mixed item prefixes' \
