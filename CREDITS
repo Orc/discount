@@ -29,5 +29,7 @@ Andrew White	--  bug reports about the format of generated urls.
 Steve Huff	--  bug reports about Makefile portability (for Fink)
 Ignacio Burgue?o--  bug reports about `>%class%`
 Henrik Nyh	--  bug reports about embedded html handling.
+John J. Foerch  --  bug reports about incorrect `&ndash;` and `&mdash;`
+                    translations.
 
 		    
