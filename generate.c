@@ -1403,12 +1403,18 @@ static char* alignments[] = { "", " align=\"center\"", " align=\"left\"",
 typedef STRING(int) Istring;
 
 static int
-splat(Line *p, char *block, Istring align, int force, MMIOT *f)
+splat(Line *p, int leading_pipe, char *block, Istring align, int force, MMIOT *f)
 {
     int first,
-	idx = 0,
+	idx = p->dle,
 	colno = 0;
 
+
+    if ( leading_pipe ) idx++;
+    ___mkd_tidy(&p->text);
+    if ( T(p->text)[S(p->text)-1] == '|' )
+	--S(p->text);
+    
     Qstring("<tr>\n", f);
     while ( idx < S(p->text) ) {
 	first = idx;
@@ -1446,16 +1452,14 @@ printtable(Paragraph *pp, MMIOT *f)
 
     Line *hdr, *dash, *body;
     Istring align;
-    int start;
-    int hcols;
+    int hcols,start,starts_with_pipe=0;
     char *p;
-
-    if ( !(pp->text && pp->text->next) )
-	return 0;
 
     hdr = pp->text;
     dash= hdr->next;
     body= dash->next;
+
+    starts_with_pipe = T(hdr->text)[hdr->dle] == '|';
 
     /* first figure out cell alignments */
 
@@ -1481,7 +1485,7 @@ printtable(Paragraph *pp, MMIOT *f)
 
     Qstring("<table>\n", f);
     Qstring("<thead>\n", f);
-    hcols = splat(hdr, "th", align, 0, f);
+    hcols = splat(hdr, starts_with_pipe, "th", align, 0, f);
     Qstring("</thead>\n", f);
 
     if ( hcols < S(align) )
@@ -1492,7 +1496,7 @@ printtable(Paragraph *pp, MMIOT *f)
 
     Qstring("<tbody>\n", f);
     for ( ; body; body = body->next)
-	splat(body, "td", align, 1, f);
+	splat(body, starts_with_pipe, "td", align, 1, f);
     Qstring("</tbody>\n", f);
     Qstring("</table>\n", f);
 
