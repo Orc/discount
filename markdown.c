@@ -319,47 +319,6 @@ htmlblock(Paragraph *p, struct kw *tag, int *unclosed)
 }
 
 
-/* tables look like
- *   header|header{|header}
- *   ------|------{|......}
- *   {body lines}
- */
-static int
-istable(Line *t)
-{
-    char *p;
-    Line *dashes, *body;
-    int l;
-    int dashed = 0;
-    
-    /* three lines, first must contain |,
-		    second must be ---|---,
-		    third must contain |
-     */
-    if ( !(t->flags & PIPECHAR) )
-	return 0;
-	
-    dashes = t->next;
-    if ( !(dashes && (dashes->flags & PIPECHAR)) )
-	return 0;
-
-    body = dashes->next;
-    if ( !(body && (body->flags & PIPECHAR)) )
-	return 0;
-
-    /* second line must contain - or | and nothing
-     * else except for whitespace or :
-     */
-    for ( p = T(dashes->text), l = S(dashes->text); l > 0; ++p, --l)
-	if ( *p == '-' )
-	    dashed = 1;
-	else if ( ! ((*p == '|') || (*p == ':') || isspace(*p)) )
-	    return 0;
-
-    return dashed;
-}
-
-
 /* footnotes look like ^<whitespace>{0,3}[stuff]: <content>$
  */
 static int
@@ -841,25 +800,6 @@ quoteblock(Paragraph *p, DWORD flags)
 }
 
 
-/*
- * A table block starts with a table header (see istable()), and continues
- * until EOF or a line that /doesn't/ contain a |.
- */
-static Line *
-tableblock(Paragraph *p)
-{
-    Line *t, *q;
-
-    for ( t = p->text; t && (q = t->next); t = t->next ) {
-	if ( !(t->flags & PIPECHAR) ) {
-	    t->next = 0;
-	    return q;
-	}
-    }
-    return 0;
-}
-
-
 typedef int (*linefn)(Line *);
 
 
@@ -1189,6 +1129,58 @@ compile_document(Line *ptr, MMIOT *f)
 }
 
 
+static int
+first_nonblank_before(Line *j, int dle)
+{
+    return (j->dle < dle) ? j->dle : dle;
+}
+
+
+static int
+actually_a_table(MMIOT *f, Line *pp)
+{
+    Line *r;
+    int j;
+    int c;
+
+    /* tables need to be turned on */
+    if ( f->flags & (MKD_STRICT|MKD_NOTABLES) )
+	return 0;
+
+    /* tables need three lines */
+    if ( !(pp && pp->next && pp->next->next) ) {
+	return 0;
+    }
+
+    /* all lines must contain |'s */
+    for (r = pp; r; r = r->next )
+	if ( !(r->flags & PIPECHAR) ) {
+	    return 0;
+	}
+
+    /* if the header has a leading |, all lines must have leading |'s */
+    if ( T(pp->text)[pp->dle] == '|' ) {
+	for ( r = pp; r; r = r->next )
+	    if ( T(r->text)[first_nonblank_before(r,pp->dle)] != '|' ) {
+		return 0;
+	    }
+    }
+
+    /* second line must be only whitespace, -, |, or : */
+    r = pp->next;
+
+    for ( j=r->dle; j < S(r->text); ++j ) {
+	c = T(r->text)[j];
+
+	if ( !(isspace(c)||(c=='-')||(c==':')||(c=='|')) ) {
+	    return 0;
+	}
+    }
+
+    return 1;
+}
+
+
 /*
  * break a collection of markdown input into
  * blocks of lists, code, html, and text to
@@ -1249,13 +1241,12 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p = Pp(&d, ptr, HDR);
 	    ptr = headerblock(p, hdr_type);
 	}
-	else if ( istable(ptr) && !(f->flags & (MKD_STRICT|MKD_NOTABLES)) ) {
-	    p = Pp(&d, ptr, TABLE);
-	    ptr = tableblock(p);
-	}
 	else {
 	    p = Pp(&d, ptr, MARKUP);
 	    ptr = textblock(p, toplevel, f->flags);
+	    /* tables are a special kind of paragraph */
+	    if ( actually_a_table(f, p->text) )
+		p->typ = TABLE;
 	}
 
 	if ( (para||toplevel) && !p->align )
