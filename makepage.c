@@ -22,7 +22,7 @@ basename(char *p)
 
 char *pgm = "makepage";
 
-float
+int
 main(argc, argv)
 int argc;
 char **argv;

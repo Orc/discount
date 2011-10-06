@@ -59,7 +59,7 @@ complain(char *fmt, ...)
 }
 
 
-float
+int
 main(int argc, char **argv)
 {
     int opt;
