@@ -874,7 +874,6 @@ say(char *w, char *v)
 			: "s:@%s@:%s:g\n", w, v);
 }
 
-void
 main(argc, argv)
 char **argv;
 {
