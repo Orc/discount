@@ -499,7 +499,6 @@ spin(FILE *template, MMIOT *doc, FILE *output)
 } /* spin */
 
 
-void
 main(argc, argv)
 char **argv;
 {

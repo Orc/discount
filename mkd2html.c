@@ -65,7 +65,6 @@ fail(char *why, ...)
 }
 
 
-void
 main(argc, argv)
 char **argv;
 {

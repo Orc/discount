@@ -385,7 +385,10 @@ EOF
     TLOGN " ($AC_CC)"
 
     if [ $status -eq 0 ]; then
-	if $AC_CC -v 2>&1 | grep 'gcc version' >/dev/null; then
+	if $AC_CC -x c /dev/null -dM -E 2>&1 | grep '__clang__' >/dev/null; then
+	    TLOG " yuck, you're using clang"
+	    IS_BROKEN_CC=T
+	elif $AC_CC -v 2>&1 | grep 'gcc version' >/dev/null; then
 	    TLOG " oh ick, it looks like gcc"
 	    IS_BROKEN_CC=T
 	else
@@ -1176,7 +1179,7 @@ main()
 EOF
 
     if $AC_CC -o ngc$$ ngc$$.c $LIBS; then
-	if ngc$$; then
+	if ./ngc$$; then
 	    TLOG "(found)"
 	    AC_DEFINE 'HAVE_BASENAME' 1
 	    AC_CHECK_HEADERS libgen.h
