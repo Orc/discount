@@ -23,9 +23,11 @@ hi' \
     try '-T -ftoc' 'toc item with link' \
     '##[H2](H2) here' \
 '<ul>
- <li><ul>
+ <li>
+ <ul>
   <li><a href="#H2.here">H2 here</a></li>
- </ul></li>
+ </ul>
+ </li>
 </ul>
 <h2 id="H2.here"><a href="H2">H2</a> here</h2>'  
 
@@ -56,9 +58,11 @@ hi' \
     try '-T -ftoc' 'toc item with link' \
     '##[H2](H2) here' \
 '<ul>
- <li><ul>
+ <li>
+ <ul>
   <li><a href="#H2.here">H2 here</a></li>
- </ul></li>
+ </ul>
+ </li>
 </ul>
 <a name="H2.here"></a>
 <h2><a href="H2">H2</a> here</h2>'  

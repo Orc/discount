@@ -1,7 +1,8 @@
 /*
  * toc -- spit out a table of contents based on header blocks
  *
- * Copyright (C) 2008 Jjgod Jiang, David L Parsons.
+ * Copyright (C) 2008 Jjgod Jiang, David L Parsons
+ * portions Copyright (C) 2011 Stefano D'Angelo
  * The redistribution terms are provided in the COPYRIGHT file that must
  * be distributed with this source code.
  */
@@ -23,6 +24,7 @@ mkd_toc(Document *p, char **doc)
     int last_hnumber = 0;
     Cstring res;
     int size;
+    int first = 1;
     
     if ( !(doc && p && p->ctx) ) return -1;
 
@@ -38,16 +40,23 @@ mkd_toc(Document *p, char **doc)
 	    for ( srcp = tp->down; srcp; srcp = srcp->next ) {
 		if ( srcp->typ == HDR && srcp->text ) {
 	    
-		    if ( last_hnumber >= srcp->hnumber ) {
-			while ( last_hnumber > srcp->hnumber ) {
-			    Csprintf(&res, "%*s</ul></li>\n", last_hnumber-1,"");
-			    --last_hnumber;
-			}
+		    while ( last_hnumber > srcp->hnumber ) {
+			if ( (last_hnumber - srcp->hnumber) > 1 )
+				Csprintf(&res, "\n");
+			Csprintf(&res, "</li>\n%*s</ul>\n%*s",
+				 last_hnumber-1, "", last_hnumber-1, "");
+			--last_hnumber;
 		    }
 
+		    if ( last_hnumber == srcp->hnumber )
+			Csprintf(&res, "</li>\n");
+		    else if ( (srcp->hnumber > last_hnumber) && !first )
+			Csprintf(&res, "\n");
+
 		    while ( srcp->hnumber > last_hnumber ) {
-			Csprintf(&res, "%*s%s<ul>\n", last_hnumber, "",
-				    last_hnumber ? "<li>" : "");
+			Csprintf(&res, "%*s<ul>\n", last_hnumber, "");
+			if ( (srcp->hnumber - last_hnumber) > 1 )
+			    Csprintf(&res, "%*s<li>\n", last_hnumber+1, "");
 			++last_hnumber;
 		    }
 		    Csprintf(&res, "%*s<li><a href=\"#", srcp->hnumber, "");
@@ -59,7 +68,8 @@ mkd_toc(Document *p, char **doc)
 					 S(srcp->text->text),
 					 (mkd_sta_function_t)Csputc, &res,0);
 		    Csprintf(&res, "</a>");
-		    Csprintf(&res, "</li>\n");
+
+		    first = 0;
 		}
 	    }
         }
@@ -67,7 +77,8 @@ mkd_toc(Document *p, char **doc)
 
     while ( last_hnumber > 0 ) {
 	--last_hnumber;
-	Csprintf(&res, last_hnumber ? "%*s</ul></li>\n" : "%*s</ul>\n", last_hnumber, "");
+	Csprintf(&res, "</li>\n%*s</ul>\n%*s",
+		 last_hnumber, "", last_hnumber, "");
     }
 
     if ( (size = S(res)) > 0 ) {
