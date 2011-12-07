@@ -1403,14 +1403,13 @@ static char* alignments[] = { "", " align=\"center\"", " align=\"left\"",
 typedef STRING(int) Istring;
 
 static int
-splat(Line *p, int leading_pipe, char *block, Istring align, int force, MMIOT *f)
+splat(Line *p, char *block, Istring align, int force, MMIOT *f)
 {
     int first,
 	idx = p->dle,
 	colno = 0;
 
 
-    if ( leading_pipe ) idx++;
     ___mkd_tidy(&p->text);
     if ( T(p->text)[S(p->text)-1] == '|' )
 	--S(p->text);
@@ -1452,20 +1451,27 @@ printtable(Paragraph *pp, MMIOT *f)
 
     Line *hdr, *dash, *body;
     Istring align;
-    int hcols,start,starts_with_pipe=0;
+    int hcols,start;
     char *p;
+    enum e_alignments it;
 
     hdr = pp->text;
     dash= hdr->next;
     body= dash->next;
 
-    starts_with_pipe = T(hdr->text)[hdr->dle] == '|';
+    if ( T(hdr->text)[hdr->dle] == '|' ) {
+	/* trim leading pipe off all lines
+	 */
+	Line *r;
+	for ( r = pp->text; r; r = r->next )
+	    r->dle ++;
+    }
 
-    /* first figure out cell alignments */
+    /* figure out cell alignments */
 
     CREATE(align);
 
-    for (p=T(dash->text), start=0; start < S(dash->text); ) {
+    for (p=T(dash->text), start=dash->dle; start < S(dash->text); ) {
 	char first, last;
 	int end;
 	
@@ -1478,14 +1484,16 @@ printtable(Paragraph *pp, MMIOT *f)
 		last = p[end];
 	    }
 	}
-	EXPAND(align) = ( first == ':' ) ? (( last == ':') ? a_CENTER : a_LEFT)
-					 : (( last == ':') ? a_RIGHT : a_NONE );
+	it = ( first == ':' ) ? (( last == ':') ? a_CENTER : a_LEFT)
+			      : (( last == ':') ? a_RIGHT : a_NONE );
+
+	EXPAND(align) = it;
 	start = 1+end;
     }
 
     Qstring("<table>\n", f);
     Qstring("<thead>\n", f);
-    hcols = splat(hdr, starts_with_pipe, "th", align, 0, f);
+    hcols = splat(hdr, "th", align, 0, f);
     Qstring("</thead>\n", f);
 
     if ( hcols < S(align) )
@@ -1496,7 +1504,7 @@ printtable(Paragraph *pp, MMIOT *f)
 
     Qstring("<tbody>\n", f);
     for ( ; body; body = body->next)
-	splat(body, starts_with_pipe, "td", align, 1, f);
+	splat(body, "td", align, 1, f);
     Qstring("</tbody>\n", f);
     Qstring("</table>\n", f);
 
