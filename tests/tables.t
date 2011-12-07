@@ -250,5 +250,27 @@ try "table with flanking |'s" \
 </tbody>
 </table>'
 
+try "table with leading |'s and alignment" \
+'|AA|BB|CC
+|:-|::|-:
+|aa|bb|cc' \
+'<table>
+<thead>
+<tr>
+<th align="left">AA</th>
+<th align="center">BB</th>
+<th align="right">CC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">aa</td>
+<td align="center">bb</td>
+<td align="right">cc</td>
+</tr>
+</tbody>
+</table>'
+
+
 summary $0
 exit $rc
