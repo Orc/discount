@@ -13,7 +13,7 @@ SAMPLE_PGMS=mkd2html makepage
 @THEME@SAMPLE_PGMS+= theme
 MKDLIB=libmarkdown
 OBJS=mkdio.o markdown.o dumptree.o generate.o \
-     resource.o docheader.o version.o toc.o css.o \
+     resource.o docheader.o versioninfo.o toc.o css.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o \
      setup.o tags.o html5.o flags.o @AMALLOC@
 TESTFRAMEWORK=echo cols
@@ -62,8 +62,8 @@ $(DESTDIR)$(INCDIR):
 $(DESTDIR)$(LIBDIR):
 	@INSTALL_DIR@ $(DESTDIR)$(LIBDIR)
 
-version.o: version.c VERSION
-	$(CC) -DVERSION=\"`cat VERSION`\" -c version.c
+versioninfo.o: versioninfo.c VERSION
+	$(CC) -DVERSION=\"`cat VERSION`\" -c versioninfo.c
 
 VERSION:
 	@true
@@ -133,6 +133,6 @@ mkdio.o: mkdio.c config.h cstring.h amalloc.h markdown.h
 resource.o: resource.c config.h cstring.h amalloc.h markdown.h
 theme.o: theme.c config.h mkdio.h cstring.h amalloc.h
 toc.o: toc.c config.h cstring.h amalloc.h markdown.h
-version.o: version.c config.h
+versioninfo.o: versioninfo.c config.h
 xml.o: xml.c config.h cstring.h amalloc.h markdown.h
 xmlpage.o: xmlpage.c config.h cstring.h amalloc.h markdown.h

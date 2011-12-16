@@ -146,4 +146,4 @@ fi
 
 [ "$WITH_PANDOC_HEADER" ] && AC_DEFINE 'PANDOC_HEADER' '1'
 
-AC_OUTPUT Makefile version.c mkdio.h
+AC_OUTPUT Makefile versioninfo.c mkdio.h
