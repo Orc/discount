@@ -65,6 +65,9 @@ $(DESTDIR)$(LIBDIR):
 version.o: version.c VERSION
 	$(CC) -DVERSION=\"`cat VERSION`\" -c version.c
 
+VERSION:
+	@true
+
 tags.o: tags.c blocktags
 
 blocktags: mktags
