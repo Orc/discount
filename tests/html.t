@@ -23,15 +23,6 @@ text' \
 
 <p>text</p>'
 
-try 'self-closing block tags (br)' \
-    '<br>
-
-text' \
-    '<br>
-
-
-<p>text</p>'
-
 try 'html comments' \
     '<!--
 **hi**
