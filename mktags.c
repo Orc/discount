@@ -75,7 +75,6 @@ main()
     KW("WBR");
     KW("XMP");
     SC("HR");
-    SC("BR");
     KW("IFRAME");
     KW("MAP");
 
