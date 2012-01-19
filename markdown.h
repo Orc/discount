@@ -79,6 +79,12 @@ typedef struct callback_data {
 } Callback_data;
 
 
+struct escaped { 
+    char *text;
+    struct escaped *up;
+} ;
+
+
 /* a magic markdown io thing holds all the data structures needed to
  * do the backend processing of a markdown document
  */
@@ -88,6 +94,7 @@ typedef struct mmiot {
     Qblock Q;
     int isp;
     int reference;
+    struct escaped *esc;
     char *ref_prefix;
     STRING(Footnote) *footnotes;
     DWORD flags;
@@ -182,7 +189,7 @@ extern void ___mkd_initmmiot(MMIOT *, void *);
 extern void ___mkd_freemmiot(MMIOT *, void *);
 extern void ___mkd_freeLineRange(Line *, Line *);
 extern void ___mkd_xml(char *, int, FILE *);
-extern void ___mkd_reparse(char *, int, int, MMIOT*);
+extern void ___mkd_reparse(char *, int, int, MMIOT*, char*);
 extern void ___mkd_emblock(MMIOT*);
 extern void ___mkd_tidy(Cstring *);
 

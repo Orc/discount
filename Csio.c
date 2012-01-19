@@ -54,7 +54,7 @@ Csreparse(Cstring *iot, char *buf, int size, int flags)
 {
     MMIOT f;
     ___mkd_initmmiot(&f, 0);
-    ___mkd_reparse(buf, size, 0, &f);
+    ___mkd_reparse(buf, size, 0, &f, 0);
     ___mkd_emblock(&f);
     SUFFIX(*iot, T(f.out), S(f.out));
     ___mkd_freemmiot(&f, 0);
