@@ -1,4 +1,5 @@
-CC=@CC@ -I. -L.
+CC=@CC@ -I.
+LFLAGS=-L.
 CFLAGS=@CFLAGS@
 AR=@AR@
 RANLIB=@RANLIB@
@@ -79,13 +80,13 @@ blocktags: mktags
 
 
 mkd2html:  mkd2html.o $(MKDLIB) mkdio.h
-	$(CC) -o mkd2html mkd2html.o -lmarkdown @LIBS@
+	$(CC) $(LFLAGS) -o mkd2html mkd2html.o -lmarkdown @LIBS@
 
 markdown: main.o pgm_options.o $(MKDLIB)
-	$(CC) $(CFLAGS) -o markdown main.o pgm_options.o -lmarkdown @LIBS@
+	$(CC) $(LFLAGS) -o markdown main.o pgm_options.o -lmarkdown @LIBS@
 	
 makepage:  makepage.c pgm_options.o $(MKDLIB) mkdio.h
-	$(CC) $(CFLAGS) -o makepage makepage.c pgm_options.o -lmarkdown @LIBS@
+	$(CC) $(LFLAGS) -o makepage makepage.c pgm_options.o -lmarkdown @LIBS@
 
 pgm_options.o: pgm_options.c mkdio.h config.h
 	$(CC) -I. -c pgm_options.c
