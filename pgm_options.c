@@ -59,6 +59,8 @@ static struct _opt {
 #define NR(x)	(sizeof x / sizeof x[0])
 
 
+typedef int (*stfu)(const void *, const void *);
+
 int
 sort_by_name(struct _opt *a, struct _opt *b)
 {
@@ -78,14 +80,14 @@ show_flags(int byname)
     int i;
 
     if ( byname ) {
-	qsort(opts, NR(opts), sizeof(opts[0]), sort_by_name);
+	qsort(opts, NR(opts), sizeof(opts[0]), (stfu)sort_by_name);
     
 	for (i=0; i < NR(opts); i++)
 	    if ( ! opts[i].skip )
 		fprintf(stderr, "%16s : %s\n", opts[i].name, opts[i].desc);
     }
     else {
-	qsort(opts, NR(opts), sizeof(opts[0]), sort_by_flag);
+	qsort(opts, NR(opts), sizeof(opts[0]), (stfu)sort_by_flag);
 	
 	for (i=0; i < NR(opts); i++)
 	    if ( ! opts[i].skip ) {
