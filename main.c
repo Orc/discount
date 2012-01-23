@@ -78,7 +78,7 @@ main(int argc, char **argv)
     char *q;
     MMIOT *doc;
 
-    if ( q = getenv("MARKDOWN_FLAGS") )
+    if ( (q = getenv("MARKDOWN_FLAGS")) )
 	flags = strtol(q, 0, 0);
 
     pgm = basename(argv[0]);
