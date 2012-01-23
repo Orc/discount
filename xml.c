@@ -46,7 +46,7 @@ mkd_generatexml(char *p, int size, FILE *out)
     while ( size-- > 0 ) {
 	c = *p++;
 
-	if ( entity = mkd_xmlchar(c) )
+	if ( (entity = mkd_xmlchar(c)) )
 	    fputs(entity, out);
 	else
 	    fputc(c, out);
@@ -69,7 +69,7 @@ mkd_xml(char *p, int size, char **res)
 
     while ( size-- > 0 ) {
 	c = *p++;
-	if ( entity = mkd_xmlchar(c) )
+	if ( (entity = mkd_xmlchar(c)) )
 	    Cswrite(&f, entity, strlen(entity));
 	else
 	    Csputc(c, &f);

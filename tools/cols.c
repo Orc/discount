@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int
 main(argc, argv)
 char **argv;
 {
-    register c;
+    int register c;
     int xp;
     int width;
 
