@@ -18,6 +18,7 @@
 #include "config.h"
 #include "amalloc.h"
 #include "pgm_options.h"
+#include "tags.h"
 
 #if HAVE_LIBGEN_H
 #include <libgen.h>
@@ -58,7 +59,7 @@ complain(char *fmt, ...)
     fflush(stderr);
 }
 
-
+int
 main(int argc, char **argv)
 {
     int opt;
