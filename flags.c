@@ -45,7 +45,7 @@ mkd_flags_are(FILE *f, DWORD flags, int htmlplease)
     for (i=0; i < NR(flagnames); i++) {
 	set = flags & flagnames[i].flag;
 	name = flagnames[i].name;
-	if ( not = (*name == '!') ) {
+	if ( (not = (*name == '!')) ) {
 	    ++name;
 	    set = !set;
 	}

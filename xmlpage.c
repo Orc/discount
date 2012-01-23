@@ -30,7 +30,7 @@ mkd_xhtmlpage(Document *p, int flags, FILE *out)
 	fprintf(out, "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n");
 
 	fprintf(out, "<head>\n");
-	if ( title = mkd_doc_title(p) )
+	if ( (title = mkd_doc_title(p)) )
 	    fprintf(out, "<title>%s</title>\n", title);
 	mkd_generatecss(p, out);
 	fprintf(out, "</head>\n");
