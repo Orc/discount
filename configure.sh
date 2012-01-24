@@ -71,7 +71,7 @@ if [ "IS_BROKEN_CC" ]; then
 	AC_DEFINE 'if(x)' 'if( (x) != 0 )'
 
 	if [ "$IS_CLANG" ]; then
-	    AC_CC="$AC_CC -Wno-unused-value -Wno-implicit-int"
+	    AC_CC="$AC_CC -Wno-implicit-int"
 	elif [ "$IS_GCC" ]; then
 	    AC_CC="$AC_CC -Wno-return-type -Wno-implicit-int"
 	fi ;;
