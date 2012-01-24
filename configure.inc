@@ -387,9 +387,11 @@ EOF
     if [ $status -eq 0 ]; then
 	if $AC_CC -x c /dev/null -dM -E 2>&1 | grep '__clang__' >/dev/null; then
 	    TLOG " yuck, you're using clang"
+	    IS_CLANG=T
 	    IS_BROKEN_CC=T
 	elif $AC_CC -v 2>&1 | grep 'gcc version' >/dev/null; then
 	    TLOG " oh ick, it looks like gcc"
+	    IS_GCC=T
 	    IS_BROKEN_CC=T
 	else
 	    TLOG " ok"
@@ -424,8 +426,6 @@ EOF
     else
 	AC_FAIL " does not compile code properly"
     fi
-
-    AC_SUB 'CC' "$AC_CC"
 
     __remove ngc$$ ngc$$.c ngc$$.o
 
@@ -940,6 +940,7 @@ AC_OUTPUT () {
     AC_SUB 'LIBS'    "$AC_LIBS"
     AC_SUB 'CONFIGURE_FILES' "$__config_files"
     AC_SUB 'GENERATED_FILES' "$*"
+    AC_SUB 'CC'      "$AC_CC"
     AC_SUB 'CFLAGS'  "$AC_CFLAGS"
     AC_SUB 'LDFLAGS' "$AC_LDFLAGS"
     AC_SUB 'srcdir'  "$AC_SRCDIR"
