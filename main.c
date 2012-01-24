@@ -18,6 +18,7 @@
 #include "config.h"
 #include "amalloc.h"
 #include "pgm_options.h"
+#include "tags.h"
 
 #if HAVE_LIBGEN_H
 #include <libgen.h>
