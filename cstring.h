@@ -27,9 +27,9 @@
 #define DELETE(x)	ALLOCATED(x) ? (free(T(x)), S(x) = (x).alloc = 0) \
 				     : ( S(x) = 0 )
 #define CLIP(t,i,sz)	\
-	    ( ((i) >= 0) && ((sz) > 0) && (((i)+(sz)) <= S(t)) ) ? \
+	    S(t) -= ( ((i) >= 0) && ((sz) > 0) && (((i)+(sz)) <= S(t)) ) ? \
 	    (memmove(&T(t)[i], &T(t)[i+sz], (S(t)-(i+sz)+1)*sizeof(T(t)[0])), \
-		S(t) -= (sz)) : -1
+		(sz)) : 0
 
 #define RESERVE(x, sz)	T(x) = ((x).alloc > S(x) + (sz) \
 			    ? T(x) \
