@@ -872,7 +872,7 @@ definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 	if ( (text = skipempty(q->next)) == 0 )
 	    break;
 
-	if (( para = (text != q->next) ))
+	if ( para = (text != q->next) )
 	    ___mkd_freeLineRange(q, text);
 	
 	q->next = 0; 
@@ -895,7 +895,7 @@ definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 	if ( (q = skipempty(text)) == 0 )
 	    break;
 
-	if (( para = (q != text) )) {
+	if ( para = (q != text) ) {
 	    Line anchor;
 
 	    anchor.next = text;
@@ -1221,7 +1221,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    ptr = ptr->next;
 	    ___mkd_freeLine(r);
 	}
-	else if (( list_class = islist(ptr, &indent, f->flags, &list_type) )) {
+	else if ( list_class = islist(ptr, &indent, f->flags, &list_type) ) {
 	    if ( list_class == DL ) {
 		p = Pp(&d, ptr, DL);
 		ptr = definition_block(p, indent, f, list_type);
