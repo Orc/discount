@@ -110,7 +110,7 @@ emmatch(MMIOT *f, int first, int last)
     int e, e2, match;
 
     switch (start->b_count) {
-    case 2: if ( e = empair(f,first,last,match=2) )
+    case 2: if ( (e = empair(f,first,last,match=2)) )
 		break;
     case 1: e = empair(f,first,last,match=1);
 	    break;
