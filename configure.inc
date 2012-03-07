@@ -1215,28 +1215,58 @@ AC_COMPILER_PIC () {
     return $__rc
 }
 
-#
-# AC_CC_SHLIBS checks if the C compiler can produce shared libraries
-# and if it can writes a librarian that handles those libraries for us.
-#
-AC_CC_SHLIBS () {
-    AC_PROG_CC || AC_FAIL "Need a C compiler to build shared libraries"
-    AC_PROG_LN_S || AC_FAIL "Need to be able to make symbolic links for shared libraries"
-    AC_PROG_INSTALL || AC_FAIL "Need an install program to install shared libraries"
-    LOGN "checking whether the C compiler can build shared libraries "
 
-    echo "int some_variable = 0;" > ngc$$.c 
+# generate a macosX librarian
+#
+__AC_MACOS_LIBRARIAN() {
+    AC_SUB LD_LIBRARY_PATH DYLD_LIBRARY_PATH
+    __config_files="$__config_files librarian.sh"
+    cat > librarian.sh << EOF
+#! /bin/sh
+#
+#  Build MacOS shared libraries, hiding (some) ickiness from the makefile
 
-    if $AC_CC $AC_PICFLAG -shared -o ngc$$.so ngc$$.c; then
-	AC_SUB LD_LIBRARY_PATH LD_LIBRARY_PATH
-	# -Wl option probably works, but be paranoid anyway
-	_VFLAGS="$AC_PICFLAG -shared -Wl,-soname,ngc$$.so.1"
-	if $AC_CC $_VFLAGS -o ngc$$.so ngc$$.c; then
-	    USE_SONAME=T
+ACTION=\$1; shift
+LIBRARY=\$1; shift
+	
+eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
+		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
+shift
+
+LIBNAME=\$LIBRARY.dylib
+FULLNAME=\$LIBNAME
+
+case "\$ACTION" in
+make)   FLAGS="$AC_CFLAGS -dynamiclib"
+	VFLAGS="-current_version \$VERSION -compatibility_version \$MAJOR"
+
+	rm -f \$LIBRARY
+	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
+	    $PROG_LN_S \$FULLNAME \$LIBRARY
 	fi
-	LDCONFIG=`AC_PATH=/sbin:/usr/sbin:/usr/local/sbin acLookFor ldconfig`
-	__config_files="$__config_files librarian.sh"
-	cat > librarian.sh << EOF
+	;;
+files)  echo "\$FULLNAME"
+	;;
+install)$PROG_INSTALL -c \$FULLNAME "\$1"
+	;;
+esac
+EOF
+    chmod +x librarian.sh
+}
+
+
+# Generate an ELF librarian (for Linux, freebsd)
+#
+__AC_ELF_LIBRARIAN() {
+    AC_SUB LD_LIBRARY_PATH LD_LIBRARY_PATH
+    # -Wl option probably works, but be paranoid anyway
+    _VFLAGS="$AC_PICFLAG -shared -Wl,-soname,ngc$$.so.1"
+    if $AC_CC $_VFLAGS -o ngc$$.so ngc$$.c; then
+	USE_SONAME=T
+    fi
+    LDCONFIG=`AC_PATH=/sbin:/usr/sbin:/usr/local/sbin acLookFor ldconfig`
+    __config_files="$__config_files librarian.sh"
+    cat > librarian.sh << EOF
 #! /bin/sh
 #
 #  Build ELF shared libraries, hiding (some) ickiness from the makefile
@@ -1272,45 +1302,36 @@ install)$PROG_INSTALL -c \$FULLNAME "\$1"
 	;;
 esac
 EOF
-	chmod +x librarian.sh
-        LOG "(yes; -shared)"
-	__rc=0
-    elif $AC_CC $AC_PICFLAG  -dynamiclib -o ngc$$.so ngc$$.c; then
-	# macosx
-	AC_SUB LD_LIBRARY_PATH DYLD_LIBRARY_PATH
-	__config_files="$__config_files librarian.sh"
-	cat > librarian.sh << EOF
-#! /bin/sh
+    chmod +x librarian.sh
+}
+
+
 #
-#  Build MacOS shared libraries, hiding (some) ickiness from the makefile
+# AC_CC_SHLIBS checks if the C compiler can produce shared libraries
+# and if it can writes a librarian that handles those libraries for us.
+#
+AC_CC_SHLIBS () {
+    AC_PROG_CC || AC_FAIL "Need a C compiler to build shared libraries"
+    AC_PROG_LN_S || AC_FAIL "Need to be able to make symbolic links for shared libraries"
+    AC_PROG_INSTALL || AC_FAIL "Need an install program to install shared libraries"
+    LOGN "checking whether the C compiler can build shared libraries "
 
-ACTION=\$1; shift
-LIBRARY=\$1; shift
-	
-eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
-		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
-shift
+    echo "int some_variable = 0;" > ngc$$.c 
 
-LIBNAME=\$LIBRARY.dylib
-FULLNAME=\$LIBNAME
+    if uname -a | grep Darwin >/dev/null; then
+	# Claims to be macos?
+	if $AC_CC $AC_PICFLAG  -dynamiclib -o ngc$$.so ngc$$.c; then
+	    __AC_MACOS_LIBRARIAN
 
-case "\$ACTION" in
-make)   FLAGS="$AC_CFLAGS -dynamiclib"
-	VFLAGS="-current_version \$VERSION -compatibility_version \$MAJOR"
-
-	rm -f \$LIBRARY
-	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
-	    $PROG_LN_S \$FULLNAME \$LIBRARY
+	    LOG "(yes; macos dylib)"
+	    __rc=0
+	else
+	    LOG "(no)"
+	    __rc=1
 	fi
-	;;
-files)  echo "\$FULLNAME"
-	;;
-install)$PROG_INSTALL -c \$FULLNAME "\$1"
-	;;
-esac
-EOF
-	chmod +x librarian.sh
-        LOG "(yes; macos dylib)"
+    elif $AC_CC $AC_PICFLAG -shared -o ngc$$.so ngc$$.c; then
+	__AC_ELF_LIBRARIAN
+        LOG "(yes; -shared)"
 	__rc=0
     else
         LOG "(no)"
