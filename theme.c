@@ -10,6 +10,7 @@
  * be distributed with this source code.
  */
 #include "config.h"
+#include "pgm_options.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -506,6 +507,7 @@ char **argv;
     char *source = "stdin";
     FILE *tmplfile;
     int opt;
+    mkd_flag_t flags = MKD_TOC;
     int force = 0;
     MMIOT *doc;
     struct stat sourceinfo;
@@ -513,7 +515,7 @@ char **argv;
     opterr=1;
     pgm = basename(argv[0]);
 
-    while ( (opt=getopt(argc, argv, "Efd:t:p:o:V")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "EfC:c:d:t:p:o:V")) != EOF ) {
 	switch (opt) {
 	case 'd':   root = optarg;
 		    break;
@@ -525,6 +527,20 @@ char **argv;
 		    break;
 	case 't':   template = optarg;
 		    break;
+	case 'C':   if ( strcmp(optarg, "?") == 0 ) {
+			show_flags(0);
+			exit(0);
+		    }
+		    else
+			flags = strtol(optarg, 0, 0);
+		    break;
+	case 'c':   if ( strcmp(optarg, "?") == 0 ) {
+			show_flags(1);
+			exit(0);
+		    }
+		    else if ( !set_flag(&flags, optarg) )
+			fprintf(stderr,"%s: unknown option <%s>", pgm, optarg);
+		    break;		    
 	case 'o':   output = optarg;
 		    break;
 	case 'V':   printf("theme+discount %s\n", markdown_version);
@@ -599,7 +615,7 @@ char **argv;
 	fail("out of memory");
 #endif
 
-    if ( !mkd_compile(doc, MKD_TOC) )
+    if ( !mkd_compile(doc, flags) )
 	fail("couldn't compile input");
 
     if ( tmplfile )
