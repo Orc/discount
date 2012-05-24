@@ -29,6 +29,8 @@ static struct flagnames flagnames[] = {
     { MKD_NOALPHALIST,    "!ALPHALIST" },
     { MKD_NODLIST,        "!DLIST" },
     { MKD_EXTRA_FOOTNOTE, "FOOTNOTE" },
+    { MKD_GITHUB_NEWLINES,"NEWLINES" },
+    { MKD_GITHUB_SYNTAX,  "SYNTAX" },	
 };
 #define NR(x)	(sizeof x/sizeof x[0])
 

@@ -1558,9 +1558,14 @@ printblock(Paragraph *pp, MMIOT *f)
 	    else {
 		___mkd_tidy(&t->text);
 		push(T(t->text), S(t->text), f);
-		if ( t->next )
-		    push("\n", 1, f);
-	    }
+		if ( t->next ) {
+			if (f->flags & MKD_GITHUB_NEWLINES) {
+				push("\003\n", 2, f);
+			} else {
+				push("\n", 1, f);
+			}
+		}
+		}
 	}
 	t = t->next;
     }
@@ -1572,11 +1577,13 @@ printblock(Paragraph *pp, MMIOT *f)
 
 
 static void
-printcode(Line *t, MMIOT *f)
+printcode(Paragraph *p, MMIOT *f)
 {
     int blanks;
-
-    Qstring("<pre><code>", f);
+    Line *t = p->text;
+	
+    Qstring("<pre>", f);
+    Qprintf(f, p->ident ? "<%s %s>" : "<%s>", "code", p->ident);
     for ( blanks = 0; t ; t = t->next ) {
 	if ( S(t->text) > t->dle ) {
 	    while ( blanks ) {
@@ -1689,7 +1696,7 @@ display(Paragraph *p, MMIOT *f)
 	break;
 	
     case CODE:
-	printcode(p->text, f);
+	printcode(p, f);
 	break;
 	
     case QUOTE:
