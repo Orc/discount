@@ -1085,7 +1085,7 @@ islike(MMIOT *f, char *s)
     int len;
     int i;
 
-    if ( s[0] == '<' ) {
+    if ( s[0] == '|' ) {
 	if ( !isthisnonword(f, -1) )
 	    return 0;
        ++s;
@@ -1094,7 +1094,7 @@ islike(MMIOT *f, char *s)
     if ( !(len = strlen(s)) )
 	return 0;
 
-    if ( s[len-1] == '>' ) {
+    if ( s[len-1] == '|' ) {
 	if ( !isthisnonword(f,len-1) )
 	    return 0;
 	len--;
@@ -1113,13 +1113,13 @@ static struct smarties {
     char *entity;
     int shift;
 } smarties[] = {
-    { '\'', "'s>",      "rsquo",  0 },
-    { '\'', "'t>",      "rsquo",  0 },
-    { '\'', "'re>",     "rsquo",  0 },
-    { '\'', "'ll>",     "rsquo",  0 },
-    { '\'', "'ve>",     "rsquo",  0 },
-    { '\'', "'m>",      "rsquo",  0 },
-    { '\'', "'d>",      "rsquo",  0 },
+    { '\'', "'s|",      "rsquo",  0 },
+    { '\'', "'t|",      "rsquo",  0 },
+    { '\'', "'re|",     "rsquo",  0 },
+    { '\'', "'ll|",     "rsquo",  0 },
+    { '\'', "'ve|",     "rsquo",  0 },
+    { '\'', "'m|",      "rsquo",  0 },
+    { '\'', "'d|",      "rsquo",  0 },
     { '-',  "---",      "mdash",  2 },
     { '-',  "--",       "ndash",  1 },
     { '.',  "...",      "hellip", 2 },
@@ -1127,11 +1127,11 @@ static struct smarties {
     { '(',  "(c)",      "copy",   2 },
     { '(',  "(r)",      "reg",    2 },
     { '(',  "(tm)",     "trade",  3 },
-    { '3',  "<3/4>",    "frac34", 2 },
-    { '3',  "<3/4ths>", "frac34", 2 },
-    { '1',  "<1/2>",    "frac12", 2 },
-    { '1',  "<1/4>",    "frac14", 2 },
-    { '1',  "<1/4th>",  "frac14", 2 },
+    { '3',  "|3/4|",    "frac34", 2 },
+    { '3',  "|3/4ths|", "frac34", 2 },
+    { '1',  "|1/2|",    "frac12", 2 },
+    { '1',  "|1/4|",    "frac14", 2 },
+    { '1',  "|1/4th|",  "frac14", 2 },
     { '&',  "&#0;",      0,       3 },
 } ;
 #define NRSMART ( sizeof smarties / sizeof smarties[0] )
