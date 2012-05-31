@@ -193,4 +193,8 @@ extern void ___mkd_reparse(char *, int, int, MMIOT*, char*);
 extern void ___mkd_emblock(MMIOT*);
 extern void ___mkd_tidy(Cstring *);
 
+extern Document *__mkd_new_Document();
+extern void __mkd_enqueue(Document*, Cstring *);
+extern void __mkd_header_dle(Line *);
+
 #endif/*_MARKDOWN_D*/

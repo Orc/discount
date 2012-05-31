@@ -18,8 +18,8 @@ typedef ANCHOR(Line) LineAnchor;
 
 /* create a new blank Document
  */
-static Document*
-new_Document()
+Document*
+__mkd_new_Document()
 {
     Document *ret = calloc(sizeof(Document), 1);
 
@@ -37,8 +37,8 @@ new_Document()
 /* add a line to the markdown input chain, expanding tabs and
  * noting the presence of special characters as we go.
  */
-static void
-queue(Document* a, Cstring *line)
+void
+__mkd_enqueue(Document* a, Cstring *line)
 {
     Line *p = calloc(sizeof *p, 1);
     unsigned char c;
@@ -75,8 +75,8 @@ queue(Document* a, Cstring *line)
 
 /* trim leading blanks from a header line
  */
-static void
-header_dle(Line *p)
+void
+__mkd_header_dle(Line *p)
 {
     CLIP(p->text, 0, 1);
     p->dle = mkd_firstnonblank(p);
@@ -91,7 +91,7 @@ Document *
 populate(getc_func getc, void* ctx, int flags)
 {
     Cstring line;
-    Document *a = new_Document();
+    Document *a = __mkd_new_Document();
     int c;
     int pandoc = 0;
 
@@ -109,7 +109,7 @@ populate(getc_func getc, void* ctx, int flags)
 		else
 		    pandoc = EOF;
 	    }
-	    queue(a, &line);
+	    __mkd_enqueue(a, &line);
 	    S(line) = 0;
 	}
 	else if ( isprint(c) || isspace(c) || (c & 0x80) )
@@ -117,7 +117,7 @@ populate(getc_func getc, void* ctx, int flags)
     }
 
     if ( S(line) )
-	queue(a, &line);
+	__mkd_enqueue(a, &line);
 
     DELETE(line);
 
@@ -128,9 +128,9 @@ populate(getc_func getc, void* ctx, int flags)
 	 */
 	Line *headers = T(a->content);
 
-	a->title = headers;             header_dle(a->title);
-	a->author= headers->next;       header_dle(a->author);
-	a->date  = headers->next->next; header_dle(a->date);
+	a->title = headers;             __mkd_header_dle(a->title);
+	a->author= headers->next;       __mkd_header_dle(a->author);
+	a->date  = headers->next->next; __mkd_header_dle(a->date);
 
 	T(a->content) = headers->next->next->next;
     }

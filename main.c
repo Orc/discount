@@ -70,6 +70,7 @@ main(int argc, char **argv)
     int version = 0;
     int with_html5 = 0;
     int use_mkd_line = 0;
+    int github_flavoured = 0;
     char *extra_footnote_prefix = 0;
     char *urlflags = 0;
     char *text = 0;
@@ -84,7 +85,7 @@ main(int argc, char **argv)
     pgm = basename(argv[0]);
     opterr = 1;
 
-    while ( (opt=getopt(argc, argv, "5b:C:df:E:F:o:s:t:TV")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "5b:C:df:E:F:Go:s:t:TV")) != EOF ) {
 	switch (opt) {
 	case '5':   with_html5 = 1;
 		    break;
@@ -109,6 +110,8 @@ main(int argc, char **argv)
 		    }
 		    else if ( !set_flag(&flags, optarg) )
 			complain("unknown option <%s>", optarg);
+		    break;
+	case 'G':   github_flavoured = 1;
 		    break;
 	case 't':   text = optarg;
 		    use_mkd_line = 1;
@@ -165,7 +168,9 @@ main(int argc, char **argv)
 		perror(argv[0]);
 		exit(1);
 	    }
-	    if ( (doc = mkd_in(stdin,flags)) == 0 ) {
+
+	    doc = github_flavoured ? gfm_in(stdin,flags) : mkd_in(stdin,flags);
+	    if ( !doc ) {
 		perror(argc ? argv[0] : "stdin");
 		exit(1);
 	    }
