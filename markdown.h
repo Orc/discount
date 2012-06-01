@@ -152,6 +152,16 @@ typedef struct document {
 } Document;
 
 
+/*
+ * economy FILE-type structure for pulling characters out of a
+ * fixed-length string.
+ */
+struct string_stream {
+    const char *data;	/* the unread data */
+    int   size;		/* and how much is there? */
+} ;
+
+
 extern int  mkd_firstnonblank(Line *);
 extern int  mkd_compile(Document *, DWORD);
 extern int  mkd_document(Document *, char **);
@@ -196,5 +206,7 @@ extern void ___mkd_tidy(Cstring *);
 extern Document *__mkd_new_Document();
 extern void __mkd_enqueue(Document*, Cstring *);
 extern void __mkd_header_dle(Line *);
+
+extern int  __mkd_io_strget(struct string_stream *);
 
 #endif/*_MARKDOWN_D*/

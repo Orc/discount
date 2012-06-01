@@ -150,14 +150,8 @@ mkd_in(FILE *f, DWORD flags)
 
 /* return a single character out of a buffer
  */
-struct string_ctx {
-    const char *data;	/* the unread data */
-    int   size;		/* and how much is there? */
-} ;
-
-
-static int
-strget(struct string_ctx *in)
+int
+__mkd_io_strget(struct string_stream *in)
 {
     if ( !in->size ) return EOF;
 
@@ -172,12 +166,12 @@ strget(struct string_ctx *in)
 Document *
 mkd_string(const char *buf, int len, DWORD flags)
 {
-    struct string_ctx about;
+    struct string_stream about;
 
     about.data = buf;
     about.size = len;
 
-    return populate((getc_func)strget, &about, flags & INPUT_MASK);
+    return populate((getc_func)__mkd_io_strget, &about, flags & INPUT_MASK);
 }
 
 

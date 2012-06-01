@@ -158,7 +158,10 @@ main(int argc, char **argv)
 	rc = mkd_generateline( text, strlen(text), stdout, flags);
     else {
 	if ( text ) {
-	    if ( (doc = mkd_string(text, strlen(text), flags)) == 0 ) {
+	    doc = github_flavoured ? gfm_string(text, strlen(text), flags)
+				   : mkd_string(text, strlen(text), flags) ;
+
+	    if ( !doc ) {
 		perror(text);
 		exit(1);
 	    }

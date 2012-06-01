@@ -77,6 +77,20 @@ gfm_populate(getc_func getc, void* ctx, int flags)
 }
 
 
+/* convert a block of text into a linked list
+ */
+Document *
+gfm_string(const char *buf, int len, DWORD flags)
+{
+    struct string_stream about;
+
+    about.data = buf;
+    about.size = len;
+
+    return gfm_populate((getc_func)__mkd_io_strget, &about, flags & INPUT_MASK);
+}
+
+
 /* convert a file into a linked list
  */
 Document *
