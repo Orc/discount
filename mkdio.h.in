@@ -12,6 +12,11 @@ typedef @DWORD@ mkd_flag_t;
 MMIOT *mkd_in(FILE*,mkd_flag_t);		/* assemble input from a file */
 MMIOT *mkd_string(const char*,int,mkd_flag_t);	/* assemble input from a buffer */
 
+/* line builder for github flavoured markdown
+ */
+MMIOT *gfm_in(FILE*,mkd_flag_t);		/* assemble input from a file */
+MMIOT *gfm_string(const char*,int,mkd_flag_t);	/* assemble input from a buffer */
+
 void mkd_basename(MMIOT*,char*);
 
 void mkd_initialize();
