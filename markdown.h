@@ -33,7 +33,8 @@ typedef struct line {
 
     enum { chk_text, chk_code,
 	   chk_hr, chk_dash,
-	   chk_tilde, chk_equal } kind;
+	   chk_tilde, chk_equal,
+	   chk_backtick } kind;
     int count;
 } Line;
 
@@ -120,6 +121,8 @@ typedef struct mmiot {
 #define MKD_NOALPHALIST	0x00080000
 #define MKD_NODLIST	0x00100000
 #define MKD_EXTRA_FOOTNOTE 0x00200000
+#define MKD_GITHUB_NEWLINES 0x00400000
+#define MKD_GITHUB_SYNTAX 0x00800000
 #define IS_LABEL	0x08000000
 #define USER_FLAGS	0x0FFFFFFF
 #define INPUT_MASK	(MKD_NOHEADER|MKD_TABSTOP)
