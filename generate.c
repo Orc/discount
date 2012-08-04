@@ -1579,6 +1579,35 @@ printblock(Paragraph *pp, MMIOT *f)
     return 1;
 }
 
+static int
+printfigure(Paragraph *pp, MMIOT *f)
+{
+    Line *t = pp->text;
+    Qstring("<figure>\n", f);
+    ___mkd_tidy(&t->text);
+    push(T(t->text)+2, S(t->text)-2, f);
+    if ( tag_text(f) || !linkylinky(1, f) ) {
+        Qstring("![", f);
+        text(f);
+    }
+    else {
+        const char* name = T(t->text) + 2;
+        const char* cp = name;
+        for (;;) {
+            char c = *cp++; 
+            if (!c || c == ']')
+                break;
+            if (c == '\\' && *cp == ']')
+                ++cp;
+        }
+        Qstring("\n<figurecaption>\n", f);
+        Qwrite(name, cp - name - 1, f);
+        Qstring("\n</figurecaption>", f);
+    }
+    Qstring("\n</figure>\n", f);
+    return 1;
+}
+
 
 static void
 printcode(Line *t, MMIOT *f)
@@ -1739,6 +1768,10 @@ display(Paragraph *p, MMIOT *f)
             printtable(p, 0, f);
         }
 	break;
+
+    case FIGURE:
+	printfigure(p, f);
+        break;
 
     case SOURCE:
 	htmlify(p->down, 0, 0, f);
