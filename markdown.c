@@ -1187,6 +1187,45 @@ actually_a_table(MMIOT *f, Line *pp)
 }
 
 
+static int
+actually_a_figure(MMIOT *f, Line *pp)
+{
+    const char* cp;
+    char c;
+    char close_delim;
+
+    /* figures need to be turned on */
+    if ( f->flags & (MKD_STRICT|MKD_NOFIGURES) )
+	return 0;
+
+    /* figures must be exactly one line */
+    if ( !pp || pp->next)
+	return 0;
+
+    cp = &T(pp->text)[pp->dle];
+    if (*cp != '!' || *++cp != '[')
+        return 0;
+
+    while (*++cp != ']') {
+        if (!*cp)
+            return 0;
+    }
+
+    c = *++cp;
+    if (c != '(' && c != '[')
+        return 0;
+
+    close_delim = (c == '(') ? ')' : ']'; 
+    cp = T(pp->text) + S(pp->text);
+    for (;;) {
+      c = *--cp;
+      if (!isspace(c))
+        break;
+    }
+    return (*cp == close_delim);
+}
+
+
 /*
  * break a collection of markdown input into
  * blocks of lists, code, html, and text to
@@ -1250,9 +1289,11 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	else {
 	    p = Pp(&d, ptr, MARKUP);
 	    ptr = textblock(p, toplevel, f->flags);
-	    /* tables are a special kind of paragraph */
+	    /* tables and figures are special kinds of paragraph */
 	    if ( actually_a_table(f, p->text) )
 		p->typ = TABLE;
+            else if( actually_a_figure(f, p->text) )
+                p->typ = FIGURE;
 	}
 
 	if ( (para||toplevel) && !p->align )

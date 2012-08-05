@@ -31,5 +31,4 @@ Ignacio Burgue?o--  bug reports about `>%class%`
 Henrik Nyh	--  bug reports about embedded html handling.
 John J. Foerch  --  bug reports about incorrect `&ndash;` and `&mdash;`
                     translations.
-
-		    
+Terry Golubiewski -- Pandoc-style figures.
