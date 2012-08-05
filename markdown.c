@@ -402,6 +402,22 @@ ishdr(Line *t, int *htyp)
     return issetext(t, htyp);
 }
 
+static int
+iscaption(Line* t, int *htyp)
+{
+  /* A caption is a paragraph that starts with, optionally "Table"
+   * followed by, a colon.
+   */
+  if (t->dle != 0 || S(t->text) <= 1)
+   return 0;
+  int i = 0;
+  if (!strncasecmp(T(t->text), "Table", 5))
+    i = nextnonblank(t, 5);
+  if (T(t->text)[i] != ':')
+    return 0;
+  *htyp = CAPTION;
+  return 1;
+}
 
 static inline int
 end_of_block(Line *t)
@@ -688,6 +704,22 @@ textblock(Paragraph *p, int toplevel, DWORD flags)
 	}
     }
     return t;
+}
+
+
+static Line *
+captionblock(Paragraph *pp, int toplevel, DWORD flags)
+{
+    Line *p = pp->text;
+    int i;
+
+    for (i = p->dle; T(p->text)[i] != ':'; ++i)
+      ;
+    i = nextnonblank(p, i+1);
+    CLIP(p->text, 0, i);
+    UNCHECK(p);
+
+    return textblock(pp, toplevel, flags);
 }
 
 
@@ -1297,6 +1329,10 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p = Pp(&d, ptr, HDR);
 	    ptr = headerblock(p, hdr_type);
 	}
+        else if ( iscaption(ptr, &hdr_type) ) {
+            p = Pp(&d, ptr, CAPTION);
+            ptr = captionblock(p, toplevel, f->flags);
+        }
 	else {
 	    p = Pp(&d, ptr, MARKUP);
 	    ptr = textblock(p, toplevel, f->flags);

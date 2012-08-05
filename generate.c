@@ -23,6 +23,8 @@ typedef void (*spanhandler)(MMIOT*,int);
 /* forward declarations */
 static void text(MMIOT *f);
 static Paragraph *display(Paragraph*, MMIOT*);
+static int printblock(Paragraph *pp, MMIOT *f);
+
 
 /* externals from markdown.c */
 int __mkd_footsort(Footnote *, Footnote *);
@@ -1579,7 +1581,7 @@ splat(Line *p, char *block, Istring align, int force, MMIOT *f)
 
 
 static int
-printtable(Paragraph *pp, MMIOT *f)
+printtable(Paragraph *pp, Paragraph *caption, MMIOT *f)
 {
     /* header, dashes, then lines of content */
 
@@ -1626,6 +1628,13 @@ printtable(Paragraph *pp, MMIOT *f)
     }
 
     Qstring("<table>\n", f);
+    if (caption) {
+        if (caption->align == PARA)
+            caption->align = IMPLICIT;
+        Qstring("<caption>\n", f);
+        printblock(caption, f);
+        Qstring("\n</caption>\n", f);
+    }
     Qstring("<thead>\n", f);
     hcols = splat(hdr, "th", align, 0, f);
     Qstring("</thead>\n", f);
@@ -1850,8 +1859,21 @@ display(Paragraph *p, MMIOT *f)
 	printheader(p, f);
 	break;
 
+    case CAPTION:
+        if (p->next && p->next->typ == TABLE) {
+            printtable(p->next, p, f);
+            p = p->next;
+        }
+        break;
+
     case TABLE:
-	printtable(p, f);
+        if (p->next && p->next->typ == CAPTION) {
+            printtable(p, p->next, f);
+            p = p->next;
+        }
+        else {
+            printtable(p, 0, f);
+        }
 	break;
 
     case FIGURE:
