@@ -50,7 +50,7 @@ typedef struct paragraph {
     char *ident;		/* %id% tag for QUOTE */
     enum { WHITESPACE=0, CODE, QUOTE, MARKUP,
 	   HTML, STYLE, DL, UL, OL, AL, LISTITEM,
-	   HDR, HR, TABLE, SOURCE } typ;
+	   HDR, HR, TABLE, FIGURE, SOURCE } typ;
     enum { IMPLICIT=0, PARA, CENTER} align;
     int hnumber;		/* <Hn> for typ == HDR */
 } Paragraph;
@@ -121,6 +121,7 @@ typedef struct mmiot {
 #define MKD_NOALPHALIST	0x00080000
 #define MKD_NODLIST	0x00100000
 #define MKD_EXTRA_FOOTNOTE 0x00200000
+#define MKD_NOFIGURES   0x00400000
 #define IS_LABEL	0x08000000
 #define USER_FLAGS	0x0FFFFFFF
 #define INPUT_MASK	(MKD_NOHEADER|MKD_TABSTOP)
