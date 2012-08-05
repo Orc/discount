@@ -402,6 +402,22 @@ ishdr(Line *t, int *htyp)
     return issetext(t, htyp);
 }
 
+static int
+iscaption(Line* t, int *htyp)
+{
+  /* A caption is a paragraph that starts with, optionally "Table"
+   * followed by, a colon.
+   */
+  if (t->dle != 0 || S(t->text) <= 1)
+   return 0;
+  int i = 0;
+  if (!strncasecmp(T(t->text), "Table", 5))
+    i = nextnonblank(t, 5);
+  if (T(t->text)[i] != ':')
+    return 0;
+  *htyp = CAPTION;
+  return 1;
+}
 
 static inline int
 end_of_block(Line *t)
@@ -691,6 +707,22 @@ textblock(Paragraph *p, int toplevel, DWORD flags)
 }
 
 
+static Line *
+captionblock(Paragraph *pp, int toplevel, DWORD flags)
+{
+    Line *p = pp->text;
+    int i;
+
+    for (i = p->dle; T(p->text)[i] != ':'; ++i)
+      ;
+    i = nextnonblank(p, i+1);
+    CLIP(p->text, 0, i);
+    UNCHECK(p);
+
+    return textblock(pp, toplevel, flags);
+}
+
+
 /* length of the id: or class: kind in a special div-not-quote block
  */
 static int
@@ -977,6 +1009,7 @@ addfootnote(Line *p, MMIOT* f)
     CREATE(foot->tag);
     CREATE(foot->link);
     CREATE(foot->title);
+    CREATE(foot->args);
     foot->flags = foot->height = foot->width = 0;
 
     for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
@@ -1013,22 +1046,41 @@ addfootnote(Line *p, MMIOT* f)
 	j = p->dle;
     }
 
-    if ( (c = tgood(T(p->text)[j])) ) {
+    /* Process title, if any. */
+    c = T(p->text)[j];
+    if (c == '"' || c == '\'') {
+        c = tgood(c);
 	/* Try to take the rest of the line as a comment; read to
 	 * EOL, then shrink the string back to before the final
 	 * quote.
 	 */
 	++j;	/* skip leading quote */
 
-	while ( j < S(p->text) )
+	while ( j < S(p->text) && T(p->text)[j] != c)
 	    EXPAND(foot->title) = T(p->text)[j++];
 
-	while ( S(foot->title) && T(foot->title)[S(foot->title)-1] != c )
-	    --S(foot->title);
-	if ( S(foot->title) )	/* skip trailing quote */
-	    --S(foot->title);
 	EXPAND(foot->title) = 0;
 	--S(foot->title);
+        j = nextnonblank(p, j+1);
+    }
+
+    /* Process extra args, if any */
+    if ( (j < S(p->text)) || (np && np->dle) ) {
+        for (;;) {
+            if (j >= S(p->text)) {
+                if (!np || np->dle == 0)
+                    break;
+                ___mkd_freeLine(p);
+                p = np;
+                np = p->next;
+                j = p->dle;
+                EXPAND(foot->args) = ' ';
+            }
+            while ( j < S(p->text))
+                EXPAND(foot->args) = T(p->text)[j++];
+        }
+	EXPAND(foot->args) = 0;
+	--S(foot->args);
     }
 
 skip_to_end:
@@ -1181,6 +1233,45 @@ actually_a_table(MMIOT *f, Line *pp)
 }
 
 
+static int
+actually_a_figure(MMIOT *f, Line *pp)
+{
+    const char* cp;
+    char c;
+    char close_delim;
+
+    /* figures need to be turned on */
+    if ( f->flags & (MKD_STRICT|MKD_NOFIGURES) )
+	return 0;
+
+    /* figures must be exactly one line */
+    if ( !pp || pp->next)
+	return 0;
+
+    cp = &T(pp->text)[pp->dle];
+    if (*cp != '!' || *++cp != '[')
+        return 0;
+
+    while (*++cp != ']') {
+        if (!*cp)
+            return 0;
+    }
+
+    c = *++cp;
+    if (c != '(' && c != '[')
+        return 0;
+
+    close_delim = (c == '(') ? ')' : ']'; 
+    cp = T(pp->text) + S(pp->text);
+    for (;;) {
+      c = *--cp;
+      if (!isspace(c))
+        break;
+    }
+    return (*cp == close_delim);
+}
+
+
 /*
  * break a collection of markdown input into
  * blocks of lists, code, html, and text to
@@ -1241,12 +1332,18 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p = Pp(&d, ptr, HDR);
 	    ptr = headerblock(p, hdr_type);
 	}
+        else if ( iscaption(ptr, &hdr_type) ) {
+            p = Pp(&d, ptr, CAPTION);
+            ptr = captionblock(p, toplevel, f->flags);
+        }
 	else {
 	    p = Pp(&d, ptr, MARKUP);
 	    ptr = textblock(p, toplevel, f->flags);
-	    /* tables are a special kind of paragraph */
+	    /* tables and figures are special kinds of paragraph */
 	    if ( actually_a_table(f, p->text) )
 		p->typ = TABLE;
+            else if( actually_a_figure(f, p->text) )
+                p->typ = FIGURE;
 	}
 
 	if ( (para||toplevel) && !p->align )

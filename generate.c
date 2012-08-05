@@ -23,6 +23,8 @@ typedef void (*spanhandler)(MMIOT*,int);
 /* forward declarations */
 static void text(MMIOT *f);
 static Paragraph *display(Paragraph*, MMIOT*);
+static int printblock(Paragraph *pp, MMIOT *f);
+
 
 /* externals from markdown.c */
 int __mkd_footsort(Footnote *, Footnote *);
@@ -622,6 +624,70 @@ extra_linky(MMIOT *f, Cstring text, Footnote *ref)
     return 1;
 } /* extra_linky */
 
+static void
+printargs(char* args, int len, MMIOT *f) {
+    char* arg = args;
+    char* const end = arg + len;
+    while (arg < end) {
+        char *cp = arg;
+        char* name;
+        char* value;
+        int namelen = 0;
+        int valuelen = 0;
+        Qchar(' ', f);
+        name = cp;
+        while (*cp && *cp != '=' && !isspace(*cp))
+            ++cp;
+        namelen = cp - name;
+        if (*cp != '=') {
+            Qwrite(name, namelen, f);
+        }
+        else {
+            char quote;
+            ++cp;
+            while (isspace(*cp))
+                ++cp;
+            quote = *cp;
+            if (quote == '"' || quote == '\'') {
+                value = ++cp;
+                while (*cp && *cp != quote)
+                    ++cp;
+                valuelen = cp - value;
+                if (*cp)
+                    ++cp;
+            }
+            else {
+                quote = 0;
+                value = cp;
+                while (*cp && !isspace(*cp))
+                    ++cp;
+                valuelen = cp - value;
+            }
+            if (!strncasecmp(name, "width", namelen)) {
+                Qstring("style=\"width:", f);
+                Qwrite(value, valuelen, f);
+                Qstring(";\"", f);
+            }
+            else if (!strncasecmp(name, "height", namelen)) {
+                Qstring("style=\"height:", f);
+                Qwrite(value, valuelen, f);
+                Qstring(";\"", f);
+            }
+            else {
+                Qwrite(name, namelen, f);
+                Qchar('=', f);
+                if (quote)
+                    Qchar(quote, f);
+                Qwrite(value, valuelen, f);
+                if (quote)
+                    Qchar(quote, f);
+            }
+        }
+        while (isspace(*cp))
+            ++cp;
+        arg = cp;
+    }
+} /* printargs */
 
 /* print out a linky (or fail if it's Not Allowed)
  */
@@ -665,6 +731,8 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	    ___mkd_reparse(T(ref->title), S(ref->title), MKD_TAGTEXT, f, 0);
 	    Qchar('"', f);
 	}
+
+        printargs(T(ref->args), S(ref->args), f);
 
 	Qstring(tag->text_pfx, f);
 	___mkd_reparse(T(text), S(text), tag->flags, f, 0);
@@ -1472,7 +1540,7 @@ splat(Line *p, char *block, Istring align, int force, MMIOT *f)
 
 
 static int
-printtable(Paragraph *pp, MMIOT *f)
+printtable(Paragraph *pp, Paragraph *caption, MMIOT *f)
 {
     /* header, dashes, then lines of content */
 
@@ -1519,6 +1587,13 @@ printtable(Paragraph *pp, MMIOT *f)
     }
 
     Qstring("<table>\n", f);
+    if (caption) {
+        if (caption->align == PARA)
+            caption->align = IMPLICIT;
+        Qstring("<caption>\n", f);
+        printblock(caption, f);
+        Qstring("\n</caption>\n", f);
+    }
     Qstring("<thead>\n", f);
     hcols = splat(hdr, "th", align, 0, f);
     Qstring("</thead>\n", f);
@@ -1567,6 +1642,35 @@ printblock(Paragraph *pp, MMIOT *f)
     Qstring(Begin[pp->align], f);
     text(f);
     Qstring(End[pp->align], f);
+    return 1;
+}
+
+static int
+printfigure(Paragraph *pp, MMIOT *f)
+{
+    Line *t = pp->text;
+    Qstring("<figure>\n", f);
+    ___mkd_tidy(&t->text);
+    push(T(t->text)+2, S(t->text)-2, f);
+    if ( tag_text(f) || !linkylinky(1, f) ) {
+        Qstring("![", f);
+        text(f);
+    }
+    else {
+        char* name = T(t->text) + 2;
+        char* cp = name;
+        for (;;) {
+            char c = *cp++; 
+            if (!c || c == ']')
+                break;
+            if (c == '\\' && *cp == ']')
+                ++cp;
+        }
+        Qstring("\n<figurecaption>\n", f);
+        Qwrite(name, cp - name - 1, f);
+        Qstring("\n</figurecaption>", f);
+    }
+    Qstring("\n</figure>\n", f);
     return 1;
 }
 
@@ -1714,9 +1818,26 @@ display(Paragraph *p, MMIOT *f)
 	printheader(p, f);
 	break;
 
+    case CAPTION:
+        if (p->next && p->next->typ == TABLE) {
+            printtable(p->next, p, f);
+            p = p->next;
+        }
+        break;
+
     case TABLE:
-	printtable(p, f);
+        if (p->next && p->next->typ == CAPTION) {
+            printtable(p, p->next, f);
+            p = p->next;
+        }
+        else {
+            printtable(p, 0, f);
+        }
 	break;
+
+    case FIGURE:
+	printfigure(p, f);
+        break;
 
     case SOURCE:
 	htmlify(p->down, 0, 0, f);
