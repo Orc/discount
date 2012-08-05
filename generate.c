@@ -744,8 +744,6 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
     return 1;
 } /* linkyformat */
 
-static int AutoAnchorHeaders = 1;
-
 static Cstring linky_local_url(const Cstring* str) {
   Cstring result;
   CREATE(result);
@@ -829,7 +827,7 @@ linkylinky(int image, MMIOT *f)
 		    else
 			status = linkyformat(f, name, image, ref);
 		}
-                else if (AutoAnchorHeaders) {
+                else if (!(f->flags & MKD_NOHDRLINKS)) {
                     // If implicit link is not found assume it's a local header.
                     Cstring url;
                     url = linky_local_url(&name);
@@ -1507,7 +1505,7 @@ printheader(Paragraph *pp, MMIOT *f)
 {
 #if WITH_ID_ANCHOR
     Qprintf(f, "<h%d", pp->hnumber);
-    if (AutoAnchorHeaders || (f->flags & MKD_TOC) ) {
+    if (!(f->flags & MKD_NOHDRLINKS) || (f->flags & MKD_TOC) ) {
 	Qstring(" id=\"", f);
 	mkd_string_to_anchor(T(pp->text->text),
 			     S(pp->text->text),
@@ -1516,7 +1514,7 @@ printheader(Paragraph *pp, MMIOT *f)
     }
     Qchar('>', f);
 #else
-    if (AutoAnchorHeaders || (f->flags & MKD_TOC) ) {
+    if (!(f->flags & MKD_NOHDRLINKS) || (f->flags & MKD_TOC) ) {
 	Qstring("<a name=\"", f);
 	mkd_string_to_anchor(T(pp->text->text),
 			     S(pp->text->text),
