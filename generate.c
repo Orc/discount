@@ -622,6 +622,70 @@ extra_linky(MMIOT *f, Cstring text, Footnote *ref)
     return 1;
 } /* extra_linky */
 
+static void
+printargs(char* args, int len, MMIOT *f) {
+    char* arg = args;
+    char* const end = arg + len;
+    while (arg < end) {
+        char *cp = arg;
+        char* name;
+        char* value;
+        int namelen = 0;
+        int valuelen = 0;
+        Qchar(' ', f);
+        name = cp;
+        while (*cp && *cp != '=' && !isspace(*cp))
+            ++cp;
+        namelen = cp - name;
+        if (*cp != '=') {
+            Qwrite(name, namelen, f);
+        }
+        else {
+            char quote;
+            ++cp;
+            while (isspace(*cp))
+                ++cp;
+            quote = *cp;
+            if (quote == '"' || quote == '\'') {
+                value = ++cp;
+                while (*cp && *cp != quote)
+                    ++cp;
+                valuelen = cp - value;
+                if (*cp)
+                    ++cp;
+            }
+            else {
+                quote = 0;
+                value = cp;
+                while (*cp && !isspace(*cp))
+                    ++cp;
+                valuelen = cp - value;
+            }
+            if (!strncasecmp(name, "width", namelen)) {
+                Qstring("style=\"width:", f);
+                Qwrite(value, valuelen, f);
+                Qstring(";\"", f);
+            }
+            else if (!strncasecmp(name, "height", namelen)) {
+                Qstring("style=\"height:", f);
+                Qwrite(value, valuelen, f);
+                Qstring(";\"", f);
+            }
+            else {
+                Qwrite(name, namelen, f);
+                Qchar('=', f);
+                if (quote)
+                    Qchar(quote, f);
+                Qwrite(value, valuelen, f);
+                if (quote)
+                    Qchar(quote, f);
+            }
+        }
+        while (isspace(*cp))
+            ++cp;
+        arg = cp;
+    }
+} /* printargs */
 
 /* print out a linky (or fail if it's Not Allowed)
  */
@@ -665,6 +729,8 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	    ___mkd_reparse(T(ref->title), S(ref->title), MKD_TAGTEXT, f, 0);
 	    Qchar('"', f);
 	}
+
+        printargs(T(ref->args), S(ref->args), f);
 
 	Qstring(tag->text_pfx, f);
 	___mkd_reparse(T(text), S(text), tag->flags, f, 0);
