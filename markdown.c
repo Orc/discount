@@ -1085,6 +1085,7 @@ compile_document(Line *ptr, MMIOT *f)
 
     while ( ptr ) {
 	if ( !(f->flags & MKD_NOHTML) && (tag = isopentag(ptr)) ) {
+	    int blocktype;
 	    /* If we encounter a html/style block, compile and save all
 	     * of the cached source BEFORE processing the html/style.
 	     */
@@ -1094,7 +1095,12 @@ compile_document(Line *ptr, MMIOT *f)
 		p->down = compile(T(source), 1, f);
 		T(source) = E(source) = 0;
 	    }
-	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
+	    
+	    if ( f->flags & MKD_NOSTYLE )
+		blocktype = HTML;
+	    else
+		blocktype = strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML;
+	    p = Pp(&d, ptr, blocktype);
 	    ptr = htmlblock(p, tag, &unclosed);
 	    if ( unclosed ) {
 		p->typ = SOURCE;

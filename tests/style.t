@@ -30,5 +30,7 @@ try 'multiple lines unclosed' "$UNCLOSED" "$RESULT"
 
 try -fnohtml 'unclosed with -fnohtml' '<style>foo' '<p>&lt;style>foo</p>'
 
+try -fnostyle 'disabling style blocks' "$ASK" "$ASK"
+
 summary $0
 exit $rc
