@@ -1143,7 +1143,9 @@ compile_document(Line *ptr, MMIOT *f)
 		p->down = compile(T(source), 1, f);
 		T(source) = E(source) = 0;
 	    }
-	    p = Pp(&d, ptr, strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML);
+            int style = !(f->flags & MKD_NOSTYLE)
+                        && strcmp(tag->id, "STYLE") == 0;
+	    p = Pp(&d, ptr, style ? STYLE : HTML);
 	    ptr = htmlblock(p, tag, &unclosed);
 	    if ( unclosed ) {
 		p->typ = SOURCE;
