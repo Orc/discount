@@ -1143,6 +1143,30 @@ first_nonblank_before(Line *j, int dle)
 
 
 static int
+last_nonspace(const Cstring* str)
+{
+    int i = S(*str);
+    while (i > 0) {
+        char c = T(*str)[--i];
+        if (!isspace(c))
+            return i;
+    }
+    return EOF;
+}
+
+
+static int
+table_caption(const Line* p)
+{
+    int i;
+    if (!p || S(p->text) == 0 || T(p->text)[p->dle] != '[')
+        return 0;
+    i = last_nonspace(&p->text);
+    return (i != EOF && T(p->text)[i] == ']');
+}
+
+
+static int
 actually_a_table(MMIOT *f, Line *pp)
 {
     Line *r;
@@ -1153,7 +1177,14 @@ actually_a_table(MMIOT *f, Line *pp)
     if ( f->flags & (MKD_STRICT|MKD_NOTABLES) )
 	return 0;
 
-    /* tables need three lines */
+    if (!pp)
+        return 0;
+
+    /* the first line may be a table caption; skip it */
+    if (table_caption(pp))
+        pp = pp->next;
+
+    /* tables need at least three lines */
     if ( !(pp && pp->next && pp->next->next) ) {
 	return 0;
     }
@@ -1161,6 +1192,8 @@ actually_a_table(MMIOT *f, Line *pp)
     /* all lines must contain |'s */
     for (r = pp; r; r = r->next )
 	if ( !(r->flags & PIPECHAR) ) {
+            if (table_caption(r) && !r->next)
+                break;
 	    return 0;
 	}
 
@@ -1168,8 +1201,12 @@ actually_a_table(MMIOT *f, Line *pp)
     if ( T(pp->text)[pp->dle] == '|' ) {
 	for ( r = pp; r; r = r->next )
 	    if ( T(r->text)[first_nonblank_before(r,pp->dle)] != '|' ) {
-		return 0;
+		break;
 	    }
+
+        /* but if the last line is a caption, it doesn't need any |'s */
+        if (r && (r->next || T(r->text)[r->dle] != '['))
+            return 0;
     }
 
     /* second line must be only whitespace, -, |, or : */

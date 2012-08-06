@@ -1471,18 +1471,53 @@ splat(Line *p, char *block, Istring align, int force, MMIOT *f)
 }
 
 
+static void
+printcaption(Line* caption, MMIOT *f) {
+  int i, j;
+  if (!caption)
+    return;
+  j = S(caption->text);
+  if (j < 2)
+    return;
+  while (j && T(caption->text)[--j] != ']')
+    ;
+  i = caption->dle;
+  if (i >= j)
+    return;
+  Qstring("<caption>\n", f);
+  while (++i != j)
+    Qchar(T(caption->text)[i], f);
+  Qstring("\n</caption>\n", f);
+}
+
+
 static int
 printtable(Paragraph *pp, MMIOT *f)
 {
     /* header, dashes, then lines of content */
 
-    Line *hdr, *dash, *body;
+    Line *caption, *hdr, *dash, *body, *last;
     Istring align;
     int hcols,start;
     char *p;
     enum e_alignments it;
 
     hdr = pp->text;
+
+    /* first and last line could be a caption */
+    if ( T(hdr->text)[hdr->dle] == '[' ) {
+      caption = hdr;
+      hdr = hdr->next;
+    }
+
+    for (last = hdr; last; last = last->next) {
+      if (T(last->text)[last->dle] == '[') {
+        if (!caption)
+          caption = last;
+        break;
+      }
+    }
+
     dash= hdr->next;
     body= dash->next;
 
@@ -1490,7 +1525,7 @@ printtable(Paragraph *pp, MMIOT *f)
 	/* trim leading pipe off all lines
 	 */
 	Line *r;
-	for ( r = pp->text; r; r = r->next )
+	for ( r = hdr; r != last; r = r->next )
 	    r->dle ++;
     }
 
@@ -1520,6 +1555,7 @@ printtable(Paragraph *pp, MMIOT *f)
 
     Qstring("<table>\n", f);
     Qstring("<thead>\n", f);
+    printcaption(caption, f);
     hcols = splat(hdr, "th", align, 0, f);
     Qstring("</thead>\n", f);
 
@@ -1530,7 +1566,7 @@ printtable(Paragraph *pp, MMIOT *f)
 	    EXPAND(align) = a_NONE;
 
     Qstring("<tbody>\n", f);
-    for ( ; body; body = body->next)
+    for ( ; body != last; body = body->next)
 	splat(body, "td", align, 1, f);
     Qstring("</tbody>\n", f);
     Qstring("</table>\n", f);
