@@ -67,8 +67,10 @@ main(int argc, char **argv)
     mkd_flag_t flags = 0;
     int debug = 0;
     int toc = 0;
+    int content = 1;
     int version = 0;
     int with_html5 = 0;
+    int styles = 0;
     int use_mkd_line = 0;
     int github_flavoured = 0;
     char *extra_footnote_prefix = 0;
@@ -85,7 +87,7 @@ main(int argc, char **argv)
     pgm = basename(argv[0]);
     opterr = 1;
 
-    while ( (opt=getopt(argc, argv, "5b:C:df:E:F:Go:s:t:TV")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "5b:C:df:E:F:Gno:s:St:TV")) != EOF ) {
 	switch (opt) {
 	case '5':   with_html5 = 1;
 		    break;
@@ -113,12 +115,16 @@ main(int argc, char **argv)
 		    break;
 	case 'G':   github_flavoured = 1;
 		    break;
+	case 'n':   content = 0;
+		    break;
+	case 's':   text = optarg;
+		    break;
+	case 'S':   styles = 1;
+		    break;
 	case 't':   text = optarg;
 		    use_mkd_line = 1;
 		    break;
 	case 'T':   toc = 1;
-		    break;
-	case 's':   text = optarg;
 		    break;
 	case 'C':   extra_footnote_prefix = optarg;
 		    break;
@@ -195,7 +201,10 @@ main(int argc, char **argv)
 		rc = 0;
 		if ( toc )
 		    mkd_generatetoc(doc, stdout);
-		mkd_generatehtml(doc, stdout);
+		if ( styles )
+		    mkd_generatecss(doc, stdout);
+		if ( content )
+		    mkd_generatehtml(doc, stdout);
 		mkd_cleanup(doc);
 	    }
 	}
