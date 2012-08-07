@@ -977,6 +977,7 @@ addfootnote(Line *p, MMIOT* f)
     CREATE(foot->tag);
     CREATE(foot->link);
     CREATE(foot->title);
+    CREATE(foot->args);
     foot->flags = foot->height = foot->width = 0;
 
     for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
@@ -1020,15 +1021,31 @@ addfootnote(Line *p, MMIOT* f)
 	 */
 	++j;	/* skip leading quote */
 
-	while ( j < S(p->text) )
+	while ( j < S(p->text) && T(p->text)[j] != c)
 	    EXPAND(foot->title) = T(p->text)[j++];
 
-	while ( S(foot->title) && T(foot->title)[S(foot->title)-1] != c )
-	    --S(foot->title);
-	if ( S(foot->title) )	/* skip trailing quote */
-	    --S(foot->title);
 	EXPAND(foot->title) = 0;
 	--S(foot->title);
+        j = nextnonblank(p, j+1);
+    }
+
+    /* Process extra args, if any */
+    if ( (j < S(p->text)) || (np && np->dle) ) {
+        for (;;) {
+            if (j >= S(p->text)) {
+                if (!np || np->dle == 0)
+                    break;
+                ___mkd_freeLine(p);
+                p = np;
+                np = p->next;
+                j = p->dle;
+                EXPAND(foot->args) = ' ';
+            }
+            while ( j < S(p->text))
+                EXPAND(foot->args) = T(p->text)[j++];
+        }
+	EXPAND(foot->args) = 0;
+	--S(foot->args);
     }
 
 skip_to_end:
