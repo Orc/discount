@@ -54,6 +54,7 @@ static struct _opt {
     { "1.0",           "markdown 1.0 compatibility", 0, 0, 1, MKD_1_COMPAT },
     { "footnotes",     "markdown extra footnotes",   0, 0, 1, MKD_EXTRA_FOOTNOTE },
     { "footnote",      "markdown extra footnotes",   0, 1, 1, MKD_EXTRA_FOOTNOTE },
+    { "style",         "extract style blocks",       1, 0, 1, MKD_NOSTYLE },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])
