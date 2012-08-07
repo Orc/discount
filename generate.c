@@ -1473,21 +1473,30 @@ splat(Line *p, char *block, Istring align, int force, MMIOT *f)
 
 static void
 printcaption(Line* caption, MMIOT *f) {
-  int i, j;
-  if (!caption)
-    return;
-  j = S(caption->text);
-  if (j < 2)
-    return;
-  while (j && T(caption->text)[--j] != ']')
-    ;
-  i = caption->dle;
-  if (i >= j)
-    return;
-  Qstring("<caption>\n", f);
-  while (++i != j)
-    Qchar(T(caption->text)[i], f);
-  Qstring("\n</caption>\n", f);
+    char* caption_text;
+    int caption_size;
+    if (!caption)
+        return;
+    caption_text = T(caption->text) + caption->dle + 1;
+    caption_size = S(caption->text) - caption->dle - 1;;
+    while (caption_size > 0 && caption_text[--caption_size] != ']')
+        ;
+    if (caption_size <= 0)
+        return;
+#if WITH_ID_ANCHOR
+    Qstring("<caption id=\"", f);
+    mkd_string_to_anchor(caption_text, caption_size,
+                         (mkd_sta_function_t)Qchar, f, 1);
+    Qstring("\">\n", f);
+#else
+    Qstring("<a name=\"", f);
+    mkd_string_to_anchor(caption_text, caption_size,
+                         (mkd_sta_function_t)Qchar, f, 1);
+    Qstring("\"></a>\n<caption>\n", f);
+#endif
+    push(caption_text, caption_size, f);
+    text(f);
+    Qstring("\n</caption>\n", f);
 }
 
 
@@ -1496,7 +1505,9 @@ printtable(Paragraph *pp, MMIOT *f)
 {
     /* header, dashes, then lines of content */
 
-    Line *caption, *hdr, *dash, *body, *last;
+    Line *hdr, *dash, *body;
+    Line *caption = 0;
+    Line *last;
     Istring align;
     int hcols,start;
     char *p;
@@ -1505,13 +1516,13 @@ printtable(Paragraph *pp, MMIOT *f)
     hdr = pp->text;
 
     /* first and last line could be a caption */
-    if ( T(hdr->text)[hdr->dle] == '[' ) {
+    if ( !(hdr->flags & PIPECHAR) ) {
       caption = hdr;
       hdr = hdr->next;
     }
 
     for (last = hdr; last; last = last->next) {
-      if (T(last->text)[last->dle] == '[') {
+      if ( !(last->flags & PIPECHAR) ) {
         if (!caption)
           caption = last;
         break;

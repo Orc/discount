@@ -1159,7 +1159,9 @@ static int
 table_caption(const Line* p)
 {
     int i;
-    if (!p || S(p->text) == 0 || T(p->text)[p->dle] != '[')
+    if (!p || (p->flags & PIPECHAR))
+        return 0;
+    if (S(p->text) == 0 || T(p->text)[p->dle] != '[')
         return 0;
     i = last_nonspace(&p->text);
     return (i != EOF && T(p->text)[i] == ']');
@@ -1205,7 +1207,7 @@ actually_a_table(MMIOT *f, Line *pp)
 	    }
 
         /* but if the last line is a caption, it doesn't need any |'s */
-        if (r && (r->next || T(r->text)[r->dle] != '['))
+        if (r && (r->next || (r->flags & PIPECHAR)))
             return 0;
     }
 
