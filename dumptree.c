@@ -32,6 +32,7 @@ Pptype(int typ)
     case HDR       : return "header";
     case HR        : return "hr";
     case TABLE     : return "table";
+    case FIGURE    : return "figure";
     case SOURCE    : return "source";
     case STYLE     : return "style";
     default        : return "mystery node!";

@@ -33,3 +33,4 @@ John J. Foerch  --  bug reports about incorrect `&ndash;` and `&mdash;`
                     translations.
 Terry Golubiewski -- extra arguments allowed for link- and image-labels.
                      Automatic local link generation for headers.
+                     Pandoc-style figures.
