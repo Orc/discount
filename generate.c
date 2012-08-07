@@ -622,6 +622,70 @@ extra_linky(MMIOT *f, Cstring text, Footnote *ref)
     return 1;
 } /* extra_linky */
 
+static void
+printargs(char* args, int len, MMIOT *f) {
+    char* arg = args;
+    char* const end = arg + len;
+    while (arg < end) {
+        char *cp = arg;
+        char* name;
+        char* value;
+        int namelen = 0;
+        int valuelen = 0;
+        Qchar(' ', f);
+        name = cp;
+        while (*cp && *cp != '=' && !isspace(*cp))
+            ++cp;
+        namelen = cp - name;
+        if (*cp != '=') {
+            Qwrite(name, namelen, f);
+        }
+        else {
+            char quote;
+            ++cp;
+            while (isspace(*cp))
+                ++cp;
+            quote = *cp;
+            if (quote == '"' || quote == '\'') {
+                value = ++cp;
+                while (*cp && *cp != quote)
+                    ++cp;
+                valuelen = cp - value;
+                if (*cp)
+                    ++cp;
+            }
+            else {
+                quote = 0;
+                value = cp;
+                while (*cp && !isspace(*cp))
+                    ++cp;
+                valuelen = cp - value;
+            }
+            if (!strncasecmp(name, "width", namelen)) {
+                Qstring("style=\"width:", f);
+                Qwrite(value, valuelen, f);
+                Qstring(";\"", f);
+            }
+            else if (!strncasecmp(name, "height", namelen)) {
+                Qstring("style=\"height:", f);
+                Qwrite(value, valuelen, f);
+                Qstring(";\"", f);
+            }
+            else {
+                Qwrite(name, namelen, f);
+                Qchar('=', f);
+                if (quote)
+                    Qchar(quote, f);
+                Qwrite(value, valuelen, f);
+                if (quote)
+                    Qchar(quote, f);
+            }
+        }
+        while (isspace(*cp))
+            ++cp;
+        arg = cp;
+    }
+} /* printargs */
 
 /* print out a linky (or fail if it's Not Allowed)
  */
@@ -666,6 +730,8 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	    Qchar('"', f);
 	}
 
+        printargs(T(ref->args), S(ref->args), f);
+
 	Qstring(tag->text_pfx, f);
 	___mkd_reparse(T(text), S(text), tag->flags, f, 0);
 	Qstring(tag->text_sfx, f);
@@ -676,6 +742,31 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
     return 1;
 } /* linkyformat */
 
+static Cstring linky_local_url(const Cstring* str) {
+  Cstring result;
+  CREATE(result);
+  if (!str || !T(*str) || !S(*str))
+    return result;
+  RESERVE(result, S(*str) + 3);
+  if (!ALLOCATED(result))
+    return result;
+  const char* src = T(*str);
+  const char* const end = src + S(*str);
+  char* dst = T(result);
+  *dst = '#';
+  if (!isalpha(*src))
+    *++dst = 'L';
+  while (src != end) {
+    char c = *src++;
+    if (!c)
+      break;
+    int legal = (isalnum(c) || c == '_' || c == ':' || c == '-');
+    *++dst = legal ? c : '.';
+  }
+  *++dst = '\0';
+  S(result) = dst - T(result);
+  return result;
+}
 
 /*
  * process embedded links and images
@@ -734,6 +825,20 @@ linkylinky(int image, MMIOT *f)
 		    else
 			status = linkyformat(f, name, image, ref);
 		}
+                else if (!(f->flags & MKD_NOHDRLINKS)) {
+                    // If implicit link is not found assume it's a local header.
+                    Cstring url;
+                    url = linky_local_url(&name);
+                    if (ALLOCATED(url)) {
+                      Qstring("<a href=\"", f);
+                      Qwrite(T(url), S(url), f);
+                      Qstring("\">", f);
+                      Qwrite(T(name), S(name), f);
+                      Qstring("</a>", f);
+                      status = 1;
+                      DELETE(url);
+                    }
+                }
 	    }
 	}
     }
@@ -1398,7 +1503,7 @@ printheader(Paragraph *pp, MMIOT *f)
 {
 #if WITH_ID_ANCHOR
     Qprintf(f, "<h%d", pp->hnumber);
-    if ( f->flags & MKD_TOC ) {
+    if (!(f->flags & MKD_NOHDRLINKS) || (f->flags & MKD_TOC) ) {
 	Qstring(" id=\"", f);
 	mkd_string_to_anchor(T(pp->text->text),
 			     S(pp->text->text),
@@ -1407,7 +1512,7 @@ printheader(Paragraph *pp, MMIOT *f)
     }
     Qchar('>', f);
 #else
-    if ( f->flags & MKD_TOC ) {
+    if (!(f->flags & MKD_NOHDRLINKS) || (f->flags & MKD_TOC) ) {
 	Qstring("<a name=\"", f);
 	mkd_string_to_anchor(T(pp->text->text),
 			     S(pp->text->text),
@@ -1471,18 +1576,64 @@ splat(Line *p, char *block, Istring align, int force, MMIOT *f)
 }
 
 
+static void
+printcaption(Line* caption, MMIOT *f) {
+    char* caption_text;
+    int caption_size;
+    if (!caption)
+        return;
+    caption_text = T(caption->text) + caption->dle + 1;
+    caption_size = S(caption->text) - caption->dle - 1;;
+    while (caption_size > 0 && caption_text[--caption_size] != ']')
+        ;
+    if (caption_size <= 0)
+        return;
+#if WITH_ID_ANCHOR
+    Qstring("<caption id=\"", f);
+    mkd_string_to_anchor(caption_text, caption_size,
+                         (mkd_sta_function_t)Qchar, f, 1);
+    Qstring("\">\n", f);
+#else
+    Qstring("<a name=\"", f);
+    mkd_string_to_anchor(caption_text, caption_size,
+                         (mkd_sta_function_t)Qchar, f, 1);
+    Qstring("\"></a>\n<caption>\n", f);
+#endif
+    push(caption_text, caption_size, f);
+    text(f);
+    Qstring("\n</caption>\n", f);
+}
+
+
 static int
 printtable(Paragraph *pp, MMIOT *f)
 {
     /* header, dashes, then lines of content */
 
     Line *hdr, *dash, *body;
+    Line *caption = 0;
+    Line *last;
     Istring align;
     int hcols,start;
     char *p;
     enum e_alignments it;
 
     hdr = pp->text;
+
+    /* first and last line could be a caption */
+    if ( !(hdr->flags & PIPECHAR) ) {
+      caption = hdr;
+      hdr = hdr->next;
+    }
+
+    for (last = hdr; last; last = last->next) {
+      if ( !(last->flags & PIPECHAR) ) {
+        if (!caption)
+          caption = last;
+        break;
+      }
+    }
+
     dash= hdr->next;
     body= dash->next;
 
@@ -1490,7 +1641,7 @@ printtable(Paragraph *pp, MMIOT *f)
 	/* trim leading pipe off all lines
 	 */
 	Line *r;
-	for ( r = pp->text; r; r = r->next )
+	for ( r = hdr; r != last; r = r->next )
 	    r->dle ++;
     }
 
@@ -1519,6 +1670,7 @@ printtable(Paragraph *pp, MMIOT *f)
     }
 
     Qstring("<table>\n", f);
+    printcaption(caption, f);
     Qstring("<thead>\n", f);
     hcols = splat(hdr, "th", align, 0, f);
     Qstring("</thead>\n", f);
@@ -1530,7 +1682,7 @@ printtable(Paragraph *pp, MMIOT *f)
 	    EXPAND(align) = a_NONE;
 
     Qstring("<tbody>\n", f);
-    for ( ; body; body = body->next)
+    for ( ; body != last; body = body->next)
 	splat(body, "td", align, 1, f);
     Qstring("</tbody>\n", f);
     Qstring("</table>\n", f);
@@ -1567,6 +1719,35 @@ printblock(Paragraph *pp, MMIOT *f)
     Qstring(Begin[pp->align], f);
     text(f);
     Qstring(End[pp->align], f);
+    return 1;
+}
+
+static int
+printfigure(Paragraph *pp, MMIOT *f)
+{
+    Line *t = pp->text;
+    Qstring("<figure>\n", f);
+    ___mkd_tidy(&t->text);
+    push(T(t->text)+2, S(t->text)-2, f);
+    if ( tag_text(f) || !linkylinky(1, f) ) {
+        Qstring("![", f);
+        text(f);
+    }
+    else {
+        char* name = T(t->text) + 2;
+        char* cp = name;
+        for (;;) {
+            char c = *cp++; 
+            if (!c || c == ']')
+                break;
+            if (c == '\\' && *cp == ']')
+                ++cp;
+        }
+        Qstring("\n<figurecaption>\n", f);
+        Qwrite(name, cp - name - 1, f);
+        Qstring("\n</figurecaption>", f);
+    }
+    Qstring("\n</figure>\n", f);
     return 1;
 }
 
@@ -1717,6 +1898,10 @@ display(Paragraph *p, MMIOT *f)
     case TABLE:
 	printtable(p, f);
 	break;
+
+    case FIGURE:
+	printfigure(p, f);
+        break;
 
     case SOURCE:
 	htmlify(p->down, 0, 0, f);

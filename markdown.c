@@ -977,6 +977,7 @@ addfootnote(Line *p, MMIOT* f)
     CREATE(foot->tag);
     CREATE(foot->link);
     CREATE(foot->title);
+    CREATE(foot->args);
     foot->flags = foot->height = foot->width = 0;
 
     for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
@@ -1020,15 +1021,31 @@ addfootnote(Line *p, MMIOT* f)
 	 */
 	++j;	/* skip leading quote */
 
-	while ( j < S(p->text) )
+	while ( j < S(p->text) && T(p->text)[j] != c)
 	    EXPAND(foot->title) = T(p->text)[j++];
 
-	while ( S(foot->title) && T(foot->title)[S(foot->title)-1] != c )
-	    --S(foot->title);
-	if ( S(foot->title) )	/* skip trailing quote */
-	    --S(foot->title);
 	EXPAND(foot->title) = 0;
 	--S(foot->title);
+        j = nextnonblank(p, j+1);
+    }
+
+    /* Process extra args, if any */
+    if ( (j < S(p->text)) || (np && np->dle) ) {
+        for (;;) {
+            if (j >= S(p->text)) {
+                if (!np || np->dle == 0)
+                    break;
+                ___mkd_freeLine(p);
+                p = np;
+                np = p->next;
+                j = p->dle;
+                EXPAND(foot->args) = ' ';
+            }
+            while ( j < S(p->text))
+                EXPAND(foot->args) = T(p->text)[j++];
+        }
+	EXPAND(foot->args) = 0;
+	--S(foot->args);
     }
 
 skip_to_end:
@@ -1143,6 +1160,32 @@ first_nonblank_before(Line *j, int dle)
 
 
 static int
+last_nonspace(const Cstring* str)
+{
+    int i = S(*str);
+    while (i > 0) {
+        char c = T(*str)[--i];
+        if (!isspace(c))
+            return i;
+    }
+    return EOF;
+}
+
+
+static int
+table_caption(const Line* p)
+{
+    int i;
+    if (!p || (p->flags & PIPECHAR))
+        return 0;
+    if (S(p->text) == 0 || T(p->text)[p->dle] != '[')
+        return 0;
+    i = last_nonspace(&p->text);
+    return (i != EOF && T(p->text)[i] == ']');
+}
+
+
+static int
 actually_a_table(MMIOT *f, Line *pp)
 {
     Line *r;
@@ -1153,7 +1196,14 @@ actually_a_table(MMIOT *f, Line *pp)
     if ( f->flags & (MKD_STRICT|MKD_NOTABLES) )
 	return 0;
 
-    /* tables need three lines */
+    if (!pp)
+        return 0;
+
+    /* the first line may be a table caption; skip it */
+    if (table_caption(pp))
+        pp = pp->next;
+
+    /* tables need at least three lines */
     if ( !(pp && pp->next && pp->next->next) ) {
 	return 0;
     }
@@ -1161,6 +1211,8 @@ actually_a_table(MMIOT *f, Line *pp)
     /* all lines must contain |'s */
     for (r = pp; r; r = r->next )
 	if ( !(r->flags & PIPECHAR) ) {
+            if (table_caption(r) && !r->next)
+                break;
 	    return 0;
 	}
 
@@ -1168,8 +1220,12 @@ actually_a_table(MMIOT *f, Line *pp)
     if ( T(pp->text)[pp->dle] == '|' ) {
 	for ( r = pp; r; r = r->next )
 	    if ( T(r->text)[first_nonblank_before(r,pp->dle)] != '|' ) {
-		return 0;
+		break;
 	    }
+
+        /* but if the last line is a caption, it doesn't need any |'s */
+        if (r && (r->next || (r->flags & PIPECHAR)))
+            return 0;
     }
 
     /* second line must be only whitespace, -, |, or : */
@@ -1184,6 +1240,45 @@ actually_a_table(MMIOT *f, Line *pp)
     }
 
     return 1;
+}
+
+
+static int
+actually_a_figure(MMIOT *f, Line *pp)
+{
+    const char* cp;
+    char c;
+    char close_delim;
+
+    /* figures need to be turned on */
+    if ( f->flags & (MKD_STRICT|MKD_NOFIGURES) )
+	return 0;
+
+    /* figures must be exactly one line */
+    if ( !pp || pp->next)
+	return 0;
+
+    cp = &T(pp->text)[pp->dle];
+    if (*cp != '!' || *++cp != '[')
+        return 0;
+
+    while (*++cp != ']') {
+        if (!*cp)
+            return 0;
+    }
+
+    c = *++cp;
+    if (c != '(' && c != '[')
+        return 0;
+
+    close_delim = (c == '(') ? ')' : ']'; 
+    cp = T(pp->text) + S(pp->text);
+    for (;;) {
+      c = *--cp;
+      if (!isspace(c))
+        break;
+    }
+    return (*cp == close_delim);
 }
 
 
@@ -1250,9 +1345,11 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	else {
 	    p = Pp(&d, ptr, MARKUP);
 	    ptr = textblock(p, toplevel, f->flags);
-	    /* tables are a special kind of paragraph */
+	    /* tables and figures are special kinds of paragraph */
 	    if ( actually_a_table(f, p->text) )
 		p->typ = TABLE;
+            else if( actually_a_figure(f, p->text) )
+                p->typ = FIGURE;
 	}
 
 	if ( (para||toplevel) && !p->align )
