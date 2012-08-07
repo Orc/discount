@@ -199,10 +199,10 @@ main(int argc, char **argv)
 	    rc = 1;
 	    if ( mkd_compile(doc, flags) ) {
 		rc = 0;
-		if ( toc )
-		    mkd_generatetoc(doc, stdout);
 		if ( styles )
 		    mkd_generatecss(doc, stdout);
+		if ( toc )
+		    mkd_generatetoc(doc, stdout);
 		if ( content )
 		    mkd_generatehtml(doc, stdout);
 		mkd_cleanup(doc);

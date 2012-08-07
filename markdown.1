@@ -15,7 +15,9 @@
 .Op Fl C Ar prefix
 .Op Fl F Pa bitmap
 .Op Fl f Ar flags
+.Op Fl n
 .Op Fl o Pa file
+.Op Fl S
 .Op Fl s Pa text
 .Op Fl t Pa text
 .Op Pa textfile
@@ -107,6 +109,8 @@ Allow alphabetic lists.
 Allow definition lists.
 .It Ar footnote
 Allow markdown extra-style footnotes.
+.It Ar styles
+Extract <style> blocks from the output.
 .El
 .Pp
 As an example, the option
@@ -123,6 +127,13 @@ described in
 .Xr markdown 3 
 (the flag values are defined in
 .Pa mkdio.h )
+.It Fl n
+Don't write generated html.
+.It Fl o Pa file
+Write the generated html to 
+.Pa file .
+.It Fl S
+output <style> blocks.
 .It Fl V
 Show the version# and compile-time configuration data.
 .Pp
@@ -138,9 +149,6 @@ was configured to use the specified tabstop.
 .It Fl VV
 Show the version#, the compile-time configuration, and the
 run-time configuration.
-.It Fl o Pa file
-Write the generated html to 
-.Pa file .
 .It Fl t Ar text
 Use
 .Xr mkd_text 3
