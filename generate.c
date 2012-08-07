@@ -1670,8 +1670,8 @@ printtable(Paragraph *pp, MMIOT *f)
     }
 
     Qstring("<table>\n", f);
-    Qstring("<thead>\n", f);
     printcaption(caption, f);
+    Qstring("<thead>\n", f);
     hcols = splat(hdr, "th", align, 0, f);
     Qstring("</thead>\n", f);
 
