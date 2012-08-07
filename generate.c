@@ -742,6 +742,31 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
     return 1;
 } /* linkyformat */
 
+static Cstring linky_local_url(const Cstring* str) {
+  Cstring result;
+  CREATE(result);
+  if (!str || !T(*str) || !S(*str))
+    return result;
+  RESERVE(result, S(*str) + 3);
+  if (!ALLOCATED(result))
+    return result;
+  const char* src = T(*str);
+  const char* const end = src + S(*str);
+  char* dst = T(result);
+  *dst = '#';
+  if (!isalpha(*src))
+    *++dst = 'L';
+  while (src != end) {
+    char c = *src++;
+    if (!c)
+      break;
+    int legal = (isalnum(c) || c == '_' || c == ':' || c == '-');
+    *++dst = legal ? c : '.';
+  }
+  *++dst = '\0';
+  S(result) = dst - T(result);
+  return result;
+}
 
 /*
  * process embedded links and images
@@ -800,6 +825,20 @@ linkylinky(int image, MMIOT *f)
 		    else
 			status = linkyformat(f, name, image, ref);
 		}
+                else if (!(f->flags & MKD_NOHDRLINKS)) {
+                    // If implicit link is not found assume it's a local header.
+                    Cstring url;
+                    url = linky_local_url(&name);
+                    if (ALLOCATED(url)) {
+                      Qstring("<a href=\"", f);
+                      Qwrite(T(url), S(url), f);
+                      Qstring("\">", f);
+                      Qwrite(T(name), S(name), f);
+                      Qstring("</a>", f);
+                      status = 1;
+                      DELETE(url);
+                    }
+                }
 	    }
 	}
     }
@@ -1464,7 +1503,7 @@ printheader(Paragraph *pp, MMIOT *f)
 {
 #if WITH_ID_ANCHOR
     Qprintf(f, "<h%d", pp->hnumber);
-    if ( f->flags & MKD_TOC ) {
+    if (!(f->flags & MKD_NOHDRLINKS) || (f->flags & MKD_TOC) ) {
 	Qstring(" id=\"", f);
 	mkd_string_to_anchor(T(pp->text->text),
 			     S(pp->text->text),
@@ -1473,7 +1512,7 @@ printheader(Paragraph *pp, MMIOT *f)
     }
     Qchar('>', f);
 #else
-    if ( f->flags & MKD_TOC ) {
+    if (!(f->flags & MKD_NOHDRLINKS) || (f->flags & MKD_TOC) ) {
 	Qstring("<a name=\"", f);
 	mkd_string_to_anchor(T(pp->text->text),
 			     S(pp->text->text),
