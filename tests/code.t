@@ -85,6 +85,21 @@ text text text
 code code code?
 ~~~</p>'
 
+try 'fenced code blocks with backtick delimiters' \
+'```
+code
+```' \
+'<pre><code>code
+</code></pre>'
+
+try 'fenced code block with mismatched delimters' \
+'```
+code
+~~~' \
+'<p>```
+code
+~~~</p>'
+
 fi
 
 summary $0

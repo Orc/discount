@@ -188,7 +188,8 @@ checkline(Line *l)
     int eol, i;
     int dashes = 0, spaces = 0,
 	equals = 0, underscores = 0,
-	stars = 0, tildes = 0;
+	stars = 0, tildes = 0,
+	backticks = 0;
 
     l->flags |= CHECKED;
     l->kind = chk_text;
@@ -210,12 +211,15 @@ checkline(Line *l)
 	case '=':  equals = 1; break;
 	case '_':  underscores = 1; break;
 	case '*':  stars = 1; break;
+#if WITH_FENCED_CODE
 	case '~':  tildes = 1; break;
+	case '`':  backticks = 1; break;
+#endif
 	default:   return;
 	}
     }
 
-    if ( dashes + equals + underscores + stars + tildes > 1 )
+    if ( dashes + equals + underscores + stars + tildes + backticks > 1 )
 	return;
 
     if ( spaces ) {
@@ -227,7 +231,10 @@ checkline(Line *l)
     if ( stars || underscores ) { l->kind = chk_hr; }
     else if ( dashes ) { l->kind = chk_dash; }
     else if ( tildes ) { l->kind = chk_tilde; }
+#if WITH_FENCED_CODE
     else if ( equals ) { l->kind = chk_equal; }
+    else if ( backticks ) { l->kind = chk_backtick; }
+#endif
 }
 
 
@@ -599,12 +606,15 @@ codeblock(Paragraph *p)
 
 #ifdef WITH_FENCED_CODE
 static int
-iscodefence(Line *r, int size)
+iscodefence(Line *r, int size, line_type kind)
 {
     if ( !(r->flags & CHECKED) )
 	checkline(r);
 
-    return (r->kind == chk_tilde) && (r->count >= size);
+    if ( kind )
+	return (r->kind == kind) && (r->count >= size);
+    else
+	return (r->kind == chk_tilde || r->kind == chk_backtick) && (r->count >= size);
 }
 
 static Paragraph *
@@ -617,14 +627,14 @@ fencedcodeblock(ParagraphRoot *d, Line **ptr)
     
     /* don't allow zero-length code fences
      */
-    if ( (first->next == 0) || iscodefence(first->next, first->count) )
+    if ( (first->next == 0) || iscodefence(first->next, first->count, 0) )
 	return 0;
 
     /* find the closing fence, discard the fences,
      * return a Paragraph with the contents
      */
     for ( r = first; r && r->next; r = r->next )
-	if ( iscodefence(r->next, first->count) ) {
+	if ( iscodefence(r->next, first->count, first->kind) ) {
 	    (*ptr) = r->next->next;
 	    ret = Pp(d, first->next, CODE);
 	    ___mkd_freeLine(first);
@@ -1218,7 +1228,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    ptr = codeblock(p);
 	}
 #if WITH_FENCED_CODE
-	else if ( iscodefence(ptr,3) && (p=fencedcodeblock(&d, &ptr)) )
+	else if ( iscodefence(ptr,3,0) && (p=fencedcodeblock(&d, &ptr)) )
 	    /* yay, it's already done */ ;
 #endif
 	else if ( ishr(ptr) ) {
