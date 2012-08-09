@@ -1477,12 +1477,19 @@ printtable(Paragraph *pp, MMIOT *f)
     /* header, dashes, then lines of content */
 
     Line *hdr, *dash, *body;
+    Line *first, *caption = 0;
     Istring align;
     int hcols,start;
     char *p;
     enum e_alignments it;
 
-    hdr = pp->text;
+    first = pp->text;
+    if ( ___mkd_tablecaption(first) ) {
+	caption = first;
+	first = first->next;
+    }
+    
+    hdr = first;
     dash= hdr->next;
     body= dash->next;
 
@@ -1530,9 +1537,21 @@ printtable(Paragraph *pp, MMIOT *f)
 	    EXPAND(align) = a_NONE;
 
     Qstring("<tbody>\n", f);
-    for ( ; body; body = body->next)
+    for ( ; body; body = body->next) {
+	if ( !body->next && ___mkd_tablecaption(body) ) {
+	    if ( !caption )
+		caption = body;
+	    break;
+	}
 	splat(body, "td", align, 1, f);
+    }
     Qstring("</tbody>\n", f);
+
+    if ( caption ) {
+	Qstring("<caption>\n", f);
+	___mkd_reparse(T(caption->text)+1, S(caption->text)-2, 0, f, 0);
+	Qstring("</caption>", f);
+    }
     Qstring("</table>\n", f);
 
     DELETE(align);
