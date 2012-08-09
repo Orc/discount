@@ -193,8 +193,8 @@ AC_CHECK_FUNCS () {
     B=`echo "$1" | sed -e 's/(.*)//'`
 
     case "$B" in
-    "$1") F="$1()" ;;
-    *)    F="$1" ;;
+    "$1") F="$1()"; need_proto=1 ;;
+    *)    F="$1"  ; unset need_proto ;;
     esac
 
     shift
@@ -204,6 +204,10 @@ AC_CHECK_FUNCS () {
 	echo "#include <$1>" >> ngc$$.c
 	shift
     done
+
+    if [ "$need_proto" ]; then
+	echo "void $F;" >> ngc$$.c
+    fi
 
     cat >> ngc$$.c << EOF
 main()
@@ -1168,6 +1172,8 @@ AC_CHECK_BASENAME() {
 
     cat > ngc$$.c << EOF
 #include <string.h>
+
+extern char *basename(char*);
 
 main()
 {
