@@ -215,7 +215,7 @@ checkline(Line *l)
 	case '~':  tildes = 1; break;
 	case '`':  backticks = 1; break;
 #endif
-	default:   fprintf(stderr, "failure: (%c)\n", c); return;
+	default:   return;
 	}
     }
 
