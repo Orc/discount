@@ -215,7 +215,7 @@ checkline(Line *l)
 	case '~':  tildes = 1; break;
 	case '`':  backticks = 1; break;
 #endif
-	default:   return;
+	default:   fprintf(stderr, "failure: (%c)\n", c); return;
 	}
     }
 
@@ -230,9 +230,9 @@ checkline(Line *l)
 
     if ( stars || underscores ) { l->kind = chk_hr; }
     else if ( dashes ) { l->kind = chk_dash; }
-    else if ( tildes ) { l->kind = chk_tilde; }
-#if WITH_FENCED_CODE
     else if ( equals ) { l->kind = chk_equal; }
+#if WITH_FENCED_CODE
+    else if ( tildes ) { l->kind = chk_tilde; }
     else if ( backticks ) { l->kind = chk_backtick; }
 #endif
 }
