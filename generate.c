@@ -1497,7 +1497,7 @@ printtable(Paragraph *pp, MMIOT *f)
 	/* trim leading pipe off all lines
 	 */
 	Line *r;
-	for ( r = pp->text; r; r = r->next )
+	for ( r = hdr; r; r = r->next )
 	    r->dle ++;
     }
 

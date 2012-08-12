@@ -92,9 +92,9 @@ lastnonblank(Line *p)
     while ( i > 0 ) {
 	--i;
 	if ( !isspace(T(p->text)[i]) )
-	    break;
+	    return i;
     }
-    return i;
+    return -1;
 }
 
 
