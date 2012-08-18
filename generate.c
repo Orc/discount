@@ -26,6 +26,8 @@ static Paragraph *display(Paragraph*, MMIOT*);
 
 /* externals from markdown.c */
 int __mkd_footsort(Footnote *, Footnote *);
+int ___mkd_tablecaption(Line*);
+
 
 /*
  * push text into the generator input buffer
@@ -1477,7 +1479,8 @@ printtable(Paragraph *pp, MMIOT *f)
     /* header, dashes, then lines of content */
 
     Line *hdr, *dash, *body;
-    Line *first, *caption = 0;
+    Line *first, *caption = 0, *lastline;
+    Line *r;
     Istring align;
     int hcols,start;
     char *p;
@@ -1488,7 +1491,12 @@ printtable(Paragraph *pp, MMIOT *f)
 	caption = first;
 	first = first->next;
     }
-    
+    for ( r = pp->text; (lastline = r); r = r->next )
+	if ( r->next == 0 && ___mkd_tablecaption(r) ) {
+	    if ( !caption ) caption = r;
+	    break;
+	}
+
     hdr = first;
     dash= hdr->next;
     body= dash->next;
@@ -1496,8 +1504,7 @@ printtable(Paragraph *pp, MMIOT *f)
     if ( T(hdr->text)[hdr->dle] == '|' ) {
 	/* trim leading pipe off all lines
 	 */
-	Line *r;
-	for ( r = pp->text; r; r = r->next )
+	for ( r = pp->text; r != lastline; r = r->next )
 	    r->dle ++;
     }
 
@@ -1526,6 +1533,11 @@ printtable(Paragraph *pp, MMIOT *f)
     }
 
     Qstring("<table>\n", f);
+    if ( caption ) {
+	Qstring("<caption>", f);
+	___mkd_reparse(T(caption->text)+1, S(caption->text)-2, 0, f, 0);
+	Qstring("</caption>\n", f);
+    }
     Qstring("<thead>\n", f);
     hcols = splat(hdr, "th", align, 0, f);
     Qstring("</thead>\n", f);
@@ -1537,21 +1549,11 @@ printtable(Paragraph *pp, MMIOT *f)
 	    EXPAND(align) = a_NONE;
 
     Qstring("<tbody>\n", f);
-    for ( ; body; body = body->next) {
-	if ( !body->next && ___mkd_tablecaption(body) ) {
-	    if ( !caption )
-		caption = body;
-	    break;
-	}
+    for ( ; body != lastline; body = body->next )
 	splat(body, "td", align, 1, f);
-    }
+    
     Qstring("</tbody>\n", f);
 
-    if ( caption ) {
-	Qstring("<caption>\n", f);
-	___mkd_reparse(T(caption->text)+1, S(caption->text)-2, 0, f, 0);
-	Qstring("</caption>", f);
-    }
     Qstring("</table>\n", f);
 
     DELETE(align);
