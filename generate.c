@@ -1473,6 +1473,24 @@ splat(Line *p, char *block, Istring align, int force, MMIOT *f)
 }
 
 
+static void
+printcaption(Line* caption, MMIOT *f) {
+    char* caption_text;
+    int caption_size;
+    if (!caption)
+        return;
+    caption_text = T(caption->text) + caption->dle + 1;
+    caption_size = S(caption->text) - caption->dle - 1;;
+    while (caption_size > 0 && caption_text[--caption_size] != ']')
+        ;
+    if (caption_size <= 0)
+        return;
+    Qstring("<caption>", f);
+    ___mkd_reparse(caption_text, caption_size, 0, f, 0);
+    Qstring("\n</caption>\n", f);
+}
+
+
 static int
 printtable(Paragraph *pp, MMIOT *f)
 {
@@ -1534,9 +1552,7 @@ printtable(Paragraph *pp, MMIOT *f)
 
     Qstring("<table>\n", f);
     if ( caption ) {
-	Qstring("<caption>", f);
-	___mkd_reparse(T(caption->text)+1, S(caption->text)-2, 0, f, 0);
-	Qstring("</caption>\n", f);
+        printcaption(caption, f);
     }
     Qstring("<thead>\n", f);
     hcols = splat(hdr, "th", align, 0, f);
