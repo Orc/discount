@@ -1173,12 +1173,9 @@ first_nonblank_before(Line *j, int dle)
 int
 ___mkd_tablecaption(Line *pp)
 {
-    if ( pp && T(pp->text)[pp->dle] == '[' ) {
-	int last = lastnonblank(pp);
-	if ( last >= 0 && T(pp->text)[last] == ']' )
-	    return 1;
-    }
-    return 0;
+    return pp && S(pp->text)
+	      && (T(pp->text)[pp->dle] == '[')
+	      && (T(pp->text)[lastnonblank(pp)] == ']');
 }
 
 
@@ -1198,9 +1195,8 @@ actually_a_table(MMIOT *f, Line *pp)
 	pp = pp->next;
 
     /* tables need three lines */
-    if ( !(pp && pp->next && pp->next->next) ) {
+    if ( !(pp && pp->next && pp->next->next) )
 	return 0;
-    }
 
     /* all lines must contain |'s */
     for (r = pp; r; r = r->next )
