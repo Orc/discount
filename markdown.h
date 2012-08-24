@@ -166,6 +166,7 @@ struct string_stream {
 
 
 extern int  mkd_firstnonblank(Line *);
+extern int  mkd_lastnonblank(Line *);
 extern int  mkd_compile(Document *, DWORD);
 extern int  mkd_document(Document *, char **);
 extern int  mkd_generatehtml(Document *, FILE *);

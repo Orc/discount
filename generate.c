@@ -1535,7 +1535,7 @@ printtable(Paragraph *pp, MMIOT *f)
     Qstring("<table>\n", f);
     if ( caption ) {
 	Qstring("<caption>", f);
-	___mkd_reparse(T(caption->text)+1, S(caption->text)-2, 0, f, 0);
+	___mkd_reparse(T(caption->text)+1, mkd_lastnonblank(caption)-1, 0, f, 0);
 	Qstring("</caption>\n", f);
     }
     Qstring("<thead>\n", f);

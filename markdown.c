@@ -82,8 +82,8 @@ mkd_firstnonblank(Line *p)
 
 /* find the last nonblank character on the line
  */
-static int
-lastnonblank(Line *p)
+int
+mkd_lastnonblank(Line *p)
 {
     int i;
 
@@ -1175,7 +1175,7 @@ ___mkd_tablecaption(Line *pp)
 {
     return pp && S(pp->text)
 	      && (T(pp->text)[pp->dle] == '[')
-	      && (T(pp->text)[lastnonblank(pp)] == ']');
+	      && (T(pp->text)[mkd_lastnonblank(pp)] == ']');
 }
 
 
