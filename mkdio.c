@@ -216,7 +216,7 @@ mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 				       void *out, int labelformat)
 {
 #if WITH_URLENCODED_ANCHOR
-    static const char hexchars[] = "0123456789abcdef";
+    static const unsigned char hexchars[] = "0123456789abcdef";
 #endif
     unsigned char c;
 
@@ -238,8 +238,8 @@ mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 #if WITH_URLENCODED_ANCHOR
 	    {
 		(*outchar)('%', out);
-		(*outchar)((int)hexchars[c >> 4 & 0xf], out);
-		(*outchar)((int)hexchars[c      & 0xf], out);
+		(*outchar)(hexchars[c >> 4 & 0xf], out);
+		(*outchar)(hexchars[c      & 0xf], out);
 	    }
 #else
 		(*outchar)('.', out);
