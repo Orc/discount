@@ -22,8 +22,6 @@
 void
 ___mkd_freeLine(Line *ptr)
 {
-    if ( ptr == NULL )
-        return;
     DELETE(ptr->text);
     free(ptr);
 }
@@ -34,8 +32,6 @@ ___mkd_freeLine(Line *ptr)
 void
 ___mkd_freeLines(Line *p)
 {
-    if ( p == NULL )
-        return;
     if (p->next)
 	 ___mkd_freeLines(p->next);
     ___mkd_freeLine(p);
