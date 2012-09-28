@@ -1337,7 +1337,15 @@ text(MMIOT *f)
 	case '\\':  switch ( c = pull(f) ) {
 		    case '&':   Qstring("&amp;", f);
 				break;
-		    case '<':   Qstring("&lt;", f);
+		    case '<':   if ( isspace(peek(f,1)) )
+				    Qstring("&lt;", f);
+				else {
+				    /* Markdown.pl does not escape <[nonwhite]
+				     * sequences */
+				    Qchar('\\', f);
+				    Qchar(c, f);
+				}
+				
 				break;
 		    case '^':   if ( f->flags & (MKD_STRICT|MKD_NOSUPERSCRIPT) ) {
 				    Qchar('\\', f);
