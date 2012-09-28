@@ -1337,7 +1337,8 @@ text(MMIOT *f)
 	case '\\':  switch ( c = pull(f) ) {
 		    case '&':   Qstring("&amp;", f);
 				break;
-		    case '<':   if ( isspace(peek(f,1)) )
+		    case '<':   c = peek(f,1);
+				if ( (c == EOF) || isspace(c) )
 				    Qstring("&lt;", f);
 				else {
 				    /* Markdown.pl does not escape <[nonwhite]

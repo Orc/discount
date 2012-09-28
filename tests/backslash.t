@@ -12,5 +12,9 @@ try -fautolink 'autolink url with trailing \' \
     'http://a.com/\' \
     '<p><a href="http://a.com/\">http://a.com/\</a></p>'
 
+
+try 'backslashes before <text' '\<code>' '<p>\<code></p>'
+try 'backslashes before < (no text)' '\< ' '<p>&lt; </p>'
+
 summary $0
 exit $rc
