@@ -1343,7 +1343,7 @@ text(MMIOT *f)
 				    /* Markdown.pl does not escape <[nonwhite]
 				     * sequences */
 				    Qchar('\\', f);
-				    Qchar(c, f);
+				    shift(f, -1);
 				}
 				
 				break;
