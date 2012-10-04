@@ -22,7 +22,7 @@
  *          of html has been generated.
  *
  *          It should create MarkdownTest_1.0 (and _1.0.3)
- *          compatable emphasis for non-pathological cases
+ *          compatible emphasis for non-pathological cases
  *          and it should fail in a standards-compliant way
  *          when someone attempts to feed it junk.
  *
