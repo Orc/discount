@@ -97,14 +97,14 @@ hello|sailor' \
     '<table>
 <thead>
 <tr>
-<th align="right">a  </th>
-<th align="left">  b</th>
+<th style="text-align:right;">a  </th>
+<th style="text-align:left;">  b</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="right">hello</td>
-<td align="left">sailor</td>
+<td style="text-align:right;">hello</td>
+<td style="text-align:left;">sailor</td>
 </tr>
 </tbody>
 </table>'
@@ -257,16 +257,16 @@ try "table with leading |'s and alignment" \
 '<table>
 <thead>
 <tr>
-<th align="left">AA</th>
-<th align="center">BB</th>
-<th align="right">CC</th>
+<th style="text-align:left;">AA</th>
+<th style="text-align:center;">BB</th>
+<th style="text-align:right;">CC</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="left">aa</td>
-<td align="center">bb</td>
-<td align="right">cc</td>
+<td style="text-align:left;">aa</td>
+<td style="text-align:center;">bb</td>
+<td style="text-align:right;">cc</td>
 </tr>
 </tbody>
 </table>'

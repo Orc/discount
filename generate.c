@@ -1433,8 +1433,9 @@ printheader(Paragraph *pp, MMIOT *f)
 
 enum e_alignments { a_NONE, a_CENTER, a_LEFT, a_RIGHT };
 
-static char* alignments[] = { "", " align=\"center\"", " align=\"left\"",
-				  " align=\"right\"" };
+static char* alignments[] = { "", " style=\"text-align:center;\"",
+				  " style=\"text-align:left;\"",
+				  " style=\"text-align:right;\"" };
 
 typedef STRING(int) Istring;
 
