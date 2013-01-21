@@ -1695,7 +1695,11 @@ display(Paragraph *p, MMIOT *f)
 	break;
 
     case HTML:
-	printhtml(p->text, f);
+	if (p->text)
+	    printhtml(p->text, f);
+	else
+	    htmlify(p->down, 0, 0, f);
+
 	break;
 	
     case CODE:

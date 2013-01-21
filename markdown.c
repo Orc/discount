@@ -258,16 +258,19 @@ commentblock(Paragraph *p, int *unclosed)
 
 }
 
+static struct kw markdown = { "MARKDOWN", 8, 0 };
+static struct kw span = { "SPAN", 4, 0 };
 
 static Line *
-htmlblock(Paragraph *p, struct kw *tag, int *unclosed)
+htmlblock(Paragraph *p, struct kw *tag, int *unclosed, int *doparse)
 {
     Line *ret;
     FLO f = { p->text, 0 };
     int c;
-    int i, closing, depth=0;
+    int i, l, closing, depth=0;
 
     *unclosed = 0;
+    *doparse = 0;
     
     if ( tag == &comment )
 	return commentblock(p, unclosed);
@@ -316,11 +319,80 @@ htmlblock(Paragraph *p, struct kw *tag, int *unclosed)
 			ret = f.t->next;
 			f.t->next = 0;
 			return ret;
+		    } else if ( depth == 1 && !closing ) {
+			while ( c != EOF && c != '>' ) {
+			    int as;
+
+			    if ( !isspace(c) ) {
+				c = flogetc(&f);
+				continue;
+			    }
+
+			    as = floindex(f) - 1;
+
+			    while ( c != EOF && isspace(c) )
+				c = flogetc(&f);
+
+			    for ( i=0; i < markdown.size; c = flogetc(&f) ) {
+				if ( markdown.id[i++] != toupper(c) )
+				    break;
+			    }
+
+			    if ( i == markdown.size ) {
+				if ( c == '=') {
+				    int quoted = 0;
+				    const char *v;
+
+				    c = flogetc(&f);
+				    i = floindex(f) - 1;
+
+				    /* identify the attribute value */
+				    if ( c == '\'') {
+					while ( (c = flogetc(&f)) != EOF && c != '\'' );
+					quoted = 1;
+				    } else if ( c == '\"') {
+					while ( (c = flogetc(&f)) != EOF && c != '\"' );
+					quoted = 1;
+				    } else {
+					while ( c != EOF && c != '>' && !isspace(c) )
+					    c = flogetc(&f);
+				    }
+
+				    /* compute length of attribute value */
+				    v = T(f.t->text) + i;
+				    l = floindex(f) - i - 1;
+
+				    if (quoted) {
+					if (c != EOF)
+					    c = flogetc(&f);
+
+					v += 1;
+					l -= 1;
+				    }
+
+				    if ( l == 1 && v[0] == '1' )
+					*doparse = 1;
+				    else if ( l == span.size && strncasecmp(v, span.id, l) == 0 )
+					*doparse = 1;
+				} else if ( c == '>' || isspace(c) ) {
+				    /* assume a default value of "span" for an empty attribute */
+				    *doparse = 1;
+				}
+
+				l = floindex(f) - as - 1;
+				CLIP(f.t->text, as, l);
+				f.i -= l;
+			    }
+			}
+
+			if ( c == EOF )
+			    break;
 		    }
 		}
 	    }
 	}
     }
+
     *unclosed = 1;
     return 0;
 }
@@ -1091,7 +1163,7 @@ compile_document(Line *ptr, MMIOT *f)
     ANCHOR(Line) source = { 0, 0 };
     Paragraph *p = 0;
     struct kw *tag;
-    int eaten, unclosed;
+    int eaten, unclosed, doparse;
 
     while ( ptr ) {
 	if ( !(f->flags & MKD_NOHTML) && (tag = isopentag(ptr)) ) {
@@ -1111,10 +1183,13 @@ compile_document(Line *ptr, MMIOT *f)
 	    else
 		blocktype = strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML;
 	    p = Pp(&d, ptr, blocktype);
-	    ptr = htmlblock(p, tag, &unclosed);
+	    ptr = htmlblock(p, tag, &unclosed, &doparse);
 	    if ( unclosed ) {
 		p->typ = SOURCE;
 		p->down = compile(p->text, 1, f);
+		p->text = 0;
+	    } else if ( doparse && p->typ == HTML) {
+		p->down = compile(p->text, 0, f);
 		p->text = 0;
 	    }
 	}
