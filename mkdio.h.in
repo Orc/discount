@@ -26,7 +26,7 @@ void mkd_shlib_destructor();
 /* compilation, debugging, cleanup
  */
 int mkd_compile(MMIOT*, mkd_flag_t);
-int mkd_cleanup(MMIOT*);
+void mkd_cleanup(MMIOT*);
 
 /* markup functions
  */
