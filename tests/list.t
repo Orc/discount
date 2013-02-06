@@ -61,9 +61,9 @@ try 'nested lists (2)' \
 <li><p>A (list)</p>
 
 <ol>
-<li>Sub (list)</li>
-<li>Two (items)</li>
-<li>Here</li>
+<li> Sub (list)</li>
+<li> Two (items)</li>
+<li> Here</li>
 </ol>
 
 
