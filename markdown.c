@@ -524,6 +524,7 @@ islist(Line *t, int *clip, DWORD flags, int *list_type)
 	    strtoul(T(t->text)+t->dle, &q, 10);
 	    if ( (q > T(t->text)+t->dle) && (q == T(t->text) + (j-1)) ) {
 		j = nextnonblank(t,j);
+		/* *clip = j; */
 		*clip = (j > 4) ? 4 : j;
 		*list_type = OL;
 		return AL;
@@ -729,6 +730,7 @@ isdivmarker(Line *p, int start, DWORD flags)
     if ( flags & (MKD_NODIVQUOTE|MKD_STRICT) )
 	return 0;
 
+    start = nextnonblank(p, start);
     last= S(p->text) - (1 + start);
     s   = T(p->text) + start;
 
