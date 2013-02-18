@@ -113,7 +113,7 @@ else
     AC_DEFINE 'COINTOSS()' '1'
 fi
 
-if AC_CHECK_FUNCS strcasecmp; then
+if AC_CHECK_FUNCS 'strcasecmp(0,0)' strings.h; then
     :
 elif AC_CHECK_FUNCS stricmp; then
     AC_DEFINE strcasecmp stricmp
@@ -121,7 +121,7 @@ else
     AC_FAIL "$TARGET requires either strcasecmp() or stricmp()"
 fi
 
-if AC_CHECK_FUNCS strncasecmp; then
+if AC_CHECK_FUNCS 'strncasecmp(0,0,0)' strings.h; then
     :
 elif AC_CHECK_FUNCS strnicmp; then
     AC_DEFINE strncasecmp strnicmp
