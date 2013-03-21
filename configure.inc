@@ -868,6 +868,18 @@ AC_C_INLINE() {
 # AC_SCALAR_TYPES checks to see if the compiler can generate 2 and 4 byte ints.
 #
 AC_SCALAR_TYPES () {
+
+    rc=1
+    LOGN "defining WORD & DWORD scalar types"
+    
+    if AC_QUIET AC_CHECK_HEADERS WinDef.h; then
+	# windows machine; BYTE, WORD, DWORD already
+	# defined
+	echo "#include <WinDef.h>" >> $__cwd/config.h
+	TLOG " (defined in WinDef.h)"
+	return 0
+    fi
+	
     cat > ngc$$.c << EOF
 #include <stdio.h>
 #include <string.h>
@@ -908,8 +920,6 @@ char **argv;
     exit(0);
 }
 EOF
-    rc=1
-    LOGN "defining WORD & DWORD scalar types"
     if $AC_CC ngc$$.c -o ngc$$; then
 	while [ "$1" ]; do
 	    case "$1" in
@@ -933,6 +943,7 @@ EOF
     0) TLOG "" ;;
     *) AC_FAIL " ** FAILED **" ;;
     esac
+    return $rc
 }
 
 
