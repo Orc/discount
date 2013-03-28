@@ -81,7 +81,7 @@ char **argv;
     CREATE(footers);
     pgm = basename(argv[0]);
 
-    while ( argc ) {
+    while ( argc > 1 ) {
 	if ( strcmp(argv[1], "-css") == 0 ) {
 	    EXPAND(css) = argv[2];
 	    argc -= 2;
