@@ -188,7 +188,7 @@ checkline(Line *l)
     int eol, i;
     int dashes = 0, spaces = 0,
 	equals = 0, underscores = 0,
-	stars = 0, tildes = 0,
+	stars = 0, tildes = 0, other = 0,
 	backticks = 0;
 
     l->flags |= CHECKED;
@@ -212,10 +212,13 @@ checkline(Line *l)
 	case '_':  underscores = 1; break;
 	case '*':  stars = 1; break;
 #if WITH_FENCED_CODE
-	case '~':  tildes = 1; break;
-	case '`':  backticks = 1; break;
+	case '~':  if (other) return; tildes = 1; break;
+	case '`':  if (other) return; backticks = 1; break;
 #endif
-	default:   return;
+	default:
+    other = 1;
+    l->count--;
+    if (!tildes && !backticks) return;
 	}
     }
 
@@ -638,6 +641,12 @@ fencedcodeblock(ParagraphRoot *d, Line **ptr)
 	if ( iscodefence(r->next, first->count, first->kind) ) {
 	    (*ptr) = r->next->next;
 	    ret = Pp(d, first->next, CODE);
+      if (S(first->text) - first->count > 0) {
+        ret->lang = strdup(T(first->text) + first->count);
+      }
+      else {
+        ret->lang = 0;
+      }
 	    ___mkd_freeLine(first);
 	    ___mkd_freeLine(r->next);
 	    r->next = 0;

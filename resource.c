@@ -51,6 +51,8 @@ ___mkd_freeParagraph(Paragraph *p)
 	___mkd_freeLines(p->text);
     if (p->ident)
 	free(p->ident);
+    if (p->lang)
+	free(p->lang);
     free(p);
 }
 

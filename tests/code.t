@@ -100,6 +100,13 @@ code
 code
 ~~~</p>'
 
+try 'fenced code block with lang attribute' \
+'```lang
+code
+```' \
+'<pre><code class="lang">code
+</code></pre>'
+
 fi
 
 summary $0
