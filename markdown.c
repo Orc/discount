@@ -177,6 +177,9 @@ splitline(Line *t, int cutpoint)
 }
 
 #define UNCHECK(l) ((l)->flags &= ~CHECKED)
+#define UNLESS_FENCED(t) if (fenced) { \
+    other = 1; l->count += (c == ' ' ? 0 : -1); \
+  } else { t; }
 
 /*
  * walk a line, seeing if it's any of half a dozen interesting regular
@@ -189,7 +192,7 @@ checkline(Line *l)
     int dashes = 0, spaces = 0,
 	equals = 0, underscores = 0,
 	stars = 0, tildes = 0, other = 0,
-	backticks = 0;
+	backticks = 0, fenced = 0;
 
     l->flags |= CHECKED;
     l->kind = chk_text;
@@ -206,19 +209,19 @@ checkline(Line *l)
 	if ( c != ' ' ) l->count++;
 
 	switch (c) {
-	case '-':  dashes = 1; break;
-	case ' ':  spaces = 1; break;
+	case '-':  UNLESS_FENCED(dashes = 1); break;
+	case ' ':  UNLESS_FENCED(spaces = 1); break;
 	case '=':  equals = 1; break;
-	case '_':  underscores = 1; break;
+	case '_':  UNLESS_FENCED(underscores = 1); break;
 	case '*':  stars = 1; break;
 #if WITH_FENCED_CODE
-	case '~':  if (other) return; tildes = 1; break;
-	case '`':  if (other) return; backticks = 1; break;
+	case '~':  if (other) return; fenced = 1; tildes = 1; break;
+	case '`':  if (other) return; fenced = 1; backticks = 1; break;
 #endif
 	default:
     other = 1;
     l->count--;
-    if (!tildes && !backticks) return;
+    if (!fenced) return;
 	}
     }
 
@@ -642,7 +645,9 @@ fencedcodeblock(ParagraphRoot *d, Line **ptr)
 	    (*ptr) = r->next->next;
 	    ret = Pp(d, first->next, CODE);
       if (S(first->text) - first->count > 0) {
-        ret->lang = strdup(T(first->text) + first->count);
+        char *lang_attr = T(first->text) + first->count;
+        while ( *lang_attr != 0 && *lang_attr == ' ' ) lang_attr++;
+        ret->lang = strdup(lang_attr);
       }
       else {
         ret->lang = 0;
