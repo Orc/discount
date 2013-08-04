@@ -1582,11 +1582,17 @@ printblock(Paragraph *pp, MMIOT *f)
 
 
 static void
-printcode(Line *t, MMIOT *f)
+printcode(Line *t, char *lang, MMIOT *f)
 {
     int blanks;
 
-    Qstring("<pre><code>", f);
+    Qstring("<pre><code", f);
+    if (lang) {
+      Qstring(" class=\"", f);
+      Qstring(lang, f);
+      Qstring("\"", f);
+    }
+    Qstring(">", f);
     for ( blanks = 0; t ; t = t->next ) {
 	if ( S(t->text) > t->dle ) {
 	    while ( blanks ) {
@@ -1699,7 +1705,7 @@ display(Paragraph *p, MMIOT *f)
 	break;
 	
     case CODE:
-	printcode(p->text, f);
+	printcode(p->text, p->lang, f);
 	break;
 	
     case QUOTE:
