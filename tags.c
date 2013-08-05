@@ -26,6 +26,9 @@ mkd_define_tag(char *id, int selfclose)
      * either the standard or extra tag tables.
      */
     if ( !(p = mkd_search_tags(id, strlen(id))) ) {
+	/* extratags could be deallocated */
+	if ( S(extratags) == 0 )
+	    CREATE(extratags);
 	p = &EXPAND(extratags);
 	p->id = id;
 	p->size = strlen(id);
