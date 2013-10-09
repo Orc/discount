@@ -73,6 +73,10 @@ isthisspace(MMIOT *f, int i)
 {
     int c = peek(f, i);
 
+    if ( c == EOF )
+	return 1;
+    if ( c & 0x80 )
+	return 0;
     return isspace(c) || (c < ' ');
 }
 
