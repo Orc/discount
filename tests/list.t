@@ -61,9 +61,9 @@ try 'nested lists (2)' \
 <li><p>A (list)</p>
 
 <ol>
-<li> Sub (list)</li>
-<li> Two (items)</li>
-<li> Here</li>
+<li>Sub (list)</li>
+<li>Two (items)</li>
+<li>Here</li>
 </ol>
 
 
@@ -150,6 +150,22 @@ try 'non-dl followed by dl' \
 <dt>sailor</dt>
 <dd>hi!</dd>
 </dl>'
+
+try 'long enumerated list tag' \
+    '10000. This is an item
+
+    and this is another paragraph in the same
+    item.
+
+2. and this is another item.
+' \
+'<ol>
+<li><p>This is an item</p>
+
+<p>and this is another paragraph in the same
+item.</p></li>
+<li><p>and this is another item.</p></li>
+</ol>'
 
 summary $0
 exit $rc
