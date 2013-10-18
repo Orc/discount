@@ -167,5 +167,30 @@ item.</p></li>
 <li><p>and this is another item.</p></li>
 </ol>'
 
+try 'long enumerated list tag' \
+    '10000. This is an item
+
+    and this is another paragraph in the same
+    item.
+
+    200000. A longer number in an embedded list.
+    200001. Another longer and bigger number in an embedded list.
+
+2. and this is another item.
+' \
+'<ol>
+<li><p>This is an item</p>
+
+<p>and this is another paragraph in the same
+item.</p>
+
+<ol>
+<li>A longer number in an embedded list.</li>
+<li>Another longer and bigger number in an embedded list.</li>
+</ol>
+</li>
+<li><p>and this is another item.</p></li>
+</ol>'
+
 summary $0
 exit $rc
