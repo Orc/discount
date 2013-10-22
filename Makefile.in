@@ -31,9 +31,11 @@ install: $(PGMS) $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR)
 install.everything: install install.samples install.man
 
 install.samples: $(SAMPLE_PGMS) install $(DESTDIR)$(BINDIR)
-	@INSTALL_PROGRAM@ $(SAMPLE_PGMS) $(DESTDIR)$(BINDIR)
 	@INSTALL_DIR@ $(DESTDIR)$(MANDIR)/man1
-	@INSTALL_DATA@ theme.1 makepage.1 mkd2html.1 $(DESTDIR)$(MANDIR)/man1
+	for x in $(SAMPLE_PGMS); do \\
+	    @INSTALL_PROGRAM@ $$x $(DESTDIR)$(BINDIR)/$(SAMPLE_PFX)$$x; \
+	    @INSTALL_DATA@ $$x.1 $(DESTDIR)$(MANDIR)/man1/$(SAMPLE_PFX)$$x; \
+	done
 
 install.man:
 	@INSTALL_DIR@ $(DESTDIR)$(MANDIR)/man3
