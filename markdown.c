@@ -846,8 +846,9 @@ listitem(Paragraph *p, int indent, DWORD flags, linefn check)
 	UNCHECK(t);
 	t->dle = mkd_firstnonblank(t);
 
-        // even though we had to trim a long leader off this item,
-        // the indent for trailing paragraphs is still 4...
+        /* even though we had to trim a long leader off this item,
+         * the indent for trailing paragraphs is still 4...
+	 */
 	if (indent > 4) {
 	    indent = 4;
 	}
