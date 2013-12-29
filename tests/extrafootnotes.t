@@ -6,6 +6,7 @@ rc=0
 MARKDOWN_FLAGS=
 
 FOOTIE='I haz a footnote[^1]
+
 [^1]: yes?'
 
 try -ffootnote 'footnotes (-ffootnote)' "$FOOTIE" \
@@ -17,6 +18,53 @@ try -ffootnote 'footnotes (-ffootnote)' "$FOOTIE" \
 <p>yes?<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
 </ol>
 </div>'
+
+try -ffootnote 'Simple, multi-line footnote' 'I haz a footnote[^1]
+
+[^1]: yes?
+really.' \
+'<p>I haz a footnote<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>yes?
+really.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>'
+
+try -ffootnote 'Indented, multi-line footnote' 'I haz a footnote[^1]
+
+[^1]: yes?
+      really.' \
+'<p>I haz a footnote<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>yes?
+really.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>'
+
+try -ffootnote 'Multi-line footnote followed by paragraph' 'I haz a footnote[^1]
+
+[^1]: yes?
+      really.
+
+Another paragraph' \
+'<p>I haz a footnote<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
+
+<p>Another paragraph</p>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>yes?
+really.<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>'
+
 
 try -ffootnote -Cfoot 'footnotes (-ffootnote -Cfoot)' "$FOOTIE" \
 '<p>I haz a footnote<sup id="footref:1"><a href="#foot:1" rel="footnote">1</a></sup></p>
