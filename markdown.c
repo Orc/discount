@@ -1017,12 +1017,25 @@ addfootnote(Line *p, MMIOT* f)
     S(foot->tag)--;
     j = nextnonblank(p, j+2);
 
+    /* Expand ^1-style footnotes */
+    /* Handles multi-line, but does not handle embedded block elements */
     if ( (f->flags & MKD_EXTRA_FOOTNOTE) && (T(foot->tag)[0] == '^') ) {
-	while ( j < S(p->text) )
-	    EXPAND(foot->title) = T(p->text)[j++];
-	goto skip_to_end;
+        while (1) {
+            while ( j < S(p->text) )
+                EXPAND(foot->title) = T(p->text)[j++];
+
+            if (blankline(np))
+                break;
+
+            EXPAND(foot->title) = '\n';
+            p = np;
+            np = p->next;
+            j = nextnonblank(p, 0);
+        }
+        goto skip_to_end;
     }
 
+    /* Expand implicit references */
     while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
 	EXPAND(foot->link) = T(p->text)[j++];
     EXPAND(foot->link) = 0;

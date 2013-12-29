@@ -27,6 +27,7 @@ summary() {
 }
 
 
+# try -flags... 'Title' '...input-markdown...' '...expected-html...'
 try() {
     unset FLAGS
     while [ "$1" ]; do
