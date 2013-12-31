@@ -19,6 +19,7 @@ try -ffootnote 'footnotes (-ffootnote)' "$FOOTIE" \
 </div>'
 
 try -ffootnote 'footnotes (-ffootnote)' "$FOOTIE
+    
     second" \
 '<p>I haz a footnote<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
 <div class="footnotes">
