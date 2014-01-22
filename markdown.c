@@ -1018,6 +1018,7 @@ addfootnote(Line *p, MMIOT* f)
     j = nextnonblank(p, j+2);
 
     if ( (f->flags & MKD_EXTRA_FOOTNOTE) && (T(foot->tag)[0] == '^') ) {
+	/* need to consume all lines until non-indented block? */
 	while ( j < S(p->text) )
 	    EXPAND(foot->title) = T(p->text)[j++];
 	goto skip_to_end;
