@@ -18,6 +18,7 @@ MMIOT *gfm_in(FILE*,mkd_flag_t);		/* assemble input from a file */
 MMIOT *gfm_string(const char*,int,mkd_flag_t);	/* assemble input from a buffer */
 
 void mkd_basename(MMIOT*,char*);
+void mkd_source_basename(MMIOT*,char*);
 
 void mkd_initialize();
 void mkd_with_html5_tags();
@@ -69,6 +70,15 @@ void mkd_e_url(void *, mkd_callback_t);
 void mkd_e_flags(void *, mkd_callback_t);
 void mkd_e_free(void *, mkd_free_t );
 void mkd_e_data(void *, void *);
+
+/* source links.
+ * The callback will be called with NULL for first argument and number
+ * of the line in the markdown input as the second arguement. The
+ * result will be placed into href of the link
+ */
+void mkd_sl_data(void *, void *);
+void mkd_sl_handler(void *, mkd_callback_t);
+void mkd_sl_free(void *, mkd_free_t);
 
 /* version#.
  */

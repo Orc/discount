@@ -25,7 +25,7 @@ gfm_populate(getc_func getc, void* ctx, int flags)
 {
     Cstring line;
     Document *a = __mkd_new_Document();
-    int c;
+    int c, l = 1;
     int pandoc = 0;
 
     if ( !a ) return 0;
@@ -47,7 +47,7 @@ gfm_populate(getc_func getc, void* ctx, int flags)
 		EXPAND(line) = ' ';
 		EXPAND(line) = ' ';
 	    }
-	    __mkd_enqueue(a, &line);
+	    __mkd_enqueue(a, &line, l++);
 	    S(line) = 0;
 	}
 	else if ( isprint(c) || isspace(c) || (c & 0x80) )
@@ -55,7 +55,7 @@ gfm_populate(getc_func getc, void* ctx, int flags)
     }
 
     if ( S(line) )
-	__mkd_enqueue(a, &line);
+	__mkd_enqueue(a, &line, l);
 
     DELETE(line);
 

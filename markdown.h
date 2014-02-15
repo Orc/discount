@@ -37,6 +37,7 @@ typedef struct line {
 
     line_type kind;
     int count;
+    int lineno;
 } Line;
 
 
@@ -79,6 +80,12 @@ typedef struct callback_data {
     mkd_callback_t e_url;	/* url edit callback */
     mkd_callback_t e_flags;	/* extra href flags callback */
     mkd_free_t e_free;		/* edit/flags callback memory deallocator */
+
+    /* souce link generation helpers.
+     */
+    void *sl_data;
+    mkd_callback_t sl_handler;
+    mkd_free_t sl_free;
 } Callback_data;
 
 
@@ -211,7 +218,7 @@ extern void ___mkd_emblock(MMIOT*);
 extern void ___mkd_tidy(Cstring *);
 
 extern Document *__mkd_new_Document();
-extern void __mkd_enqueue(Document*, Cstring *);
+extern void __mkd_enqueue(Document*, Cstring *, int);
 extern void __mkd_header_dle(Line *);
 
 extern int  __mkd_io_strget(struct string_stream *);

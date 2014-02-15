@@ -78,6 +78,7 @@ main(int argc, char **argv)
     char *text = 0;
     char *ofile = 0;
     char *urlbase = 0;
+    char *srcbase = 0;
     char *q;
     MMIOT *doc;
 
@@ -87,7 +88,7 @@ main(int argc, char **argv)
     pgm = basename(argv[0]);
     opterr = 1;
 
-    while ( (opt=getopt(argc, argv, "5b:C:df:E:F:Gno:s:St:TV")) != EOF ) {
+    while ( (opt=getopt(argc, argv, "5b:C:df:E:F:Gno:s:St:TVL:")) != EOF ) {
 	switch (opt) {
 	case '5':   with_html5 = 1;
 		    break;
@@ -137,10 +138,12 @@ main(int argc, char **argv)
 			exit(1);
 		    }
 		    break;
+	case 'L':   srcbase = optarg;
+		    break;
 	default:    fprintf(stderr, "usage: %s [-dTV] [-b url-base]"
 				    " [-F bitmap] [-f {+-}flags]"
 				    " [-o ofile] [-s text]"
-				    " [-t text] [file]\n", pgm);
+				    " [-t text] [-L source-base] [file]\n", pgm);
 		    exit(1);
 	}
     }
@@ -192,6 +195,8 @@ main(int argc, char **argv)
 	}
 	if ( extra_footnote_prefix )
 	    mkd_ref_prefix(doc, extra_footnote_prefix);
+	if ( srcbase )
+	    mkd_source_basename(doc, srcbase);
 
 	if ( debug )
 	    rc = mkd_dump(doc, stdout, 0, argc ? basename(argv[0]) : "stdin");

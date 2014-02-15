@@ -16,7 +16,8 @@ MKDLIB=libmarkdown
 OBJS=mkdio.o markdown.o dumptree.o generate.o \
      resource.o docheader.o version.o toc.o css.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o \
-     github_flavoured.o setup.o tags.o html5.o flags.o @AMALLOC@
+     github_flavoured.o setup.o tags.o html5.o flags.o \
+     source_basename.o @AMALLOC@
 TESTFRAMEWORK=echo cols
 
 MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
