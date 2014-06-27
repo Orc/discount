@@ -132,6 +132,9 @@ typedef struct mmiot {
 } MMIOT;
 
 
+#define MKD_EOLN	3
+
+
 /*
  * the mkdio text input functions return a document structure,
  * which contains a header (retrieved from the document if
