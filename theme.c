@@ -499,6 +499,18 @@ spin(FILE *template, MMIOT *doc, FILE *output)
     }
 } /* spin */
 
+/* isstdout() - returns true iff path is the same file as stdout
+*/
+static int
+isstdout(const char *path)
+{
+    struct stat pathstat, stdoutstat;
+
+    return
+	!stat(path, &pathstat) && !fstat(STDOUT_FILENO, &stdoutstat)
+	&& pathstat.st_ino == stdoutstat.st_ino
+	&& pathstat.st_dev == stdoutstat.st_dev;
+}
 
 main(argc, argv)
 char **argv;
@@ -592,7 +604,7 @@ char **argv;
 	    strcat(q, ".html");
 	}
     }
-    if ( output ) {
+    if ( output && !isstdout(output) ) {
 	if ( force )
 	    unlink(output);
 	if ( !freopen(output, "w", stdout) )
