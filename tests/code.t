@@ -33,6 +33,17 @@ try 'backslashes in code(2)' '`printf "%s: \n", $1;`' \
 
 if ./markdown -V | grep FENCED-CODE >/dev/null; then
 
+try 'fenced code block with blank lines' \
+'~~~
+code!
+
+still code!
+~~~' \
+    '<pre><code>code!
+
+still code!
+</code></pre>'
+
 try 'fenced code block' \
 '~~~
 code!

@@ -177,9 +177,14 @@ splitline(Line *t, int cutpoint)
 }
 
 #define UNCHECK(l) ((l)->flags &= ~CHECKED)
-#define UNLESS_FENCED(t) if (fenced) { \
+
+#ifdef WITH_FENCED_CODE
+# define UNLESS_FENCED(t) if (fenced) { \
     other = 1; l->count += (c == ' ' ? 0 : -1); \
   } else { t; }
+#else
+# define UNLESS_FENCED(t) t;
+#endif
 
 /*
  * walk a line, seeing if it's any of half a dozen interesting regular
