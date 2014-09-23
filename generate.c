@@ -785,7 +785,7 @@ mangle(char *s, int len, MMIOT *f)
 {
     while ( len-- > 0 ) {
 	Qstring("&#", f);
-	Qprintf(f, COINTOSS() ? "x%02x;" : "%02d;", *((unsigned char*)(s++)) );
+	Qprintf(f, (len % 2 == 0) ? "x%02x;" : "%02d;", *((unsigned char*)(s++)) );
     }
 }
 

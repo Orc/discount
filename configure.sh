@@ -107,14 +107,6 @@ else
     AC_FAIL "$TARGET requires bzero or memset"
 fi
 
-if AC_CHECK_FUNCS random; then
-    AC_DEFINE 'COINTOSS()' '(random()&1)'
-elif AC_CHECK_FUNCS rand; then
-    AC_DEFINE 'COINTOSS()' '(rand()&1)'
-else
-    AC_DEFINE 'COINTOSS()' '1'
-fi
-
 if AC_CHECK_FUNCS strcasecmp; then
     :
 elif AC_CHECK_FUNCS stricmp; then
