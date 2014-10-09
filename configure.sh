@@ -14,7 +14,6 @@ ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-github-tags	Allow `_` and `-` in <> tags
 --with-fenced-code	Allow fenced code blocks
 --with-urlencoded-anchor	Use url-encoded chars to multibyte chars in toc links
---with-unmangled-email		Dont mangle email addresses
 --enable-all-features	Turn on all stable optional features
 --shared		Build shared libraries (default is static)'
 
@@ -38,6 +37,9 @@ locals() {
 		;;
     --ENABLE-*)	enable=`echo $K | sed -e 's/--ENABLE-//' | tr '-' '_'`
 		echo WITH_${enable}=T ;;
+    --DEBIAN-GLITCH)
+		echo DEBIAN_GLITCH=T
+		;;
     esac
 }
 
@@ -60,7 +62,7 @@ test "$WITH_FENCED_CODE" && AC_DEFINE "WITH_FENCED_CODE" 1
 test "$WITH_ID_ANCHOR" && AC_DEFINE 'WITH_ID_ANCHOR' 1
 test "$WITH_GITHUB_TAGS" && AC_DEFINE 'WITH_GITHUB_TAGS' 1
 test "$WITH_URLENCODED_ANCHOR" && AC_DEFINE 'WITH_URLENCODED_ANCHOR' 1
-test "$WITH_UNMANGLED_EMAIL" && AC_DEFINE 'DONT_MANGLE' 1
+test "$DEBIAN_GLITCH" && AC_DEFINE 'DEBIAN_GLITCH' 1
 
 AC_PROG_CC
 
