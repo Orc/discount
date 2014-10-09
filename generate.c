@@ -784,8 +784,15 @@ static void
 mangle(char *s, int len, MMIOT *f)
 {
     while ( len-- > 0 ) {
+#if DONT_MANGLE
+	if ( *s == '"' || *s == '&' || *s == '<' || *s == '>' )
+	    Qprintf(f, "&#02d;", *((unsigned char*)(s++)) );
+	else
+	    Qchar(*s++, f);
+#else
 	Qstring("&#", f);
 	Qprintf(f, COINTOSS() ? "x%02x;" : "%02d;", *((unsigned char*)(s++)) );
+#endif
     }
 }
 
