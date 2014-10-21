@@ -647,7 +647,7 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 
     if ( image )
 	tag = &imaget;
-    else if ( tag = pseudo(ref->link) ) {
+    else if ( (tag = pseudo(ref->link)) ) {
 	if ( f->flags & (MKD_NO_EXT|MKD_SAFELINK) )
 	    return 0;
     }
@@ -741,8 +741,8 @@ linkylinky(int image, MMIOT *f)
 		    S(key.tag) = S(name);
 		}
 
-		if ( ref = bsearch(&key, T(*f->footnotes), S(*f->footnotes),
-					  sizeof key, (stfu)__mkd_footsort) ) {
+		if ( (ref = bsearch(&key, T(*f->footnotes), S(*f->footnotes),
+					  sizeof key, (stfu)__mkd_footsort)) ) {
 		    if ( extra_footnote )
 			status = extra_linky(f,name,ref);
 		    else
