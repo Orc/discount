@@ -628,7 +628,7 @@ extra_linky(MMIOT *f, Cstring text, Footnote *ref)
     	___mkd_reparse(T(text), S(text), linkt.flags, f, 0);
     else {
 	ref->flags |= REFERENCED;
-	ref->refnumber = ++ f->reference;
+	ref->refnumber = ++ f->footnotes->reference;
 	Qprintf(f, "<sup id=\"%sref:%d\"><a href=\"#%s:%d\" rel=\"footnote\">%d</a></sup>",
 		p_or_nothing(f), ref->refnumber,
 		p_or_nothing(f), ref->refnumber, ref->refnumber);
@@ -741,8 +741,9 @@ linkylinky(int image, MMIOT *f)
 		    S(key.tag) = S(name);
 		}
 
-		if ( ref = bsearch(&key, T(*f->footnotes), S(*f->footnotes),
-					  sizeof key, (stfu)__mkd_footsort) ) {
+		if ( ref = bsearch(&key, T(f->footnotes->note),
+					 S(f->footnotes->note),
+					 sizeof key, (stfu)__mkd_footsort) ) {
 		    if ( extra_footnote )
 			status = extra_linky(f,name,ref);
 		    else
@@ -1775,14 +1776,14 @@ mkd_extra_footnotes(MMIOT *m)
     int j, i;
     Footnote *t;
 
-    if ( m->reference == 0 )
+    if ( m->footnotes->reference == 0 )
 	return;
 
     Csprintf(&m->out, "\n<div class=\"footnotes\">\n<hr/>\n<ol>\n");
     
-    for ( i=1; i <= m->reference; i++ ) {
-	for ( j=0; j < S(*m->footnotes); j++ ) {
-	    t = &T(*m->footnotes)[j];
+    for ( i=1; i <= m->footnotes->reference; i++ ) {
+	for ( j=0; j < S(m->footnotes->note); j++ ) {
+	    t = &T(m->footnotes->note)[j];
 	    if ( (t->refnumber == i) && (t->flags & REFERENCED) ) {
 		Csprintf(&m->out, "<li id=\"%s:%d\">\n<p>",
 			    p_or_nothing(m), t->refnumber);
