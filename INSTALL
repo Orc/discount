@@ -30,7 +30,6 @@ Configure.sh has a few options that can be set:
 --enable-pandoc-header	Use pandoc-style header blocks
 --enable-superscript	A^B expands to A<sup>B</sup>
 --enable-amalloc	Use a debugging memory allocator (to detect leaks)
---relaxed-emphasis	Don't treat _ in the middle of a word as emphasis
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 
 3) Installing sample programs and manpages
