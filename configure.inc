@@ -871,15 +871,7 @@ AC_SCALAR_TYPES () {
 
     rc=1
     LOGN "defining WORD & DWORD scalar types"
-    
-    if AC_QUIET AC_CHECK_HEADERS WinDef.h; then
-	# windows machine; BYTE, WORD, DWORD already
-	# defined
-	echo "#include <WinDef.h>" >> $__cwd/config.h
-	TLOG " (defined in WinDef.h)"
-	return 0
-    fi
-	
+
     cat > ngc$$.c << EOF
 #include <stdio.h>
 #include <string.h>

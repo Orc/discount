@@ -8,6 +8,7 @@
 # load in the configuration file
 #
 ac_help='--enable-amalloc	Enable memory allocation debugging
+--use-windows-headers	Use Windows headers for DWORD
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --with-dl=X		Use Discount, Extra, or Both types of definition list
 --with-id-anchor	Use id= anchors for table-of-contents links
@@ -40,6 +41,9 @@ locals() {
     --DEBIAN-GLITCH)
 		echo DEBIAN_GLITCH=T
 		;;
+    --USE-WINDOWS-HEADERS)
+        echo USE_WINDOWS_HEADERS=T
+        ;;
     esac
 }
 
@@ -90,7 +94,22 @@ AC_PROG ranlib
 AC_C_VOLATILE
 AC_C_CONST
 AC_C_INLINE
-AC_SCALAR_TYPES sub hdr
+LOGN "Checking if we should use Windows typedefs"
+if test "$USE_WINDOWS_HEADERS" && AC_QUIET AC_CHECK_HEADERS WinDef.h; then
+	# windows machine; BYTE, WORD, DWORD already
+	# defined
+	echo "#define WIN32_LEAN_AND_MEAN" >> $__cwd/config.h
+    echo "#define NOMINMAX" >> $__cwd/config.h
+	echo "#include <WinDef.h>" >> $__cwd/config.h
+	TLOG " (defined in WinDef.h)"
+    # still want substitutions for mkdio.h to avoid including another header there
+    AC_SCALAR_TYPES sub
+	else
+	AC_SUB 'DWORD_INCLUDE' ''
+    TLOG " (no)"
+    AC_SCALAR_TYPES sub hdr
+fi
+
 AC_CHECK_BASENAME
 
 AC_CHECK_HEADERS sys/types.h pwd.h && AC_CHECK_FUNCS getpwuid
