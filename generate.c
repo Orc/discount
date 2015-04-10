@@ -786,7 +786,7 @@ mangle(char *s, int len, MMIOT *f)
 {
     while ( len-- > 0 ) {
 #if DEBIAN_GLITCH
-	Qprintf(f, "&#02d;", *((unsigned char*)(s++)) );
+	Qprintf(f, "&#%02d;", *((unsigned char*)(s++)) );
 #else
 	Qstring("&#", f);
 	Qprintf(f, COINTOSS() ? "x%02x;" : "%02d;", *((unsigned char*)(s++)) );
