@@ -20,7 +20,6 @@ To select features and extensions, `--with-dl=both` may be replaced by zero or m
 * `--enable-superscript`:  `A^B` becomes A<sup>B</sup>
 * `--enable-amalloc`:  Enable memory allocation debugging
 * `--with-tabstops=`*N*:  Set tabstops to *N* characters (default 4)
-* `--enable-div`:  Enable >%id% divisions
 * `--enable-alpha-list`:  Enable `(a)/(b)/(c)` list markers
 * `--enable-all-features`:  Turn on all stable optional features
 
