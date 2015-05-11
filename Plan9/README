@@ -1,19 +1,23 @@
 % Discount on Plan 9
 % Josh Wood
-% 2009-06-12
+% 2015-05-11
 
 # *Discount* Markdown compiler on Plan 9
 
-## Build
+## Build, test, install:
 
-	% CONFIG='--enable-all-features' mk config
+	% CONFIG='--with-dl=both' mk config
+    % mk test
 	% mk install
 	% markdown -V
-	markdown: discount X.Y.Z DL_TAG HEADER DEBUG SUPERSCRIPT RELAXED DIV
+	markdown: discount X.Y.Z DL=BOTH
 
-`--enable-all-features` may be replaced by zero or more of:
+`--with-dl=both` may be replaced by zero or more of:
 
-		--enable-dl-tag		Use the DL tag extension
+		--enable-dl-tag		Use the definition list tag extension with the
+                            default tag style
+        --with-dl=T         Set the tags that define DLs to T, one of discount,
+                            extra, or both. Implies --enable-dl-tag.
 		--enable-pandoc-header	Use pandoc-style header blocks
 		--enable-superscript	A^B becomes A<sup>B</sup>
 		--enable-amalloc	Enable memory allocation debugging
@@ -27,6 +31,7 @@
 The supplied mkfile merely drives Discount's own configure script and
 then APE's *psh* environment to build the Discount source, then copies
 the result(s) to locations appropriate for system-wide use on Plan 9.
+
 There are a few other *mk*(1) targets:
 
 `install.libs`: Discount includes a C library and header.
@@ -37,3 +42,6 @@ Installation is optional.  Plan 9 binaries are statically linked.
 `install.progs`: Extra programs.  *makepage* writes complete XHTML
 documents, rather than fragments.  *mkd2html* is similar, but produces
 HTML.
+
+`CONFIG` must contain at least `--with-dl=both` to produce a binary that
+passes `../discount/tests/dl.t`.
