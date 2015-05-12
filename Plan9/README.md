@@ -1,7 +1,3 @@
-% Discount on Plan 9
-% Josh Wood
-% 2015-05-11
-
 # *Discount* Markdown compiler on Plan 9
 
 ## Build
