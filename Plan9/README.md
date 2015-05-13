@@ -29,7 +29,7 @@ Plan 9.
 2. There are a few other *mk*(1) targets:
     * `install.libs`:  Discount includes a C library and header.
 Installation is optional.  Plan 9 binaries are statically linked.
-    * `install.man`:  Add manual pages for *markdown* in Sections 1, 2, and 6.
+    * `install.man`:  Add manual pages for *markdown* in sections 1, 2, and 6.
     * `install.progs`:  Extra programs.  *makepage* writes complete XHTML
 documents, rather than fragments.  *mkd2html* is similar, but produces
 HTML.
