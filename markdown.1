@@ -106,7 +106,15 @@ blocks.
 .It Ar alphalist
 Allow alphabetic lists.
 .It Ar definitionlist
-Allow definition lists.
+Allow definition lists at all (default). Use
+.Em dldiscount
+and
+.Em dlextra
+to control which syntaxes are respected.
+.It Ar dldiscount
+Enable discount-style definition lists (default).
+.It Ar dlextra
+Enable extra-style definition lists (not default). Both styles may be enabled simultaneously.
 .It Ar footnote
 Allow markdown extra-style footnotes.
 .It Ar styles

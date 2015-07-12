@@ -434,10 +434,11 @@ end_of_block(Line *t)
 
 
 static Line*
-is_discount_dt(Line *t, int *clip)
+is_discount_dt(Line *t, int *clip, DWORD flags)
 {
-#if USE_DISCOUNT_DL
-    if ( t && t->next
+    if ( !(flags & MKD_NODLDISCOUNT)
+	   && t
+	   && t->next
 	   && (S(t->text) > 2)
 	   && (t->dle == 0)
 	   && (T(t->text)[0] == '=')
@@ -447,9 +448,8 @@ is_discount_dt(Line *t, int *clip)
 	    return t;
 	}
 	else
-	    return is_discount_dt(t->next, clip);
+	    return is_discount_dt(t->next, clip, flags);
     }
-#endif
     return 0;
 }
 
@@ -463,11 +463,11 @@ is_extra_dd(Line *t)
 
 
 static Line*
-is_extra_dt(Line *t, int *clip)
+is_extra_dt(Line *t, int *clip, DWORD flags)
 {
-#if USE_EXTRA_DL
-    
-    if ( t && t->next && S(t->text) && T(t->text)[0] != '='
+    if ( flags & MKD_DLEXTRA
+	   && t
+	   && t->next && S(t->text) && T(t->text)[0] != '='
 		      && T(t->text)[S(t->text)-1] != '=') {
 	Line *x;
     
@@ -479,25 +479,24 @@ is_extra_dt(Line *t, int *clip)
 	    return t;
 	}
 	
-	if ( x=is_extra_dt(t->next, clip) )
+	if ( x=is_extra_dt(t->next, clip, flags) )
 	    return x;
     }
-#endif
     return 0;
 }
 
 
 static Line*
-isdefinition(Line *t, int *clip, int *kind)
+isdefinition(Line *t, int *clip, int *kind, DWORD flags)
 {
     Line *ret;
 
     *kind = 1;
-    if ( ret = is_discount_dt(t,clip) )
+    if ( ret = is_discount_dt(t,clip,flags) )
 	return ret;
 
     *kind=2;
-    return is_extra_dt(t,clip);
+    return is_extra_dt(t,clip,flags);
 }
 
 
@@ -510,7 +509,7 @@ islist(Line *t, int *clip, DWORD flags, int *list_type)
     if ( end_of_block(t) )
 	return 0;
 
-    if ( !(flags & (MKD_NODLIST|MKD_STRICT)) && isdefinition(t,clip,list_type) )
+    if ( !(flags & (MKD_NODLIST|MKD_STRICT)) && isdefinition(t,clip,list_type,flags) )
 	return DL;
 
     if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
@@ -902,7 +901,7 @@ definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 
     while (( labels = q )) {
 
-	if ( (q = isdefinition(labels, &z, &kind)) == 0 )
+	if ( (q = isdefinition(labels, &z, &kind, f->flags)) == 0 )
 	    break;
 
 	if ( (text = skipempty(q->next)) == 0 )

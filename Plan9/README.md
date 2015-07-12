@@ -1,17 +1,15 @@
 # *Discount* Markdown compiler on Plan 9
 
 ## Build
-    % CONFIG='--with-dl=both' mk config
+    % CONFIG='--with-tabstops=7' mk config
     % mk test
     % mk install
     % markdown -V
-    markdown: discount X.Y.Z DL=BOTH
+    markdown: discount X.Y.Z TAB=7
 
 ### Configuration
-To select features and extensions, `--with-dl=both` may be replaced by zero or more of:
+To select features and extensions, `--with-tabstops=7` may be replaced by zero or more of:
 
-* `--enable-dl-tag`:  Enable the definition list tag extension with the default (`discount`) tag style
-* `--with-dl=`*tagstyle*:  Set the tags that define `<dl>`s to *tagstyle*. *Tagstyle* must be one of `discount`, `extra`, or `both`. Implies `--enable-dl-tag`.
 * `--enable-pandoc-header`:  Use pandoc-style header blocks
 * `--enable-superscript`:  `A^B` becomes A<sup>B</sup>
 * `--enable-amalloc`:  Enable memory allocation debugging
@@ -33,6 +31,3 @@ Installation is optional.  Plan 9 binaries are statically linked.
     * `install.progs`:  Extra programs.  *makepage* writes complete XHTML
 documents, rather than fragments.  *mkd2html* is similar, but produces
 HTML.
-
-3. `CONFIG`, the argument list given to `../configure.sh`, must contain at least `--with-dl=both` to produce a binary that
-passes `../discount/tests/dl.t`.

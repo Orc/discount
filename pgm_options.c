@@ -25,7 +25,7 @@ static struct _opt {
     char *name;
     char *desc;
     int off;
-    int skip;
+    int skip; /* this opt is a synonym */
     int sayenable;
     mkd_flag_t flag;
 } opts[] = {
@@ -55,6 +55,8 @@ static struct _opt {
     { "footnotes",     "markdown extra footnotes",   0, 0, 1, MKD_EXTRA_FOOTNOTE },
     { "footnote",      "markdown extra footnotes",   0, 1, 1, MKD_EXTRA_FOOTNOTE },
     { "style",         "extract style blocks",       1, 0, 1, MKD_NOSTYLE },
+    { "dldiscount",    "discount-style definition lists", 1, 0, 1, MKD_NODLDISCOUNT },
+    { "dlextra",       "extra-style definition lists", 0, 0, 1, MKD_DLEXTRA },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])
