@@ -129,8 +129,14 @@ typedef struct mmiot {
 #define MKD_NODLIST	0x00100000
 #define MKD_EXTRA_FOOTNOTE 0x00200000
 #define MKD_NOSTYLE	0x00400000
-#define IS_LABEL	0x08000000
-#define USER_FLAGS	0x0FFFFFFF
+#define MKD_NODLDISCOUNT 0x00800000
+#define	MKD_DLEXTRA	0x01000000
+#define MKD_FENCEDCODE	0x02000000
+#define MKD_IDANCHOR	0x04000000
+#define MKD_GITHUBTAGS	0x08000000
+#define MKD_URLENCODEDANCHOR 0x10000000
+#define IS_LABEL	0x20000000
+#define USER_FLAGS	0x3FFFFFFF
 #define INPUT_MASK	(MKD_NOHEADER|MKD_TABSTOP)
 
     Callback_data *cb;
@@ -190,7 +196,7 @@ extern int  mkd_generateline(char *, int, FILE*, DWORD);
 extern void mkd_basename(Document*, char *);
 
 typedef int (*mkd_sta_function_t)(const int,const void*);
-extern void mkd_string_to_anchor(char*,int, mkd_sta_function_t, void*, int);
+extern void mkd_string_to_anchor(char*,int, mkd_sta_function_t, void*, int, DWORD);
 
 extern Document *mkd_in(FILE *, DWORD);
 extern Document *mkd_string(const char*,int, DWORD);

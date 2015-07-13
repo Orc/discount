@@ -104,8 +104,22 @@ blocks.
 Forbid alphabetic lists.
 .It Ar MKD_NODLIST
 Forbid definition lists.
+.It Ar MKD_NODLDISCOUNT
+Disable the discount definition list syntax style.
+.It Ar MKD_DLEXTRA
+Enable the extra definition list syntax style.
 .It Ar MKD_EXTRA_FOOTNOTE
 Enable markdown extra-style footnotes.
+.It Ar MKD_NOSTYLE
+Do not extract (omit) <style/> blocks from the output.
+.It Ar MKD_FENCEDCODE
+Allow fenced code blocks.
+.It Ar MKD_IDANCHOR
+Use id= anchors instead of <a name=/> for table-of-contents links.
+.It Ar MKD_GITHUBTAGS
+Allow underscore and dash in passed through element names.
+.It Ar MKD_URLENCODEDANCHOR
+Use url-encoded chars for multibyte and nonalphanumeric chars rather than dots in toc links.
 .El
 .Sh RETURN VALUES
 .Fn markdown

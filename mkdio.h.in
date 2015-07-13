@@ -106,6 +106,13 @@ void mkd_ref_prefix(MMIOT*, char*);
 #define MKD_NODLIST	0x00100000	/* forbid definition lists */
 #define MKD_EXTRA_FOOTNOTE 0x00200000	/* enable markdown extra-style footnotes */
 #define MKD_NOSTYLE	0x00400000	/* don't extract <style> blocks */
+#define MKD_NODLDISCOUNT 0x00800000	/* disable discount-style definition lists */
+#define	MKD_DLEXTRA	0x01000000	/* enable extra-style definition lists */
+#define MKD_FENCEDCODE	0x02000000	/* enabled fenced code blocks */
+#define MKD_IDANCHOR	0x04000000	/* use id= anchors for TOC links */
+#define MKD_GITHUBTAGS	0x08000000	/* allow dash and underscore in element names */
+#define MKD_URLENCODEDANCHOR 0x10000000 /* urlencode non-identifier chars instead of replacing with dots */
+
 #define MKD_EMBED	MKD_NOLINKS|MKD_NOIMAGE|MKD_TAGTEXT
 
 /* special flags for mkd_in() and mkd_string()

@@ -106,11 +106,27 @@ blocks.
 .It Ar alphalist
 Allow alphabetic lists.
 .It Ar definitionlist
-Allow definition lists.
+Allow definition lists at all (default). Use
+.Em dldiscount
+and
+.Em dlextra
+to control which syntaxes are respected.
+.It Ar dldiscount
+Enable discount-style definition lists (default).
+.It Ar dlextra
+Enable extra-style definition lists (not default). Both styles may be enabled simultaneously.
 .It Ar footnote
 Allow markdown extra-style footnotes.
-.It Ar styles
+.It Ar style
 Extract <style> blocks from the output.
+.It Ar fencedcode
+Allow fenced code blocks (not default).
+.It Ar idanchor
+Use id= anchors for table-of-contents links instead of <a name=/> (not default).
+.It Ar githubtags
+Allow underscore and dash in passed through element names (not default).
+.It Ar urlencodedanchor
+Use url-encoded chars for multibyte and nonalphanumeric chars rather than dots in toc links.
 .El
 .Pp
 As an example, the option
