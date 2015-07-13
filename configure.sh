@@ -46,7 +46,7 @@ AC_INIT $TARGET
 for banned_with in dl fenced-code id-anchor github-tags urlencoded-anchor; do
     banned_with_variable_ref=\$WITH_`echo "$banned_with" | $AC_UPPERCASE | tr - _`
     if [ "`eval echo "$banned_with_variable_ref"`" ]; then
-	AC_FAIL "Invalid option: --with-$banned_with. Please use a runtime flag to configure this feature."
+	LOG "Invalid option: --with-$banned_with. Please use a runtime flag to configure this feature."
     fi
 done
 
