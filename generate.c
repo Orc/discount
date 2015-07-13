@@ -1430,7 +1430,7 @@ printheader(Paragraph *pp, MMIOT *f)
 	    Qstring(" id=\"", f);
 	    mkd_string_to_anchor(T(pp->text->text),
 				 S(pp->text->text),
-				 (mkd_sta_function_t)Qchar, f, 1);
+				 (mkd_sta_function_t)Qchar, f, 1, f->flags);
 	    Qchar('"', f);
 	}
 	Qchar('>', f);
@@ -1439,7 +1439,7 @@ printheader(Paragraph *pp, MMIOT *f)
 	    Qstring("<a name=\"", f);
 	    mkd_string_to_anchor(T(pp->text->text),
 				 S(pp->text->text),
-				 (mkd_sta_function_t)Qchar, f, 1);
+				 (mkd_sta_function_t)Qchar, f, 1, f->flags);
 	    Qstring("\"></a>\n", f);
 	}
 	Qprintf(f, "<h%d>", pp->hnumber);

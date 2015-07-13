@@ -75,5 +75,14 @@ try '-T -ftoc' 'toc item with non-alpha start' \
 <a name="L1.header"></a>
 <h1>1 header</h1>'
 
+# Be sure to save toc.t as UTF-8.
+try '-T -ftoc,urlencodedanchor' 'urlencoded multibyte chars' \
+'#It’s an apostrophe' \
+'<ul>
+ <li><a href="#It%e2%80%99s%20an%20apostrophe">It’s an apostrophe</a></li>
+</ul>
+<a name="It%e2%80%99s%20an%20apostrophe"></a>
+<h1>It’s an apostrophe</h1>'
+
 summary $0
 exit $rc
