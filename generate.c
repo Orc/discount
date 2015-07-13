@@ -1009,11 +1009,9 @@ maybe_tag_or_link(MMIOT *f)
 	}
 	else if ( isspace(c) )
 	    break;
-#if WITH_GITHUB_TAGS
-	else if ( ! (c == '/' || c == '-' || c == '_' || isalnum(c) ) )
-#else
-	else if ( ! (c == '/' || isalnum(c) ) )
-#endif
+	else if ( ! (c == '/'
+		     || (f->flags & MKD_GITHUBTAGS && (c == '-' || c == '_'))
+		     || isalnum(c) ) )
 	    maybetag=0;
     }
 
