@@ -33,6 +33,7 @@ static struct flagnames flagnames[] = {
     { MKD_NODLDISCOUNT,   "!DLDISCOUNT" },
     { MKD_DLEXTRA,        "DLEXTRA" },
     { MKD_FENCEDCODE,     "FENCEDCODE" },
+    { MKD_IDANCHOR,       "IDANCHOR" },
 };
 #define NR(x)	(sizeof x/sizeof x[0])
 
