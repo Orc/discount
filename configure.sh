@@ -11,7 +11,6 @@ ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --with-id-anchor	Use id= anchors for table-of-contents links
 --with-github-tags	Allow `_` and `-` in <> tags
---with-fenced-code	Allow fenced code blocks
 --with-urlencoded-anchor	Use url-encoded chars to multibyte chars in toc links
 --enable-all-features	Turn on all stable optional features
 --shared		Build shared libraries (default is static)'
@@ -47,14 +46,13 @@ TARGET=markdown
 
 AC_INIT $TARGET
 
-for banned_with in dl; do
-    banned_with_variable_ref=\$WITH_`echo "$banned_with" | $AC_UPPERCASE`
+for banned_with in dl fenced-code; do
+    banned_with_variable_ref=\$WITH_`echo "$banned_with" | $AC_UPPERCASE | tr - _`
     if [ "`eval echo "$banned_with_variable_ref"`" ]; then
 	AC_FAIL "Invalid option: --with-$banned_with. Please use a runtime flag to configure this feature."
     fi
 done
 
-test "$WITH_FENCED_CODE" && AC_DEFINE "WITH_FENCED_CODE" 1
 test "$WITH_ID_ANCHOR" && AC_DEFINE 'WITH_ID_ANCHOR' 1
 test "$WITH_GITHUB_TAGS" && AC_DEFINE 'WITH_GITHUB_TAGS' 1
 test "$WITH_URLENCODED_ANCHOR" && AC_DEFINE 'WITH_URLENCODED_ANCHOR' 1

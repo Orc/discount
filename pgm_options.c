@@ -57,6 +57,7 @@ static struct _opt {
     { "style",         "extract style blocks",       1, 0, 1, MKD_NOSTYLE },
     { "dldiscount",    "discount-style definition lists", 1, 0, 1, MKD_NODLDISCOUNT },
     { "dlextra",       "extra-style definition lists", 0, 0, 1, MKD_DLEXTRA },
+    { "fencedcode",    "fenced code blocks",         0, 0, 1, MKD_FENCEDCODE },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])

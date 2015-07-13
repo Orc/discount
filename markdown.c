@@ -178,20 +178,16 @@ splitline(Line *t, int cutpoint)
 
 #define UNCHECK(l) ((l)->flags &= ~CHECKED)
 
-#ifdef WITH_FENCED_CODE
-# define UNLESS_FENCED(t) if (fenced) { \
+#define UNLESS_FENCED(t) if (fenced) { \
     other = 1; l->count += (c == ' ' ? 0 : -1); \
   } else { t; }
-#else
-# define UNLESS_FENCED(t) t;
-#endif
 
 /*
  * walk a line, seeing if it's any of half a dozen interesting regular
  * types.
  */
 static void
-checkline(Line *l)
+checkline(Line *l, DWORD flags)
 {
     int eol, i;
     int dashes = 0, spaces = 0,
@@ -210,6 +206,7 @@ checkline(Line *l)
 
     for (i=l->dle; i<eol; i++) {
 	register int c = T(l->text)[i];
+	int is_fence_char = 0;
 
 	if ( c != ' ' ) l->count++;
 
@@ -219,14 +216,20 @@ checkline(Line *l)
 	case '=':  equals = 1; break;
 	case '_':  UNLESS_FENCED(underscores = 1); break;
 	case '*':  stars = 1; break;
-#if WITH_FENCED_CODE
-	case '~':  if (other) return; fenced = 1; tildes = 1; break;
-	case '`':  if (other) return; fenced = 1; backticks = 1; break;
-#endif
 	default:
-    other = 1;
-    l->count--;
-    if (!fenced) return;
+	    if (flags & MKD_FENCEDCODE) {
+		switch (c) {
+		case '~':  if (other) return; is_fence_char = 1; tildes = 1; break;
+		case '`':  if (other) return; is_fence_char = 1; backticks = 1; break;
+		}
+		if (is_fence_char) {
+		    fenced = 1;
+		    break;
+		}
+	    }
+	    other = 1;
+	    l->count--;
+	    if (!fenced) return;
 	}
     }
 
@@ -242,10 +245,8 @@ checkline(Line *l)
     if ( stars || underscores ) { l->kind = chk_hr; }
     else if ( dashes ) { l->kind = chk_dash; }
     else if ( equals ) { l->kind = chk_equal; }
-#if WITH_FENCED_CODE
     else if ( tildes ) { l->kind = chk_tilde; }
     else if ( backticks ) { l->kind = chk_backtick; }
-#endif
 }
 
 
@@ -372,10 +373,10 @@ iscode(Line *t)
 
 
 static inline int
-ishr(Line *t)
+ishr(Line *t, DWORD flags)
 {
     if ( ! (t->flags & CHECKED) )
-	checkline(t);
+	checkline(t, flags);
 
     if ( t->count > 2 )
 	return t->kind == chk_hr || t->kind == chk_dash || t->kind == chk_equal;
@@ -384,7 +385,7 @@ ishr(Line *t)
 
 
 static int
-issetext(Line *t, int *htyp)
+issetext(Line *t, int *htyp, DWORD flags)
 {
     Line *n;
     
@@ -394,7 +395,7 @@ issetext(Line *t, int *htyp)
 
     if ( (n = t->next) ) {
 	if ( !(n->flags & CHECKED) )
-	    checkline(n);
+	    checkline(n, flags);
 
 	if ( n->kind == chk_dash || n->kind == chk_equal ) {
 	    *htyp = SETEXT;
@@ -406,7 +407,7 @@ issetext(Line *t, int *htyp)
 
 
 static int
-ishdr(Line *t, int *htyp)
+ishdr(Line *t, int *htyp, DWORD flags)
 {
     /* ANY leading `#`'s make this into an ETX header
      */
@@ -417,19 +418,19 @@ ishdr(Line *t, int *htyp)
 
     /* And if not, maybe it's a SETEXT header instead
      */
-    return issetext(t, htyp);
+    return issetext(t, htyp, flags);
 }
 
 
 static inline int
-end_of_block(Line *t)
+end_of_block(Line *t, DWORD flags)
 {
     int dummy;
     
     if ( !t )
 	return 0;
 	
-    return ( (S(t->text) <= t->dle) || ishr(t) || ishdr(t, &dummy) );
+    return ( (S(t->text) <= t->dle) || ishr(t, flags) || ishdr(t, &dummy, flags) );
 }
 
 
@@ -471,7 +472,7 @@ is_extra_dt(Line *t, int *clip, DWORD flags)
 		      && T(t->text)[S(t->text)-1] != '=') {
 	Line *x;
     
-	if ( iscode(t) || end_of_block(t) )
+	if ( iscode(t) || end_of_block(t, flags) )
 	    return 0;
 
 	if ( (x = skipempty(t->next)) && is_extra_dd(x) ) {
@@ -506,7 +507,7 @@ islist(Line *t, int *clip, DWORD flags, int *list_type)
     int i, j;
     char *q;
     
-    if ( end_of_block(t) )
+    if ( end_of_block(t, flags) )
 	return 0;
 
     if ( !(flags & (MKD_NODLIST|MKD_STRICT)) && isdefinition(t,clip,list_type,flags) )
@@ -614,12 +615,14 @@ codeblock(Paragraph *p)
 }
 
 
-#ifdef WITH_FENCED_CODE
 static int
-iscodefence(Line *r, int size, line_type kind)
+iscodefence(Line *r, int size, line_type kind, DWORD flags)
 {
+    if ( !(flags & MKD_FENCEDCODE) )
+	return 0;
+
     if ( !(r->flags & CHECKED) )
-	checkline(r);
+	checkline(r, flags);
 
     if ( kind )
 	return (r->kind == kind) && (r->count >= size);
@@ -628,7 +631,7 @@ iscodefence(Line *r, int size, line_type kind)
 }
 
 static Paragraph *
-fencedcodeblock(ParagraphRoot *d, Line **ptr)
+fencedcodeblock(ParagraphRoot *d, Line **ptr, DWORD flags)
 {
     Line *first, *r;
     Paragraph *ret;
@@ -637,14 +640,14 @@ fencedcodeblock(ParagraphRoot *d, Line **ptr)
     
     /* don't allow zero-length code fences
      */
-    if ( (first->next == 0) || iscodefence(first->next, first->count, 0) )
+    if ( (first->next == 0) || iscodefence(first->next, first->count, 0, flags) )
 	return 0;
 
     /* find the closing fence, discard the fences,
      * return a Paragraph with the contents
      */
     for ( r = first; r && r->next; r = r->next )
-	if ( iscodefence(r->next, first->count, first->kind) ) {
+	if ( iscodefence(r->next, first->count, first->kind, flags) ) {
 	    (*ptr) = r->next->next;
 	    ret = Pp(d, first->next, CODE);
       if (S(first->text) - first->count > 0) {
@@ -662,7 +665,6 @@ fencedcodeblock(ParagraphRoot *d, Line **ptr)
 	}
     return 0;
 }
-#endif
 
 
 static int
@@ -688,7 +690,7 @@ endoftextblock(Line *t, int toplevelblock, DWORD flags)
 {
     int z;
 
-    if ( end_of_block(t) || isquote(t) )
+    if ( end_of_block(t, flags) || isquote(t) )
 	return 1;
 
     /* HORRIBLE STANDARDS KLUDGES:
@@ -877,9 +879,9 @@ listitem(Paragraph *p, int indent, DWORD flags, linefn check)
 	    indent = clip ? clip : 2;
 	}
 
-	if ( (q->dle < indent) && (ishr(q) || islist(q,&z,flags,&z)
+	if ( (q->dle < indent) && (ishr(q,flags) || islist(q,&z,flags,&z)
 					   || (check && (*check)(q)))
-			       && !issetext(q,&z) ) {
+			       && !issetext(q,&z,flags) ) {
 	    q = t->next;
 	    t->next = 0;
 	    return q;
@@ -1253,11 +1255,9 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    
 	    ptr = codeblock(p);
 	}
-#if WITH_FENCED_CODE
-	else if ( iscodefence(ptr,3,0) && (p=fencedcodeblock(&d, &ptr)) )
+	else if ( iscodefence(ptr,3,0,f->flags) && (p=fencedcodeblock(&d, &ptr, f->flags)) )
 	    /* yay, it's already done */ ;
-#endif
-	else if ( ishr(ptr) ) {
+	else if ( ishr(ptr, f->flags) ) {
 	    p = Pp(&d, 0, HR);
 	    r = ptr;
 	    ptr = ptr->next;
@@ -1279,7 +1279,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p->down = compile(p->text, 1, f);
 	    p->text = 0;
 	}
-	else if ( ishdr(ptr, &hdr_type) ) {
+	else if ( ishdr(ptr, &hdr_type, f->flags) ) {
 	    p = Pp(&d, ptr, HDR);
 	    ptr = headerblock(p, hdr_type);
 	}
