@@ -507,7 +507,7 @@ char **argv;
     char *source = "stdin";
     FILE *tmplfile;
     int opt;
-    mkd_flag_t flags = MKD_TOC;
+    mkd_flag_t flags = THEME_CF|MKD_TOC;
     int force = 0;
     MMIOT *doc;
     struct stat sourceinfo;

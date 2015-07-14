@@ -50,6 +50,17 @@ for banned_with in dl fenced-code id-anchor github-tags urlencoded-anchor; do
     fi
 done
 
+# theme wants the old behavior of --with-(foo)
+#
+case "`echo "$WITH_DL" | $AC_UPPERCASE`" in
+    EXTRA)         THEME_CF="MKD_DLEXTRA|MKD_NODLDISCOUNT";;
+    BOTH)          THEME_CF="MKD_DLEXTRA";;
+esac
+test "$WITH_FENCED_CODE" && THEME_CF="${THEME_CF:+$THEME_CF|}MKD_FENCEDCODE"
+
+AC_DEFINE THEME_CF "$THEME_CF"
+
+
 test "$DEBIAN_GLITCH" && AC_DEFINE 'DEBIAN_GLITCH' 1
 
 AC_PROG_CC
