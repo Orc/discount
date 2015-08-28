@@ -60,6 +60,7 @@ complain(char *fmt, ...)
 }
 
 
+int
 main(int argc, char **argv)
 {
     int opt;

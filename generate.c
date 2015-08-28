@@ -38,6 +38,16 @@ push(char *bfr, int size, MMIOT *f)
 }
 
 
+/*
+ * push a character into the generator input buffer
+ */
+static void 
+pushc(char c, MMIOT *f)
+{
+    EXPAND(f->in) = c;
+}
+
+
 /* look <i> characters ahead of the cursor.
  */
 static inline int
@@ -207,7 +217,7 @@ ___mkd_reparse(char *bfr, int size, int flags, MMIOT *f, char *esc)
 	sub.esc = f->esc;
 
     push(bfr, size, &sub);
-    EXPAND(sub.in) = 0;
+    pushc(0, &sub);
     S(sub.in)--;
     
     text(&sub);
@@ -262,7 +272,7 @@ puturl(char *s, int size, MMIOT *f, int display)
 	    Qstring("%22", f);
 	else if ( isalnum(c) || ispunct(c) || (display && isspace(c)) )
 	    Qchar(c, f);
-	else if ( c == 003 )	/* untokenize ^C */
+	else if ( c == MKD_EOLN )	/* untokenize hard return */
 	    Qstring("  ", f);
 	else
 	    Qprintf(f, "%%%02X", c);
@@ -618,7 +628,7 @@ extra_linky(MMIOT *f, Cstring text, Footnote *ref)
     	___mkd_reparse(T(text), S(text), linkt.flags, f, 0);
     else {
 	ref->flags |= REFERENCED;
-	ref->refnumber = ++ f->reference;
+	ref->refnumber = ++ f->footnotes->reference;
 	Qprintf(f, "<sup id=\"%sref:%d\"><a href=\"#%s:%d\" rel=\"footnote\">%d</a></sup>",
 		p_or_nothing(f), ref->refnumber,
 		p_or_nothing(f), ref->refnumber, ref->refnumber);
@@ -731,8 +741,9 @@ linkylinky(int image, MMIOT *f)
 		    S(key.tag) = S(name);
 		}
 
-		if ( ref = bsearch(&key, T(*f->footnotes), S(*f->footnotes),
-					  sizeof key, (stfu)__mkd_footsort) ) {
+		if ( ref = bsearch(&key, T(f->footnotes->note),
+					 S(f->footnotes->note),
+					 sizeof key, (stfu)__mkd_footsort) ) {
 		    if ( extra_footnote )
 			status = extra_linky(f,name,ref);
 		    else
@@ -774,8 +785,12 @@ static void
 mangle(char *s, int len, MMIOT *f)
 {
     while ( len-- > 0 ) {
+#if DEBIAN_GLITCH
+	Qprintf(f, "&#02d;", *((unsigned char*)(s++)) );
+#else
 	Qstring("&#", f);
 	Qprintf(f, COINTOSS() ? "x%02x;" : "%02d;", *((unsigned char*)(s++)) );
+#endif
     }
 }
 
@@ -837,7 +852,7 @@ code(MMIOT *f, char *s, int length)
     int i,c;
 
     for ( i=0; i < length; i++ )
-	if ( (c = s[i]) == 003)  /* ^C: expand back to 2 spaces */
+	if ( (c = s[i]) == MKD_EOLN)  /* ^C: expand back to 2 spaces */
 	    Qstring("  ", f);
 	else if ( c == '\\' && (i < length-1) && escaped(f, s[i+1]) )
 	    cputc(s[++i], f);
@@ -1043,13 +1058,14 @@ maybe_autolink(MMIOT *f)
 
     /* greedily scan forward for the end of a legitimate link.
      */
-    for ( size=0; (c=peek(f, size+1)) != EOF; size++ )
+    for ( size=0; (c=peek(f, size+1)) != EOF; size++ ) {
 	if ( c == '\\' ) {
 	     if ( peek(f, size+2) != EOF )
 		++size;
 	}
-	else if ( isspace(c) || strchr("'\"()[]{}<>`", c) )
+	else if ( isspace(c) || strchr("'\"()[]{}<>`", c) || c == MKD_EOLN )
 	    break;
+    }
 
     if ( (size > 1) && process_possible_link(f, size) ) {
 	shift(f, size);
@@ -1257,7 +1273,8 @@ text(MMIOT *f)
 	switch (c) {
 	case 0:     break;
 
-	case 3:     Qstring(tag_text(f) ? "  " : "<br/>", f);
+	case MKD_EOLN:
+		    Qstring(tag_text(f) ? "  " : "<br/>", f);
 		    break;
 
 	case '>':   if ( tag_text(f) )
@@ -1586,13 +1603,14 @@ printblock(Paragraph *pp, MMIOT *f)
 			 && T(t->text)[S(t->text)-2] == ' '
 			 && T(t->text)[S(t->text)-1] == ' ' ) {
 		push(T(t->text), S(t->text)-2, f);
-		push("\003\n", 2, f);
+		pushc(MKD_EOLN, f);
+		pushc('\n', f);
 	    }
 	    else {
 		___mkd_tidy(&t->text);
 		push(T(t->text), S(t->text), f);
 		if ( t->next )
-		    push("\n", 1, f);
+		    pushc('\n', f);
 	    }
 	}
 	t = t->next;
@@ -1777,14 +1795,14 @@ mkd_extra_footnotes(MMIOT *m)
     int j, i;
     Footnote *t;
 
-    if ( m->reference == 0 )
+    if ( m->footnotes->reference == 0 )
 	return;
 
     Csprintf(&m->out, "\n<div class=\"footnotes\">\n<hr/>\n<ol>\n");
     
-    for ( i=1; i <= m->reference; i++ ) {
-	for ( j=0; j < S(*m->footnotes); j++ ) {
-	    t = &T(*m->footnotes)[j];
+    for ( i=1; i <= m->footnotes->reference; i++ ) {
+	for ( j=0; j < S(m->footnotes->note); j++ ) {
+	    t = &T(m->footnotes->note)[j];
 	    if ( (t->refnumber == i) && (t->flags & REFERENCED) ) {
 		Csprintf(&m->out, "<li id=\"%s:%d\">\n<p>",
 			    p_or_nothing(m), t->refnumber);

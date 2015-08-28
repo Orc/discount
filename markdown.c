@@ -177,9 +177,14 @@ splitline(Line *t, int cutpoint)
 }
 
 #define UNCHECK(l) ((l)->flags &= ~CHECKED)
-#define UNLESS_FENCED(t) if (fenced) { \
+
+#ifdef WITH_FENCED_CODE
+# define UNLESS_FENCED(t) if (fenced) { \
     other = 1; l->count += (c == ' ' ? 0 : -1); \
   } else { t; }
+#else
+# define UNLESS_FENCED(t) t;
+#endif
 
 /*
  * walk a line, seeing if it's any of half a dozen interesting regular
@@ -530,8 +535,7 @@ islist(Line *t, int *clip, DWORD flags, int *list_type)
 	    strtoul(T(t->text)+t->dle, &q, 10);
 	    if ( (q > T(t->text)+t->dle) && (q == T(t->text) + (j-1)) ) {
 		j = nextnonblank(t,j);
-		/* *clip = j; */
-		*clip = (j > 4) ? 4 : j;
+		*clip = j;
 		*list_type = OL;
 		return AL;
 	    }
@@ -847,6 +851,12 @@ listitem(Paragraph *p, int indent, DWORD flags, linefn check)
 	UNCHECK(t);
 	t->dle = mkd_firstnonblank(t);
 
+        /* even though we had to trim a long leader off this item,
+         * the indent for trailing paragraphs is still 4...
+	 */
+	if (indent > 4) {
+	    indent = 4;
+	}
 	if ( (q = skipempty(t->next)) == 0 ) {
 	    ___mkd_freeLineRange(t,q);
 	    return 0;
@@ -998,7 +1008,7 @@ addfootnote(Line *p, MMIOT* f)
     int c;
     Line *np = p->next;
 
-    Footnote *foot = &EXPAND(*f->footnotes);
+    Footnote *foot = &EXPAND(f->footnotes->note);
     
     CREATE(foot->tag);
     CREATE(foot->link);
@@ -1013,6 +1023,7 @@ addfootnote(Line *p, MMIOT* f)
     j = nextnonblank(p, j+2);
 
     if ( (f->flags & MKD_EXTRA_FOOTNOTE) && (T(foot->tag)[0] == '^') ) {
+	/* need to consume all lines until non-indented block? */
 	while ( j < S(p->text) )
 	    EXPAND(foot->title) = T(p->text)[j++];
 	goto skip_to_end;
@@ -1320,13 +1331,14 @@ mkd_compile(Document *doc, DWORD flags)
     doc->ctx->flags     = flags & USER_FLAGS;
     CREATE(doc->ctx->in);
     doc->ctx->footnotes = malloc(sizeof doc->ctx->footnotes[0]);
-    CREATE(*doc->ctx->footnotes);
+    doc->ctx->footnotes->reference = 0;
+    CREATE(doc->ctx->footnotes->note);
 
     mkd_initialize();
 
     doc->code = compile_document(T(doc->content), doc->ctx);
-    qsort(T(*doc->ctx->footnotes), S(*doc->ctx->footnotes),
-		        sizeof T(*doc->ctx->footnotes)[0],
+    qsort(T(doc->ctx->footnotes->note), S(doc->ctx->footnotes->note),
+		        sizeof T(doc->ctx->footnotes->note)[0],
 			           (stfu)__mkd_footsort);
     memset(&doc->content, 0, sizeof doc->content);
     return 1;

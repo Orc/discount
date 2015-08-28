@@ -88,6 +88,12 @@ struct escaped {
 } ;
 
 
+struct footnote_list {
+    int reference;
+    STRING(Footnote) note;
+} ;
+
+
 /* a magic markdown io thing holds all the data structures needed to
  * do the backend processing of a markdown document
  */
@@ -96,10 +102,9 @@ typedef struct mmiot {
     Cstring in;
     Qblock Q;
     int isp;
-    int reference;
     struct escaped *esc;
     char *ref_prefix;
-    STRING(Footnote) *footnotes;
+    struct footnote_list *footnotes;
     DWORD flags;
 #define MKD_NOLINKS	0x00000001
 #define MKD_NOIMAGE	0x00000002
@@ -130,6 +135,9 @@ typedef struct mmiot {
 
     Callback_data *cb;
 } MMIOT;
+
+
+#define MKD_EOLN	3
 
 
 /*

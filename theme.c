@@ -592,7 +592,7 @@ char **argv;
 	    strcat(q, ".html");
 	}
     }
-    if ( output ) {
+    if ( output && strcmp(output, "-") ) {
 	if ( force )
 	    unlink(output);
 	if ( !freopen(output, "w", stdout) )

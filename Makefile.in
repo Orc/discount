@@ -31,9 +31,11 @@ install: $(PGMS) $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR)
 install.everything: install install.samples install.man
 
 install.samples: $(SAMPLE_PGMS) install $(DESTDIR)$(BINDIR)
-	@INSTALL_PROGRAM@ $(SAMPLE_PGMS) $(DESTDIR)$(BINDIR)
 	@INSTALL_DIR@ $(DESTDIR)$(MANDIR)/man1
-	@INSTALL_DATA@ theme.1 makepage.1 mkd2html.1 $(DESTDIR)$(MANDIR)/man1
+	for x in $(SAMPLE_PGMS); do \
+	    @INSTALL_PROGRAM@ $$x $(DESTDIR)$(BINDIR)/$(SAMPLE_PFX)$$x; \
+	    @INSTALL_DATA@ $$x.1 $(DESTDIR)$(MANDIR)/man1/$(SAMPLE_PFX)$$x.1; \
+	done
 
 install.man:
 	@INSTALL_DIR@ $(DESTDIR)$(MANDIR)/man3
@@ -115,7 +117,7 @@ clean:
 	rm -f $(MKDLIB) `./librarian.sh files $(MKDLIB) VERSION`
 
 distclean spotless: clean
-	rm -f @GENERATED_FILES@ @CONFIGURE_FILES@
+	rm -f @GENERATED_FILES@ @CONFIGURE_FILES@ ./mktags ./blocktags ./librarian.sh
 
 Csio.o: Csio.c cstring.h amalloc.h config.h markdown.h
 amalloc.o: amalloc.c
