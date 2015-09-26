@@ -113,7 +113,7 @@ echo:   tools/echo.c config.h
 	$(CC) -o echo tools/echo.c
 	
 clean:
-	rm -f $(PGMS) $(TESTFRAMEWORK) $(SAMPLE_PGMS) *.o
+	rm -rf $(PGMS) $(TESTFRAMEWORK) $(SAMPLE_PGMS) *.o *.dSYM/
 	rm -f $(MKDLIB) `./librarian.sh files $(MKDLIB) VERSION`
 
 distclean spotless: clean
