@@ -183,13 +183,17 @@ mkd_generatehtml(Document *p, FILE *output)
     char *doc;
     int szdoc;
 
-    if ( (szdoc = mkd_document(p, &doc)) != EOF ) {
-	if ( p->ctx->flags & MKD_CDATA )
-	    mkd_generatexml(doc, szdoc, output);
-	else
-	    fwrite(doc, szdoc, 1, output);
-	putc('\n', output);
-	return 0;
+    if ((szdoc = mkd_document(p, &doc)) != EOF) {
+        int ret = 0;
+
+        if (p->ctx->flags & MKD_CDATA)
+            ret |= mkd_generatexml(doc, szdoc, output);
+        else
+            ret = !fwrite(doc, szdoc, 1, output);
+
+        ret |= putc('\n', output);
+
+        return ret;
     }
     return -1;
 }
