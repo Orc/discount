@@ -302,15 +302,19 @@ int
 mkd_generateline(char *bfr, int size, FILE *output, DWORD flags)
 {
     MMIOT f;
+    int ret;
 
     mkd_parse_line(bfr, size, &f, flags);
     if ( flags & MKD_CDATA )
-	mkd_generatexml(T(f.out), S(f.out), output);
+        ret = mkd_generatexml(T(f.out), S(f.out), output);
     else
-	fwrite(T(f.out), S(f.out), 1, output);
+        if (S(f.out) == 0)
+            ret = 0;
+        else
+            ret = !fwrite(T(f.out), S(f.out), 1, output);
 
     ___mkd_freemmiot(&f, 0);
-    return 0;
+    return ret;
 }
 
 
