@@ -39,8 +39,6 @@ mkd_xhtmlpage(Document *p, int flags, FILE *out)
 	mkd_generatehtml(p, out);
 	fprintf(out, "</body>\n");
 	fprintf(out, "</html>\n");
-	
-	mkd_cleanup(p);
 
 	return 0;
     }
