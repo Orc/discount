@@ -951,10 +951,18 @@ EOF
 # AC_OUTPUT generates makefiles from makefile.in's
 #
 AC_OUTPUT () {
+    
     cd $__cwd
     AC_SUB 'LIBS'    "$AC_LIBS"
     AC_SUB 'CONFIGURE_FILES' "$__config_files"
-    AC_SUB 'GENERATED_FILES' "$*"
+    
+    if test "$__MACOS_DSYM"; then
+	# deal with extra OSX droppings, if they exist
+	AC_SUB 'GENERATED_FILES' "-r *.dSYM $*"
+    else
+	AC_SUB 'GENERATED_FILES' "$*"
+    fi
+    
     AC_SUB 'CC'      "$AC_CC"
     AC_SUB 'CFLAGS'  "$AC_CFLAGS"
     AC_SUB 'LDFLAGS' "$AC_LDFLAGS"
@@ -1513,8 +1521,10 @@ AC_FAIL() {
 #
 # AC_SUB writes a substitution into config.sub
 AC_SUB() {
-    (   _subst=`echo $2 | sed -e 's/;/\\;/g'`
-	echo "s;@$1@;$_subst;g" ) >> $__cwd/config.sub
+    (   _target="$1"
+	shift
+	_subst=`echo "$*" | sed -e 's/;/\\;/g'`
+	echo "s;@$_target@;$_subst;g" ) >> $__cwd/config.sub
 }
 
 #
