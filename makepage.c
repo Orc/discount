@@ -30,6 +30,7 @@ char **argv;
     char *q;
     int version = 0;
     int opt;
+    int ret;
     mkd_flag_t flags = 0;
 
     if ( (q = getenv("MARKDOWN_FLAGS")) )
@@ -82,5 +83,9 @@ char **argv;
 	exit(1);
     }
 
-    exit(mkd_xhtmlpage(doc, flags, stdout));
+    ret = mkd_xhtmlpage(doc, flags, stdout);
+
+    mkd_cleanup(doc);
+
+    exit(ret);
 }

@@ -145,7 +145,6 @@ mkd_dump(Document *doc, FILE *out, int flags, char *title)
 	dumptree(doc->code, &stack, out);
 	DELETE(stack);
 
-	mkd_cleanup(doc);
 	return 0;
     }
     return -1;

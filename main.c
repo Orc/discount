@@ -206,9 +206,9 @@ main(int argc, char **argv)
 		    mkd_generatetoc(doc, stdout);
 		if ( content )
 		    mkd_generatehtml(doc, stdout);
-		mkd_cleanup(doc);
 	    }
 	}
+	mkd_cleanup(doc);
     }
     mkd_deallocate_tags();
     adump();
