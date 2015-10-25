@@ -78,8 +78,12 @@ mkd_generatecss(Document *d, FILE *f)
     int written = EOF, size = mkd_css(d, &res);
 
     if ( size > 0 )
-	written = fwrite(res, 1, size, f);
+        written = fwrite(res, 1, size, f);
     if ( res )
-	free(res);
+        free(res);
+
+    if ( size == 0 )
+        return 0;
+
     return (written == size) ? size : EOF;
 }
