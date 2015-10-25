@@ -1810,15 +1810,19 @@ mkd_document(Document *p, char **res)
 	    if ( p->ctx->flags & MKD_EXTRA_FOOTNOTE )
 		mkd_extra_footnotes(p->ctx);
 	    p->html = 1;
-	}
-
-	size = S(p->ctx->out);
+	    size = S(p->ctx->out);
 	
-	if ( (size == 0) || T(p->ctx->out)[size-1] )
-	    EXPAND(p->ctx->out) = 0;
+	    if ( (size == 0) || T(p->ctx->out)[size-1] ) {
+		/* Add a null byte at the end of the generated html,
+		 * but pretend it doesn't exist.
+		 */
+		EXPAND(p->ctx->out) = 0;
+		--S(p->ctx->out);
+	    }
+	}
 	
 	*res = T(p->ctx->out);
-	return size;
+	return S(p->ctx->out);
     }
     return EOF;
 }
