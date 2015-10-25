@@ -1818,6 +1818,10 @@ mkd_document(Document *p, char **res)
 	    EXPAND(p->ctx->out) = 0;
 	
 	*res = T(p->ctx->out);
+
+	p->html = 0;
+	CREATE(p->ctx->out);
+
 	return size;
     }
     return EOF;
