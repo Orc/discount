@@ -169,7 +169,7 @@ AC_CHECK_HEADERS () {
     for hdr in $*; do
 	echo "#include <$hdr>" >> ngc$$.c
     done
-    echo "main() { }" >> ngc$$.c
+    echo "int main() { }" >> ngc$$.c
 
     LOGN "looking for header $hdr"
 
@@ -210,7 +210,7 @@ AC_CHECK_FUNCS () {
     fi
 
     cat >> ngc$$.c << EOF
-main()
+int main()
 {
 
     $F;
@@ -251,7 +251,7 @@ AC_CHECK_STRUCT () {
     done
 
     cat >> ngc$$.c << EOF
-main()
+int main()
 {
     struct $struct foo;
 }
@@ -286,7 +286,7 @@ AC_CHECK_TYPE () {
     done
 
     cat >> ngc$$.c << EOF
-main()
+int main()
 {
     $type foo;
 }
@@ -323,7 +323,7 @@ AC_CHECK_FIELD () {
     done
 
     cat >> ngc$$.c << EOF
-main()
+int main()
 {
     struct $struct foo;
 
@@ -352,7 +352,7 @@ AC_PROG_CC () {
 
     cat > ngc$$.c << \EOF
 #include <stdio.h>
-main()
+int main()
 {
     puts("hello, sailor");
 }
@@ -360,7 +360,7 @@ EOF
 
     TLOGN "checking the C compiler"
 
-    unset AC_CFLAGS AC_LDFLAGS
+    unset AC_CFLAGS AC_LDFLAGS __MACOS_DSYM
 
     if [ "$CC" ] ; then
 	AC_CC="$CC"
@@ -381,10 +381,8 @@ EOF
     fi
     echo "checking out the C compiler"
 
-    unset __MACOS_DSYM
     $AC_CC -o ngc$$ ngc$$.c
     status=$?
-    test -d ngc$$.dSYM && __MACOS_DSYM=1
 
     TLOGN " ($AC_CC)"
 
@@ -427,6 +425,12 @@ EOF
 	else
 	    AC_LDFLAGS=${CFLAGS:-"-g"}
 	fi
+	
+	# macos-specific(?) test for .dSYM resource directories
+	$AC_CC $AC_CFLAGS $AC_LDFLAGS -o ngc$$ ngc$$.c
+	ls -dl ngc$$*
+	test -d ngc$$.dSYM && __MACOS_DSYM=1
+	
     else
 	AC_FAIL " does not compile code properly"
     fi
@@ -1062,7 +1066,7 @@ AC_CHECK_FLOCK() {
 #include <sys/types.h>
 #include <fcntl.h>
 
-main()
+int main()
 {
     int x = open("$$.c", O_RDWR, 0666);
     int y = open("$$.c", O_RDWR, 0666);
@@ -1115,7 +1119,7 @@ AC_CHECK_RESOLVER () {
 #include <arpa/nameser.h>
 #include <resolv.h>
 
-main()
+int main()
 {
     char bfr[256];
 
@@ -1158,7 +1162,7 @@ AC_CHECK_ALLOCA () {
 #else
 # include <stdlib.h>
 #endif
-main()
+int main()
 {
 	alloca(10);
 }
@@ -1194,7 +1198,7 @@ AC_CHECK_BASENAME() {
 
 extern char *basename(char*);
 
-main()
+int main()
 {
     char *a = basename("/a/test");
     char *b = basename("/a/nother");
