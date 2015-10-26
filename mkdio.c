@@ -183,13 +183,17 @@ mkd_generatehtml(Document *p, FILE *output)
     char *doc;
     int szdoc;
 
-    if ( (szdoc = mkd_document(p, &doc)) != EOF ) {
-	if ( p->ctx->flags & MKD_CDATA )
-	    mkd_generatexml(doc, szdoc, output);
-	else
-	    fwrite(doc, szdoc, 1, output);
-	putc('\n', output);
-	return 0;
+    if ((szdoc = mkd_document(p, &doc)) != EOF) {
+        int ret = 0;
+
+        if (p->ctx->flags & MKD_CDATA)
+            ret |= mkd_generatexml(doc, szdoc, output);
+        else
+            ret = !fwrite(doc, szdoc, 1, output);
+
+        ret |= putc('\n', output);
+
+        return ret;
     }
     return -1;
 }
@@ -298,15 +302,19 @@ int
 mkd_generateline(char *bfr, int size, FILE *output, DWORD flags)
 {
     MMIOT f;
+    int ret;
 
     mkd_parse_line(bfr, size, &f, flags);
     if ( flags & MKD_CDATA )
-	mkd_generatexml(T(f.out), S(f.out), output);
+        ret = mkd_generatexml(T(f.out), S(f.out), output);
     else
-	fwrite(T(f.out), S(f.out), 1, output);
+        if (S(f.out) == 0)
+            ret = 0;
+        else
+            ret = !fwrite(T(f.out), S(f.out), 1, output);
 
     ___mkd_freemmiot(&f, 0);
-    return 0;
+    return ret;
 }
 
 
