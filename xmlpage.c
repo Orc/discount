@@ -42,5 +42,5 @@ mkd_xhtmlpage(Document *p, int flags, FILE *out)
 
 	return 0;
     }
-    return -1;
+    return EOF;
 }

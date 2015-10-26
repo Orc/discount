@@ -87,5 +87,5 @@ char **argv;
 
     mkd_cleanup(doc);
 
-    exit(ret);
+    return (ret == EOF);
 }

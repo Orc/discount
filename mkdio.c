@@ -187,7 +187,7 @@ mkd_generatehtml(Document *p, FILE *output)
     DO_OR_DIE( szdoc = mkd_document(p,&doc) );
     if ( p->ctx->flags & MKD_CDATA )
 	DO_OR_DIE( mkd_generatexml(doc, szdoc, output) );
-    else if ( fwrite(doc, szdoc, 1, output) != szdoc )
+    else if ( fwrite(doc, szdoc, 1, output) != 1 )
 	return EOF;
     DO_OR_DIE( putc('\n', output) );
     return 0;
