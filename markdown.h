@@ -230,4 +230,9 @@ extern void __mkd_header_dle(Line *);
 
 extern int  __mkd_io_strget(struct string_stream *);
 
+/* utility function to do some operation and exit the current function
+ * if it fails
+ */
+#define DO_OR_DIE(op) if ( (op) == EOF ) return EOF; else 1
+
 #endif/*_MARKDOWN_D*/

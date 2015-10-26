@@ -75,11 +75,13 @@ int
 mkd_generatecss(Document *d, FILE *f)
 {
     char *res;
-    int written = EOF, size = mkd_css(d, &res);
+    int written;
+    int size = mkd_css(d, &res);
 
-    if ( size > 0 )
-	written = fwrite(res, 1, size, f);
+    written = (size > 0) ? fwrite(res,1,size,f) : 0;
+    
     if ( res )
 	free(res);
+    
     return (written == size) ? size : EOF;
 }

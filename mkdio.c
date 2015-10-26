@@ -16,6 +16,7 @@
 
 typedef ANCHOR(Line) LineAnchor;
 
+
 /* create a new blank Document
  */
 Document*
@@ -183,15 +184,13 @@ mkd_generatehtml(Document *p, FILE *output)
     char *doc;
     int szdoc;
 
-    if ( (szdoc = mkd_document(p, &doc)) != EOF ) {
-	if ( p->ctx->flags & MKD_CDATA )
-	    mkd_generatexml(doc, szdoc, output);
-	else
-	    fwrite(doc, szdoc, 1, output);
-	putc('\n', output);
-	return 0;
-    }
-    return -1;
+    DO_OR_DIE( szdoc = mkd_document(p,&doc) );
+    if ( p->ctx->flags & MKD_CDATA )
+	DO_OR_DIE( mkd_generatexml(doc, szdoc, output) );
+    else if ( fwrite(doc, szdoc, 1, output) != szdoc )
+	return EOF;
+    DO_OR_DIE( putc('\n', output) );
+    return 0;
 }
 
 
@@ -298,15 +297,16 @@ int
 mkd_generateline(char *bfr, int size, FILE *output, DWORD flags)
 {
     MMIOT f;
+    int status;
 
     mkd_parse_line(bfr, size, &f, flags);
     if ( flags & MKD_CDATA )
-	mkd_generatexml(T(f.out), S(f.out), output);
+	status = mkd_generatexml(T(f.out), S(f.out), output) != EOF;
     else
-	fwrite(T(f.out), S(f.out), 1, output);
+	status = fwrite(T(f.out), S(f.out), 1, output) == S(f.out);
 
     ___mkd_freemmiot(&f, 0);
-    return 0;
+    return status ? 0 : EOF;
 }
 
 

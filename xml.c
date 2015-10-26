@@ -47,9 +47,9 @@ mkd_generatexml(char *p, int size, FILE *out)
 	c = *p++;
 
 	if ( entity = mkd_xmlchar(c) )
-	    fputs(entity, out);
+	    DO_OR_DIE( fputs(entity, out) );
 	else
-	    fputc(c, out);
+	    DO_OR_DIE( fputc(c, out) );
     }
     return 0;
 }
