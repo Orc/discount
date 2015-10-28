@@ -513,7 +513,7 @@ AC_INIT () {
     __config_files="config.cmd config.sub config.h config.mak config.log"
     rm -f $__config_files
     __cwd=`pwd`
-    exec 5>&1 1>$__cwd/config.log 2>&1
+    exec 5>&1 1>"$__cwd"/config.log 2>&1
     AC_CONFIGURE_FOR=__AC_`echo $1 | sed -e 's/\..$//' | $AC_UPPERCASE  | tr ' ' '_'`_D
 
     # check to see whether to use echo -n or echo ...\c
@@ -536,7 +536,7 @@ AC_INIT () {
 
     LOG "Configuring for [$1]"
 
-    cat > $__cwd/config.h << EOF
+    cat > "$__cwd"/config.h << EOF
 /*
  * configuration for $1${2:+" ($2)"}, generated `date`
  * by ${LOGNAME:-`whoami`}@`hostname`
@@ -879,7 +879,7 @@ AC_SCALAR_TYPES () {
     if AC_QUIET AC_CHECK_HEADERS WinDef.h; then
 	# windows machine; BYTE, WORD, DWORD already
 	# defined
-	echo "#include <WinDef.h>" >> $__cwd/config.h
+	echo "#include <WinDef.h>" >> "$__cwd"/config.h
 	TLOG " (defined in WinDef.h)"
 	return 0
     fi
@@ -927,17 +927,17 @@ EOF
     if $AC_CC ngc$$.c -o ngc$$; then
 	while [ "$1" ]; do
 	    case "$1" in
-	    sub)if ./ngc$$ sub >> $__cwd/config.sub; then
+	    sub)if ./ngc$$ sub >> "$__cwd"/config.sub; then
 		    rc=0
 		fi;;
-	    *)  if ./ngc$$ >> $__cwd/config.h; then
+	    *)  if ./ngc$$ >> "$__cwd"/config.h; then
 		    rc=0
 		fi ;;
 	    esac
 	    shift
 	done
 	if [ "$rc" != 0 ]; then
-	    if ./ngc$$ >> $__cwd/config.h; then
+	    if ./ngc$$ >> "$__cwd"/config.h; then
 		rc=1
 	    fi
 	fi
@@ -956,7 +956,7 @@ EOF
 #
 AC_OUTPUT () {
     
-    cd $__cwd
+    cd "$__cwd"
     AC_SUB 'LIBS'    "$AC_LIBS"
     AC_SUB 'CONFIGURE_FILES' "$__config_files"
     
@@ -1036,10 +1036,10 @@ EOF
 
 	__d=$AC_SRCDIR
 	for makefile in $*;do
-	    if test -r $__d/${makefile}.in; then
+	    if test -r "$__d/${makefile}.in"; then
 		LOG "generating $makefile"
 		./config.md `__ac_dirname ./$makefile` 2>/dev/null
-		$AC_SED_PROG -f config.sub < $__d/${makefile}.in > $makefile
+		$AC_SED_PROG -f config.sub < "$__d/${makefile}.in" > $makefile
 		__config_files="$__config_files $makefile"
 	    else
 		LOG "WARNING: ${makefile}.in does not exist!"
@@ -1434,15 +1434,15 @@ AC_PROG_INSTALL () {
     fi
 
     __config_files="$__config_files config.md"
-    AC_SUB 'INSTALL_DIR' "$__cwd/config.md"
-    echo "#! /bin/sh"                                   > $__cwd/config.md
-    echo "# script generated" `date` "by configure.sh" >> $__cwd/config.md
-    echo                                               >> $__cwd/config.md
+    AC_SUB 'INSTALL_DIR' "./config.md"
+    echo "#! /bin/sh"                                   > ""$__cwd"/config.md"
+    echo "# script generated" `date` "by configure.sh" >> ""$__cwd"/config.md"
+    echo                                               >> ""$__cwd"/config.md"
     if [ "$__mkdir" ]; then
-	echo "test -d \"\$1\" || $__mkdir \"\$1\""     >> $__cwd/config.md
-	echo "exit $?"                                 >> $__cwd/config.md
+	echo "test -d \"\$1\" || $__mkdir \"\$1\""     >> ""$__cwd"/config.md"
+	echo "exit $?"                                 >> ""$__cwd"/config.md"
     else
-	cat - >> $__cwd/config.md << \EOD
+	cat - >> ""$__cwd"/config.md" << \EOD
 pieces=`IFS=/; for x in $1; do echo $x; done`
 dir=
 for x in $pieces; do
@@ -1453,7 +1453,7 @@ done
 exit 0
 EOD
     fi
-    chmod +x $__cwd/config.md
+    chmod +x "$__cwd"/config.md
 }
 
 #
@@ -1528,25 +1528,25 @@ AC_SUB() {
     (   _target="$1"
 	shift
 	_subst=`echo "$*" | sed -e 's/;/\\;/g'`
-	echo "s;@$_target@;$_subst;g" ) >> $__cwd/config.sub
+	echo "s;@$_target@;$_subst;g" ) >> "$__cwd"/config.sub
 }
 
 #
 # AC_MAK writes a define into config.mak
 AC_MAK() {
-    echo "HAVE_$1 = 1" >> $__cwd/config.mak
+    echo "HAVE_$1 = 1" >> "$__cwd"/config.mak
 }
 
 #
 # AC_DEFINE adds a #define to config.h
 AC_DEFINE() {
-    echo "#define $1 ${2:-1}" >> $__cwd/config.h
+    echo "#define $1 ${2:-1}" >> "$__cwd"/config.h
 }
 
 #
 # AC_INCLUDE adds a #include to config.h
 AC_INCLUDE() {
-    echo "#include \"$1\"" >> $__cwd/config.h
+    echo "#include \"$1\"" >> "$__cwd"/config.h
 }
 
 #
