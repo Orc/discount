@@ -1062,6 +1062,8 @@ maybe_autolink(MMIOT *f)
 	     if ( peek(f, size+2) != EOF )
 		++size;
 	}
+	else if ( c & 0x80 )	/* HACK: ignore utf-8 extended characters */
+	    continue;
 	else if ( isspace(c) || strchr("'\"()[]{}<>`", c) || c == MKD_EOLN )
 	    break;
     }
