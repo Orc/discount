@@ -19,7 +19,7 @@ hi' \
 
 <p>hi</p>'
 
-try -fidanchor '-T -ftoc' 'toc item with link' \
+try -fidanchor -fnourlencodedanchor '-T -ftoc' 'toc item with link' \
 '##[H2](H2) here' \
 '<ul>
  <li>
@@ -30,12 +30,19 @@ try -fidanchor '-T -ftoc' 'toc item with link' \
 </ul>
 <h2 id="H2.here"><a href="H2">H2</a> here</h2>'  
 
-try -fidanchor '-T -ftoc' 'toc item with non-alpha start' \
+try -fidanchor -fnourlencodedanchor '-T -ftoc' 'toc item with non-alpha start' \
 '#1 header' \
 '<ul>
  <li><a href="#L1.header">1 header</a></li>
 </ul>
 <h1 id="L1.header">1 header</h1>'
+
+try -fidanchor -furlencodedanchor '-T -ftoc' 'toc item with non-alpha start (url encoded)' \
+'#1 header' \
+'<ul>
+ <li><a href="#1%20header">1 header</a></li>
+</ul>
+<h1 id="1%20header">1 header</h1>'
 
 summary $0
 
