@@ -1327,9 +1327,8 @@ files)  echo "\$FULLNAME" "\$LIBNAME" "\$LIBNAME.\$MAJOR"
 install)$PROG_INSTALL -c \$FULLNAME "\$1"
 	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME.\$MAJOR
 	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME
-ESAC
-
-    test "$LDCONFIG" && echo '	$LDCONFIG' '"\$1"' >> librarian.sh
+EOF
+    test "$LDCONFIG" && echo '	'$LDCONFIG '"\$1"' >> librarian.sh
     cat >> librarian.sh << EOF
 	;;
 esac
