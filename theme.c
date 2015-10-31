@@ -18,6 +18,9 @@
 #if defined(HAVE_BASENAME) && defined(HAVE_LIBGEN_H)
 #  include <libgen.h>
 #endif
+#if defined(HAVE_ALLOCA_H)
+#  include <alloca.h>
+#endif
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/types.h>
