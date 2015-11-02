@@ -1320,14 +1320,24 @@ mkd_compile(Document *doc, DWORD flags)
     if ( !doc )
 	return 0;
 
-    if ( doc->compiled )
-	return 1;
+    flags &= USER_FLAGS;
+    
+    if ( doc->compiled ) {
+	if ( doc->ctx->flags == flags )
+	    return 1;
+	else {
+	    if ( doc->code)
+		___mkd_freeParagraph(doc->code);
+	    if ( doc->ctx->footnotes )
+		___mkd_freefootnotes(doc->ctx);
+	}
+    }
 
     doc->compiled = 1;
     memset(doc->ctx, 0, sizeof(MMIOT) );
     doc->ctx->ref_prefix= doc->ref_prefix;
     doc->ctx->cb        = &(doc->cb);
-    doc->ctx->flags     = flags & USER_FLAGS;
+    doc->ctx->flags     = flags;
     CREATE(doc->ctx->in);
     doc->ctx->footnotes = malloc(sizeof doc->ctx->footnotes[0]);
     doc->ctx->footnotes->reference = 0;
