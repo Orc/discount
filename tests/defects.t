@@ -19,5 +19,7 @@ bar' \
 '<p><a href="http://foo">http://foo</a><br/>
 bar</p>'
 
+try 'unterminated <p> block' '<p></>*' '<p><p></>*</p>'
+
 summary $0
 exit $rc
