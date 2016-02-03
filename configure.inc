@@ -1204,6 +1204,9 @@ int main()
     char *a = basename("/a/test");
     char *b = basename("/a/nother");
 
+    if ( a == 0 || b == 0 || a == b )
+	return 0;
+
     return (strcmp(a,b) != 0) ? 0 : 1;
 
 }
