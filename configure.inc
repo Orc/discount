@@ -1131,14 +1131,15 @@ EOF
     if $AC_CC -o ngc$$ ngc$$.c; then
 	TLOG " (found)"
     elif $AC_CC -o ngc$$ ngc$$.c -lresolv; then
-	TLOG " (found, needs -lresolv)"
+	TLOG " (yes, needs -lresolv)"
 	AC_LIBS="$AC_LIBS -lresolv"
     elif $AC_CC -DBIND_8_COMPAT -o ngc$$ ngc$$.c; then
-	TLOG " (found, needs BIND_8_COMPAT)"
+	TLOG " (fyes, needs BIND_8_COMPAT)"
 	AC_DEFINE BIND_8_COMPAT 1
     elif $AC_CC -DBIND_8_COMPAT -o ngc$$ ngc$$.c -lresolv; then
-	TLOG " (found, needs BIND_8_COMPAT & -lresolv)"
+	TLOG " (yes, needs BIND_8_COMPAT & -lresolv)"
 	AC_DEFINE BIND_8_COMPAT 1
+	AC_LIBS="$AC_LIBS -lresolv"
     else
 	TLOG " (not found)"
 	__ACR_rc=1
@@ -1328,7 +1329,7 @@ install)$PROG_INSTALL -c \$FULLNAME "\$1"
 	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME.\$MAJOR
 	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME
 EOF
-    test "$LDCONFIG" && echo '	'$LDCONFIG '"\$1"' >> librarian.sh
+    test "$LDCONFIG" && echo '	'$LDCONFIG '"$1"' >> librarian.sh
     cat >> librarian.sh << EOF
 	;;
 esac
