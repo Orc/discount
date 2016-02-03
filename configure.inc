@@ -993,7 +993,7 @@ AC_OUTPUT () {
 	AC_PROG ar
 	AC_PROG ranlib
 	AC_SUB LD_LIBRARY_PATH HERE
-	AC
+
 	__config_files="$__config_files librarian.sh"
 	cat > librarian.sh << EOF
 #! /bin/sh
