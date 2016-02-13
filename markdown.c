@@ -260,14 +260,17 @@ commentblock(Paragraph *p, int *unclosed)
     Line *t, *ret;
     char *end;
 
-    for ( t = p->text; t ; t = t->next) {
-	if ( end = strstr(T(t->text), "-->") ) {
-	    int end_of_comment = 3 + (end - T(t->text));
-
-	    if ( end_of_comment == S(t->text) )
-		return t->next;
-	}
+       for ( t = p->text; t ; t = t->next) {
+	   if ( end = strstr(T(t->text), "-->") ) {
+	       if ( 3 + (end - T(t->text)) < S(t->text) )
+		   continue;
+	       /*splitline(t, 3 + (end - T(t->text)) );*/
+	       ret = t->next;
+	       t->next = 0;
+	       return ret;
+	   }
     }
+
     *unclosed = 1;
     return t;
 
