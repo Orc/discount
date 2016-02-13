@@ -262,7 +262,7 @@ commentblock(Paragraph *p, int *unclosed)
 
        for ( t = p->text; t ; t = t->next) {
 	   if ( end = strstr(T(t->text), "-->") ) {
-	       if ( 3 + (end - T(t->text)) < S(t->text) )
+	       if ( nextnonblank(t, 3 + (end - T(t->text))) < S(t->text) )
 		   continue;
 	       /*splitline(t, 3 + (end - T(t->text)) );*/
 	       ret = t->next;
