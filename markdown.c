@@ -251,6 +251,9 @@ checkline(Line *l, DWORD flags)
 
 
 
+/* markdown only does special handling of comments if the comment end
+ * is at the end of a line
+ */
 static Line *
 commentblock(Paragraph *p, int *unclosed)
 {
@@ -259,10 +262,10 @@ commentblock(Paragraph *p, int *unclosed)
 
     for ( t = p->text; t ; t = t->next) {
 	if ( end = strstr(T(t->text), "-->") ) {
-	    splitline(t, 3 + (end - T(t->text)) );
-	    ret = t->next;
-	    t->next = 0;
-	    return ret;
+	    int end_of_comment = 3 + (end - T(t->text));
+
+	    if ( end_of_comment == S(t->text) )
+		return t->next;
 	}
     }
     *unclosed = 1;

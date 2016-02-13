@@ -23,14 +23,6 @@ text' \
 
 <p>text</p>'
 
-try 'html comments' \
-    '<!--
-**hi**
--->' \
-    '<!--
-**hi**
--->'
-    
 try 'no smartypants inside tags (#1)' \
     '<img src="linky">' \
     '<p><img src="linky"></p>'
@@ -82,49 +74,11 @@ so is this</div>'
 try 'unfinished tags' '<foo bar' '<p>&lt;foo bar</p>'
 
 
-try 'comment with trailing text' '<!-- this is -->a test' \
-'<!-- this is -->
-
-
-<p>a test</p>'
-
 try 'block with trailing text' '<p>this is</p>a test' \
 '<p>this is</p>
 
 
 <p>a test</p>'
-
-
-COMMENTS='<!-- 1. -->line 1
-
-<!-- 2. -->line 2'
-
-try 'two comments' "$COMMENTS" \
-'<!-- 1. -->
-
-
-<p>line 1</p>
-
-<!-- 2. -->
-
-
-<p>line 2</p>'
-
-COMMENTS='<!-- 1. -->line 1
-<!-- 2. -->line 2'
-
-try 'two adjacent comments' "$COMMENTS" \
-'<!-- 1. -->
-
-
-<p>line 1</p>
-
-<!-- 2. -->
-
-
-<p>line 2</p>'
-
-try 'comment, no white space' '<!--foo-->' '<!--foo-->'
 
 try 'unclosed block' '<p>here we go!' '<p><p>here we go!</p>'
 
