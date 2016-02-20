@@ -9,6 +9,7 @@
 #
 ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
+--with-latex		Enable latex passthrough
 --enable-all-features	Turn on all stable optional features
 --shared		Build shared libraries (default is static)'
 
@@ -162,5 +163,6 @@ fi
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
 
 [ "$WITH_PANDOC_HEADER" ] && AC_DEFINE 'PANDOC_HEADER' '1'
+[ "$WITH_LATEX" ] && AC_DEFINE 'WITH_LATEX' '1'
 
 AC_OUTPUT Makefile version.c mkdio.h
