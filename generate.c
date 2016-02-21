@@ -1208,18 +1208,23 @@ smartypants(int c, int *flags, MMIOT *f)
 
 
 #if WITH_LATEX
-/* process latex with \(, \) delimiters
+/* process latex with arbitrary 2-character ( $$ .. $$, \[ .. \], \( .. \)
+ * delimiters
  */
 static int
-mathhandler(MMIOT *f, int endtick) {
-    int i = 0, size;
+mathhandler(MMIOT *f, int e1, e2)
+{
+    int i = 0;
 
-    while(peek(f, ++i) != EOF)
-        if (peek(f, i) == '\\' && peek(f, i+1) == endtick) {
-            Qstring("\\(", f);
-            while(i-->-1) cputc(pull(f), f);
+    while(peek(f, ++i) != EOF) {
+        if (peek(f, i) == e1 && peek(f, i+1) == e2) {
+	    cputc(peek(f,-1), f);
+	    cputc(peek(f, 0), f);
+	    while ( i-- > -1 )
+		cputc(pull(f), f);
             return 1;
         }
+    }
     return 0;
 }
 #endif
@@ -1406,7 +1411,8 @@ text(MMIOT *f)
 				break;
 
 #if WITH_LATEX
-		    case '(':   if ( mathhandler(f, ')') )
+		    case '[':
+		    case '(':   if ( mathhandler(f, '\\', (c =='(')?')':']') )
 				    break;
 				/* else fall through to default */
 #endif
@@ -1436,6 +1442,13 @@ text(MMIOT *f)
 			Qchar(c, f);
 		    break;
 
+#if WITH_LATEX
+	case '$':   if ( ((c = pull(f)) == '$') && mathhandler(f, '$', '$') )
+			break;
+		    Qchar('$', f);
+		    /* fall through to default */
+#endif
+	
 	default:    Qchar(c, f);
 		    break;
 	}

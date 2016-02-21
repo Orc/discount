@@ -12,5 +12,8 @@ try 'latex passthrough' '\(\tex\)' '<p>\(\tex\)</p>'
 try 'latex w/ special characters' 'Equation:\(a<+>b\).' \
     '<p>Equation:\(a&lt;+&gt;b\).</p>'
 
+try 'latex with $$ .. $$' '$$foo$$' '<p>$$foo$$</p>'
+try 'latex with \[ .. \]' '\[foo\]' '<p>\[foo\]</p>'
+
 summary $0
 exit $rc
