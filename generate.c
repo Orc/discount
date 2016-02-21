@@ -1212,7 +1212,7 @@ smartypants(int c, int *flags, MMIOT *f)
  * delimiters
  */
 static int
-mathhandler(MMIOT *f, int e1, e2)
+mathhandler(MMIOT *f, int e1, int e2)
 {
     int i = 0;
 
