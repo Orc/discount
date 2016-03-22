@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "config.h"
 
 #define MAGIC 0x1f2e3d4c
 
