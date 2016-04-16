@@ -10,7 +10,6 @@
 ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --with-latex		Enable latex passthrough
---enable-all-features	Turn on all stable optional features
 --shared		Build shared libraries (default is static)'
 
 LOCAL_AC_OPTIONS='
@@ -28,9 +27,6 @@ locals() {
     --SHARED)
                 echo TRY_SHARED=T
                 ;;
-    --ENABLE-ALL|--ENABLE-ALL-FEATURES)
-		echo WITH_AMALLOC=T
-		;;
     --ENABLE-*)	enable=`echo $K | sed -e 's/--ENABLE-//' | tr '-' '_'`
 		echo WITH_${enable}=T ;;
     --DEBIAN-GLITCH)
