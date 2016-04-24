@@ -73,8 +73,8 @@ char **argv;
 	exit(0);
     }    
     
-    if ( (argc > 1) && !freopen(argv[1], "r", stdin) ) {
-	perror(argv[1]);
+    if ( (argc > 0) && !freopen(argv[0], "r", stdin) ) {
+	perror(argv[0]);
 	exit(1);
     }
 
