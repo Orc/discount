@@ -36,6 +36,7 @@ static struct flagnames flagnames[] = {
     { MKD_IDANCHOR,       "IDANCHOR" },
     { MKD_GITHUBTAGS,     "GITHUBTAGS" },
     { MKD_URLENCODEDANCHOR, "URLENCODEDANCHOR" },
+    { MKD_LATEX,          "LATEX" },
 };
 #define NR(x)	(sizeof x/sizeof x[0])
 

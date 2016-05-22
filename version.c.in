@@ -7,7 +7,4 @@ char markdown_version[] = VERSION
 #if USE_AMALLOC
 		" DEBUG"
 #endif
-#if WITH_LATEX
-		" LATEX"
-#endif
 		;

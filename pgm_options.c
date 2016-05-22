@@ -61,6 +61,7 @@ static struct _opt {
     { "idanchor",      "id= anchors in TOC",         0, 0, 1, MKD_IDANCHOR },
     { "githubtags",    "permit - and _ in element names", 0, 0, 0, MKD_GITHUBTAGS },
     { "urlencodedanchor", "urlencode special chars in TOC links", 0, 0, 0, MKD_URLENCODEDANCHOR },
+    { "latex",         "handle LaTeX escapes",         0, 0, 1, MKD_LATEX },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])
