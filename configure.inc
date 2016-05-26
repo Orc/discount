@@ -879,7 +879,18 @@ AC_SCALAR_TYPES () {
     if AC_QUIET AC_CHECK_HEADERS WinDef.h; then
 	# windows machine; BYTE, WORD, DWORD already
 	# defined
-	echo "#include <WinDef.h>" >> "$__cwd"/config.h
+
+	for x in $@; do
+	    case "$x" in
+	    sub)AC_SUB DWORD DWORD
+		AC_SUB WORD WORD
+		AC_SUB BYTE BYTE
+		;;
+	    *)
+		echo "#include <WinDef.h>" >> "$__cwd"/config.h
+		;;
+	    esac
+	done
 	TLOG " (defined in WinDef.h)"
 	return 0
     fi
