@@ -876,24 +876,25 @@ AC_SCALAR_TYPES () {
     rc=1
     LOGN "defining WORD & DWORD scalar types"
     
-    if AC_QUIET AC_CHECK_HEADERS WinDef.h; then
-	# windows machine; BYTE, WORD, DWORD already
-	# defined
-
-	for x in $@; do
-	    case "$x" in
-	    sub)AC_SUB DWORD DWORD
-		AC_SUB WORD WORD
-		AC_SUB BYTE BYTE
-		;;
-	    *)
-		echo "#include <WinDef.h>" >> "$__cwd"/config.h
-		;;
-	    esac
-	done
-	TLOG " (defined in WinDef.h)"
-	return 0
-    fi
+# --- is this needed anymore? ---
+#    if AC_QUIET AC_CHECK_HEADERS WinDef.h; then
+#	# windows machine; BYTE, WORD, DWORD already
+#	# defined
+#
+#	for x in $@; do
+#	    case "$x" in
+#	    sub)AC_SUB DWORD DWORD
+#		AC_SUB WORD WORD
+#		AC_SUB BYTE BYTE
+#		;;
+#	    *)
+#		echo "#include <WinDef.h>" >> "$__cwd"/config.h
+#		;;
+#	    esac
+#	done
+#	TLOG " (defined in WinDef.h)"
+#	return 0
+#    fi
 	
     cat > ngc$$.c << EOF
 #include <stdio.h>
