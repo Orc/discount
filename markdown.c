@@ -152,7 +152,7 @@ flogetc(FLO *f)
 {
     if ( f && f->t ) {
 	if ( f->i < S(f->t->text) )
-	    return T(f->t->text)[f->i++];
+	    return (unsigned char) (T(f->t->text)[f->i++]);
 	f->t = f->t->next;
 	f->i = 0;
 	return flogetc(f);

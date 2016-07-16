@@ -190,7 +190,7 @@ prepare(FILE *input)
 static int
 pull()
 {
-    return psp < S(inbuf) ? T(inbuf)[psp++] : EOF;
+    return psp < S(inbuf) ? (unsigned char) (T(inbuf)[psp++]) : EOF;
 }
 
 static int
@@ -199,7 +199,7 @@ peek(int offset)
     int pos = (psp + offset)-1;
 
     if ( pos >= 0 && pos < S(inbuf) )
-	return T(inbuf)[pos];
+	return (unsigned char) (T(inbuf)[pos]);
 
     return EOF;
 }

@@ -56,7 +56,9 @@ peek(MMIOT *f, int i)
 
     i += (f->isp-1);
 
-    return (i >= 0) && (i < S(f->in)) ? T(f->in)[i] : EOF;
+    if ((i >= 0) && (i < S(f->in)))
+	return (unsigned char) (T(f->in)[i]);
+    return EOF;
 }
 
 
@@ -65,7 +67,9 @@ peek(MMIOT *f, int i)
 static inline int
 pull(MMIOT *f)
 {
-    return ( f->isp < S(f->in) ) ? T(f->in)[f->isp++] : EOF;
+    if ( f->isp < S(f->in) )
+	return (unsigned char) (T(f->in)[f->isp++]);
+    return EOF;
 }
 
 
