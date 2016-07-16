@@ -50,22 +50,22 @@ pushc(char c, MMIOT *f)
 
 /* look <i> characters ahead of the cursor.
  */
-static inline int
+static inline unsigned int
 peek(MMIOT *f, int i)
 {
 
     i += (f->isp-1);
 
-    return (i >= 0) && (i < S(f->in)) ? T(f->in)[i] : EOF;
+    return (i >= 0) && (i < S(f->in)) ? (unsigned char)T(f->in)[i] : EOF;
 }
 
 
 /* pull a byte from the input buffer
  */
-static inline int
+static inline unsigned int
 pull(MMIOT *f)
 {
-    return ( f->isp < S(f->in) ) ? T(f->in)[f->isp++] : EOF;
+    return ( f->isp < S(f->in) ) ? (unsigned char)T(f->in)[f->isp++] : EOF;
 }
 
 
