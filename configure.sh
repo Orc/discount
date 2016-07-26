@@ -34,10 +34,13 @@ locals() {
     esac
 }
 
+VERSION=`cat VERSION`
 TARGET=markdown
 . ./configure.inc
 
 AC_INIT $TARGET
+AC_SUB 'PACKAGE_NAME' lib$TARGET
+AC_SUB 'PACKAGE_VERSION' $VERSION
 
 for banned_with in dl fenced-code id-anchor github-tags urlencoded-anchor; do
     banned_with_variable_ref=\$WITH_`echo "$banned_with" | $AC_UPPERCASE | tr - _`
@@ -159,4 +162,4 @@ fi
 
 [ "$WITH_PANDOC_HEADER" ] && AC_DEFINE 'PANDOC_HEADER' '1'
 
-AC_OUTPUT Makefile version.c mkdio.h
+AC_OUTPUT Makefile version.c mkdio.h libmarkdown.pc
