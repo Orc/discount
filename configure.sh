@@ -92,6 +92,7 @@ AC_PROG ranlib
 if [ "$PKGCONFIG" ]; then
     AC_SUB MK_PKGCONFIG ''
 elif AC_PROG pkg-config ; then
+    PKGCONFIG=true
     AC_SUB MK_PKGCONFIG ''
 else
     AC_SUB MK_PKGCONFIG '#'
