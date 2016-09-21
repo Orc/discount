@@ -9,7 +9,8 @@
 #
 ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
---shared		Build shared libraries (default is static)'
+--shared		Build shared libraries (default is static)
+--pkg-config		Install pkg-config(1) glue files'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
@@ -30,6 +31,9 @@ locals() {
 		echo WITH_${enable}=T ;;
     --DEBIAN-GLITCH)
 		echo DEBIAN_GLITCH=T
+		;;
+    --PKG-CONFIG)
+		echo PKGCONFIG=true
 		;;
     esac
 }
@@ -84,6 +88,14 @@ fi
 
 AC_PROG ar || AC_FAIL "$TARGET requires ar"
 AC_PROG ranlib
+
+if [ "$PKGCONFIG" ]; then
+    AC_SUB MK_PKGCONFIG ''
+elif AC_PROG pkg-config ; then
+    AC_SUB MK_PKGCONFIG ''
+else
+    AC_SUB MK_PKGCONFIG '#'
+fi
 
 AC_C_VOLATILE
 AC_C_CONST
@@ -162,4 +174,10 @@ fi
 
 [ "$WITH_PANDOC_HEADER" ] && AC_DEFINE 'PANDOC_HEADER' '1'
 
-AC_OUTPUT Makefile version.c mkdio.h libmarkdown.pc
+GENERATE="Makefile version.c mkdio.h"
+
+if [ "$PKGCONFIG" ]; then
+    GENERATE="$GENERATE libmarkdown.pc"
+fi
+
+AC_OUTPUT $GENERATE
