@@ -89,9 +89,11 @@ fi
 AC_PROG ar || AC_FAIL "$TARGET requires ar"
 AC_PROG ranlib
 
+# should we create a .pc for pkg-config & GNU automake
+#
 if [ "$PKGCONFIG" ]; then
     AC_SUB MK_PKGCONFIG ''
-elif AC_PROG pkg-config ; then
+elif AC_PROG pkg-config || AC_PROG automake ; then
     PKGCONFIG=true
     AC_SUB MK_PKGCONFIG ''
 else
