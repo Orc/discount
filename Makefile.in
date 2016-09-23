@@ -8,7 +8,7 @@ BINDIR=@exedir@
 MANDIR=@mandir@
 LIBDIR=@libdir@
 INCDIR=@prefix@/include
-PKGDIR=$(LIBDIR)/pkgconfig
+@MK_PKGCONFIG@PKGDIR=$(LIBDIR)/pkgconfig
 
 PGMS=markdown
 SAMPLE_PGMS=mkd2html makepage
@@ -28,7 +28,9 @@ install: $(PGMS) $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR) $(D
 	@INSTALL_PROGRAM@ $(PGMS) $(DESTDIR)$(BINDIR)
 	./librarian.sh install libmarkdown VERSION $(DESTDIR)$(LIBDIR)
 	@INSTALL_DATA@ mkdio.h $(DESTDIR)$(INCDIR)
-	@INSTALL_DATA@ $(MKDLIB).pc $(DESTDIR)$(PKGDIR)
+
+@MK_PKGCONFIG@$(DESTDIR)$(PKGDIR)/$(MKDLIB).pc: $(MKDLIB).pc $(DESTDIR)$(PKGDIR)
+@MK_PKGCONFIG@	@INSTALL_DATA@ $(MKDLIB).pc $(DESTDIR)$(PKGDIR)
 
 install.everything: install install.samples install.man
 
@@ -67,8 +69,8 @@ $(DESTDIR)$(INCDIR):
 $(DESTDIR)$(LIBDIR):
 	@INSTALL_DIR@ $(DESTDIR)$(LIBDIR)
 
-$(DESTDIR)$(PKGDIR): $(DESTDIR)$(LIBDIR)
-	@INSTALL_DIR@ $(DESTDIR)$(PKGDIR)
+@MK_PKGCONFIG@$(DESTDIR)$(PKGDIR): $(DESTDIR)$(LIBDIR)
+@MK_PKGCONFIG@	@INSTALL_DIR@ $(DESTDIR)$(PKGDIR)
 
 version.o: version.c VERSION
 	$(CC) $(CFLAGS) -DVERSION=\"`cat VERSION`\" -c version.c
