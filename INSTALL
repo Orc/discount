@@ -26,11 +26,12 @@ Configure.sh has a few options that can be set:
 --libdir=DIR		where to put libraries (prefix/lib)
 --libexecdir=DIR	where to put private executables
 --mandir=DIR		where to put manpages
---enable-dl-tag	Use the DL tag extension
---enable-pandoc-header	Use pandoc-style header blocks
---enable-superscript	A^B expands to A<sup>B</sup>
---enable-amalloc	Use a debugging memory allocator (to detect leaks)
---with-tabstops=N	Set tabstops to N characters (default is 4)
+--with-amalloc		Use my paranoid malloc library to catch memory leaks
+--shared		Build shared libraries
+--debian-glitch		When mangling email addresses, do them deterministically
+			so the Debian regression tester won't complain
+--pkg-config		Build & install a pkg-config(1) .pc file for
+			the discount library.
 
 3) Installing sample programs and manpages
 
