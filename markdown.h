@@ -146,7 +146,7 @@ typedef struct mmiot {
 } MMIOT;
 
 
-#define MKD_EOLN	3
+#define MKD_EOLN	'\r'
 
 
 /*
