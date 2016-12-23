@@ -82,5 +82,16 @@ try 'block with trailing text' '<p>this is</p>a test' \
 
 try 'unclosed block' '<p>here we go!' '<p><p>here we go!</p>'
 
+
+try '<form> block' '<form>
+
+pie?
+
+</form>' '<form>
+
+pie?
+
+</form>'
+
 summary $0
 exit $rc
