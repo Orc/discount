@@ -65,6 +65,7 @@ main()
     KW("H6");
     KW("LISTING");
     KW("NOBR");
+    KW("FORM");
     KW("UL");
     KW("P");
     KW("OL");
