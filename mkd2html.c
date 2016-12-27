@@ -166,11 +166,14 @@ char **argv;
 			"        type=\"text/css\"\n"
 			"        href=\"%s\" />\n", T(css)[i]);
 
-    if ( h ) {
-	fprintf(output,"  <title>");
+    fprintf(output,"  <title>");
+    if ( h )
 	mkd_generateline(h, strlen(h), output, 0);
-	fprintf(output, "</title>\n");
-    }
+    /* xhtml requires a <title> in the header, even if it doesn't
+     * contain anything
+     */
+    fprintf(output, "</title>\n");
+    
     for ( i=0; i < S(headers); i++ )
 	fprintf(output, "  %s\n", T(headers)[i]);
     fprintf(output, "</head>\n"
