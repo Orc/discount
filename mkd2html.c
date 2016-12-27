@@ -170,6 +170,8 @@ char **argv;
 	fprintf(output,"  <title>");
 	mkd_generateline(h, strlen(h), output, 0);
 	fprintf(output, "</title>\n");
+    }else {
+	fprintf(output, "  <title></title>\n");
     }
     for ( i=0; i < S(headers); i++ )
 	fprintf(output, "  %s\n", T(headers)[i]);
