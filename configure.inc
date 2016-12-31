@@ -567,11 +567,11 @@ AC_INIT () {
 EOF
 
     unset __share
-    if [ -d $AC_PREFIX/share/man ]; then
+    if [ -d "$AC_PREFIX/share/man" ]; then
 	for t in 1 2 3 4 5 6 7 8 9; do
-	    if [ -d $AC_PREFIX/share/man/man$t ]; then
+	    if [ -d "$AC_PREFIX/share/man/man$t" ]; then
 		__share=/share
-	    elif [ -d $AC_PREFIX/share/man/cat$t ]; then
+	    elif [ -d "$AC_PREFIX/share/man/cat$t" ]; then
 		__share=/share
 	    fi
 	done
@@ -579,7 +579,7 @@ EOF
 	__share=
     fi
 
-    if [ -d $AC_PREFIX/libexec ]; then
+    if [ -d "$AC_PREFIX/libexec" ]; then
 	__libexec=libexec
     else
 	__libexec=lib
@@ -595,6 +595,7 @@ EOF
     AC_CONFDIR=${AC_CONFDIR:-/etc}
 
     AC_PATH=${WITH_PATH:-$PATH}
+    AC_PROG_CC
     AC_PROG_CPP
     AC_PROG_INSTALL
 
@@ -983,6 +984,14 @@ EOF
 
 
 #
+# quote a string if it has spaces in it
+#
+__ac_quote() {
+    
+    echo "$1" | sed -e 's/ /\\\\ /g'
+}
+
+#
 # AC_OUTPUT generates makefiles from makefile.in's
 #
 AC_OUTPUT () {
@@ -1001,14 +1010,14 @@ AC_OUTPUT () {
     AC_SUB 'CC'      "$AC_CC"
     AC_SUB 'CFLAGS'  "$AC_CFLAGS"
     AC_SUB 'LDFLAGS' "$AC_LDFLAGS"
-    AC_SUB 'srcdir'  "$AC_SRCDIR"
-    AC_SUB 'prefix'  "$AC_PREFIX"
-    AC_SUB 'exedir'  "$AC_EXECDIR"
-    AC_SUB 'sbindir' "$AC_SBINDIR"
-    AC_SUB 'libdir'  "$AC_LIBDIR"
-    AC_SUB 'libexec' "$AC_LIBEXEC"
-    AC_SUB 'confdir' "$AC_CONFDIR"
-    AC_SUB 'mandir'  "$AC_MANDIR"
+    AC_SUB 'srcdir'  `__ac_quote "$AC_SRCDIR"`
+    AC_SUB 'prefix'  `__ac_quote "$AC_PREFIX"`
+    AC_SUB 'exedir'  `__ac_quote "$AC_EXECDIR"`
+    AC_SUB 'sbindir' `__ac_quote "$AC_SBINDIR"`
+    AC_SUB 'libdir'  `__ac_quote "$AC_LIBDIR"`
+    AC_SUB 'libexec' `__ac_quote "$AC_LIBEXEC"`
+    AC_SUB 'confdir' `__ac_quote "$AC_CONFDIR"`
+    AC_SUB 'mandir'  `__ac_quote "$AC_MANDIR"`
 
     if echo "$__config_files" | grep -v librarian.sh >/dev/null; then
 	# write a librarian that works with static libraries
@@ -1559,13 +1568,59 @@ AC_FAIL() {
     $__fail 1
 }
 
+
+#
+# __ac_config_sed; a C program to do escaping for AC_SUB
+__ac_config_sed() {
+
+    AC_PROG_CC
+
+cat > config.sed.c << \EOF
+#include <stdio.h>
+
+int
+main(argc, argv)
+int argc;
+char **argv;
+{
+    char *p;
+    
+    if (argc != 3)
+	return 1;
+
+    printf("s;@%s@;", argv[1]);
+
+    for (p=argv[2]; *p; ++p) {
+	if ( *p == ';' )
+	    putchar('\\');
+	putchar(*p);
+    }
+
+    puts(";g");
+    return 0;
+}
+EOF
+
+    __config_files="$__config_files config.sed.c"
+    
+    if $AC_CC -o config.sed config.sed.c; then
+	__config_files="$__config_files config.sed"
+    else
+	AC_FAIL "Cannot generate config.sed helper program"
+    fi
+}
+
 #
 # AC_SUB writes a substitution into config.sub
 AC_SUB() {
-    (   _target="$1"
-	shift
-	_subst=`echo "$*" | sed -e 's/;/\\;/g'`
-	echo "s;@$_target@;$_subst;g" ) >> "$__cwd"/config.sub
+    
+    _target="$1"
+    shift
+
+    echo "target=$_target, rest=$*"
+    
+    test -x config.sed || __ac_config_sed
+    ./config.sed "$_target" "$*" >> "$__cwd"/config.sub
 }
 
 #
