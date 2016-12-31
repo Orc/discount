@@ -1045,14 +1045,14 @@ LIBRARY=\$1; shift
 VERSION=\$1; shift
 
 case "\$ACTION" in
-make)   ${PROG_AR} crv \$LIBRARY.a "\$@"
-	${PROG_RANLIB} \$LIBRARY.a
-	rm -f \$LIBRARY
-	${__dolink} \$LIBRARY.a \$LIBRARY
+make)   ${PROG_AR} crv "\$LIBRARY.a" "\$@"
+	${PROG_RANLIB} "\$LIBRARY.a"
+	rm -f "\$LIBRARY"
+	${__dolink} "\$LIBRARY.a" "\$LIBRARY"
 	;;
 files)  echo "\${LIBRARY}.a"
 	;;
-install)$PROG_INSTALL -m 644 \${LIBRARY}.a \$1
+install)$PROG_INSTALL -m 644 "\${LIBRARY}.a" "\$1"
 	;;
 esac
 EOF
@@ -1306,21 +1306,21 @@ eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
 		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
 shift
 
-LIBNAME=\$LIBRARY.dylib
-FULLNAME=\$LIBNAME
+LIBNAME="\$LIBRARY.dylib"
+FULLNAME="\$LIBNAME"
 
 case "\$ACTION" in
 make)   FLAGS="$AC_CFLAGS -dynamiclib"
 	VFLAGS="-current_version \$VERSION -compatibility_version \$MAJOR"
 
 	rm -f \$LIBRARY
-	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
-	    $PROG_LN_S \$FULLNAME \$LIBRARY
+	if $AC_CC \$FLAGS \$VFLAGS -o "\$FULLNAME" "\$@"; then
+	    $PROG_LN_S "\$FULLNAME" "\$LIBRARY"
 	fi
 	;;
 files)  echo "\$FULLNAME"
 	;;
-install)$PROG_INSTALL -c \$FULLNAME "\$1"
+install)$PROG_INSTALL -c "\$FULLNAME" "\$1"
 	;;
 esac
 EOF
@@ -1351,26 +1351,26 @@ eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
 		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
 shift
 
-LIBNAME=\$LIBRARY.so
-FULLNAME=\$LIBNAME.\$VERSION
+LIBNAME="\$LIBRARY.so"
+FULLNAME="\$LIBNAME.\$VERSION"
 
 case "\$ACTION" in
 make)   FLAGS="$AC_CFLAGS -shared"
 	unset VFLAGS
 	test "$USE_SONAME" && VFLAGS="-Wl,-soname,\$LIBNAME.\$MAJOR"
 
-	rm -f \$LIBRARY \$LIBNAME \$LIBNAME.\$MAJOR
-	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
-	    $PROG_LN_S \$FULLNAME \$LIBRARY
-	    $PROG_LN_S \$FULLNAME \$LIBNAME
-	    $PROG_LN_S \$FULLNAME \$LIBNAME.\$MAJOR
+	rm -f "\$LIBRARY" "\$LIBNAME" "\$LIBNAME.\$MAJOR"
+	if $AC_CC \$FLAGS \$VFLAGS -o "\$FULLNAME" "\$@"; then
+	    $PROG_LN_S "\$FULLNAME" "\$LIBRARY"
+	    $PROG_LN_S "\$FULLNAME" "\$LIBNAME"
+	    $PROG_LN_S "\$FULLNAME" "\$LIBNAME.\$MAJOR"
 	fi
 	;;
 files)  echo "\$FULLNAME" "\$LIBNAME" "\$LIBNAME.\$MAJOR"
 	;;
-install)$PROG_INSTALL -c \$FULLNAME "\$1"
-	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME.\$MAJOR
-	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME
+install)$PROG_INSTALL -c "\$FULLNAME" "\$1"
+	$PROG_LN_S -f "\$FULLNAME" "\$1/\$LIBNAME.\$MAJOR"
+	$PROG_LN_S -f "\$FULLNAME" "\$1/\$LIBNAME"
 EOF
     test "$LDCONFIG" && echo '	'$LDCONFIG '"$1"' >> librarian.sh
     cat >> librarian.sh << EOF
