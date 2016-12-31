@@ -1573,9 +1573,14 @@ AC_FAIL() {
 # __ac_config_sed; a C program to do escaping for AC_SUB
 __ac_config_sed() {
 
-    AC_PROG_CC
 
-cat > config.sed.c << \EOF
+    test -x config.sed && return
+
+    echo "generating config.sed"
+
+    AC_PROG_CC
+    
+cat > ngc$$.c << \EOF
 #include <stdio.h>
 
 int
@@ -1601,9 +1606,11 @@ char **argv;
 }
 EOF
 
-    __config_files="$__config_files config.sed.c"
-    
-    if $AC_CC -o config.sed config.sed.c; then
+    $AC_CC -o config.sed ngc$$.c
+    status=$?
+    rm -f ngc$$.c
+
+    if [ "$status" -eq 0 ]; then
 	__config_files="$__config_files config.sed"
     else
 	AC_FAIL "Cannot generate config.sed helper program"
@@ -1619,7 +1626,7 @@ AC_SUB() {
 
     echo "target=$_target, rest=$*"
     
-    test -x config.sed || __ac_config_sed
+    __ac_config_sed
     ./config.sed "$_target" "$*" >> "$__cwd"/config.sub
 }
 
