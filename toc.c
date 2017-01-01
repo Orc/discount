@@ -64,9 +64,8 @@ mkd_toc(Document *p, char **doc)
 					 S(srcp->text->text),
 					 (mkd_sta_function_t)Csputc, &res,1,p->ctx->flags);
 		    Csprintf(&res, "\">");
-		    mkd_string_to_anchor(T(srcp->text->text),
-					 S(srcp->text->text),
-					 (mkd_sta_function_t)Csputc, &res,0,p->ctx->flags);
+		    Csreparse(&res, T(srcp->text->text),
+				    S(srcp->text->text), 0);
 		    Csprintf(&res, "</a>");
 
 		    first = 0;
