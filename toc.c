@@ -65,7 +65,7 @@ mkd_toc(Document *p, char **doc)
 					 (mkd_sta_function_t)Csputc, &res,1,p->ctx->flags);
 		    Csprintf(&res, "\">");
 		    Csreparse(&res, T(srcp->text->text),
-				    S(srcp->text->text), 0);
+				    S(srcp->text->text), IS_LABEL);
 		    Csprintf(&res, "</a>");
 
 		    first = 0;
