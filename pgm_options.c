@@ -60,7 +60,8 @@ static struct _opt {
     { "fencedcode",    "fenced code blocks",         0, 0, 1, MKD_FENCEDCODE },
     { "idanchor",      "id= anchors in TOC",         0, 0, 1, MKD_IDANCHOR },
     { "githubtags",    "permit - and _ in element names", 0, 0, 0, MKD_GITHUBTAGS },
-    { "urlencodedanchor", "urlencode special chars in TOC links", 0, 0, 0, MKD_URLENCODEDANCHOR },
+    { "urlencodedanchor", "html5-style anchors", 0, 0, 0, MKD_URLENCODEDANCHOR },
+    { "html5anchor",   "html5-style anchors", 0, 1, 0, MKD_URLENCODEDANCHOR },
     { "latex",         "handle LaTeX escapes",         0, 0, 1, MKD_LATEX },
 } ;
 
