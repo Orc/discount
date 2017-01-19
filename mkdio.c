@@ -220,25 +220,39 @@ mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 
     int i, size;
     char *line;
+    /* MKD_URLENCODEDANCHOR is now perverted to being a html5 anchor
+     *
+     * !labelformat:  print all characters
+     * labelformat && h4anchor: prefix nonalpha label with L,
+     *                          expand all nonalnum, _, ':', '.' to hex
+     *                          except space which maps to -
+     * labelformat && !h4anchor:expand space to -, other isspace() & '%' to hex
+     */
+    int h4anchor = !(flags & MKD_URLENCODEDANCHOR);
 
     size = mkd_line(s, len, &line, IS_LABEL);
 
-    if ( !(flags & MKD_URLENCODEDANCHOR)
-	 && labelformat
-	 && (size>0) && !isalpha(line[0]) )
+    if ( h4anchor && labelformat && (size>0) && !isalpha(line[0]) )
 	(*outchar)('L',out);
+    
     for ( i=0; i < size ; i++ ) {
 	c = line[i];
 	if ( labelformat ) {
-	    if ( isalnum(c) || (c == '_') || (c == ':') || (c == '-') || (c == '.' ) )
+	    if ( h4anchor
+		    ? (isalnum(c) || (c == '_') || (c == ':') || (c == '.' ) )
+		    : !(isspace(c) || c == '%') )
 		(*outchar)(c, out);
-	    else if ( flags & MKD_URLENCODEDANCHOR ) {
-		(*outchar)('%', out);
-		(*outchar)(hexchars[c >> 4 & 0xf], out);
-		(*outchar)(hexchars[c      & 0xf], out);
+	    else {
+		if ( c == ' ' )
+		    (*outchar)('-', out);
+		else {
+		    (*outchar)(h4anchor ? '-' : '%', out);
+		    (*outchar)(hexchars[c >> 4 & 0xf], out);
+		    (*outchar)(hexchars[c      & 0xf], out);
+		    if ( h4anchor )
+			 (*outchar)('-', out);
+		}
 	    }
-	    else
-		(*outchar)('.', out);
 	}
 	else
 	    (*outchar)(c,out);
@@ -272,15 +286,14 @@ mkd_line(char *bfr, int size, char **res, DWORD flags)
     mkd_parse_line(bfr, size, &f, flags);
 
     if ( len = S(f.out) ) {
-	/* kludge alert;  we know that T(f.out) is malloced memory,
-	 * so we can just steal it away.   This is awful -- there
-	 * should be an opaque method that transparently moves 
-	 * the pointer out of the embedded Cstring.
-	 */
 	EXPAND(f.out) = 0;
-	*res = T(f.out);
-	T(f.out) = 0;
-	S(f.out) = ALLOCATED(f.out) = 0;
+	/* strdup() doesn't use amalloc(), so in an amalloc()ed
+	 * build this copies the string safely out of our memory
+	 * paranoia arena.  In a non-amalloc world, it's a spurious
+	 * memory allocation, but it avoids unintentional hilarity
+	 * with amalloc()
+	 */
+	*res = strdup(T(f.out));
     }
     else {
 	 *res = 0;
