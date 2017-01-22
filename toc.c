@@ -81,16 +81,12 @@ mkd_toc(Document *p, char **doc)
     }
 
     if ( (size = S(res)) > 0 ) {
+	/* null-terminate & strdup into a free()able memory chunk
+	 */
 	EXPAND(res) = 0;
-			/* HACK ALERT! HACK ALERT! HACK ALERT! */
-	*doc = T(res);  /* we know that a T(Cstring) is a character pointer
-			 * so we can simply pick it up and carry it away,
-			 * leaving the husk of the Ctring on the stack
-			 * END HACK ALERT
-			 */
+	*doc = strdup(T(res));
     }
-    else
-	DELETE(res);
+    DELETE(res);
     return size;
 }
 
