@@ -81,7 +81,11 @@ char **argv;
     CREATE(footers);
     pgm = basename(argv[0]);
 
-    while ( argc > 1 ) {
+    /* the only options we have for this program are -name value pairs,
+     * so don't even bother parsing them if there aren't still a couple
+     * of arguments waiting on the line.
+     */
+    while ( argc > 2 ) {
 	if ( strcmp(argv[1], "-css") == 0 ) {
 	    EXPAND(css) = argv[2];
 	    argc -= 2;
