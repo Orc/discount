@@ -1257,6 +1257,19 @@ tickhandler(MMIOT *f, int tickchar, int minticks, int allow_space, spanhandler s
 
 #define tag_text(f)	(f->flags & MKD_TAGTEXT)
 
+static int
+sourcelink(Line *t, MMIOT *f)
+{
+    char *link;
+
+    if (t && f->cb && f->cb->sl_handler && (link = f->cb->sl_handler(NULL, t->lineno, f->cb->sl_data))) {
+	Qstring("<a class=\"edit-source\" href=\"", f);
+	puturl(link, strlen(link), f, 0);
+	Qstring("\"></a>", f);
+	if ( f->cb->sl_free ) f->cb->sl_free(link, f->cb->sl_data);
+    }
+}
+
 
 static void
 text(MMIOT *f)
@@ -1631,6 +1644,8 @@ printblock(Paragraph *pp, MMIOT *f)
 	}
 	t = t->next;
     }
+    if (pp->align > 0)
+	sourcelink(pp->text, f);
     Qstring(Begin[pp->align], f);
     text(f);
     Qstring(End[pp->align], f);
@@ -1643,6 +1658,7 @@ printcode(Line *t, char *lang, MMIOT *f)
 {
     int blanks;
 
+    sourcelink(t, f);
     Qstring("<pre><code", f);
     if (lang) {
       Qstring(" class=\"", f);
@@ -1831,7 +1847,6 @@ mkd_extra_footnotes(MMIOT *m)
     }
     Csprintf(&m->out, "</ol>\n</div>\n");
 }
-
 
 /* return a pointer to the compiled markdown
  * document.

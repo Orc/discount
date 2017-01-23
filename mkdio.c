@@ -39,7 +39,7 @@ __mkd_new_Document()
  * noting the presence of special characters as we go.
  */
 void
-__mkd_enqueue(Document* a, Cstring *line)
+__mkd_enqueue(Document* a, Cstring *line, int lineno)
 {
     Line *p = calloc(sizeof *p, 1);
     unsigned char c;
@@ -47,6 +47,7 @@ __mkd_enqueue(Document* a, Cstring *line)
     int           size = S(*line);
     unsigned char *str = (unsigned char*)T(*line);
 
+    p->lineno = lineno;
     CREATE(p->text);
     ATTACH(a->content, p);
 
@@ -93,7 +94,7 @@ populate(getc_func getc, void* ctx, int flags)
 {
     Cstring line;
     Document *a = __mkd_new_Document();
-    int c;
+    int c, l = 1;
     int pandoc = 0;
 
     if ( !a ) return 0;
@@ -110,7 +111,7 @@ populate(getc_func getc, void* ctx, int flags)
 		else
 		    pandoc = EOF;
 	    }
-	    __mkd_enqueue(a, &line);
+	    __mkd_enqueue(a, &line, l++);
 	    S(line) = 0;
 	}
 	else if ( isprint(c) || isspace(c) || (c & 0x80) )
@@ -118,7 +119,7 @@ populate(getc_func getc, void* ctx, int flags)
     }
 
     if ( S(line) )
-	__mkd_enqueue(a, &line);
+	__mkd_enqueue(a, &line, l);
 
     DELETE(line);
 
@@ -370,4 +371,34 @@ mkd_ref_prefix(Document *f, char *data)
 {
     if ( f )
 	f->ref_prefix = data;
+}
+
+
+/* set the source link context data field
+ */
+void
+mkd_sl_data(Document *f, void *data)
+{
+    if ( f )
+	f->cb.sl_data = data;
+}
+
+
+/* set the source link callback
+ */
+void
+mkd_sl_handler(Document *f, mkd_callback_t handler)
+{
+    if ( f )
+	f->cb.sl_handler = handler;
+}
+
+
+/* set the source link deallocator
+ */
+void
+mkd_sl_free(Document *f, mkd_free_t dealloc)
+{
+    if ( f )
+	f->cb.sl_free = dealloc;
 }
