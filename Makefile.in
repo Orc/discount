@@ -88,8 +88,8 @@ blocktags: mktags
 @THEME@	$(CC) $(CFLAGS) $(LFLAGS) -o theme theme.o pgm_options.o -lmarkdown @LIBS@
 
 
-mkd2html:  mkd2html.o $(MKDLIB) mkdio.h
-	$(CC) $(CFLAGS) $(LFLAGS) -o mkd2html mkd2html.o -lmarkdown @LIBS@
+mkd2html:  mkd2html.o $(MKDLIB) mkdio.h gethopt.h gethopt.o
+	$(CC) $(CFLAGS) $(LFLAGS) -o mkd2html mkd2html.o gethopt.o -lmarkdown @LIBS@
 
 markdown: main.o pgm_options.o $(MKDLIB)
 	$(CC) $(CFLAGS) $(LFLAGS) -o markdown main.o pgm_options.o -lmarkdown @LIBS@
