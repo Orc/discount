@@ -1,0 +1,194 @@
+.\" Copyright (c) 1988, 1991 Regents of the University of California.
+.\" Copyright (c) 2017 David Loren Parsons.
+.\" All rights reserved.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.Dd Jan 23, 2017
+.Dt GETHOPT 3
+.Os Mastodon
+.Sh NAME
+.Nm gethopt
+.Nd get option letter or word from argv
+.Sh SYNOPSIS
+.Fd #include "gethopt.h"
+
+.Bd -literal -compact
+struct h_opt {
+    int  option;
+    char *optword;
+    char optchar;
+    int  opthasarg;
+    char *optdesc;
+} ;
+.Ed
+.Ft char*
+.Fn hoptarg "struct h_context* p"
+.Ft int
+.Fn hoptind "struct h_context* p"
+.Ft int
+.Fn hopterr "struct h_context* p" "int flag"
+.Ft char
+.Fn hoptopt "struct h_context* p"
+.Ft void
+.Fn hoptset "struct h_context* p" "int argc" "char** argv"
+.Ft struct h_opt*
+.Fn gethopt "struct h_context* p" "struct h_opt* optarray" "int nropts"
+
+.Sh DESCRIPTION
+The
+.Fn gethopt
+function gets 
+the next
+.Em known
+option word or character from
+.Fa argv .
+An option is
+.Em known
+if it has been specified in the array of accepted options
+.Fa optarray .
+.Pp
+The option array
+.Fa optarray
+Contains records with either an option word, character, or both,
+a flag saying the option needs an argument, a short description
+of the option, and an
+.Va option
+key (which is there for the convenience of the calling program;
+.Fn gethopt
+does not use it in any way.).
+It does not matter to
+.Fn getopt
+if a following argument has leading white space.
+.Pp
+On return from
+.Fn gethopt ,
+.Fn hoptarg
+returns an option argument, if it is anticipated,
+and the variable
+.Fn hoptind
+contains the index to the next
+.Fa argv
+argument for a subsequent call
+to
+.Fn gethopt .
+.Pp
+.Fn
+gethopt
+uses a (semi) opaque data blob to hold the current state, which
+must be initialized by the
+.Fn hoptset
+function.
+.Pp
+The
+.Fn gethopt
+function
+returns
+.Dv HOPTERR
+a non-recognized
+option is encountered,
+and NULL when it reaches the end of the options on the command line..
+.Pp
+The interpretation of options in the argument list may be cancelled
+by 
+.Ql -
+(single dash) or
+.Ql --
+(double dash) which causes
+.Fn getopt
+to signal the end of argument processing and return an
+.Dv NULL . 
+When all options have been processed (i.e., up to the first non-option
+argument),
+.Fn gethopt
+returns
+.Dv NULL .
+.Sh DIAGNOSTICS
+If the
+.Fn gethopt
+function encounters a character not found in
+.Va optarray
+or detects
+a missing option argument
+it return HOPTERR (and writes an error message to the
+.Em stderr 
+if
+.Fn hopterr
+is used to turn error reporting on.)
+.Sh EXAMPLE
+.Bd -literal -compact
+struct h_opt opts[] = {
+    { 0, "css",    0,  1, "css file" },
+    { 1, "header", 0,  1, "header file" },
+    { 2, 0,       'a', 0, "option a (no arg)" },
+    { 3, 0,       'b', 1, "option B (with arg)" },
+    { 4, "help",  '?', 0, "help message" },
+} ;
+
+#define NROPT (sizeof opts/sizeof opts[0])
+
+
+int
+main(argc, argv)
+char **argv;
+{
+    struct h_opt *ret;
+    struct h_context ctx;
+
+    hoptset(&ctx, argc, argv);
+    hopterr(&ctx, 1);
+
+    while (( ret = gethopt(&ctx, opts, NROPT) )) {
+
+	if ( ret != HOPTERR ) {
+	    if ( ret->optword )
+		printf("%s", ret->optword);
+	    else
+		printf("%c", ret->optchar);
+
+	    if ( ret->opthasarg ) {
+		if ( hoptarg(&ctx) )
+		    printf(" = %s", hoptarg(&ctx));
+		else
+		    printf(" with no argument?");
+	    }
+	    puts(ret->optdesc ? ret->optdesc : "");
+	}
+    }
+
+    argc -= hoptind(&ctx);
+    argv += hoptind(&ctx);
+
+.Ed
+.Sh HISTORY
+The
+.Fn gethopt
+function was a quick hack to replace manually parsing full-word arguments
+in 
+.Va discount .
