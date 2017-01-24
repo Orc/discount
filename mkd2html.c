@@ -37,6 +37,8 @@
 #include "cstring.h"
 #include "amalloc.h"
 
+#include "gethopt.h"
+
 char *pgm = "mkd2html";
 
 #ifndef HAVE_BASENAME
@@ -65,6 +67,16 @@ fail(char *why, ...)
 }
 
 
+enum { ADD_CSS, ADD_HEADER, ADD_FOOTER };
+
+struct h_opt opts[] = {
+    { ADD_CSS,       "css", 0, 1, "Additional stylesheets for this page" },
+    { ADD_HEADER, "header", 0, 1, "Additonal headers for this page" },
+    { ADD_FOOTER, "footer", 0, 1, "Additional footers for this page" },
+};
+#define NROPTS (sizeof opts/sizeof opts[0])
+
+
 main(argc, argv)
 char **argv;
 {
@@ -74,6 +86,8 @@ char **argv;
     int i;
     FILE *input, *output; 
     STRING(char*) css, headers, footers;
+    struct h_opt *res;
+    struct h_context flags;
 
 
     CREATE(css);
@@ -81,45 +95,46 @@ char **argv;
     CREATE(footers);
     pgm = basename(argv[0]);
 
-    /* the only options we have for this program are -name value pairs,
-     * so don't even bother parsing them if there aren't still a couple
-     * of arguments waiting on the line.
-     */
-    while ( argc > 2 ) {
-	if ( strcmp(argv[1], "-css") == 0 ) {
-	    EXPAND(css) = argv[2];
-	    argc -= 2;
-	    argv += 2;
+    hoptset(&flags, argc, argv);
+    hopterr(&flags, 1);
+    while ( res = gethopt(&flags, opts, NROPTS) ) {
+	if ( res != HOPTERR ) {
+	    switch ( res->option ) {
+	    case ADD_CSS:
+		EXPAND(css) = hoptarg(&flags);
+		break;
+	    case ADD_HEADER:
+		EXPAND(headers) = hoptarg(&flags);
+		break;
+	    case ADD_FOOTER:
+		EXPAND(footers) = hoptarg(&flags);
+		break;
+	    default:
+		fprintf(stderr, "unknown option?\n");
+		break;
+	    }
 	}
-	else if ( strcmp(argv[1], "-header") == 0 ) {
-	    EXPAND(headers) = argv[2];
-	    argc -= 2;
-	    argv += 2;
-	}
-	else if ( strcmp(argv[1], "-footer") == 0 ) {
-	    EXPAND(footers) = argv[2];
-	    argc -= 2;
-	    argv += 2;
-	}
-	else
-	    break;
     }
+
+    argc -= hoptind(&flags);
+    argv += hoptind(&flags);
 
     switch ( argc ) {
 	char *p, *dot;
-    case 1:
+    case 0:
 	input = stdin;
 	output = stdout;
 	break;
+    
+    case 1:
     case 2:
-    case 3:
 	dest   = malloc(strlen(argv[argc-1]) + 6);
-	source = malloc(strlen(argv[1]) + 6);
+	source = malloc(strlen(argv[0]) + 6);
 
 	if ( !(source && dest) )
 	    fail("out of memory allocating name buffers");
 
-	strcpy(source, argv[1]);
+	strcpy(source, argv[0]);
 	if (( p = strrchr(source, '/') ))
 	    p = source;
 	else
@@ -128,7 +143,7 @@ char **argv;
 	if ( (input = fopen(source, "r")) == 0 ) {
 	    strcat(source, ".text");
 	    if ( (input = fopen(source, "r")) == 0 )
-		fail("can't open either %s or %s", argv[1], source);
+		fail("can't open either %s or %s", argv[0], source);
 	}
 	strcpy(dest, source);
 
@@ -162,8 +177,8 @@ char **argv;
 	"<head>\n"
 	"  <meta name=\"GENERATOR\" content=\"mkd2html %s\">\n", markdown_version);
 
-    fprintf(output,"  <meta http-equiv=\"Content-Type\"\n"
-		   "        content=\"text/html; charset=utf-8\">");
+    fprintf(output,"  <meta http-equiv=\"Content-Type\""
+		          " content=\"text/html; charset=utf-8\">\n");
 
     for ( i=0; i < S(css); i++ )
 	fprintf(output, "  <link rel=\"stylesheet\"\n"
