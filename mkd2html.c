@@ -76,6 +76,10 @@ struct h_opt opts[] = {
 };
 #define NROPTS (sizeof opts/sizeof opts[0])
 
+#if USE_H1TITLE
+extern char* mkd_h1_title(MMIOT *);
+#endif
+
 
 main(argc, argv)
 char **argv;
@@ -168,6 +172,10 @@ char **argv;
 
 
     h = mkd_doc_title(mmiot);
+#if USE_H1TITLE
+    if ( ! h )
+	h = mkd_h1_title(mmiot);
+#endif
 
     /* print a header */
 

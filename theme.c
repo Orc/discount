@@ -48,6 +48,10 @@ struct passwd *me = 0;
 #endif
 struct stat *infop = 0;
 
+#if USE_H1TITLE
+extern char* mkd_h1_title(MMIOT*);
+#endif
+
 
 #define INTAG 0x01
 #define INHEAD 0x02
@@ -318,7 +322,14 @@ static void
 ftitle(MMIOT *doc, FILE* output, int flags, int whence)
 {
     char *h;
-    if ( (h = mkd_doc_title(doc)) == 0 && pagename )
+    h = mkd_doc_title(doc);
+
+#if USE_H1TITLE
+    if ( !h )
+	h = mkd_h1_title(doc);
+#endif
+
+    if ( !h )
 	h = pagename;
 
     if ( h )

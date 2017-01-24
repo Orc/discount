@@ -32,8 +32,11 @@ locals() {
     --DEBIAN-GLITCH)
 		echo DEBIAN_GLITCH=T
 		;;
+    --H1-TITLE)
+		echo H1TITLE=T
+		;;
     --PKG-CONFIG)
-		echo PKGCONFIG=true
+		echo PKGCONFIG=T
 		;;
     esac
 }
@@ -173,6 +176,14 @@ if [ "$WITH_AMALLOC" ]; then
 else
     AC_SUB	'AMALLOC'	''
 fi
+
+if [ "$H1TITLE" ]; then
+    AC_SUB 'H1TITLE' h1title.o
+    AC_DEFINE USE_H1TITLE 1
+else
+    AC_SUB 'H1TITLE' ''
+fi
+
 
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
 
