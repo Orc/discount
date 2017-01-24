@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "gethopt.h"
+#include "config.h" /* for bzero() macro on systems that don't have it */
 
 
 void
