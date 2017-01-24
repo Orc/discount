@@ -11,7 +11,7 @@
  *
  * example:
  *
- *   mkd2html -cs /~orc/pages.css syntax
+ *   mkd2html -css /~orc/pages.css syntax
  *     ( read syntax OR syntax.text, write syntax.html )
  */
 /*
