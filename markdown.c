@@ -1291,13 +1291,39 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    ptr = headerblock(p, hdr_type);
 	}
 	else {
-	    p = Pp(&d, ptr, MARKUP);
-	    ptr = textblock(p, toplevel, f->flags);
-	    /* tables are a special kind of paragraph */
-	    if ( actually_a_table(f, p->text) )
-		p->typ = TABLE;
-	}
+	    /* either markup or an html block element
+	     */
+	    struct kw *tag;
+	    int unclosed = 1;
 
+	    p = Pp(&d, ptr, MARKUP);	/* default to regular markup,
+					 * then check if it's an html
+					 * block.   If it IS an html
+					 * block, htmlblock() will
+					 * populate this paragraph &
+					 * all we need to do is reset
+					 * the paragraph type to HTML,
+					 * otherwise the paragraph
+					 * remains empty and ready for
+					 * processing with textblock()
+					 */
+	    
+	    if ( !(f->flags & MKD_NOHTML) && (tag = isopentag(ptr)) ) {
+		/* possibly an html block
+		 */
+		
+		ptr = htmlblock(p, tag, &unclosed);
+		if ( ! unclosed ) {
+		    p->typ = HTML;
+		}
+	    }
+	    if ( unclosed ) {
+		ptr = textblock(p, toplevel, f->flags);
+		/* tables are a special kind of paragraph */
+		if ( actually_a_table(f, p->text) )
+		    p->typ = TABLE;
+	    }
+	}
 	if ( (para||toplevel) && !p->align )
 	    p->align = PARA;
 
