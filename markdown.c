@@ -636,6 +636,7 @@ iscodefence(Line *r, int size, line_type kind, DWORD flags)
 	return (r->kind == chk_tilde || r->kind == chk_backtick) && (r->count >= size);
 }
 
+
 static Paragraph *
 fencedcodeblock(ParagraphRoot *d, Line **ptr, DWORD flags)
 {
@@ -643,32 +644,32 @@ fencedcodeblock(ParagraphRoot *d, Line **ptr, DWORD flags)
     Paragraph *ret;
 
     first = (*ptr);
-    
+
     /* don't allow zero-length code fences
-     */
+    */
     if ( (first->next == 0) || iscodefence(first->next, first->count, 0, flags) )
 	return 0;
 
     /* find the closing fence, discard the fences,
-     * return a Paragraph with the contents
-     */
+    * return a Paragraph with the contents
+    */
     for ( r = first; r && r->next; r = r->next )
 	if ( iscodefence(r->next, first->count, first->kind, flags) ) {
 	    (*ptr) = r->next->next;
 	    ret = Pp(d, first->next, CODE);
-      if (S(first->text) - first->count > 0) {
-        char *lang_attr = T(first->text) + first->count;
-        while ( *lang_attr != 0 && *lang_attr == ' ' ) lang_attr++;
-        ret->lang = strdup(lang_attr);
-      }
-      else {
-        ret->lang = 0;
-      }
-	    ___mkd_freeLine(first);
-	    ___mkd_freeLine(r->next);
-	    r->next = 0;
-	    return ret;
+	    if (S(first->text) - first->count > 0) {
+		char *lang_attr = T(first->text) + first->count;
+		while ( *lang_attr != 0 && *lang_attr == ' ' ) lang_attr++;
+		ret->lang = strdup(lang_attr);
+	    }
+	    else {
+		ret->lang = 0;
 	}
+	___mkd_freeLine(first);
+	___mkd_freeLine(r->next);
+	r->next = 0;
+	return ret;
+    }
     return 0;
 }
 

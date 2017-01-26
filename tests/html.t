@@ -93,5 +93,14 @@ pie?
 
 </form>'
 
+try 'code inside a blockquote' \
+'><form stuff>
+stuff
+</form>' \
+'<blockquote><form stuff>
+stuff
+</form>
+</blockquote>'
+
 summary $0
 exit $rc
