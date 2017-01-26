@@ -103,7 +103,8 @@ populate(getc_func getc, void* ctx, int flags)
     CREATE(line);
 
     while ( (c = (*getc)(ctx)) != EOF ) {
-	if ( c == '\n' ) {
+    	// Mou - add support for windows line breaks
+	if ( c == '\n' || c == '\r' ) {
 	    if ( pandoc != EOF && pandoc < 3 ) {
 		if ( S(line) && (T(line)[0] == '%') )
 		    pandoc++;
