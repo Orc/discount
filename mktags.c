@@ -17,7 +17,7 @@ define_one_tag(char *id, int selfclose)
     struct kw *p = &EXPAND(blocktags);
 
     p->id = id;
-    p->size = strlen(id);
+    p->size = (int)strlen(id);
     p->selfclose = selfclose;
 }
 
@@ -41,7 +41,7 @@ typedef int (*stfu)(const void*,const void*);
 
 /* load in the standard collection of html tags that markdown supports
  */
-main()
+int main()
 {
     int i;
 
