@@ -65,7 +65,7 @@ main(int argc, char **argv)
 {
     int opt;
     int rc;
-    mkd_flag_t flags = 0;
+    mkd_flag_t flags = MKD_NOSTYLE;
     int debug = 0;
     int toc = 0;
     int content = 1;
