@@ -53,7 +53,7 @@ typedef struct paragraph {
     char *lang;			/* lang attribute for CODE */
     enum { WHITESPACE=0, CODE, QUOTE, MARKUP,
 	   HTML, STYLE, DL, UL, OL, AL, LISTITEM,
-	   HDR, HR, TABLE, SOURCE } typ;
+	   HDR, HR, TABLE, CAPTION, SOURCE } typ;
     enum { IMPLICIT=0, PARA, CENTER} align;
     int hnumber;		/* <Hn> for typ == HDR */
 } Paragraph;
