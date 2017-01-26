@@ -80,6 +80,24 @@ mkd_firstnonblank(Line *p)
 }
 
 
+/* find the last nonblank character on the line
+ */
+static int
+lastnonblank(Line *p)
+{
+    int i;
+
+    i = S(p->text);
+
+    while ( i > 0 ) {
+	--i;
+	if ( !isspace(T(p->text)[i]) )
+	    return i;
+    }
+    return -1;
+}
+
+
 static inline int
 blankline(Line *p)
 {
@@ -1186,6 +1204,15 @@ first_nonblank_before(Line *j, int dle)
 }
 
 
+int
+___mkd_tablecaption(Line *pp)
+{
+    return pp && S(pp->text)
+	      && (T(pp->text)[pp->dle] == '[')
+	      && (T(pp->text)[lastnonblank(pp)] == ']');
+}
+
+
 static int
 actually_a_table(MMIOT *f, Line *pp)
 {
@@ -1197,22 +1224,27 @@ actually_a_table(MMIOT *f, Line *pp)
     if ( f->flags & (MKD_STRICT|MKD_NOTABLES) )
 	return 0;
 
+    /* tables can have a caption line preceding them */
+    if ( ___mkd_tablecaption(pp) )
+	pp = pp->next;
+
     /* tables need three lines */
-    if ( !(pp && pp->next && pp->next->next) ) {
+    if ( !(pp && pp->next && pp->next->next) )
 	return 0;
-    }
 
     /* all lines must contain |'s */
     for (r = pp; r; r = r->next )
 	if ( !(r->flags & PIPECHAR) ) {
-	    return 0;
+	    if ( r->next || !___mkd_tablecaption(r) )
+		return 0;
 	}
 
     /* if the header has a leading |, all lines must have leading |'s */
     if ( T(pp->text)[pp->dle] == '|' ) {
 	for ( r = pp; r; r = r->next )
 	    if ( T(r->text)[first_nonblank_before(r,pp->dle)] != '|' ) {
-		return 0;
+		if ( r->next || !___mkd_tablecaption(r) )
+		    return 0;
 	    }
     }
 

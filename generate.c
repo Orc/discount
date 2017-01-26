@@ -26,6 +26,8 @@ static Paragraph *display(Paragraph*, MMIOT*);
 
 /* externals from markdown.c */
 int __mkd_footsort(Footnote *, Footnote *);
+int ___mkd_tablecaption(Line*);
+
 
 /*
  * push text into the generator input buffer
@@ -1537,26 +1539,56 @@ splat(Line *p, char *block, Istring align, int force, MMIOT *f)
 }
 
 
+static void
+printcaption(Line* caption, MMIOT *f) {
+    char* caption_text;
+    int caption_size;
+    if (!caption)
+        return;
+    caption_text = T(caption->text) + caption->dle + 1;
+    caption_size = S(caption->text) - caption->dle - 1;;
+    while (caption_size > 0 && caption_text[--caption_size] != ']')
+        ;
+    if (caption_size <= 0)
+        return;
+    Qstring("<caption>", f);
+    ___mkd_reparse(caption_text, caption_size, 0, f, 0);
+    Qstring("\n</caption>\n", f);
+}
+
+
 static int
 printtable(Paragraph *pp, MMIOT *f)
 {
     /* header, dashes, then lines of content */
 
     Line *hdr, *dash, *body;
+    Line *first, *caption = 0, *lastline;
+    Line *r;
     Istring align;
     int hcols,start;
     char *p;
     enum e_alignments it;
 
-    hdr = pp->text;
+    first = pp->text;
+    if ( ___mkd_tablecaption(first) ) {
+	caption = first;
+	first = first->next;
+    }
+    for ( r = pp->text; (lastline = r); r = r->next )
+	if ( r->next == 0 && ___mkd_tablecaption(r) ) {
+	    if ( !caption ) caption = r;
+	    break;
+	}
+
+    hdr = first;
     dash= hdr->next;
     body= dash->next;
 
     if ( T(hdr->text)[hdr->dle] == '|' ) {
 	/* trim leading pipe off all lines
 	 */
-	Line *r;
-	for ( r = pp->text; r; r = r->next )
+	for ( r = hdr; r != lastline; r = r->next )
 	    r->dle ++;
     }
 
@@ -1585,6 +1617,9 @@ printtable(Paragraph *pp, MMIOT *f)
     }
 
     Qstring("<table>\n", f);
+    if ( caption ) {
+        printcaption(caption, f);
+    }
     Qstring("<thead>\n", f);
     hcols = splat(hdr, "th", align, 0, f);
     Qstring("</thead>\n", f);
@@ -1596,9 +1631,11 @@ printtable(Paragraph *pp, MMIOT *f)
 	    EXPAND(align) = a_NONE;
 
     Qstring("<tbody>\n", f);
-    for ( ; body; body = body->next)
+    for ( ; body != lastline; body = body->next )
 	splat(body, "td", align, 1, f);
+    
     Qstring("</tbody>\n", f);
+
     Qstring("</table>\n", f);
 
     DELETE(align);
