@@ -3,11 +3,11 @@
 #include "tags.h"
 
 void
-mkd_with_html5_tags()
+mkd_with_html5_tags(int force_populate)
 {
     static int populated = 0;
 
-    if ( populated ) return;
+    if ( populated && !force_populate ) return;
     populated = 1;
 
     mkd_define_tag("ASIDE", 0);
