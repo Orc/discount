@@ -32,6 +32,9 @@ Configure.sh has a few options that can be set:
 			so the Debian regression tester won't complain
 --pkg-config		Build & install a pkg-config(1) .pc file for
 			the discount library.
+--h1-title		Have theme & mkd2html use the first h1 in a document
+			as the title if there's no pandoc header or title
+			specified on the command line.
 
 3) Installing sample programs and manpages
 
