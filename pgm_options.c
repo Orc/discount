@@ -84,7 +84,7 @@ sort_by_flag(struct _opt *a, struct _opt *b)
 
 
 void
-show_flags(int byname)
+show_flags(int byname, int verbose)
 {
     int i;
 
@@ -92,14 +92,14 @@ show_flags(int byname)
 	qsort(opts, NR(opts), sizeof(opts[0]), (stfu)sort_by_name);
     
 	for (i=0; i < NR(opts); i++)
-	    if ( ! opts[i].skip )
+	    if ( verbose || !opts[i].skip )
 		fprintf(stderr, "%16s : %s\n", opts[i].name, opts[i].desc);
     }
     else {
 	qsort(opts, NR(opts), sizeof(opts[0]), (stfu)sort_by_flag);
 	
 	for (i=0; i < NR(opts); i++)
-	    if ( ! opts[i].skip ) {
+	    if ( !opts[i].skip ) {
 		fprintf(stderr, "%08lx : ", (long)opts[i].flag);
 		if ( opts[i].sayenable )
 		    fprintf(stderr, opts[i].off ? "disable " : "enable ");

@@ -101,14 +101,14 @@ main(int argc, char **argv)
 	case 'E':   urlflags = optarg;
 		    break;
 	case 'F':   if ( strcmp(optarg, "?") == 0 ) {
-			show_flags(0);
+			show_flags(0, 0);
 			exit(0);
 		    }
 		    else
 			flags = strtol(optarg, 0, 0);
 		    break;
 	case 'f':   if ( strcmp(optarg, "?") == 0 ) {
-			show_flags(1);
+			show_flags(1, version);
 			exit(0);
 		    }
 		    else if ( !set_flag(&flags, optarg) )
