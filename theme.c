@@ -92,16 +92,22 @@ typedef char* HERE;
 HERE
 pushd(char *d)
 {
-    HERE cwd;
+    HERE cwd, cwd2;
     int size;
     
     if ( chdir(d) == -1 )
 	return NOT_HERE;
 
-    for (cwd = malloc(size=40); cwd; cwd = realloc(cwd, size *= 2))
+    if ( !(cwd = malloc(size=40)) )
+	return NOT_HERE;
+
+    while ( cwd2 = realloc(cwd, size *= 2) ) {
+	cwd = cwd2;
 	if ( getcwd(cwd, size) )
 	    return cwd;
+    }
 
+    free(cwd);
     return NOT_HERE;
 }
 
