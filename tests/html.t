@@ -102,5 +102,15 @@ stuff
 </form>
 </blockquote>'
 
+try 'div with markdown' '<div markdown>*test*</div>' '<div><em>test</em></div>'
+try 'div with markdown and attribute before' '<div class=test markdown>*test*</div>' '<div class=test><em>test</em></div>'
+try 'div with markdown and attribute after' '<div markdown class=test>*test*</div>' '<div class=test><em>test</em></div>'
+try 'div with markdown=0' '<div markdown=0>*test*</div>' '<div>*test*</div>'
+try 'div with markdown=1' '<div markdown=1 class=test>*test*</div>' '<div class=test><em>test</em></div>'
+try 'div with markdown="0"' '<div markdown="0">*test*</div>' '<div>*test*</div>'
+try 'div with markdown="1"' '<div markdown="1" class="test">*test*</div>' '<div class="test"><em>test</em></div>'
+try "div with markdown='block'" "<div markdown='block'>*test*</div>" '<div>*test*</div>'
+try "div with markdown='span'" "<div markdown='span' class='test'>*test*</div>" "<div class='test'><em>test</em></div>"
+
 summary $0
 exit $rc

@@ -182,6 +182,39 @@ footnotes are supported.   If a footnote link begins with a
 the first use of that footnote will generate a link down to the 
 bottom of the rendered document, which will contain a numbered footnote
 with a link back to where the footnote was called.
+.Ss markdown inside HTML blocks
+By default HTML block elements like
+.Em <div>
+elements couldn't wrap Markdown-formatted content. This can
+be changed by adding an attribute of the name
+.Em markdown
+and the value
+.Em "span"
+, respectively
+.Em "1"
+to the element:
+.nf
+
+	<div markdown="1">This _is_ awesome!</div>
+
+.fi
+An emty SGML also enables Markdown processing:
+.nf
+
+	<div markdown>This _much_ more convenient.</div>
+
+.fi
+To disable pass a value of
+.Em "block"
+or
+.Em "0"
+
+This feature follows the behavior of
+.Ar PHP Markdown Extra
+but isn't complete: It is not possible to disable Markdown processing for
+span elements yet. Also nested block elements don't inherit the
+.Em markdown
+attribute of their anchestors.
 .Sh AUTHOR
 David Parsons
 .%T http://www.pell.portland.or.us/~orc/
