@@ -1356,9 +1356,10 @@ mkd_compile(Document *doc, DWORD flags)
     flags &= USER_FLAGS;
     
     if ( doc->compiled ) {
-	if ( doc->ctx->flags == flags )
+	if ( doc->ctx->flags == flags && !doc->dirty)
 	    return 1;
 	else {
+	    doc->compiled = doc->dirty = 0;
 	    if ( doc->code)
 		___mkd_freeParagraph(doc->code);
 	    if ( doc->ctx->footnotes )

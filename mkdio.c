@@ -328,8 +328,11 @@ mkd_generateline(char *bfr, int size, FILE *output, DWORD flags)
 void
 mkd_e_url(Document *f, mkd_callback_t edit)
 {
-    if ( f )
+    if ( f ) {
+	if ( f->cb.e_url != edit )
+	    f->dirty = 1;
 	f->cb.e_url = edit;
+    }
 }
 
 
@@ -338,8 +341,11 @@ mkd_e_url(Document *f, mkd_callback_t edit)
 void
 mkd_e_flags(Document *f, mkd_callback_t edit)
 {
-    if ( f )
+    if ( f ) {
+	if ( f->cb.e_flags != edit )
+	    f->dirty = 1;
 	f->cb.e_flags = edit;
+    }
 }
 
 
@@ -348,8 +354,11 @@ mkd_e_flags(Document *f, mkd_callback_t edit)
 void
 mkd_e_free(Document *f, mkd_free_t dealloc)
 {
-    if ( f )
+    if ( f ) {
+	if ( f->cb.e_free != dealloc )
+	    f->dirty = 1;
 	f->cb.e_free = dealloc;
+    }
 }
 
 
@@ -358,8 +367,11 @@ mkd_e_free(Document *f, mkd_free_t dealloc)
 void
 mkd_e_data(Document *f, void *data)
 {
-    if ( f )
+    if ( f ) {
+	if ( f->cb.e_data != data )
+	    f->dirty = 1;
 	f->cb.e_data = data;
+    }
 }
 
 
@@ -368,6 +380,9 @@ mkd_e_data(Document *f, void *data)
 void
 mkd_ref_prefix(Document *f, char *data)
 {
-    if ( f )
+    if ( f ) {
+	if ( f->ref_prefix != data )
+	    f->dirty = 1;
 	f->ref_prefix = data;
+    }
 }
