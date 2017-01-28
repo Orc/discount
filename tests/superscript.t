@@ -12,6 +12,10 @@ try -frelax 'A^B in link title' '[link](here "A^B")' '<p><a href="here" title="A
 try 'A^(B+2)C^2' 'A^(B+2)C^2' '<p>A<sup>B+2</sup>C<sup>2</sup></p>'
 try 'A^((B+2))C^2' 'A^((B+2))C^2' '<p>A<sup>(B+2)</sup>C<sup>2</sup></p>'
 try 'A^B+C^D' 'A^B+C^D' '<p>A<sup>B</sup>+C<sup>D</sup></p>'
+try 'A^B w/ A in link' '[A](C)^B' '<p><a href="C">A</a><sup>B</sup></p>'
+try 'A^B w/ A in html' '<em>A</em>^B' '<p><em>A</em><sup>B</sup></p>'
+try 'A^B w/ ^B in link' 'A[^B](C)' '<p>A<a href="C">^B</a></p>'
+try 'A^B w/ ^B in incomplete link' 'A[^B]' '<p>A[^B]</p>'
 
 summary $0
 exit $rc

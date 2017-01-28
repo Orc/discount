@@ -102,6 +102,7 @@ typedef struct mmiot {
     Cstring out;
     Cstring in;
     Qblock Q;
+    char last;	/* last text character added to out */
     int isp;
     struct escaped *esc;
     char *ref_prefix;

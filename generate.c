@@ -108,8 +108,10 @@ isthisnonword(MMIOT *f, int i)
 
 
 /* return/set the current cursor position
+ * (when setting the current cursor position we also need to flush the
+ * last character written cache)
  */
-#define mmiotseek(f,x)	(f->isp = x)
+#define mmiotseek(f,x)	((f->isp = x), (f->last = 0))
 #define mmiottell(f)	(f->isp)
 
 
@@ -224,6 +226,11 @@ ___mkd_reparse(char *bfr, int size, int flags, MMIOT *f, char *esc)
     ___mkd_emblock(&sub);
     
     Qwrite(T(sub.out), S(sub.out), f);
+    /* inherit the last character printed from the reparsed
+     * text;  this way superscripts can work when they're
+     * applied to something embedded in a link
+     */
+    f->last = sub.last;
 
     ___mkd_freemmiot(&sub, f->footnotes);
 }
@@ -1309,7 +1316,9 @@ text(MMIOT *f)
 		    break;
 	/* A^B -> A<sup>B</sup> */
 	case '^':   if ( (f->flags & (MKD_NOSUPERSCRIPT|MKD_STRICT|MKD_TAGTEXT))
-				|| (isthisnonword(f,-1) && peek(f,-1) != ')')
+				|| (f->last == 0)
+				|| ((ispunct(f->last) || isspace(f->last))
+				                        && f->last != ')')
 				|| isthisspace(f,1) )
 			Qchar(c,f);
 		    else {
@@ -1447,7 +1456,8 @@ text(MMIOT *f)
 		    }
 		    /* fall through to default */
 	
-	default:    Qchar(c, f);
+	default:    f->last = c;
+		    Qchar(c, f);
 		    break;
 	}
     }
