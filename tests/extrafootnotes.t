@@ -18,6 +18,18 @@ try -ffootnote 'footnotes (-ffootnote)' "$FOOTIE" \
 </ol>
 </div>'
 
+try -ffootnote 'footnotes (-ffootnote)' "$FOOTIE
+    
+    second" \
+'<p>I haz a footnote<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p>yes?</p><p>second<a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>'
+
 try -ffootnote -Cfoot 'footnotes (-ffootnote -Cfoot)' "$FOOTIE" \
 '<p>I haz a footnote<sup id="footref:1"><a href="#foot:1" rel="footnote">1</a></sup></p>
 <div class="footnotes">
