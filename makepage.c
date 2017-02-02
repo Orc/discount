@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mkdio.h>
+#include <unistd.h>
 #include "config.h"
 #include "pgm_options.h"
 
