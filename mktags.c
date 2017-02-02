@@ -2,6 +2,13 @@
  */
 #include <stdio.h>
 
+#ifdef _MSC_VER
+#ifndef strncasecmp
+#include <string.h>
+#define strncasecmp _strnicmp
+#endif
+#endif
+
 #define __WITHOUT_AMALLOC 1
 #include "cstring.h"
 #include "tags.h"
