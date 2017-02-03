@@ -101,6 +101,9 @@ makepage:  makepage.c pgm_options.o $(MKDLIB) mkdio.h
 pgm_options.o: pgm_options.c mkdio.h config.h
 	$(CC) $(CFLAGS) -I. -c pgm_options.c
 
+gethopt.o: gethopt.c
+	$(CC) $(CFLAGS) -I. -c gethopt.c
+
 main.o: main.c mkdio.h config.h
 	$(CC) $(CFLAGS) -I. -c main.c
 

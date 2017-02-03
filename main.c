@@ -61,21 +61,21 @@ complain(char *fmt, ...)
 
 
 struct h_opt opts[] = {
-    { 0, "html5",  '5', 0, "recognise html5 block elements" },
-    { 0, "base",   'b', 1, "URL prefix" },
-    { 0, "debug",  'd', 0, "debugging" },
-    { 0, "version",'V', 0, "show version info" },
-    { 0, 0,        'E', 1, "url flags" },
-    { 0, 0,        'F', 1, "set/show hex flags" },
-    { 0, 0,        'f', 1, "set/show named flags" },
-    { 0, 0,        'G', 0, "github flavoured markdown" },
-    { 0, 0,        'n', 0, "don't write generated html" },
-    { 0, 0,        's', 1, "format a string" },
-    { 0, "style",  'S', 0, "output <style> blocks" },
-    { 0, 0,        't', 1, "format a string with mkd_line()" },
-    { 0, "toc",    'T', 0, "output a TOC" },
-    { 0, 0,        'C', 1, "prefix for markdown extra footnotes" },
-    { 0, 0,        'o', 1, "write output to a file" },
+    { 0, "html5",  '5', 0,          "recognise html5 block elements" },
+    { 0, "base",   'b', "url-base", "URL prefix" },
+    { 0, "debug",  'd', 0,           "debugging" },
+    { 0, "version",'V', 0,           "show version info" },
+    { 0, 0,        'E', "flags",     "url flags" },
+    { 0, 0,        'F', "bitmap",    "set/show hex flags" },
+    { 0, 0,        'f', "{+-}flags", "set/show named flags" },
+    { 0, 0,        'G', 0,           "github flavoured markdown" },
+    { 0, 0,        'n', 0,           "don't write generated html" },
+    { 0, 0,        's', "text",      "format `text`" },
+    { 0, "style",  'S', 0,           "output <style> blocks" },
+    { 0, 0,        't', "text",      "format `text` with mkd_line()" },
+    { 0, "toc",    'T', 0,           "output a TOC" },
+    { 0, 0,        'C', "prefix",    "prefix for markdown extra footnotes" },
+    { 0, 0,        'o', "file",       "write output to file" },
 };
 #define NROPTS (sizeof opts/sizeof opts[0])
 
@@ -112,10 +112,7 @@ main(int argc, char **argv)
 
     while ( opt=gethopt(&blob, opts, NROPTS) ) {
 	if ( opt == HOPTERR ) {
-	    fprintf(stderr, "usage: %s [-dTV] [-b url-base]"
-				    " [-F bitmap] [-f {+-}flags]"
-				    " [-o ofile] [-s text]"
-				    " [-t text] [file]\n", pgm);
+	    hoptusage(pgm, opts, NROPTS, "[file]");
 	    exit(1);
 	}
 	switch (opt->optchar) {

@@ -23,9 +23,9 @@ basename(char *p)
 char *pgm = "makepage";
 
 struct h_opt opts[] = {
-    { 0, "version", 'V', 0, "show version info" },
-    { 0, 0,         'F', 1, "set/show hex flags" },
-    { 0, "flags",   'f', 1, "set/show named flags" },
+    { 0, "version", 'V', 0,           "show version info" },
+    { 0, 0,         'F', "bitmap",    "set/show hex flags" },
+    { 0, "flags",   'f', "{+-}flags", "set/show named flags" },
 } ;
 #define NROPTS (sizeof opts / sizeof opts[0])
 
@@ -49,8 +49,7 @@ char **argv;
 
     while ( opt = gethopt(&blob, opts, NROPTS) ) {
 	if ( opt == HOPTERR ) {
-	    fprintf(stderr, "usage: %s [-V] [-F bitmap] [-f {+-}flags]"
-			    " [file]\n", pgm);
+	    hoptusage(pgm, opts, NROPTS, "[file]");
 	    exit(1);
 	}
 	switch ( opt->optchar ) {
