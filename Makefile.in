@@ -21,6 +21,9 @@ OBJS=mkdio.o markdown.o dumptree.o generate.o \
      @AMALLOC@ @H1TITLE@
 TESTFRAMEWORK=echo cols
 
+# modules that markdown, makepage, mkd2html, &tc use
+COMMON=pgm_options.o gethopt.o
+
 MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 
 all: $(PGMS) $(SAMPLE_PGMS) $(TESTFRAMEWORK)
@@ -89,14 +92,14 @@ blocktags: mktags
 @THEME@	$(CC) $(CFLAGS) $(LFLAGS) -o theme theme.o pgm_options.o -lmarkdown @LIBS@
 
 
-mkd2html:  mkd2html.o $(MKDLIB) mkdio.h gethopt.h gethopt.o
-	$(CC) $(CFLAGS) $(LFLAGS) -o mkd2html mkd2html.o gethopt.o -lmarkdown @LIBS@
+mkd2html:  mkd2html.o $(MKDLIB) mkdio.h gethopt.h $(COMMON)
+	$(CC) $(CFLAGS) $(LFLAGS) -o mkd2html mkd2html.o $(COMMON) -lmarkdown @LIBS@
 
-markdown: main.o pgm_options.o $(MKDLIB)
-	$(CC) $(CFLAGS) $(LFLAGS) -o markdown main.o pgm_options.o gethopt.o -lmarkdown @LIBS@
+markdown: main.o $(COMMON) $(MKDLIB)
+	$(CC) $(CFLAGS) $(LFLAGS) -o markdown main.o $(COMMON) -lmarkdown @LIBS@
 	
-makepage:  makepage.c pgm_options.o $(MKDLIB) mkdio.h
-	$(CC) $(CFLAGS) $(LFLAGS) -o makepage makepage.c pgm_options.o gethopt.o -lmarkdown @LIBS@
+makepage:  makepage.c $(COMMON) $(MKDLIB) mkdio.h
+	$(CC) $(CFLAGS) $(LFLAGS) -o makepage makepage.c $(COMMON) -lmarkdown @LIBS@
 
 pgm_options.o: pgm_options.c mkdio.h config.h
 	$(CC) $(CFLAGS) -I. -c pgm_options.c
