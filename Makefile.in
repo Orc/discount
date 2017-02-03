@@ -93,10 +93,10 @@ mkd2html:  mkd2html.o $(MKDLIB) mkdio.h gethopt.h gethopt.o
 	$(CC) $(CFLAGS) $(LFLAGS) -o mkd2html mkd2html.o gethopt.o -lmarkdown @LIBS@
 
 markdown: main.o pgm_options.o $(MKDLIB)
-	$(CC) $(CFLAGS) $(LFLAGS) -o markdown main.o pgm_options.o -lmarkdown @LIBS@
+	$(CC) $(CFLAGS) $(LFLAGS) -o markdown main.o pgm_options.o gethopt.o -lmarkdown @LIBS@
 	
 makepage:  makepage.c pgm_options.o $(MKDLIB) mkdio.h
-	$(CC) $(CFLAGS) $(LFLAGS) -o makepage makepage.c pgm_options.o -lmarkdown @LIBS@
+	$(CC) $(CFLAGS) $(LFLAGS) -o makepage makepage.c pgm_options.o gethopt.o -lmarkdown @LIBS@
 
 pgm_options.o: pgm_options.c mkdio.h config.h
 	$(CC) $(CFLAGS) -I. -c pgm_options.c
