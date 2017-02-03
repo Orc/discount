@@ -1,0 +1,14 @@
+Build utilities in this directory
+
+
+branch.c:       generates a branch suffix for the version# (in version.c)
+		if the code was built from a non-master git branch
+checkbits.sh:   check that the MKD_ flags in markdown.h and mkdio.h are
+		identical
+cols.c:         a format prettifier for test progress output (truncates
+		the input to a fixed width, treating utf-8 character
+		sequences as one cell wide.)   A bit of a kludge, since it
+		doesn't consider zero-width or multi-cell glyphs.
+echo.c:         echo, localized so configure.sh doesn't have to thrash around
+		figuring whether the system echo uses -n or /c (or whatever)
+		to do output w/o a trailing newline
