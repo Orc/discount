@@ -19,7 +19,7 @@ OBJS=mkdio.o markdown.o dumptree.o generate.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o \
      github_flavoured.o setup.o tags.o html5.o flags.o \
      @AMALLOC@ @H1TITLE@
-TESTFRAMEWORK=echo cols
+TESTFRAMEWORK=echo cols branch
 
 # modules that markdown, makepage, mkd2html, &tc use
 COMMON=pgm_options.o gethopt.o
@@ -76,8 +76,8 @@ $(DESTDIR)$(LIBDIR):
 @MK_PKGCONFIG@$(DESTDIR)$(PKGDIR):
 @MK_PKGCONFIG@	@INSTALL_DIR@ $(DESTDIR)$(PKGDIR)
 
-version.o: version.c VERSION
-	$(CC) $(CFLAGS) -DBRANCH=\"`basename \`git describe --all\``\" -DVERSION=\"`cat VERSION`\" -c version.c
+version.o: version.c VERSION branch
+	$(CC) $(CFLAGS) -DBRANCH=`./branch \`git describe --all\`` -DVERSION=\"`cat VERSION`\" -c version.c
 
 VERSION:
 	@true
@@ -121,6 +121,8 @@ test:	$(PGMS) $(TESTFRAMEWORK) verify
 	    @LD_LIBRARY_PATH@=`pwd` sh $$x || exit 1; \
 	done
 
+branch: tools/branch.c config.h
+	$(CC) -o branch tools/branch.c
 cols:   tools/cols.c config.h
 	$(CC) -o cols tools/cols.c
 echo:   tools/echo.c config.h
