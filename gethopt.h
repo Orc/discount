@@ -14,7 +14,7 @@ struct h_opt {
     int  option;
     char *optword;
     char optchar;
-    int  opthasarg;
+    char *opthasarg;
     char *optdesc;
 } ;
 
@@ -37,5 +37,7 @@ extern char  hoptopt(struct h_context *);
 extern void  hoptset(struct h_context *, int, char **);
 extern int   hopterr(struct h_context *, int);
 extern struct h_opt *gethopt(struct h_context *, struct h_opt*, int);
+
+extern void hoptusage(char *, struct h_opt*, int, char *);
 
 #endif/*__GETHOPT_D*/

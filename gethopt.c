@@ -177,6 +177,51 @@ int nropts;
 }
 
 
+void
+hoptusage(char *pgm, struct h_opt opts[], int nropts, char *arguments)
+{
+    int i;
+    int optcount;
+    
+    fprintf(stderr, "usage: %s", pgm);
+
+    /* print out the options that don't have flags first */
+    
+    for ( optcount=i=0; i < nropts; i++ ) {
+	if ( opts[i].optchar && !opts[i].opthasarg) {
+	    if (optcount == 0 )
+		fputs(" [-", stderr);
+	    fputc(opts[i].optchar, stderr);
+	    optcount++;
+	}
+    }
+    if ( optcount )
+	fputc(']', stderr);
+
+    /* print out the options WITH flags */
+    for ( i = 0; i < nropts; i++ )
+	if ( opts[i].optchar && opts[i].opthasarg)
+	    fprintf(stderr, " [-%c %s]", opts[i].optchar, opts[i].opthasarg);
+
+    /* print out the long options */
+    for ( i = 0; i < nropts; i++ )
+	if ( opts[i].optword ) {
+	    fprintf(stderr, " [-%s", opts[i].optword);
+	    if ( opts[i].opthasarg )
+		fprintf(stderr, " %s", opts[i].opthasarg);
+	    fputc(']', stderr);
+	}
+
+    /* print out the arguments string, if any */
+
+    if ( arguments )
+	fprintf(stderr, " %s", arguments);
+
+    /* and we're done */
+    fputc('\n', stderr);
+}
+
+
 #if DEBUG
 struct h_opt opts[] = {
     { 0, "css",    0,  1, "css file" },

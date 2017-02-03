@@ -13,12 +13,12 @@
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
-#include <unistd.h>
 
 #include "config.h"
 #include "amalloc.h"
 #include "pgm_options.h"
 #include "tags.h"
+#include "gethopt.h"
 
 #if HAVE_LIBGEN_H
 #include <libgen.h>
@@ -60,10 +60,28 @@ complain(char *fmt, ...)
 }
 
 
+struct h_opt opts[] = {
+    { 0, "html5",  '5', 0,          "recognise html5 block elements" },
+    { 0, "base",   'b', "url-base", "URL prefix" },
+    { 0, "debug",  'd', 0,           "debugging" },
+    { 0, "version",'V', 0,           "show version info" },
+    { 0, 0,        'E', "flags",     "url flags" },
+    { 0, 0,        'F', "bitmap",    "set/show hex flags" },
+    { 0, 0,        'f', "{+-}flags", "set/show named flags" },
+    { 0, 0,        'G', 0,           "github flavoured markdown" },
+    { 0, 0,        'n', 0,           "don't write generated html" },
+    { 0, 0,        's', "text",      "format `text`" },
+    { 0, "style",  'S', 0,           "output <style> blocks" },
+    { 0, 0,        't', "text",      "format `text` with mkd_line()" },
+    { 0, "toc",    'T', 0,           "output a TOC" },
+    { 0, 0,        'C', "prefix",    "prefix for markdown extra footnotes" },
+    { 0, 0,        'o', "file",       "write output to file" },
+};
+#define NROPTS (sizeof opts/sizeof opts[0])
+
 int
 main(int argc, char **argv)
 {
-    int opt;
     int rc;
     mkd_flag_t flags = 0;
     int debug = 0;
@@ -81,68 +99,71 @@ main(int argc, char **argv)
     char *urlbase = 0;
     char *q;
     MMIOT *doc;
+    struct h_context blob;
+    struct h_opt *opt;
+
+    hoptset(&blob, argc, argv);
+    hopterr(&blob, 1);
 
     if ( q = getenv("MARKDOWN_FLAGS") )
 	flags = strtol(q, 0, 0);
 
     pgm = basename(argv[0]);
-    opterr = 1;
 
-    while ( (opt=getopt(argc, argv, "5b:C:df:E:F:Gno:s:St:TV")) != EOF ) {
-	switch (opt) {
+    while ( opt=gethopt(&blob, opts, NROPTS) ) {
+	if ( opt == HOPTERR ) {
+	    hoptusage(pgm, opts, NROPTS, "[file]");
+	    exit(1);
+	}
+	switch (opt->optchar) {
 	case '5':   with_html5 = 1;
 		    break;
-	case 'b':   urlbase = optarg;
+	case 'b':   urlbase = hoptarg(&blob);
 		    break;
 	case 'd':   debug = 1;
 		    break;
 	case 'V':   version++;
 		    break;
-	case 'E':   urlflags = optarg;
+	case 'E':   urlflags = hoptarg(&blob);
 		    break;
-	case 'F':   if ( strcmp(optarg, "?") == 0 ) {
+	case 'F':   if ( strcmp(hoptarg(&blob), "?") == 0 ) {
 			show_flags(0, 0);
 			exit(0);
 		    }
 		    else
-			flags = strtol(optarg, 0, 0);
+			flags = strtol(hoptarg(&blob), 0, 0);
 		    break;
-	case 'f':   if ( strcmp(optarg, "?") == 0 ) {
+	case 'f':   if ( strcmp(hoptarg(&blob), "?") == 0 ) {
 			show_flags(1, version);
 			exit(0);
 		    }
-		    else if ( !set_flag(&flags, optarg) )
-			complain("unknown option <%s>", optarg);
+		    else if ( !set_flag(&flags, hoptarg(&blob)) )
+			complain("unknown option <%s>", hoptarg(&blob));
 		    break;
 	case 'G':   github_flavoured = 1;
 		    break;
 	case 'n':   content = 0;
 		    break;
-	case 's':   text = optarg;
+	case 's':   text = hoptarg(&blob);
 		    break;
 	case 'S':   styles = 1;
 		    break;
-	case 't':   text = optarg;
+	case 't':   text = hoptarg(&blob);
 		    use_mkd_line = 1;
 		    break;
 	case 'T':   toc = 1;
 		    break;
-	case 'C':   extra_footnote_prefix = optarg;
+	case 'C':   extra_footnote_prefix = hoptarg(&blob);
 		    break;
 	case 'o':   if ( ofile ) {
 			complain("Too many -o options");
 			exit(1);
 		    }
-		    if ( !freopen(ofile = optarg, "w", stdout) ) {
+		    if ( !freopen(ofile = hoptarg(&blob), "w", stdout) ) {
 			perror(ofile);
 			exit(1);
 		    }
 		    break;
-	default:    fprintf(stderr, "usage: %s [-dTV] [-b url-base]"
-				    " [-F bitmap] [-f {+-}flags]"
-				    " [-o ofile] [-s text]"
-				    " [-t text] [file]\n", pgm);
-		    exit(1);
 	}
     }
 
@@ -155,8 +176,8 @@ main(int argc, char **argv)
 	exit(0);
     }
 
-    argc -= optind;
-    argv += optind;
+    argc -= hoptind(&blob);
+    argv += hoptind(&blob);
 
     if ( with_html5 )
 	mkd_with_html5_tags();

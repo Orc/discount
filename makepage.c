@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mkdio.h>
-#include <unistd.h>
 #include "config.h"
 #include "pgm_options.h"
+#include "gethopt.h"
 
 #ifndef HAVE_BASENAME
 char*
@@ -22,6 +22,13 @@ basename(char *p)
 
 char *pgm = "makepage";
 
+struct h_opt opts[] = {
+    { 0, "version", 'V', 0,           "show version info" },
+    { 0, 0,         'F', "bitmap",    "set/show hex flags" },
+    { 0, "flags",   'f', "{+-}flags", "set/show named flags" },
+} ;
+#define NROPTS (sizeof opts / sizeof opts[0])
+
 main(argc, argv)
 int argc;
 char **argv;
@@ -29,41 +36,44 @@ char **argv;
     MMIOT *doc;
     char *q;
     int version = 0;
-    int opt;
     int ret;
     mkd_flag_t flags = 0;
+    struct h_opt *opt;
+    struct h_context blob;
 
     if ( (q = getenv("MARKDOWN_FLAGS")) )
 	flags = strtol(q, 0, 0);
 
-    opterr = 1;
+    hoptset(&blob, argc, argv);
+    hopterr(&blob, 1);
 
-    while ( (opt=getopt(argc, argv, "F:f:V")) != EOF ) {
-	switch (opt) {
+    while ( opt = gethopt(&blob, opts, NROPTS) ) {
+	if ( opt == HOPTERR ) {
+	    hoptusage(pgm, opts, NROPTS, "[file]");
+	    exit(1);
+	}
+	switch ( opt->optchar ) {
 	case 'V':   version++;
 		    break;
-	case 'F':   if ( strcmp(optarg, "?") == 0 ) {
+	case 'F':   if ( strcmp(hoptarg(&blob), "?") == 0 ) {
 			show_flags(0,0);
 			exit(0);
 		    }
 		    else
-			flags = strtol(optarg, 0, 0);
+			flags = strtol(hoptarg(&blob), 0, 0);
 		    break;
-	case 'f':   if ( strcmp(optarg, "?") == 0 ) {
+	case 'f':   if ( strcmp(hoptarg(&blob), "?") == 0 ) {
 			show_flags(1,version);
 			exit(0);
 		    }
-		    else if ( !set_flag(&flags, optarg) )
-			fprintf(stderr, "unknown option <%s>\n", optarg);
+		    else if ( !set_flag(&flags, hoptarg(&blob)) )
+			fprintf(stderr, "unknown option <%s>\n", hoptarg(&blob));
 		    break;
-	default:    fprintf(stderr, "usage: %s [-V] [-F bitmap] [-f {+-}flags]"
-				    " [file]\n", pgm);
-		    exit(1);
 	}
     }
     
-    argc -= optind;
-    argv += optind;
+    argc -= hoptind(&blob);
+    argv += hoptind(&blob);
     
     if ( version ) {
 	printf("%s: discount %s", pgm, markdown_version);

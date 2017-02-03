@@ -1,5 +1,9 @@
 # NMAKE Makefile to build Discount with Visual C++
+<<<<<<< HEAD:msvc/Makefile
 CFLAGS	=	/nologo /MP /MD /EHa /Zi \
+=======
+CFLAGS	=	/nologo /MP /MDd /EHa /Zi \
+>>>>>>> gethopt-uber-alles:msvc/Makefile
 			/D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /D_SCL_SECURE_NO_WARNINGS \
 			/I.
 LIBOBJ	=	mkdio.obj markdown.obj dumptree.obj generate.obj \

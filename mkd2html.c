@@ -70,9 +70,9 @@ fail(char *why, ...)
 enum { ADD_CSS, ADD_HEADER, ADD_FOOTER };
 
 struct h_opt opts[] = {
-    { ADD_CSS,       "css", 0, 1, "Additional stylesheets for this page" },
-    { ADD_HEADER, "header", 0, 1, "Additonal headers for this page" },
-    { ADD_FOOTER, "footer", 0, 1, "Additional footers for this page" },
+    { ADD_CSS,       "css", 0, "url",    "Additional css for this page" },
+    { ADD_HEADER, "header", 0, "header", "Additonal headers for this page" },
+    { ADD_FOOTER, "footer", 0, "footer", "Additional footers for this page" },
 };
 #define NROPTS (sizeof opts/sizeof opts[0])
 
@@ -102,21 +102,24 @@ char **argv;
     hoptset(&flags, argc, argv);
     hopterr(&flags, 1);
     while ( res = gethopt(&flags, opts, NROPTS) ) {
-	if ( res != HOPTERR ) {
-	    switch ( res->option ) {
-	    case ADD_CSS:
-		EXPAND(css) = hoptarg(&flags);
-		break;
-	    case ADD_HEADER:
-		EXPAND(headers) = hoptarg(&flags);
-		break;
-	    case ADD_FOOTER:
-		EXPAND(footers) = hoptarg(&flags);
-		break;
-	    default:
-		fprintf(stderr, "unknown option?\n");
-		break;
-	    }
+	if ( res == HOPTERR ) {
+	    hoptusage(argv[0], opts, NROPTS, "source [dest]");
+	    exit(1);
+	}
+	
+	switch ( res->option ) {
+	case ADD_CSS:
+	    EXPAND(css) = hoptarg(&flags);
+	    break;
+	case ADD_HEADER:
+	    EXPAND(headers) = hoptarg(&flags);
+	    break;
+	case ADD_FOOTER:
+	    EXPAND(footers) = hoptarg(&flags);
+	    break;
+	default:
+	    fprintf(stderr, "unknown option?\n");
+	    break;
 	}
     }
 
@@ -160,7 +163,7 @@ char **argv;
 	break;
 
     default:
-	fprintf(stderr, "usage: %s [opts] source [dest]\n", pgm);
+	hoptusage(argv[0], opts, NROPTS, "source [dest]");
 	exit(1);
     }
 
