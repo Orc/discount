@@ -1,5 +1,5 @@
 # NMAKE Makefile to build Discount with Visual C++
-CFLAGS	=	/nologo /MP /MDd /EHa /Zi \
+CFLAGS	=	/nologo /MP /MD /EHa /Zi \
 			/D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE /D_SCL_SECURE_NO_WARNINGS \
 			/I.
 LIBOBJ	=	mkdio.obj markdown.obj dumptree.obj generate.obj \
@@ -7,8 +7,10 @@ LIBOBJ	=	mkdio.obj markdown.obj dumptree.obj generate.obj \
 			xml.obj Csio.obj xmlpage.obj basename.obj emmatch.obj \
 			github_flavoured.obj setup.obj tags.obj html5.obj flags.obj
 MKDLIB	= libmarkdown.lib
-PGMS=
-SAMPLE_PGMS=mkd2html
+PGMS=markdown
+SAMPLE_PGMS=mkd2html makepage
+# modules that markdown, makepage, mkd2html, &tc use
+COMMON=pgm_options.obj gethopt.obj
 
 # Assumes VERSION is a single-line file
 VERSION = \
@@ -29,7 +31,7 @@ version.c: version.c.in
 	powershell.exe -Command "(gc version.c.in) -replace '@TABSTOP@', 'TABSTOP' | Out-File version.c"
 
 version.obj: version.c VERSION config.h
-	$(CC) $(CFLAGS) -DVERSION=\"$(VERSION)\" /c version.c
+	$(CC) $(CFLAGS) -DBRANCH="" -DVERSION=\"$(VERSION)\" /c version.c
 
 mkdio.h: mkdio.h.in
 	powershell.exe -Command "(gc mkdio.h.in) -replace '@DWORD@', 'unsigned long' | Out-File mkdio.h"
@@ -37,6 +39,9 @@ mkdio.h: mkdio.h.in
 mkdio.obj: mkdio.h
 
 tags.obj: tags.c cstring.h tags.h blocktags
+
+pgm_options.obj: pgm_options.c mkdio.h config.h
+	$(CC) $(CFLAGS) /c pgm_options.c
 
 mktags: mktags.obj
 	$(CC) $(CFLAGS) mktags.obj
@@ -47,8 +52,11 @@ blocktags: mktags
 mkd2html:  mkd2html.obj $(MKDLIB) mkdio.h gethopt.h gethopt.obj
 	$(CC) $(CFLAGS) $(LFLAGS) mkd2html.obj gethopt.obj $(MKDLIB)
 
-pgm_options.obj: pgm_options.c mkdio.h config.h
-	$(CC) $(CFLAGS) -I. pgm_options.c
+markdown: main.obj $(COMMON) $(MKDLIB)
+	$(CC) $(CFLAGS) $(LFLAGS) /Femarkdown main.obj $(COMMON) $(MKDLIB)
+
+makepage:  makepage.c $(COMMON) $(MKDLIB) mkdio.h
+	$(CC) $(CFLAGS) $(LFLAGS) makepage.c $(COMMON) $(MKDLIB)
 
 clean:
 	-del config.h blocktags mkdio.h version.c
