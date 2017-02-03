@@ -21,7 +21,6 @@
 #if defined(HAVE_ALLOCA_H)
 #  include <alloca.h>
 #endif
-#include <unistd.h>
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -32,10 +31,12 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include "mkdio.h"
 #include "cstring.h"
 #include "amalloc.h"
+#include "gethopt.h"
 
 char *pgm = "theme";
 char *output = 0;
@@ -514,60 +515,78 @@ spin(FILE *template, MMIOT *doc, FILE *output)
 } /* spin */
 
 
+struct h_opt opts[] = {
+    { 0, 0, 'c', "flags",  "set/show rendering options" },
+    { 0, 0, 'C', "bitmap", "set/show rendering options numerically" },
+    { 0, 0, 'd', "dir",    "set the document root" },
+    { 0, 0, 'E', 0,        "do all theme expansions everywhere" },
+    { 0, 0, 'f', 0,        "forcibly overwrite existing html files" },
+    { 0, 0, 'o', "file",   "write output to `file`" },
+    { 0, 0, 'p', "title",  "set the page title" },
+    { 0, 0, 'V', 0,        "show version info" },
+} ;
+#define NROPTS (sizeof opts / sizeof opts[0])
+
 main(argc, argv)
 char **argv;
 {
     char *template = "page.theme";
     char *source = "stdin";
     FILE *tmplfile;
-    int opt;
     mkd_flag_t flags = THEME_CF|MKD_TOC;
     int force = 0;
     MMIOT *doc;
     struct stat sourceinfo;
 
-    opterr=1;
+    struct h_opt *opt;
+    struct h_context blob;
+
+    hoptset(&blob, argc, argv);
+    hopterr(&blob, 1);
+    
     pgm = basename(argv[0]);
 
-    while ( (opt=getopt(argc, argv, "EfC:c:d:t:p:o:V")) != EOF ) {
-	switch (opt) {
-	case 'd':   root = optarg;
+    while ( opt = gethopt(&blob, opts, NROPTS) ) {
+	if ( opt == HOPTERR ) {
+	    hoptusage(pgm, opts, NROPTS, "[file]");
+	    exit(1);
+	}
+	switch ( opt->optchar ) {
+	case 'd':   root = hoptarg(&blob);
 		    break;
 	case 'E':   everywhere = 1;
 		    break;
-	case 'p':   pagename = optarg;
+	case 'p':   pagename = hoptarg(&blob);
 		    break;
 	case 'f':   force = 1;
 		    break;
-	case 't':   template = optarg;
+	case 't':   template = hoptarg(&blob);
 		    break;
-	case 'C':   if ( strcmp(optarg, "?") == 0 ) {
+	case 'C':   if ( strcmp(hoptarg(&blob), "?") == 0 ) {
 			show_flags(0,0);
 			exit(0);
 		    }
 		    else
-			flags = strtol(optarg, 0, 0);
+			flags = strtol(hoptarg(&blob), 0, 0);
 		    break;
-	case 'c':   if ( strcmp(optarg, "?") == 0 ) {
+	case 'c':   if ( strcmp(hoptarg(&blob), "?") == 0 ) {
 			show_flags(1,0);
 			exit(0);
 		    }
-		    else if ( !set_flag(&flags, optarg) )
-			fprintf(stderr,"%s: unknown option <%s>", pgm, optarg);
+		    else if ( !set_flag(&flags, hoptarg(&blob)) )
+			fprintf(stderr,"%s: unknown option <%s>", pgm, hoptarg(&blob));
 		    break;		    
-	case 'o':   output = optarg;
+	case 'o':   output = hoptarg(&blob);
 		    break;
 	case 'V':   printf("theme+discount %s\n", markdown_version);
 		    exit(0);
-	default:    fprintf(stderr, "usage: %s [-V] [-d dir] [-p pagename] [-t template] [-o html] [file]\n", pgm);
-		    exit(1);
 	}
     }
 
     tmplfile = open_template(template);
 
-    argc -= optind;
-    argv += optind;
+    argc -= hoptind(&blob);
+    argv += hoptind(&blob);
 
 
     if ( argc > 0 ) {

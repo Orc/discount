@@ -88,8 +88,8 @@ blocktags: mktags
 	./mktags > blocktags
 
 # example programs
-@THEME@theme:  theme.o $(MKDLIB) mkdio.h
-@THEME@	$(CC) $(CFLAGS) $(LFLAGS) -o theme theme.o pgm_options.o -lmarkdown @LIBS@
+@THEME@theme:  theme.o $(COMMON) $(MKDLIB) mkdio.h
+@THEME@	$(CC) $(CFLAGS) $(LFLAGS) -o theme theme.o $(COMMON) -lmarkdown @LIBS@
 
 
 mkd2html:  mkd2html.o $(MKDLIB) mkdio.h gethopt.h $(COMMON)
