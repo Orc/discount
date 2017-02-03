@@ -1,6 +1,6 @@
 #include "config.h"
 
-char markdown_version[] = VERSION
+char markdown_version[] = "(" BRANCH ") " VERSION
 #if @TABSTOP@ != 4
 		" TAB=@TABSTOP@"
 #endif
