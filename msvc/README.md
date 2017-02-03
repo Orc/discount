@@ -5,6 +5,13 @@ and pre-digested `config.h` template.
 
 ## Build
 
-    nmake /f msvc/Makefile
-    nmake /f msvc/Makefile clean
+Build generates default optimised binaries.
+Edit `CFLAGS` in `Makefile` to customize generated binaries (eg. switch to debug build).
 
+* Generate static library `libmarkdown.lib` and utility programs:
+
+    nmake /f msvc/Makefile
+
+* Clean source tree
+
+    nmake /f msvc/Makefile clean
