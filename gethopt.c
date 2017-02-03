@@ -63,6 +63,7 @@ struct h_opt *opts;
 int nropts;
 {
     int i;
+    int dashes;
     
 
     if ( (ctx == 0) || ctx->optend || (ctx->optind >= ctx->argc) )
@@ -89,11 +90,22 @@ int nropts;
 	    return 0;
 	}
 
+	dashes = 1;
+	if ( ctx->argv[ctx->optind][dashes] == '-' ) {
+	    /* support GNU-style long option double-dash prefix
+	     * (if gethopt is passed an unknown option with a double-dash
+	     *  prefix, it won't match a word and then the second dash
+	     *  will be scanned as if it was a regular old single-character
+	     *  option.)
+	     */
+	    dashes = 2;
+	}
+	
 	for ( i=0; i < nropts; i++ ) {
 	    if ( ! opts[i].optword ) 
 		continue;
 
-	    if (strcmp(opts[i].optword, 1+(ctx->argv[ctx->optind]) ) == 0 ) {
+	    if (strcmp(opts[i].optword, dashes+(ctx->argv[ctx->optind]) ) == 0 ) {
 		if ( opts[i].opthasarg ) {
 		    if ( ctx->argc > ctx->optind ) {
 			ctx->optarg = ctx->argv[ctx->optind+1];
