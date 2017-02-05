@@ -1,7 +1,7 @@
 /*
  * check a filename to see if it's a (fifo|character special|socket) object
  * (if a stat() function doesn't exist, we can't stat so we'll just return
- *  false no matter what.)
+ *  true no matter what.)
  */
 
 #include "config.h"
