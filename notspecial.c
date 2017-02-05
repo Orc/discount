@@ -17,7 +17,7 @@ notspecial(char *file)
     if ( stat(file, &info) != 0 )
 	return 1;
     
-    return !(info.st_flags & (S_IFIFO|S_IFCHR|S_IFSOCK));
+    return !(info.st_mode & (S_IFIFO|S_IFCHR|S_IFSOCK));
 }
 #else
 int
