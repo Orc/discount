@@ -112,7 +112,8 @@ AC_CHECK_BASENAME
 AC_CHECK_ALLOCA
 
 AC_CHECK_HEADERS sys/types.h pwd.h && AC_CHECK_FUNCS getpwuid
-AC_CHECK_HEADERS sys/stat.h && AC_CHECK_FUNCS stat
+AC_CHECK_HEADERS sys/stat.h && AC_CHECK_FUNCS stat \
+			    && AC_CHECK_FIELD stat st_flags  sys/stat.h
 
 if AC_CHECK_FUNCS srandom; then
     AC_DEFINE 'INITRNG(x)' 'srandom((unsigned int)x)'
