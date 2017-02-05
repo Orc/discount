@@ -41,6 +41,8 @@
 
 char *pgm = "mkd2html";
 
+extern int notspecial(char *filename);
+
 #ifndef HAVE_BASENAME
 char *
 basename(char *path)
@@ -154,9 +156,11 @@ char **argv;
 	}
 	strcpy(dest, source);
 
-	if (( dot = strrchr(dest, '.') ))
-	    *dot = 0;
-	strcat(dest, ".html");
+	if ( notspecial(dest) ) {
+	    if (( dot = strrchr(dest, '.') ))
+		*dot = 0;
+	    strcat(dest, ".html");
+	}
 
 	if ( (output = fopen(dest, "w")) == 0 )
 	    fail("can't write to %s", dest);

@@ -53,6 +53,7 @@ struct stat *infop = 0;
 extern char* mkd_h1_title(MMIOT*);
 #endif
 
+extern int notspecial(char *filename);
 
 #define INTAG 0x01
 #define INHEAD 0x02
@@ -626,10 +627,11 @@ char **argv;
 	}
     }
     if ( output && strcmp(output, "-") ) {
-	if ( force )
+	if ( force && notspecial(output) )
 	    unlink(output);
-	if ( !freopen(output, "w", stdout) )
+	if ( !freopen(output, "w", stdout) ) {
 	    fail("can't write to %s", output);
+	}
     }
 
     if ( !pagename )

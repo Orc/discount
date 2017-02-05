@@ -22,7 +22,7 @@ OBJS=mkdio.o markdown.o dumptree.o generate.o \
 TESTFRAMEWORK=echo cols branch
 
 # modules that markdown, makepage, mkd2html, &tc use
-COMMON=pgm_options.o gethopt.o
+COMMON=pgm_options.o gethopt.o notspecial.o
 
 MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 
@@ -104,6 +104,9 @@ makepage:  makepage.c $(COMMON) $(MKDLIB) mkdio.h
 pgm_options.o: pgm_options.c mkdio.h config.h
 	$(CC) $(CFLAGS) -I. -c pgm_options.c
 
+notspecial.o: notspecial.c
+	$(CC) $(CFLAGS) -I. -c notspecial.c
+
 gethopt.o: gethopt.c
 	$(CC) $(CFLAGS) -I. -c gethopt.c
 
@@ -159,3 +162,4 @@ setup.o: setup.c config.h cstring.h amalloc.h markdown.h
 github_flavoured.o: github_flavoured.c config.h cstring.h amalloc.h markdown.h
 gethopt.o: gethopt.c gethopt.h
 h1title.o: h1title.c markdown.h
+notspecial.o: notspecial.c config.h

@@ -15,14 +15,14 @@ notspecial(char *file)
     struct stat info;
 
     if ( stat(file, &info) != 0 )
-	return 0;
+	return 1;
     
-    return (info.st_flags & (S_IFIFO|S_IFCHR|S_IFSOCK));
+    return !(info.st_flags & (S_IFIFO|S_IFCHR|S_IFSOCK));
 }
 #else
 int
 notspecial(char *file)
 {
-    return 0;
+    return 1;
 }
 #endif
