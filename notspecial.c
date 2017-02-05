@@ -17,12 +17,26 @@ notspecial(char *file)
     if ( stat(file, &info) != 0 )
 	return 1;
     
-    return !(info.st_mode & (S_IFIFO|S_IFCHR|S_IFSOCK));
+    return !( S_ISCHR(info.st_mode) || S_ISFIFO(info.st_mode) || S_ISSOCK(info.st_mode) );
 }
 #else
 int
 notspecial(char *file)
 {
     return 1;
+}
+#endif
+
+
+#if DEBUG
+
+#include <stdio.h>
+
+int
+main(argc, argv)
+char **argv;
+{
+    if ( argc > 1 )
+	printf("%s is %sspecial\n", argv[1], notspecial(argv[1]) ? "not " : "");
 }
 #endif
