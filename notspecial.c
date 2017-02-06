@@ -36,7 +36,9 @@ int
 main(argc, argv)
 char **argv;
 {
-    if ( argc > 1 )
-	printf("%s is %sspecial\n", argv[1], notspecial(argv[1]) ? "not " : "");
+    int i;
+
+    for ( i=1; i < argc; i++ )
+	printf("%s is %sspecial\n", argv[i], notspecial(argv[i]) ? "not " : "");
 }
 #endif
