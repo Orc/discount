@@ -49,17 +49,17 @@ struct h_opt {
 } ;
 .Ed
 .Ft char*
-.Fn hoptarg "struct h_context* p"
+.Fn hoptarg "struct h_context* argctx"
 .Ft int
-.Fn hoptind "struct h_context* p"
+.Fn hoptind "struct h_context* argctx"
 .Ft int
-.Fn hopterr "struct h_context* p" "int flag"
+.Fn hopterr "struct h_context* argctx" "int flag"
 .Ft char
-.Fn hoptopt "struct h_context* p"
+.Fn hoptopt "struct h_context* argctx"
 .Ft void
-.Fn hoptset "struct h_context* p" "int argc" "char** argv"
+.Fn hoptset "struct h_context* argctx" "int argc" "char** argv"
 .Ft struct h_opt*
-.Fn gethopt "struct h_context* p" "struct h_opt* optarray" "int nropts"
+.Fn gethopt "struct h_context* argctx" "struct h_opt* optarray" "int nropts"
 
 .Sh DESCRIPTION
 The
@@ -68,7 +68,7 @@ function gets
 the next
 .Em known
 option word or character from
-.Fa argv .
+.Fa argctx .
 An option is
 .Em known
 if it has been specified in the array of accepted options
@@ -136,7 +136,9 @@ function encounters a character not found in
 .Va optarray
 or detects
 a missing option argument
-it return HOPTERR (and writes an error message to the
+it returns
+.Dv HOPTERR
+(and writes an error message to the
 .Em stderr 
 if
 .Fn hopterr
