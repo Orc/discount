@@ -1,5 +1,5 @@
 /*
- * gehopt;  options processing with both single-character and whole-work
+ * gehopt;  options processing with both single-character and whole-word
  *           options both introduced with -
  */
 
