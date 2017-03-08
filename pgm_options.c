@@ -62,6 +62,7 @@ static struct _opt {
     { "urlencodedanchor", "html5-style anchors", 0, 0, 0, MKD_URLENCODEDANCHOR },
     { "html5anchor",   "html5-style anchors", 0, 1, 0, MKD_URLENCODEDANCHOR },
     { "latex",         "handle LaTeX escapes",         0, 0, 1, MKD_LATEX },
+    { "explicitlist",  "do not merge adjacent numeric/bullet lists", 0, 0, 1, MKD_EXPLICITLIST },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])

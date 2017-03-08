@@ -192,5 +192,26 @@ item.</p>
 <li><p>and this is another item.</p></li>
 </ol>'
 
+
+try 'bullet followed by number (non-explicit)' \
+    ' * A
+1. B' \
+    '<ul>
+<li>A</li>
+<li>B</li>
+</ul>'
+
+try -fexplicitlist 'bullet followed by number (explicit)' \
+    ' * A
+1. B' \
+    '<ul>
+<li>A</li>
+</ul>
+
+
+<ol>
+<li>B</li>
+</ol>'
+
 summary $0
 exit $rc

@@ -523,7 +523,7 @@ islist(Line *t, int *clip, DWORD flags, int *list_type)
 	i = nextnonblank(t, t->dle+1);
 	*clip = (i > 4) ? 4 : i;
 	*list_type = UL;
-	return AL;
+	return (flags & MKD_EXPLICITLIST) ? UL : AL;
     }
 
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
