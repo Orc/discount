@@ -77,7 +77,7 @@ $(DESTDIR)$(LIBDIR):
 @MK_PKGCONFIG@	@INSTALL_DIR@ $(DESTDIR)$(PKGDIR)
 
 version.o: version.c VERSION branch
-	$(CC) $(CFLAGS) -DBRANCH=`./branch \`git describe --all\`` -DVERSION=\"`cat VERSION`\" -c version.c
+	$(CC) $(CFLAGS) -DBRANCH=`./branch` -DVERSION=\"`cat VERSION`\" -c version.c
 
 VERSION:
 	@true

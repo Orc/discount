@@ -8,18 +8,17 @@ main(argc, argv)
 int argc;
 char **argv;
 {
-    char *root;
+    FILE * pipe = popen("git branch | awk '$1 ~ /\\*/ { print $2; }'", "r");
+    char line[1024];
 
-    if ( argc <= 1 )
+    if ( pipe == NULL )
 	return 0;
 
-    if ( root = strrchr(argv[1], '/') )
-	++root;
-    else
-	root = argv[1];
-
-    if ( strcmp(root, "master" ) != 0 )
-	printf("\"(%s)\"", root);
-
+    if ( fgets(line, sizeof line, pipe) != 0 ) {
+	strtok(line, "\n");
+	if ( strcmp(line, "master" ) != 0 )
+	    printf("\"(%s)\"", line);
+	pclose(pipe);
+    }
     return 0;
 }
