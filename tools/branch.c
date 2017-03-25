@@ -8,9 +8,12 @@ main(argc, argv)
 int argc;
 char **argv;
 {
-    FILE * pipe = popen("git branch | awk '$1 ~ /\\*/ { print $2; }'", "r");
+    FILE * pipe;
+
     char line[1024];
 
+    freopen("/dev/null", "w", stderr);
+    pipe = popen("git branch | awk '$1 ~ /\\*/ { print $2; }'", "r");
     if ( pipe == NULL )
 	return 0;
 
