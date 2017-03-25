@@ -18,7 +18,7 @@ char **argv;
 	strtok(line, "\n");
 	if ( strcmp(line, "master" ) != 0 )
 	    printf("\"(%s)\"", line);
-	pclose(pipe);
     }
+    pclose(pipe);
     return 0;
 }
