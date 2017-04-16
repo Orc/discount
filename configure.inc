@@ -1635,14 +1635,63 @@ AC_FAIL() {
 }
 
 #
-# AC_SUB writes a substitution into config.sub
-AC_SUB() {
-    (   _target="$1"
-	shift
-	_subst=`echo "$*" | sed -e 's/;/\\;/g'`
-	echo "s;@$_target@;$_subst;g" ) >> "$__cwd"/config.sub
+# __ac_config_sed; a C program to do escaping for AC_SUB
+__ac_config_sed() {
+
+
+    test -x config.sed && return
+
+    echo "generating config.sed"
+
+    AC_PROG_CC
+    
+cat > ngc$$.c << \EOF
+#include <stdio.h>
+
+int
+main(argc, argv)
+int argc;
+char **argv;
+{
+    char *p;
+    
+    if (argc != 3)
+	return 1;
+
+    printf("s;@%s@;", argv[1]);
+
+    for (p=argv[2]; *p; ++p) {
+	if ( *p == ';' )
+	    putchar('\\');
+	putchar(*p);
+    }
+
+    puts(";g");
+    return 0;
+}
+EOF
+
+    if $AC_CC -o config.sed ngc$$.c ; then
+	rm -f ngc$$.c
+	__config_files="$__config_files config.sed"
+    else
+	rm -f ngc$$.c
+	AC_FAIL "Cannot generate config.sed helper program"
+    fi
 }
 
+#
+# AC_SUB writes a substitution into config.sub
+AC_SUB() {
+    
+    _target="$1"
+    shift
+
+    echo "target=$_target, rest=$*"
+    
+    __ac_config_sed
+    ./config.sed "$_target" "$*" >> "$__cwd"/config.sub
+}
 #
 # AC_TEXT writes arbitrary text into config.h
 AC_TEXT() {
