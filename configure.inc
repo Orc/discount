@@ -1,5 +1,4 @@
-#   @(#) configure.inc 1.42@(#)
-#   Copyright (c) 1999-2007 David Parsons. All rights reserved.
+#   Copyright (c) 1999-2017 David Parsons. All rights reserved.
 #   
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions
@@ -140,14 +139,14 @@ AC_CONTINUE () {
 __MAKEDOTO() {
     AC_PROG_CC
 
-    if $AC_CC -c -o ngc$$.o "$@" $AC_LIBS 2>ngc$$.err; then
+    if $AC_CC -c -o ngc$$.o "$@" $LIBS 2>ngc$$.err; then
 	__remove ngc$$.o ngc$$.err
 	TLOG " (found)"
 	return 0
     fi
     __remove ngc$$.o
     TLOG " (not found)"
-    echo "test failed:  command was $AC_CC -c -o ngc$$.o" "$@" $AC_LIBS
+    echo "test failed:  command was $AC_CC -c -o ngc$$.o" "$@" $LIBS
     echo "output:"
     cat ngc$$.err
     __remove ngc$$.err
@@ -165,21 +164,25 @@ __MAKEDOTO() {
 #
 AC_CHECK_HEADERS () {
 
-    echo "/* AC_CHECK_HEADERS */" > ngc$$.c
-    for hdr in $*; do
-	echo "#include <$hdr>" >> ngc$$.c
+    AC_PROG_CPP
+
+    for __hdr in "$@"; do
+	(   echo "/* AC_CHECK_HEADERS */"
+	    echo "#include <${__hdr}>" ) > ngc$$.c
+
+	LOGN "looking for header $__hdr"
+
+	if $AC_CPP_FILTER ngc$$.c >/dev/null; then
+	    AC_DEFINE 'HAVE_'`echo $__hdr | $AC_UPPERCASE | tr './' '_'` 1
+	    rc=0
+	    LOG " (found)"
+	else
+	    rc=1
+	    LOG " (not found)"
+	fi
+	__remove ngc$$.c
     done
-    echo "int main() { }" >> ngc$$.c
-
-    LOGN "looking for header $hdr"
-
-    if __MAKEDOTO ngc$$.c; then
-	AC_DEFINE 'HAVE_'`echo $hdr | $AC_UPPERCASE | tr './' '_'` 1
-	rc=0
-    else
-	rc=1
-    fi
-    __remove ngc$$.c
+    # return code is only meaningful if one header is checked
     return $rc
 }
 
@@ -219,14 +222,14 @@ EOF
 
     LOGN "looking for the $B function"
 
-    if $AC_CC -o ngc$$ ngc$$.c $LIBS; then
+    if $AC_CC $AC_CFLAGS $AC_LDFLAGS -o ngc$$ ngc$$.c $LIBS; then
 	AC_DEFINE `echo ${2:-HAVE_$B} | $AC_UPPERCASE` 1
 	TLOG " (found)"
 	rc=0
     else
 	echo "offending command was:"
 	cat ngc$$.c
-	echo "$AC_CC -o ngc$$ ngc$$.c $LIBS"
+	echo "$AC_CC $AC_CFLAGS $AC_LDFLAGS -o ngc$$ ngc$$.c $LIBS"
 	TLOG " (not found)"
 	rc=1
     fi
@@ -295,7 +298,8 @@ EOF
     LOGN "looking for $type type"
 
     if __MAKEDOTO ngc$$.c; then
-	AC_DEFINE HAVE_TYPE_`echo ${type} | $AC_UPPERCASE`
+	AC_DEFINE HAVE_`echo ${type} | $AC_UPPERCASE`
+	AC_DEFINE HAVE_`echo ${type} | $AC_UPPERCASE`
 	rc=0
     else
 	rc=1
@@ -334,7 +338,8 @@ EOF
     LOGN "checking that struct $struct has a $field field"
 
     if __MAKEDOTO ngc$$.c; then
-	AC_DEFINE HAVE_`echo ${struct}_$field | $AC_UPPERCASE`
+	# HAVE_STRUCT_ is for Gnu configure compatability
+	AC_DEFINE HAVE_STRUCT_`echo ${struct}_$field | $AC_UPPERCASE`
 	rc=0
     else
 	rc=1
@@ -405,18 +410,18 @@ EOF
 
 	if [ "$CFLAGS" ]; then
 	    test "$CFLAGS" && echo "validating CFLAGS=${CFLAGS}"
-	    if $AC_CC $CFLAGS -o ngc$$.o ngc$$.c ; then
+	    if $AC_CC $CFLAGS -c -o ngc$$.o ngc$$.c ; then
 		AC_CFLAGS=${CFLAGS:-"-g"}
-		test "$CFLAGS" && echo "CFLAGS=\"${CFLAGS}\" are okay"
+		test "$CFLAGS" && TLOG "CFLAGS=\"${CFLAGS}\" are okay"
 	    elif [ "$CFLAGS" ]; then
-		echo "ignoring bogus CFLAGS=\"${CFLAGS}\""
+		TLOG "ignoring bogus CFLAGS=\"${CFLAGS}\""
 	    fi
 	else
 	    AC_CFLAGS=-g
 	fi
 	if [ "$LDFLAGS" ]; then
 	    test "$LDFLAGS" && echo "validating LDFLAGS=${LDFLAGS}"
-	    if $AC_CC $LDFLAGS -o ngc$$ ngc$$.o; then
+	    if $AC_CC $CFLAGS $LDFLAGS -o ngc$$ ngc$$.c; then
 		AC_LDFLAGS=${LDFLAGS:-"-g"}
 		test "$LDFLAGS" && TLOG "LDFLAGS=\"${LDFLAGS}\" are okay"
 	    elif [ "$LDFLAGS" ]; then
@@ -438,25 +443,6 @@ EOF
     __remove ngc$$ ngc$$.c ngc$$.o
 
     return $status
-}
-
-
-#
-# check for the existence of  __attribute__((__noreturn__))
-#
-AC_CHECK_NORETURN() {
-    AC_PROG_CC
-
-    echo "extern int noreturn  __attribute__((__noreturn__));" > ngc$$.c
-
-    TLOGN "Checking __attribute__((__noreturn__)) "
-    if $AC_CC -c ngc$$.c; then
-	TLOG "(yes)"
-	AC_DEFINE 'NORETURN' ' __attribute__((__noreturn__))'
-    else
-	TLOG "(no)"
-	AC_DEFINE 'NORETURN' ''
-    fi
 }
 
 
@@ -554,6 +540,7 @@ AC_INIT () {
     rm -f $$
 
     LOG "Configuring for [$1]"
+    _MK_LIBRARIAN=Y
 
     cat > "$__cwd"/config.h << EOF
 /*
@@ -567,11 +554,11 @@ AC_INIT () {
 EOF
 
     unset __share
-    if [ -d "$AC_PREFIX/share/man" ]; then
+    if [ -d $AC_PREFIX/share/man ]; then
 	for t in 1 2 3 4 5 6 7 8 9; do
-	    if [ -d "$AC_PREFIX/share/man/man$t" ]; then
+	    if [ -d $AC_PREFIX/share/man/man$t ]; then
 		__share=/share
-	    elif [ -d "$AC_PREFIX/share/man/cat$t" ]; then
+	    elif [ -d $AC_PREFIX/share/man/cat$t ]; then
 		__share=/share
 	    fi
 	done
@@ -579,7 +566,7 @@ EOF
 	__share=
     fi
 
-    if [ -d "$AC_PREFIX/libexec" ]; then
+    if [ -d $AC_PREFIX/libexec ]; then
 	__libexec=libexec
     else
 	__libexec=lib
@@ -595,7 +582,6 @@ EOF
     AC_CONFDIR=${AC_CONFDIR:-/etc}
 
     AC_PATH=${WITH_PATH:-$PATH}
-    AC_PROG_CC
     AC_PROG_CPP
     AC_PROG_INSTALL
 
@@ -613,32 +599,30 @@ EOF
 # usage: AC_LIBRARY function library [alternate ...]
 #
 AC_LIBRARY() {
-    SRC=$1
+    local SRC=$1
     shift
-
-    __acllibs=
-    __aclhdrs=
-
-    for x in "$@"; do
-	case X"$x" in
-	X-l*) __acllibs="$__acllibs $x" ;;
-	*)    __aclhdrs="$__aclhdrs $x" ;;
-	esac
-    done
 
     # first see if the function can be found in any of the
     # current libraries
-    AC_QUIET AC_CHECK_FUNCS $SRC $__aclhdrs && return 0
+    LOGN "Looking for the ${SRC} function"
+    if AC_QUIET AC_CHECK_FUNCS $SRC; then
+	AC_DEFINE HAVE_LIB`echo $1 | sed -e 's/-l//' | $AC_UPPERCASE`
+	LOG "(found)"
+	return 0
+    fi
 
-    # then search through the list of libraries
-    __libs="$LIBS"
-    for x in $__acllibs; do
+    # then search through the supplied list of libraries
+    local __libs="$LIBS"
+    for x in "$@"; do
 	LIBS="$__libs $x"
-	if AC_QUIET AC_CHECK_FUNCS $SRC $__aclhdrs; then
-	    AC_LIBS="$AC_LIBS $x"
+	if AC_QUIET AC_CHECK_FUNCS $SRC; then
+	    AC_DEFINE HAVE_LIB`echo $1 | sed -e 's/-l//' | $AC_UPPERCASE`
+	    LOG " (in $x)"
 	    return 0
 	fi
     done
+    LOG " (not found)"
+    LIBS="$__libs"	# reset LIBS if we couldn't find anything
     return 1
 }
 
@@ -669,13 +653,14 @@ AC_PROG_LEX() {
 	    return 1
 	fi
     fi
+    TLOG "($DEST)"
 
     if AC_LIBRARY yywrap -ll -lfl; then
-	TLOG "($DEST)"
 	return 0
+    else
+	TLOG "(no lex library found)"
+	return 1
     fi
-    TLOG "(no lex library found)"
-    return 1
 }
 
 
@@ -739,9 +724,9 @@ AC_PROG () {
 # AC_PROG_LN_S checks to see if ln exists, and, if so, if ln -s works
 #
 AC_PROG_LN_S () {
-    test "$AC_FIND_PROG" || AC_PROG_FIND
+    test "$PROG_FIND" || AC_PROG_FIND
 
-    test "$AC_FIND_PROG" || return 1
+    test "$PROG_LN_S" && return 0
     
     TLOGN "looking for \"ln -s\""
     DEST=`acLookFor ln`
@@ -749,7 +734,7 @@ AC_PROG_LN_S () {
     if [ "$DEST" ]; then
 	rm -f /tmp/b$$
 	$DEST -s /tmp/a$$ /tmp/b$$
-	if [ "`$AC_FIND_PROG /tmp/b$$ -type l -print`" ]; then
+	if [ "`$PROG_FIND /tmp/b$$ -type l -print`" ]; then
 	    TLOG " ($DEST)"
 	    echo "$DEST exists, and ln -s works"
 	    PROG_LN_S="$DEST -s"
@@ -776,10 +761,10 @@ AC_PROG_LN_S () {
 # variable
 #
 AC_PROG_FIND () {
-    if test -z "$AC_FIND_PROG"; then
+    if test -z "$PROG_FIND"; then
 	MF_PATH_INCLUDE FIND find
 	rc=$?
-	AC_FIND_PROG=$DEST
+	PROG_FIND=$CF_FIND
 	return $rc
     fi
     return 0
@@ -830,6 +815,26 @@ AC_TYPE_PID_T () {
 
     AC_CHECK_TYPE pid_t sys/types.h
     return $?
+}
+
+
+#
+# check for the existence of  __attribute__((__noreturn__))
+#
+AC_CHECK_NORETURN() {
+    AC_PROG_CC
+
+    echo "extern int noreturn  __attribute__((__noreturn__));" > ngc$$.c
+
+    TLOGN "Checking __attribute__((__noreturn__)) "
+    if $AC_CC -c ngc$$.c; then
+	TLOG "(yes)"
+	AC_DEFINE 'NORETURN' ' __attribute__((__noreturn__))'
+    else
+	TLOG "(no)"
+	AC_DEFINE 'NORETURN' ''
+    fi
+    rm -f ngc$$.o ngc$$.c
 }
 
 
@@ -889,6 +894,45 @@ AC_C_INLINE() {
 
 
 #
+# AC_WHATIS tries to print out the value of a macro
+#
+AC_WHATIS() {
+    MODE=$1	# what it should be (string,int,char)
+    shift
+    MACRO=$1	# the macro name
+    shift
+
+    case "$MODE" in
+    string)
+	__fmt='%s' ;;
+    int)
+	__fmt='%d' ;;
+    char)
+	__fmt='%c' ;;
+    *)  LOG "AC_WHATIS $MODE $MACRO -- mode isn't string, int, or char"
+	return 1 ;;
+    esac
+
+    (   echo '#include <stdio.h>'
+
+	for x in "$@"; do
+	    echo "#include <${x}>"
+	done
+
+	echo "main() { printf(\"${MACRO}=\\\"${__fmt}\\\"\\n\", ${MACRO}); }" )  > _ngc$$.c
+
+    if $AC_CC $AC_CFLAGS -o _ngc$$ _ngc$$.c; then
+	./_ngc$$
+	rc=0
+    else
+	rc=1
+    fi
+    rm -f _ngc$$ _ngc$$.c
+    return $rc
+}
+
+
+#
 # AC_SCALAR_TYPES checks to see if the compiler can generate 2 and 4 byte ints.
 #
 AC_SCALAR_TYPES () {
@@ -896,22 +940,10 @@ AC_SCALAR_TYPES () {
     rc=1
     LOGN "defining WORD & DWORD scalar types"
     
-# --- is this needed anymore? ---
 #    if AC_QUIET AC_CHECK_HEADERS WinDef.h; then
 #	# windows machine; BYTE, WORD, DWORD already
 #	# defined
-#
-#	for x in $@; do
-#	    case "$x" in
-#	    sub)AC_SUB DWORD DWORD
-#		AC_SUB WORD WORD
-#		AC_SUB BYTE BYTE
-#		;;
-#	    *)
-#		echo "#include <WinDef.h>" >> "$__cwd"/config.h
-#		;;
-#	    esac
-#	done
+#	echo "#include <WinDef.h>" >> "$__cwd"/config.h
 #	TLOG " (defined in WinDef.h)"
 #	return 0
 #    fi
@@ -929,6 +961,7 @@ say(char *w, char *v)
 			: "s:@%s@:%s:g\n", w, v);
 }
 
+int
 main(argc, argv)
 char **argv;
 {
@@ -944,33 +977,42 @@ char **argv;
     else if (sizeof v_int == 4)
 	say("DWORD", "unsigned int");
     else
-	exit(1);
+	return 1;
 
     if (sizeof v_int == 2)
 	say("WORD", "unsigned int");
     else if (sizeof v_short == 2)
 	say("WORD", "unsigned short");
     else
-	exit(2);
+	return 2;
+	
     say("BYTE", "unsigned char");
-    exit(0);
+    fprintf(stderr, "OK!");
+    return 0;
 }
 EOF
+
     if $AC_CC ngc$$.c -o ngc$$; then
-	while [ "$1" ]; do
-	    case "$1" in
-	    sub)if ./ngc$$ sub >> "$__cwd"/config.sub; then
-		    rc=0
-		fi;;
-	    *)  if ./ngc$$ >> "$__cwd"/config.h; then
-		    rc=0
-		fi ;;
-	    esac
-	    shift
-	done
+	if [ $# -gt 0 ]; then
+	    while [ "$1" ]; do
+		case "$1" in
+		sub)TLOGN "-sub"
+		    if ./ngc$$ sub >> "$__cwd"/config.sub; then
+			rc=0
+		    fi;;
+		*)  TLOGN "-$1"
+		    if ./ngc$$ >> "$__cwd"/config.h; then
+			rc=0
+		    fi ;;
+		esac
+		shift
+	    done
+	elif ./ngc$$ >> "$__cwd"/config.h; then
+	    rc=0
+	fi
 	if [ "$rc" != 0 ]; then
 	    if ./ngc$$ >> "$__cwd"/config.h; then
-		rc=1
+		rc=0
 	    fi
 	fi
     fi
@@ -984,42 +1026,37 @@ EOF
 
 
 #
-# quote a string if it has spaces in it
-#
-__ac_quote() {
-    
-    echo "$1" | sed -e 's/ /\\\\ /g'
-}
-
-#
 # AC_OUTPUT generates makefiles from makefile.in's
 #
 AC_OUTPUT () {
     
     cd "$__cwd"
-    AC_SUB 'LIBS'    "$AC_LIBS"
-    AC_SUB 'CONFIGURE_FILES' "$__config_files"
+    AC_SUB 'LIBS'    "$LIBS"
     
     if test "$__MACOS_DSYM"; then
 	# deal with extra OSX droppings, if they exist
-	AC_SUB 'GENERATED_FILES' "-r *.dSYM $*"
+	AC_SUB 'DISTCLEAN' 'rm -fr'
+	AC_SUB 'GENERATED_FILES' "*.dSYM $*"
     else
+	AC_SUB 'DISTCLEAN' 'rm -f'
 	AC_SUB 'GENERATED_FILES' "$*"
     fi
     
-    AC_SUB 'CC'      "$AC_CC"
-    AC_SUB 'CFLAGS'  "$AC_CFLAGS"
-    AC_SUB 'LDFLAGS' "$AC_LDFLAGS"
-    AC_SUB 'srcdir'  `__ac_quote "$AC_SRCDIR"`
-    AC_SUB 'prefix'  `__ac_quote "$AC_PREFIX"`
-    AC_SUB 'exedir'  `__ac_quote "$AC_EXECDIR"`
-    AC_SUB 'sbindir' `__ac_quote "$AC_SBINDIR"`
-    AC_SUB 'libdir'  `__ac_quote "$AC_LIBDIR"`
-    AC_SUB 'libexec' `__ac_quote "$AC_LIBEXEC"`
-    AC_SUB 'confdir' `__ac_quote "$AC_CONFDIR"`
-    AC_SUB 'mandir'  `__ac_quote "$AC_MANDIR"`
+    AC_SUB 'CC'       "$AC_CC"
+    AC_SUB 'CFLAGS'   "$AC_CFLAGS"
+    AC_SUB 'LDFLAGS'  "$AC_LDFLAGS"
+    AC_SUB 'CPPFLAGS' "$CPPFLAGS"
+    AC_SUB 'srcdir'   "$AC_SRCDIR"
+    AC_SUB 'prefix'   "$AC_PREFIX"
+    AC_SUB 'exedir'   "$AC_EXECDIR"
+    AC_SUB 'bindir'   "$AC_EXECDIR"
+    AC_SUB 'sbindir'  "$AC_SBINDIR"
+    AC_SUB 'libdir'   "$AC_LIBDIR"
+    AC_SUB 'libexec'  "$AC_LIBEXEC"
+    AC_SUB 'confdir'  "$AC_CONFDIR"
+    AC_SUB 'mandir'   "$AC_MANDIR"
 
-    if echo "$__config_files" | grep -v librarian.sh >/dev/null; then
+    if [ "$_MK_LIBRARIAN" ] && echo "$__config_files" | grep -v librarian.sh >/dev/null; then
 	# write a librarian that works with static libraries
 	if AC_PROG_LN_S ; then
 	    __dolink=$PROG_LN_S
@@ -1033,7 +1070,6 @@ AC_OUTPUT () {
 	AC_PROG ar
 	AC_PROG ranlib
 	AC_SUB LD_LIBRARY_PATH HERE
-
 	__config_files="$__config_files librarian.sh"
 	cat > librarian.sh << EOF
 #! /bin/sh
@@ -1045,19 +1081,30 @@ LIBRARY=\$1; shift
 VERSION=\$1; shift
 
 case "\$ACTION" in
-make)   ${PROG_AR} crv "\$LIBRARY.a" "\$@"
-	${PROG_RANLIB} "\$LIBRARY.a"
-	rm -f "\$LIBRARY"
-	${__dolink} "\$LIBRARY.a" "\$LIBRARY"
+make)   # first strip out any libraries that might
+	# be passed in on the object line
+	objs=
+	for x in "\$@"; do
+	    case "\$x" in
+	    -*) ;;
+	    *) objs="\$objs \$x" ;;
+	    esac
+	done
+	${PROG_AR} crv \$LIBRARY.a \$objs
+	${PROG_RANLIB} \$LIBRARY.a
+	rm -f \$LIBRARY
+	${__dolink} \$LIBRARY.a \$LIBRARY
 	;;
 files)  echo "\${LIBRARY}.a"
 	;;
-install)$PROG_INSTALL -m 644 "\${LIBRARY}.a" "\$1"
+install)$PROG_INSTALL -m 644 \${LIBRARY}.a \$1
 	;;
 esac
 EOF
+	chmod +x librarian.sh
     fi
-    chmod +x librarian.sh
+
+    AC_SUB 'CONFIGURE_FILES' "$__config_files"
 
     if [ -r config.sub ]; then
 	test "$AC_SED_PROG" || AC_PROG_SED
@@ -1070,7 +1117,7 @@ EOF
 	Q=\'
 	cat - > config.cmd << EOF
 #! /bin/sh
-${CC:+CC=${Q}${CC}${Q}} ${CFLAGS:+CFLAGS=${Q}${CFLAGS}${Q}} $ac_progname $ac_configure_command
+${CC:+CC=${Q}${CC}${Q}} ${CFLAGS:+CFLAGS=${Q}${CFLAGS}${Q}} ${LDFLAGS:+LDFLAGS=${Q}${LDFLAGS}${Q}} $ac_progname $ac_configure_command
 EOF
 	chmod +x config.cmd
 
@@ -1108,9 +1155,10 @@ AC_CHECK_FLOCK() {
 
 int main()
 {
-    int x = open("$$.c", O_RDWR, 0666);
-    int y = open("$$.c", O_RDWR, 0666);
+    int x = open("ngc$$.c", O_RDWR, 0666);
+    int y = open("ngc$$.c", O_RDWR, 0666);
 
+    alarm(1);
     if (flock(x, LOCK_EX) != 0)
 	exit(1);
     if (flock(y, LOCK_EX|LOCK_NB) == 0)
@@ -1122,7 +1170,7 @@ EOF
     LOGN "checking flock() sanity"
     HAS_FLOCK=0
     if $AC_CC -o ngc$$ ngc$$.c ; then
-	if ./flock ; then
+	if ./ngc$$ ; then
 	    LOG " (good)"
 	    HAS_FLOCK=1
 	    AC_DEFINE HAS_FLOCK
@@ -1171,15 +1219,15 @@ EOF
     if $AC_CC -o ngc$$ ngc$$.c; then
 	TLOG " (found)"
     elif $AC_CC -o ngc$$ ngc$$.c -lresolv; then
-	TLOG " (yes, needs -lresolv)"
-	AC_LIBS="$AC_LIBS -lresolv"
+	TLOG " (yes, with -lresolv)"
+	LIBS="$LIBS -lresolv"
     elif $AC_CC -DBIND_8_COMPAT -o ngc$$ ngc$$.c; then
-	TLOG " (fyes, needs BIND_8_COMPAT)"
+	TLOG " (yes, with BIND_8_COMPAT)"
 	AC_DEFINE BIND_8_COMPAT 1
     elif $AC_CC -DBIND_8_COMPAT -o ngc$$ ngc$$.c -lresolv; then
-	TLOG " (yes, needs BIND_8_COMPAT & -lresolv)"
+	TLOG " (yes, with BIND_8_COMPAT & -lresolv)"
+	LIBS="$LIBS -lresolv"
 	AC_DEFINE BIND_8_COMPAT 1
-	AC_LIBS="$AC_LIBS -lresolv"
     else
 	TLOG " (not found)"
 	__ACR_rc=1
@@ -1244,9 +1292,6 @@ int main()
     char *a = basename("/a/test");
     char *b = basename("/a/nother");
 
-    if ( a == 0 || b == 0 || a == b )
-	return 0;
-
     return (strcmp(a,b) != 0) ? 0 : 1;
 
 }
@@ -1306,21 +1351,21 @@ eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
 		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
 shift
 
-LIBNAME="\$LIBRARY.dylib"
-FULLNAME="\$LIBNAME"
+LIBNAME=\$LIBRARY.dylib
+FULLNAME=\$LIBNAME
 
 case "\$ACTION" in
 make)   FLAGS="$AC_CFLAGS -dynamiclib"
 	VFLAGS="-current_version \$VERSION -compatibility_version \$MAJOR"
 
 	rm -f \$LIBRARY
-	if $AC_CC \$FLAGS \$VFLAGS -o "\$FULLNAME" "\$@"; then
-	    $PROG_LN_S "\$FULLNAME" "\$LIBRARY"
+	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
+	    $PROG_LN_S \$FULLNAME \$LIBRARY
 	fi
 	;;
 files)  echo "\$FULLNAME"
 	;;
-install)$PROG_INSTALL -c "\$FULLNAME" "\$1"
+install)$PROG_INSTALL -c \$FULLNAME "\$1"
 	;;
 esac
 EOF
@@ -1351,26 +1396,26 @@ eval \`awk -F. '{ printf "MAJOR=%d\n", \$1;
 		  printf "VERSION=%d.%d.%d\n", \$1, \$2, \$3; }' \$1\`
 shift
 
-LIBNAME="\$LIBRARY.so"
-FULLNAME="\$LIBNAME.\$VERSION"
+LIBNAME=\$LIBRARY.so
+FULLNAME=\$LIBNAME.\$VERSION
 
 case "\$ACTION" in
 make)   FLAGS="$AC_CFLAGS -shared"
 	unset VFLAGS
 	test "$USE_SONAME" && VFLAGS="-Wl,-soname,\$LIBNAME.\$MAJOR"
 
-	rm -f "\$LIBRARY" "\$LIBNAME" "\$LIBNAME.\$MAJOR"
-	if $AC_CC \$FLAGS \$VFLAGS -o "\$FULLNAME" "\$@"; then
-	    $PROG_LN_S "\$FULLNAME" "\$LIBRARY"
-	    $PROG_LN_S "\$FULLNAME" "\$LIBNAME"
-	    $PROG_LN_S "\$FULLNAME" "\$LIBNAME.\$MAJOR"
+	rm -f \$LIBRARY \$LIBNAME \$LIBNAME.\$MAJOR
+	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
+	    $PROG_LN_S \$FULLNAME \$LIBRARY
+	    $PROG_LN_S \$FULLNAME \$LIBNAME
+	    $PROG_LN_S \$FULLNAME \$LIBNAME.\$MAJOR
 	fi
 	;;
 files)  echo "\$FULLNAME" "\$LIBNAME" "\$LIBNAME.\$MAJOR"
 	;;
-install)$PROG_INSTALL -c "\$FULLNAME" "\$1"
-	$PROG_LN_S -f "\$FULLNAME" "\$1/\$LIBNAME.\$MAJOR"
-	$PROG_LN_S -f "\$FULLNAME" "\$1/\$LIBNAME"
+install)$PROG_INSTALL -c \$FULLNAME "\$1"
+	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME.\$MAJOR
+	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME
 EOF
     test "$LDCONFIG" && echo '	'$LDCONFIG '"$1"' >> librarian.sh
     cat >> librarian.sh << EOF
@@ -1389,10 +1434,12 @@ AC_CC_SHLIBS () {
     AC_PROG_CC || AC_FAIL "Need a C compiler to build shared libraries"
     AC_PROG_LN_S || AC_FAIL "Need to be able to make symbolic links for shared libraries"
     AC_PROG_INSTALL || AC_FAIL "Need an install program to install shared libraries"
+    
     LOGN "checking whether the C compiler can build shared libraries "
 
     echo "int some_variable = 0;" > ngc$$.c 
 
+    _MK_LIBRARIAN=
     if uname -a | grep Darwin >/dev/null; then
 	# Claims to be macos?
 	if $AC_CC $AC_PICFLAG  -dynamiclib -o ngc$$.so ngc$$.c; then
@@ -1409,6 +1456,7 @@ AC_CC_SHLIBS () {
         LOG "(yes; -shared)"
 	__rc=0
     else
+	_MK_LIBRARIAN=Y
         LOG "(no)"
 	__rc=1
     fi
@@ -1513,11 +1561,20 @@ acCheckCPP () {
 FOO
 EOF
 
-    if $1 $2 ngc$$.c > ngc$$.o; then
+    good=
+    use_cflags=
+    if $1 $2 $AC_CFLAGS ngc$$.c > ngc$$.o; then
+	good=1
+	use_cflags=1
+    elif $1 $2 ngc$$.c > ngc$$.o; then
+	good=1
+    fi
+
+    if [ "$good" ]; then
 	if grep -v '#define' ngc$$.o | grep -s BAR >/dev/null; then
-	    echo "CPP=[$1], CPPFLAGS=[$2]"
+	    echo "CPP=[$1], CPP_PIPE=[$2${use_cflags:+ $AC_CFLAGS}]"
 	    AC_SUB 'CPP' "$1"
-	    AC_SUB 'CPPFLAGS' "$2"
+	    AC_CPP_FILTER="$1 $2${use_cflags:+ $AC_CFLAGS}"
 	    rm ngc$$.c ngc$$.o
 	    return 0
 	fi
@@ -1526,12 +1583,15 @@ EOF
     return 1
 }
 
-
 #
 # AC_PROG_CPP checks for cpp, then checks to see which CPPFLAGS are needed
 # to run it as a filter.
 #
 AC_PROG_CPP () {
+    test "$AC_CPP_FILTER" && return
+
+    AC_PROG_CC
+
     if [ "$AC_CPP_PROG" ]; then
 	DEST=$AC_CPP_PROG
     else
@@ -1543,6 +1603,12 @@ AC_PROG_CPP () {
 
     unset fail
     LOGN "Looking for cpp"
+    
+    if acCheckCPP "$AC_CC" -E; then
+	TLOG " (using \$CC -E as a cpp pipeline)"
+	return 0
+    fi
+    
     if [ "$DEST" ]; then
 	TLOGN " ($DEST)"
 	acCheckCPP $DEST "$CPPFLAGS" || \
@@ -1568,66 +1634,19 @@ AC_FAIL() {
     $__fail 1
 }
 
-
-#
-# __ac_config_sed; a C program to do escaping for AC_SUB
-__ac_config_sed() {
-
-
-    test -x config.sed && return
-
-    echo "generating config.sed"
-
-    AC_PROG_CC
-    
-cat > ngc$$.c << \EOF
-#include <stdio.h>
-
-int
-main(argc, argv)
-int argc;
-char **argv;
-{
-    char *p;
-    
-    if (argc != 3)
-	return 1;
-
-    printf("s;@%s@;", argv[1]);
-
-    for (p=argv[2]; *p; ++p) {
-	if ( *p == ';' )
-	    putchar('\\');
-	putchar(*p);
-    }
-
-    puts(";g");
-    return 0;
-}
-EOF
-
-    $AC_CC -o config.sed ngc$$.c
-    status=$?
-    rm -f ngc$$.c
-
-    if [ "$status" -eq 0 ]; then
-	__config_files="$__config_files config.sed"
-    else
-	AC_FAIL "Cannot generate config.sed helper program"
-    fi
-}
-
 #
 # AC_SUB writes a substitution into config.sub
 AC_SUB() {
-    
-    _target="$1"
-    shift
+    (   _target="$1"
+	shift
+	_subst=`echo "$*" | sed -e 's/;/\\;/g'`
+	echo "s;@$_target@;$_subst;g" ) >> "$__cwd"/config.sub
+}
 
-    echo "target=$_target, rest=$*"
-    
-    __ac_config_sed
-    ./config.sed "$_target" "$*" >> "$__cwd"/config.sub
+#
+# AC_TEXT writes arbitrary text into config.h
+AC_TEXT() {
+    echo "$@" >> "$__cwd"/config.h
 }
 
 #
