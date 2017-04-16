@@ -136,7 +136,7 @@ clean:
 	rm -f $(MKDLIB) `./librarian.sh files $(MKDLIB) VERSION`
 
 distclean spotless: clean
-	rm -f @GENERATED_FILES@ @CONFIGURE_FILES@ ./mktags ./blocktags ./librarian.sh
+	@DISTCLEAN@ @GENERATED_FILES@ @CONFIGURE_FILES@ ./mktags ./blocktags
 
 Csio.o: Csio.c cstring.h amalloc.h config.h markdown.h
 amalloc.o: amalloc.c
