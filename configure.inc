@@ -42,7 +42,16 @@ ac_standard="--src=DIR		where the source lives (.)
 --libexecdir=DIR	where to put private executables
 --mandir=DIR		where to put manpages"
 
-__fail=exit
+
+# remove files created by configure on abend
+#
+AC_EXIT() {
+    rm -f $__config_files
+    exit ${1:-1}
+}
+
+__fail=AC_EXIT
+
 
 if dirname B/A 2>/dev/null >/dev/null; then
 __ac_dirname() {
@@ -299,7 +308,6 @@ EOF
 
     if __MAKEDOTO ngc$$.c; then
 	AC_DEFINE HAVE_`echo ${type} | $AC_UPPERCASE`
-	AC_DEFINE HAVE_`echo ${type} | $AC_UPPERCASE`
 	rc=0
     else
 	rc=1
@@ -515,7 +523,7 @@ MF_PATH_INCLUDE () {
 # and fd 5 points to what used to be fd 1
 #
 AC_INIT () {
-    __config_files="config.cmd config.sub config.h config.mak config.log"
+    __config_files="config.cmd config.sub config.h config.mak"
     rm -f $__config_files
     __cwd=`pwd`
     exec 5>&1 1>"$__cwd"/config.log 2>&1
@@ -996,12 +1004,10 @@ EOF
 	if [ $# -gt 0 ]; then
 	    while [ "$1" ]; do
 		case "$1" in
-		sub)TLOGN "-sub"
-		    if ./ngc$$ sub >> "$__cwd"/config.sub; then
+		sub)if ./ngc$$ sub >> "$__cwd"/config.sub; then
 			rc=0
 		    fi;;
-		*)  TLOGN "-$1"
-		    if ./ngc$$ >> "$__cwd"/config.h; then
+		*)  if ./ngc$$ >> "$__cwd"/config.h; then
 			rc=0
 		    fi ;;
 		esac
@@ -1104,7 +1110,7 @@ EOF
 	chmod +x librarian.sh
     fi
 
-    AC_SUB 'CONFIGURE_FILES' "$__config_files"
+    AC_SUB 'CONFIGURE_FILES' "$__config_files config.log"
 
     if [ -r config.sub ]; then
 	test "$AC_SED_PROG" || AC_PROG_SED
@@ -1383,6 +1389,17 @@ __AC_ELF_LIBRARIAN() {
 	USE_SONAME=T
     fi
     LDCONFIG=`AC_PATH=/sbin:/usr/sbin:/usr/local/sbin acLookFor ldconfig`
+
+    if [ "$LDCONFIG" ]; then
+	case `uname -s 2>/dev/null | $AC_UPPERCASE` in
+	*BSD)	# *BSD ldconfig, when passed a directory, blows away the
+		# ld.so hints file and replaces it with one that's just
+		# the files in the library.   It needs a `-m` flag to
+		# tell it to merge the new entries with the old
+		LDCONFIG="$LDCONFIG -m" ;;
+	esac
+    fi
+    
     __config_files="$__config_files librarian.sh"
     cat > librarian.sh << EOF
 #! /bin/sh
@@ -1528,7 +1545,7 @@ AC_PROG_INSTALL () {
     fi
 
     __config_files="$__config_files config.md"
-    AC_SUB 'INSTALL_DIR' "./config.md"
+    AC_SUB 'INSTALL_DIR' "$__cwd/config.md"
     echo "#! /bin/sh"                                   > ""$__cwd"/config.md"
     echo "# script generated" `date` "by configure.sh" >> ""$__cwd"/config.md"
     echo                                               >> ""$__cwd"/config.md"
@@ -1671,7 +1688,7 @@ char **argv;
 }
 EOF
 
-    if $AC_CC -o config.sed ngc$$.c ; then
+    if $AC_CC -o config.sed ngc$$.c; then
 	rm -f ngc$$.c
 	__config_files="$__config_files config.sed"
     else
