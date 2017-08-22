@@ -32,9 +32,7 @@ install: $(PGMS) $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR) $(D
 	@INSTALL_PROGRAM@ $(PGMS) $(DESTDIR)$(BINDIR)
 	./librarian.sh install libmarkdown VERSION $(DESTDIR)$(LIBDIR)
 	@INSTALL_DATA@ mkdio.h $(DESTDIR)$(INCDIR)
-
-@MK_PKGCONFIG@$(DESTDIR)$(PKGDIR)/$(MKDLIB).pc: $(MKDLIB).pc $(DESTDIR)$(PKGDIR)
-@MK_PKGCONFIG@	@INSTALL_DATA@ $(MKDLIB).pc $(DESTDIR)$(PKGDIR)
+	@MK_PKGCONFIG@@INSTALL_DATA@ $(MKDLIB).pc $(DESTDIR)$(PKGDIR)
 
 install.everything: install install.samples install.man
 
