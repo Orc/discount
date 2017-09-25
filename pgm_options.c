@@ -109,7 +109,7 @@ show_flags(int byname, int verbose)
 }
     
 
-int
+char *
 set_flag(mkd_flag_t *flags, char *optionstring)
 {
     int i;
@@ -140,7 +140,7 @@ set_flag(mkd_flag_t *flags, char *optionstring)
 		*flags &= ~opts[i].flag;
 	}
 	else
-	    return 0;
+	    return arg;
     }
-    return 1;
+    return 0;
 }

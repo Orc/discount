@@ -137,8 +137,8 @@ main(int argc, char **argv)
 			show_flags(1, version);
 			exit(0);
 		    }
-		    else if ( !set_flag(&flags, hoptarg(&blob)) )
-			complain("unknown option <%s>", hoptarg(&blob));
+		    else if ( q=set_flag(&flags, hoptarg(&blob)) )
+			complain("unknown option <%s>", q);
 		    break;
 	case 'G':   github_flavoured = 1;
 		    break;
