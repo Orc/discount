@@ -538,6 +538,7 @@ char **argv;
     int force = 0;
     MMIOT *doc;
     struct stat sourceinfo;
+    char *q;
 
     struct h_opt *opt;
     struct h_context blob;
@@ -574,8 +575,8 @@ char **argv;
 			show_flags(1,0);
 			exit(0);
 		    }
-		    else if ( !set_flag(&flags, hoptarg(&blob)) )
-			fprintf(stderr,"%s: unknown option <%s>", pgm, hoptarg(&blob));
+		    else if ( q = set_flag(&flags, hoptarg(&blob)) )
+			fprintf(stderr,"%s: unknown option <%s>", pgm, q);
 		    break;		    
 	case 'o':   output = hoptarg(&blob);
 		    break;

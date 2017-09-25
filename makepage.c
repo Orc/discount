@@ -66,8 +66,8 @@ char **argv;
 			show_flags(1,version);
 			exit(0);
 		    }
-		    else if ( !set_flag(&flags, hoptarg(&blob)) )
-			fprintf(stderr, "unknown option <%s>\n", hoptarg(&blob));
+		    else if ( q = set_flag(&flags, hoptarg(&blob)) )
+			fprintf(stderr, "unknown option <%s>\n", q);
 		    break;
 	}
     }
