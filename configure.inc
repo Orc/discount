@@ -1528,7 +1528,7 @@ AC_PROG_INSTALL () {
     # see if we can strip binaries
     echo 'main() { puts("hello, sailor!"); }' > ngc$$.c
     if $AC_CC -o ngc$$ ngc$$.c; then
-	if $PROG_INSTALL -s -m ngc$$ inst$$; then
+	if $PROG_INSTALL -s -m 444 ngc$$ inst$$; then
 	    _strip="-s"
 	else
 	    unset _strip
