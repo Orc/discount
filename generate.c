@@ -651,11 +651,14 @@ extra_linky(MMIOT *f, Cstring text, Footnote *ref)
 static int
 safelink(Cstring link)
 {
-    char *p = T(link);
-    char *colon = memchr(p, ':', S(link));
+    char *p, *colon;
 
-    if ( colon == 0 )	/* no protocol specified: safe */
+    if ( T(link) == 0 )	/* no link; safe */
 	return 1;
+
+    p = T(link);
+    if ( (colon = memchr(p, ':', S(link))) == 0 )
+	return 1; /* no protocol specified: safe */
 
     if ( !isalpha(*p) )	/* protocol/method is [alpha][alnum or '+.-'] */
 	return 1;
