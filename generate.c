@@ -644,6 +644,29 @@ extra_linky(MMIOT *f, Cstring text, Footnote *ref)
 } /* extra_linky */
 
 
+
+/* check a url (or url fragment to see that it begins with a known good
+ * protocol (or no protocol at all)
+ */
+static int
+safelink(Cstring link)
+{
+    char *p = T(link);
+    char *colon = memchr(p, ':', S(link));
+
+    if ( colon == 0 )	/* no protocol specified: safe */
+	return 1;
+
+    if ( !isalpha(*p) )	/* protocol/method is [alpha][alnum or '+.-'] */
+	return 1;
+    while ( ++p < colon )
+	if ( !(isalnum(*p) || *p == '.' || *p == '+' || *p == '-') )
+	    return 1;
+
+    return isautoprefix(T(link), S(link));
+}
+
+
 /* print out a linky (or fail if it's Not Allowed)
  */
 static int
@@ -658,9 +681,7 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	if ( f->flags & (MKD_NO_EXT|MKD_SAFELINK) )
 	    return 0;
     }
-    else if ( (f->flags & MKD_SAFELINK) && T(ref->link)
-				        && (T(ref->link)[0] != '/')
-				        && !isautoprefix(T(ref->link), S(ref->link)) )
+    else if ( (f->flags & MKD_SAFELINK) && !safelink(ref->link) )
 	/* if MKD_SAFELINK, only accept links that are local or
 	 * a well-known protocol
 	 */
@@ -1873,4 +1894,3 @@ mkd_document(Document *p, char **res)
     }
     return EOF;
 }
-
