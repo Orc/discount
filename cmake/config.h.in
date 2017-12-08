@@ -1,6 +1,6 @@
 /*
  * Pre-digested configuration header for Windows.
- * Generated from config.h.in.
+ * Generated from cmake/config.h.in.
  * Tested with MSVC and MinGW.
  * File prototype: msvc/config.h.vc.
  */
@@ -46,14 +46,15 @@
 #define inline
 #endif /* _MSC_VER >= 1500 */
 
+#endif /* _MSC_VER */
+
 #ifndef strncasecmp
 #include <string.h>
-#define bzero(p, n) memset(p, 0, n)
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
 #endif /* strncasecmp */
 
-#endif /* _MSC_VER */
+#define bzero(p, n) memset(p, 0, n)
 
 /*
  * Beware of conflicts with <Windows.h>, which typedef's these names.
