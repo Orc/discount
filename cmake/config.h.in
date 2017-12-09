@@ -1,0 +1,81 @@
+/*
+ * Pre-digested configuration header for Windows.
+ * Generated from cmake/config.h.in.
+ * Tested with MSVC and MinGW.
+ * File prototype: msvc/config.h.vc.
+ */
+
+#ifndef _CONFIG_D
+#define _CONFIG_D 1
+
+#ifndef WIN32
+#error Use this header on Windows only.
+#endif
+
+#define OS_WIN32 1
+
+/*
+ * `discount` feature macros - we want them all!
+ */
+#ifndef WITH_ID_ANCHOR
+#define WITH_ID_ANCHOR 1
+#endif
+#ifndef WITH_FENCED_CODE
+#define WITH_FENCED_CODE 1
+#endif
+#ifndef WITH_GITHUB_TAGS
+#define WITH_GITHUB_TAGS 1
+#endif
+#ifndef USE_DISCOUNT_DL
+#define USE_DISCOUNT_DL 1
+#endif
+#ifndef USE_EXTRA_DL
+#define USE_EXTRA_DL 1
+#endif
+
+#ifdef _MSC_VER
+
+/*
+ * The Visual C++ "C" compiler has a `__inline` keyword implemented
+ * in Visual Studio 2008 and later, see
+ * <http://msdn.microsoft.com/de-de/library/cx3b23a3%28v=vs.90%29.aspx>
+ */
+#if _MSC_VER >= 1500 /* VC 9.0, MSC_VER 15, Visual Studio 2008 */
+#define inline __inline
+#else
+#define inline
+#endif /* _MSC_VER >= 1500 */
+
+#endif /* _MSC_VER */
+
+#ifndef strncasecmp
+#include <string.h>
+#define strcasecmp _stricmp
+#define strncasecmp _strnicmp
+#endif /* strncasecmp */
+
+#define bzero(p, n) memset(p, 0, n)
+
+/*
+ * Beware of conflicts with <Windows.h>, which typedef's these names.
+ */
+#ifndef WINVER
+#define DWORD @DWORD@
+#define WORD  @WORD@
+#define BYTE  @BYTE@
+#endif
+
+#define HAVE_PWD_H 0
+#define HAVE_GETPWUID 0
+#define HAVE_SRANDOM 0
+#define INITRNG(x) srand((unsigned int)x)
+#define HAVE_BZERO 0
+#define HAVE_RANDOM 0
+#define COINTOSS() (rand()&1)
+#define HAVE_STRCASECMP 1
+#define HAVE_STRNCASECMP 1
+#define HAVE_FCHDIR 0
+#define TABSTOP @TABSTOP@
+#define HAVE_MALLOC_H 0
+
+#endif /* _CONFIG_D */
