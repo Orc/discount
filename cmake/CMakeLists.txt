@@ -11,6 +11,12 @@ set(${PROJECT_NAME}_WITH_TABSTOPS "4" CACHE STRING
     "Set tabstops to N characters (default is 4)")
 set(TABSTOP "${${PROJECT_NAME}_WITH_TABSTOPS}")
 
+set(${PROJECT_NAME}_MAKE_INSTALL ON CACHE BOOL
+    "Set to OFF to disable install rules (default is ON)")
+
+set(${PROJECT_NAME}_INSTALL_SAMPLES OFF CACHE BOOL
+    "Set to ON to install sample programs (default is OFF)")
+
 # Types detection (from configure.inc: AC_SCALAR_TYPES ())
 include(CheckTypeSize)
 check_type_size("unsigned long" SIZEOF_ULONG BUILTIN_TYPES_ONLY)
@@ -105,5 +111,46 @@ add_executable(makepage
     $<TARGET_OBJECTS:common>)
 
 target_link_libraries(makepage PRIVATE libmarkdown)
+
+if(${PROJECT_NAME}_MAKE_INSTALL)
+    string(TOLOWER ${PROJECT_NAME} _PACKAGE_NAME)
+    include(GNUInstallDirs)
+    if(NOT DEFINED CMAKE_INSTALL_CMAKEDIR)
+        set(CMAKE_INSTALL_CMAKEDIR
+            "${CMAKE_INSTALL_LIBDIR}/cmake/${_PACKAGE_NAME}"
+            CACHE STRING "CMake packages")
+    endif()
+    install(FILES "${_ROOT}/mkdio.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+    target_include_directories(libmarkdown INTERFACE
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
+    set(_TARGETS libmarkdown markdown)
+    if(${PROJECT_NAME}_INSTALL_SAMPLES)
+        list(APPEND _TARGETS mkd2html makepage)
+    endif()
+    install(TARGETS ${_TARGETS} EXPORT ${_PACKAGE_NAME}-targets
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+    install(EXPORT ${_PACKAGE_NAME}-targets
+        NAMESPACE ${_PACKAGE_NAME}::
+        DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+    include(CMakePackageConfigHelpers)
+    write_basic_package_version_file(
+      "${CMAKE_CURRENT_BINARY_DIR}/${_PACKAGE_NAME}-config-version.cmake"
+      VERSION ${${PROJECT_NAME}_VERSION}
+      COMPATIBILITY AnyNewerVersion
+    )
+    configure_file("${CMAKE_CURRENT_LIST_DIR}/discount-config.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/${_PACKAGE_NAME}-config.cmake"
+        @ONLY)
+    install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/${_PACKAGE_NAME}-config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${_PACKAGE_NAME}-config-version.cmake"
+        DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
+    unset(_TARGETS)
+    unset(_PACKAGE_NAME)
+endif()
 
 unset(_ROOT)
