@@ -17,6 +17,14 @@ set(${PROJECT_NAME}_MAKE_INSTALL ON CACHE BOOL
 set(${PROJECT_NAME}_INSTALL_SAMPLES OFF CACHE BOOL
     "Set to ON to install sample programs (default is OFF)")
 
+# Check headers
+include(CheckIncludeFile)
+check_include_file(libgen.h HAVE_LIBGEN_H)
+check_include_file(pwd.h HAVE_PWD_H)
+check_include_file(alloca.h HAVE_ALLOCA_H)
+check_include_file(malloc.h HAVE_MALLOC_H)
+check_include_file(sys/stat.h HAVE_STAT)
+
 # Types detection (from configure.inc: AC_SCALAR_TYPES ())
 include(CheckTypeSize)
 check_type_size("unsigned long" SIZEOF_ULONG BUILTIN_TYPES_ONLY)
@@ -41,6 +49,50 @@ endif()
 
 set(BYTE "unsigned char")
 
+# Check symbols
+include(CheckSymbolExists)
+foreach(_symbol
+        bzero
+        strcasecmp _stricmp
+        strncasecmp _strnicmp)
+    string(TOUPPER ${_symbol} _SYMBOL)
+    check_symbol_exists(${_symbol} string.h HAVE_${_SYMBOL})
+endforeach()
+check_symbol_exists(random stdlib.h HAVE_RANDOM)
+check_symbol_exists(srandom stdlib.h HAVE_SRANDOM)
+check_symbol_exists(getpwuid pwd.h HAVE_GETPWUID)
+check_symbol_exists(basename libgen.h HAVE_BASENAME)
+check_symbol_exists(fchdir unistd.h HAVE_FCHDIR)
+if(HAVE_STAT)
+    check_symbol_exists(S_ISCHR sys/stat.h HAVE_S_ISCHR)
+    check_symbol_exists(S_ISFIFO sys/stat.h HAVE_S_ISFIFO)
+    check_symbol_exists(S_ISSOCK sys/stat.h HAVE_S_ISSOCK)
+endif()
+
+if(NOT HAVE_BZERO)
+    set(DEFINE_BZERO "#define bzero(p, n) memset(p, 0, n)")
+endif()
+
+if(NOT HAVE_STRCASECMP)
+    if(HAVE__STRICMP)
+        set(DEFINE_STRCASECMP "#define strcasecmp _stricmp")
+    else()
+        set(DEFINE_STRCASECMP "#error The symbol strcasecmp is not defined.")
+    endif()
+endif()
+
+if(NOT HAVE_STRNCASECMP)
+    if(HAVE__STRNICMP)
+        set(DEFINE_STRNCASECMP "#define strncasecmp _strnicmp")
+    else()
+        set(DEFINE_STRNCASECMP "#error The symbol strncasecmp is not defined.")
+    endif()
+endif()
+
+if(NOT HAVE_S_ISCHR OR NOT HAVE_S_ISFIFO OR NOT HAVE_S_ISSOCK)
+    set(HAVE_STAT "")
+endif()
+
 configure_file(config.h.in
     "${_ROOT}/config.h"
     @ONLY)
@@ -61,7 +113,7 @@ include_directories("${_ROOT}")
 add_executable(mktags
     "${_ROOT}/mktags.c")
 
-add_custom_command(OUTPUT blocktags
+add_custom_command(OUTPUT "${_ROOT}/blocktags"
     COMMAND mktags > blocktags
     WORKING_DIRECTORY "${_ROOT}")
 
