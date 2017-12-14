@@ -1,18 +1,12 @@
 /*
- * Pre-digested configuration header for Windows.
+ * Pre-digested configuration header.
  * Generated from cmake/config.h.in.
- * Tested with MSVC and MinGW.
+ * Tested with MSVC, MinGW on Windows and with GCC on Linux.
  * File prototype: msvc/config.h.vc.
  */
 
 #ifndef _CONFIG_D
 #define _CONFIG_D 1
-
-#ifndef WIN32
-#error Use this header on Windows only.
-#endif
-
-#define OS_WIN32 1
 
 /*
  * `discount` feature macros - we want them all!
@@ -48,13 +42,9 @@
 
 #endif /* _MSC_VER */
 
-#ifndef strncasecmp
-#include <string.h>
-#define strcasecmp _stricmp
-#define strncasecmp _strnicmp
-#endif /* strncasecmp */
-
-#define bzero(p, n) memset(p, 0, n)
+@DEFINE_BZERO@
+@DEFINE_STRCASECMP@
+@DEFINE_STRNCASECMP@
 
 /*
  * Beware of conflicts with <Windows.h>, which typedef's these names.
@@ -65,17 +55,23 @@
 #define BYTE  @BYTE@
 #endif
 
-#define HAVE_PWD_H 0
-#define HAVE_GETPWUID 0
-#define HAVE_SRANDOM 0
+#cmakedefine HAVE_PWD_H 1
+#cmakedefine HAVE_GETPWUID 1
+
+#cmakedefine HAVE_LIBGEN_H 1
+#cmakedefine HAVE_BASENAME 1
+
+#cmakedefine HAVE_RANDOM 1
+#cmakedefine HAVE_SRANDOM 1
+
 #define INITRNG(x) srand((unsigned int)x)
-#define HAVE_BZERO 0
-#define HAVE_RANDOM 0
 #define COINTOSS() (rand()&1)
-#define HAVE_STRCASECMP 1
-#define HAVE_STRNCASECMP 1
-#define HAVE_FCHDIR 0
+
+#cmakedefine HAVE_FCHDIR 1
+#cmakedefine HAVE_ALLOCA_H 1
+#cmakedefine HAVE_MALLOC_H 1
+#cmakedefine HAVE_STAT 1
+
 #define TABSTOP @TABSTOP@
-#define HAVE_MALLOC_H 0
 
 #endif /* _CONFIG_D */
