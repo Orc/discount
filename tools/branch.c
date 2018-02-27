@@ -8,6 +8,7 @@ main(argc, argv)
 int argc;
 char **argv;
 {
+#if HAS_GIT
     FILE * pipe;
 
     char line[1024];
@@ -23,5 +24,6 @@ char **argv;
 	    printf("\"(%s)\"", line);
     }
     pclose(pipe);
+#endif
     return 0;
 }
