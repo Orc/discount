@@ -112,7 +112,37 @@ AC_CHECK_BASENAME
 AC_CHECK_ALLOCA
 
 AC_CHECK_HEADERS sys/types.h pwd.h && AC_CHECK_FUNCS getpwuid
-AC_CHECK_HEADERS sys/stat.h && AC_CHECK_FUNCS stat
+if AC_CHECK_HEADERS sys/stat.h && AC_CHECK_FUNCS stat; then
+
+# need to check some of the S_ISxxx stat macros, because they may not
+# exist (for notspecial.c)
+
+cat > ngc$$.c << EOF
+#include <sys/stat.h>
+
+issock(f)
+char *f;
+{
+   struct stat info;
+
+    if ( stat(f, &info) != 0 )
+	return 1;
+
+    return MACRO(info.st_mode);
+}
+EOF
+    LOGN "special file macros in sys/stat.h:"
+    _none="none"
+    for x in ISSOCK ISCHR ISFIFO; do
+	if $AC_CC -DMACRO=S_$x -c ngc$$.c; then
+	    LOGN " S_${x}"
+	    AC_DEFINE "HAS_${x}" '1'
+	    unset _none
+	fi
+    done
+    LOG "${_none}."
+    rm -f ngc$$.c ngc$$.o
+fi
 
 if AC_CHECK_FUNCS srandom; then
     AC_DEFINE 'INITRNG(x)' 'srandom((unsigned int)x)'
