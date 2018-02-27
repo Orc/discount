@@ -6,7 +6,7 @@
 
 #include "config.h"
 
-#if HAVE_STAT && HAS_ISCHR && HAS_ISSOCK && HAS_ISSOCK
+#if HAVE_STAT && HAS_ISCHR && HAS_ISFIFO && HAS_ISSOCK
 #include <sys/stat.h>
 
 int
