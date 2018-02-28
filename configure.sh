@@ -153,7 +153,9 @@ else
     AC_DEFINE 'INITRNG(x)' '(void)1'
 fi
 
-AC_CHECK_FUNCS 'memset((char*)0,0,0)' ||  AC_FAIL "$TARGET requires memset"
+AC_CHECK_FUNCS 'memset((char*)0,0,0)' 'string.h' || \
+	    AC_CHECK_FUNCS 'memset((char*)0,0,0)' || \
+		      AC_FAIL "$TARGET requires memset"
 
 if AC_CHECK_FUNCS random; then
     AC_DEFINE 'COINTOSS()' '(random()&1)'
