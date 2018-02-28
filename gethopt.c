@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include "gethopt.h"
-#include "config.h" /* for bzero() macro on systems that don't have it */
 
 
 void
@@ -16,7 +15,7 @@ struct h_context *ctx;
 int argc;
 char **argv;
 {
-    bzero(ctx, sizeof *ctx);
+    memset(ctx, 0, sizeof *ctx);
     ctx->argc = argc;
     ctx->argv = argv;
     ctx->optind = 1;
