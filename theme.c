@@ -18,9 +18,6 @@
 #if defined(HAVE_BASENAME) && defined(HAVE_LIBGEN_H)
 #  include <libgen.h>
 #endif
-#if defined(HAVE_ALLOCA_H)
-#  include <alloca.h>
-#endif
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -39,7 +36,7 @@
 #include "gethopt.h"
 
 char *pgm = "theme";
-char *output = 0;
+char *output_file = 0;
 char *pagename = 0;
 char *root = 0;
 int   everywhere = 0;	/* expand all <?theme elements everywhere */
@@ -578,7 +575,7 @@ char **argv;
 		    else if ( q = set_flag(&flags, hoptarg(&blob)) )
 			fprintf(stderr,"%s: unknown option <%s>", pgm, q);
 		    break;		    
-	case 'o':   output = hoptarg(&blob);
+	case 'o':   output_file = hoptarg(&blob);
 		    break;
 	case 'V':   printf("theme+discount %s\n", markdown_version);
 		    exit(0);
@@ -608,30 +605,33 @@ char **argv;
 		fail("can't open either %s or %s", argv[0], source);
 	}
 
-	if ( !output ) {
+	if ( !output_file ) {
 	    char *p, *q;
-	    output = alloca(strlen(source) + strlen(".html") + 1);
 
-	    strcpy(output, source);
+	    
+	    if ( (output_file = malloc(strlen(source) + strlen(".html") + 1)) == 0 )
+		fail("out of memory allocating output file name buffer");
 
-	    if (( p = strchr(output, '/') ))
+	    strcpy(output_file, source);
+
+	    if (( p = strchr(output_file, '/') ))
 		q = strrchr(p+1, '.');
 	    else
-		q = strrchr(output, '.');
+		q = strrchr(output_file, '.');
 
 	    if ( q )
 		*q = 0;
 	    else
-		q = output + strlen(output);
+		q = output_file + strlen(output_file);
 
 	    strcat(q, ".html");
 	}
     }
-    if ( output && strcmp(output, "-") ) {
-	if ( force && notspecial(output) )
-	    unlink(output);
-	if ( !freopen(output, "w", stdout) ) {
-	    fail("can't write to %s", output);
+    if ( output_file && strcmp(output_file, "-") ) {
+	if ( force && notspecial(output_file) )
+	    unlink(output_file);
+	if ( !freopen(output_file, "w", stdout) ) {
+	    fail("can't write to %s", output_file);
 	}
     }
 
