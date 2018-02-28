@@ -121,12 +121,12 @@ if AC_CHECK_HEADERS sys/stat.h && AC_CHECK_FUNCS stat; then
 cat > ngc$$.c << EOF
 #include <sys/stat.h>
 
-issock(f)
-char *f;
+main(argc, argv)
+char **argv;
 {
    struct stat info;
 
-    if ( stat(f, &info) != 0 )
+    if ( stat(argv[0], &info) != 0 )
 	return 1;
 
     return MACRO(info.st_mode);
@@ -135,7 +135,7 @@ EOF
     LOGN "special file macros in sys/stat.h:"
     _none="none"
     for x in ISSOCK ISCHR ISFIFO; do
-	if $AC_CC -DMACRO=S_$x -c ngc$$.c; then
+	if $AC_CC -DMACRO=S_$x -o ngc$$.o  ngc$$.c; then
 	    LOGN " S_${x}"
 	    AC_DEFINE "HAS_${x}" '1'
 	    unset _none
