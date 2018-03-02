@@ -142,7 +142,7 @@ EOF
 	fi
     done
     LOG "${_none}."
-    rm -f ngc$$.c ngc$$.o
+    __remove ngc$$.o ngc$$.c
 fi
 
 if AC_CHECK_FUNCS srandom; then
