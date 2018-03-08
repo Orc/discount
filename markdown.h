@@ -4,21 +4,6 @@
 #include "config.h"
 #include "cstring.h"
 
-/* reference-style links (and images) are stored in an array
- * of footnotes.
- */
-typedef struct footnote {
-    Cstring tag;		/* the tag for the reference link */
-    Cstring link;		/* what this footnote points to */
-    Cstring title;		/* what it's called (TITLE= attribute) */
-    int height, width;		/* dimensions (for image link) */
-    int dealloc;		/* deallocation needed? */
-    int refnumber;
-    int flags;
-#define EXTRA_BOOKMARK	0x01
-#define REFERENCED	0x02
-} Footnote;
-
 /* each input line is read into a Line, which contains the line,
  * the offset of the first non-space character [this assumes 
  * that all tabs will be expanded to spaces!], and a pointer to
@@ -59,6 +44,23 @@ typedef struct paragraph {
 } Paragraph;
 
 enum { ETX, SETEXT };	/* header types */
+
+/* reference-style links (and images) are stored in an array
+ * of footnotes.
+ */
+typedef struct footnote {
+    Cstring tag;		/* the tag for the reference link */
+    Cstring link;		/* what this footnote points to */
+    Cstring title;		/* what it's called (TITLE= attribute) */
+    Line *text;			/* EXTRA_FOOTNOTE content */
+    
+    int height, width;		/* dimensions (for image link) */
+    int dealloc;		/* deallocation needed? */
+    int refnumber;
+    int flags;
+#define EXTRA_FOOTNOTE	0x01
+#define REFERENCED	0x02
+} Footnote;
 
 
 typedef struct block {

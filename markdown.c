@@ -1021,20 +1021,36 @@ addfootnote(Line *p, MMIOT* f)
     CREATE(foot->tag);
     CREATE(foot->link);
     CREATE(foot->title);
+    foot->text = 0;
     foot->flags = foot->height = foot->width = 0;
 
+    /* keep the footnote label */
     for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
 	EXPAND(foot->tag) = T(p->text)[j];
-
     EXPAND(foot->tag) = 0;
     S(foot->tag)--;
+
+    /* consume the closing ]: */
     j = nextnonblank(p, j+2);
 
     if ( (f->flags & MKD_EXTRA_FOOTNOTE) && (T(foot->tag)[0] == '^') ) {
-	/* need to consume all lines until non-indented block? */
-	while ( j < S(p->text) )
-	    EXPAND(foot->title) = T(p->text)[j++];
-	goto skip_to_end;
+	/* markdown extra footnote: All indented lines past this point;
+	 * the first line includes the footnote reference, so we need to
+	 * snip that out as we go.
+	 */
+	foot->flags |= EXTRA_FOOTNOTE;
+	foot->text = p;
+	CLIP(p->text, 0, j);
+
+	while ( p && p->next && (p->next->dle > 0) )
+	    p = p->next;
+
+	if ( p ) {
+	    np = p->next;
+	    p->next = 0;
+	    return np;
+	}
+	return 0;
     }
 
     while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
@@ -1076,7 +1092,6 @@ addfootnote(Line *p, MMIOT* f)
 	--S(foot->title);
     }
 
-skip_to_end:
     ___mkd_freeLine(p);
     return np;
 }
