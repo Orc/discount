@@ -521,6 +521,7 @@ struct h_opt opts[] = {
     { 0, 0, 'f', 0,        "forcibly overwrite existing html files" },
     { 0, 0, 'o', "file",   "write output to `file`" },
     { 0, 0, 'p', "title",  "set the page title" },
+    { 0, 0, 't', "template",  "use `template` as template file" },
     { 0, 0, 'V', 0,        "show version info" },
 } ;
 #define NROPTS (sizeof opts / sizeof opts[0])
