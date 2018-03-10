@@ -1838,14 +1838,6 @@ display(Paragraph *p, MMIOT *f)
 }
 
 
-/* dump one mkd_extra footnote
- */
-static void
-one_extra_footnote(MMIOT *f, Footnote *t)
-{
-}
-
-
 /* dump out a list of footnotes
  */
 static void
