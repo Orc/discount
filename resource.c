@@ -65,7 +65,7 @@ ___mkd_freefootnote(Footnote *f)
     DELETE(f->tag);
     DELETE(f->link);
     DELETE(f->title);
-    if ( f->text) ___mkd_freeLines(f->text);
+    if ( f->text) ___mkd_freeParagraph(f->text);
 }
 
 

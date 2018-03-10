@@ -1021,8 +1021,10 @@ extrablock(Line *p)
 	    p->next = 0;
 	    return np;
 	}
-	if ( np->dle >= 4 )
+	if ( np->dle >= 4 ) {
 	    CLIP(np->text, 0, 4);
+	    np->dle -= 4;
+	}
 	p = np;
     }
     return 0;
@@ -1063,9 +1065,13 @@ addfootnote(Line *p, MMIOT* f)
 	 */
 	foot->flags |= EXTRA_FOOTNOTE;
 	CLIP(p->text, 0, j);
-	foot->text = p;
+	p->dle = mkd_firstnonblank(p);
 
-	return extrablock(p);
+	np = extrablock(p);
+
+	foot->text = compile(p, 0, f);
+
+	return np;
     }
 
     while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
@@ -1280,6 +1286,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
     ptr = consume(ptr, &para);
 
     while ( ptr ) {
+
 	if ( iscode(ptr) ) {
 	    p = Pp(&d, ptr, CODE);
 	    

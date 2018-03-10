@@ -52,7 +52,7 @@ typedef struct footnote {
     Cstring tag;		/* the tag for the reference link */
     Cstring link;		/* what this footnote points to */
     Cstring title;		/* what it's called (TITLE= attribute) */
-    Line *text;			/* EXTRA_FOOTNOTE content */
+    Paragraph *text;		/* EXTRA_FOOTNOTE content */
     
     int height, width;		/* dimensions (for image link) */
     int dealloc;		/* deallocation needed? */

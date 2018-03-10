@@ -1641,10 +1641,12 @@ printtable(Paragraph *pp, MMIOT *f)
 
 
 static int
-__printblock(Line *t, MMIOT *f, int align)
+printblock(Paragraph *pp, MMIOT *f)
 {
     static char *Begin[] = { "", "<p>", "<p style=\"text-align:center;\">"  };
     static char *End[]   = { "", "</p>","</p>" };
+    Line *t = pp->text;
+    int align = pp->align;
 
     while (t) {
 	if ( S(t->text) ) {
@@ -1668,13 +1670,6 @@ __printblock(Line *t, MMIOT *f, int align)
     text(f);
     Qstring(End[align], f);
     return 1;
-}
-
-
-static int
-printblock(Paragraph *pp, MMIOT *f)
-{
-    return __printblock(pp->text, f, pp->align);
 }
 
 
@@ -1848,9 +1843,6 @@ display(Paragraph *p, MMIOT *f)
 static void
 one_extra_footnote(MMIOT *f, Footnote *t)
 {
-    __printblock(t->text, f, 0);
-    ___mkd_emblock(f);
-
 }
 
 
@@ -1871,12 +1863,12 @@ mkd_extra_footnotes(MMIOT *m)
 	for ( j=0; j < S(m->footnotes->note); j++ ) {
 	    t = &T(m->footnotes->note)[j];
 	    if ( (t->refnumber == i) && (t->flags & REFERENCED) ) {
-		Csprintf(&m->out, "<li id=\"%s:%d\">\n<p>",
+		Csprintf(&m->out, "<li id=\"%s:%d\">\n",
 			    p_or_nothing(m), t->refnumber);
-		one_extra_footnote(m, t);
+		htmlify(t->text, 0, 0, m);
 		Csprintf(&m->out, "<a href=\"#%sref:%d\" rev=\"footnote\">&#8617;</a>",
 			    p_or_nothing(m), t->refnumber);
-		Csprintf(&m->out, "</p></li>\n");
+		Csprintf(&m->out, "</li>\n");
 	    }
 	}
     }
