@@ -116,5 +116,11 @@ Test4 footnote<a href="#fnref:4" rev="footnote">&#8617;</a></li>
 
 try -ffootnote 'footnotes inside spans' "$TSRC" "$TOUT"
 
+for x in tests/data/f??.text;do
+    result=`echo $x | sed -e 's/.text$/.html/'`
+    try -ffootnote "`basename $x`" "`cat $x`" "`cat $result`"
+done
+    
+
 summary $0
 exit $rc

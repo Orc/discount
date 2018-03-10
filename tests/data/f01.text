@@ -1,0 +1,15 @@
+is there a footnote here?[^1]
+
+[^1]:
+    Yes, and it should have text
+
+    ````
+    code
+    ````
+
+    * And
+    * A
+    * List
+
+
+And this is not part of the footnote
