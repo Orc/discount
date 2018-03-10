@@ -1,0 +1,8 @@
+This directory contains source (.text) & expected output (.html)
+for various test that are too complicated for placing the results
+inline.
+
+The prefix characters show which test script runs the tests
+
+f  --   markdown extra footnotes (extrafootnotes.t)
+	(f01.text -> f01.html)
