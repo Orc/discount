@@ -74,13 +74,17 @@ __mkd_enqueue(Document* a, Cstring *line)
 }
 
 
-/* trim leading blanks from a header line
+/* trim leading characters from a line, then adjust the dle.
  */
 void
-__mkd_header_dle(Line *p)
+__mkd_trim_line(Line *p, int clip)
 {
-    CLIP(p->text, 0, 1);
-    p->dle = mkd_firstnonblank(p);
+    if ( clip > S(p->text) )
+	clip = S(p->text);
+    if ( clip ) {
+	CLIP(p->text, 0, clip);
+	p->dle = mkd_firstnonblank(p);
+    }
 }
 
 
@@ -129,9 +133,9 @@ populate(getc_func getc, void* ctx, int flags)
 	 */
 	Line *headers = T(a->content);
 
-	a->title = headers;             __mkd_header_dle(a->title);
-	a->author= headers->next;       __mkd_header_dle(a->author);
-	a->date  = headers->next->next; __mkd_header_dle(a->date);
+	a->title = headers;             __mkd_trim_line(a->title, 1);
+	a->author= headers->next;       __mkd_trim_line(a->author, 1);
+	a->date  = headers->next->next; __mkd_trim_line(a->date, 1);
 
 	T(a->content) = headers->next->next->next;
     }

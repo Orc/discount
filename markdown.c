@@ -608,8 +608,7 @@ codeblock(Paragraph *p)
     Line *t = p->text, *r;
 
     for ( ; t; t = r ) {
-	CLIP(t->text,0,4);
-	t->dle = mkd_firstnonblank(t);
+	__mkd_trim_line(t,4);
 
 	if ( !( (r = skipempty(t->next)) && iscode(r)) ) {
 	    ___mkd_freeLineRange(t,r);
@@ -804,9 +803,8 @@ quoteblock(Paragraph *p, DWORD flags)
 	    /* clip next space, if any */
 	    if ( T(t->text)[qp] == ' ' )
 		qp++;
-	    CLIP(t->text, 0, qp);
+	    __mkd_trim_line(t,qp);
 	    UNCHECK(t);
-	    t->dle = mkd_firstnonblank(t);
 	}
 
 	q = skipempty(t->next);
@@ -855,9 +853,8 @@ listitem(Paragraph *p, int indent, DWORD flags, linefn check)
     int z;
 
     for ( t = p->text; t ; t = q) {
-	CLIP(t->text, 0, clip);
 	UNCHECK(t);
-	t->dle = mkd_firstnonblank(t);
+	__mkd_trim_line(t, clip);
 
         /* even though we had to trim a long leader off this item,
          * the indent for trailing paragraphs is still 4...
@@ -1021,10 +1018,7 @@ extrablock(Line *p)
 	    p->next = 0;
 	    return np;
 	}
-	if ( np->dle >= 4 ) {
-	    CLIP(np->text, 0, 4);
-	    np->dle -= 4;
-	}
+	__mkd_trim_line(np,4);
 	p = np;
     }
     return 0;
@@ -1064,8 +1058,7 @@ addfootnote(Line *p, MMIOT* f)
 	 * snip that out as we go.
 	 */
 	foot->flags |= EXTRA_FOOTNOTE;
-	CLIP(p->text, 0, j);
-	p->dle = mkd_firstnonblank(p);
+	__mkd_trim_line(p,j);
 
 	np = extrablock(p);
 

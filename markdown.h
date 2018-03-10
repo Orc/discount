@@ -233,7 +233,7 @@ extern void ___mkd_tidy(Cstring *);
 
 extern Document *__mkd_new_Document();
 extern void __mkd_enqueue(Document*, Cstring *);
-extern void __mkd_header_dle(Line *);
+extern void __mkd_trim_line(Line *, int);
 
 extern int  __mkd_io_strget(struct string_stream *);
 

@@ -66,9 +66,9 @@ gfm_populate(getc_func getc, void* ctx, int flags)
 	 */
 	Line *headers = T(a->content);
 
-	a->title = headers;             __mkd_header_dle(a->title);
-	a->author= headers->next;       __mkd_header_dle(a->author);
-	a->date  = headers->next->next; __mkd_header_dle(a->date);
+	a->title = headers;             __mkd_trim_line(a->title, 1);
+	a->author= headers->next;       __mkd_trim_line(a->author, 1);
+	a->date  = headers->next->next; __mkd_trim_line(a->date, 1);
 
 	T(a->content) = headers->next->next->next;
     }
