@@ -1007,6 +1007,29 @@ tgood(char c)
 
 
 /*
+ * eat lines for a markdown extra footnote
+ */
+static Line *
+extrablock(Line *p)
+{
+    Line *np;
+    
+    while ( p && p->next ) {
+	np = p->next;
+
+	if ( np->dle < 4 && np->dle < S(np->text) ) {
+	    p->next = 0;
+	    return np;
+	}
+	if ( np->dle >= 4 )
+	    CLIP(np->text, 0, 4);
+	p = np;
+    }
+    return 0;
+}
+
+
+/*
  * add a new (image or link) footnote to the footnote table
  */
 static Line*
@@ -1039,18 +1062,10 @@ addfootnote(Line *p, MMIOT* f)
 	 * snip that out as we go.
 	 */
 	foot->flags |= EXTRA_FOOTNOTE;
-	foot->text = p;
 	CLIP(p->text, 0, j);
+	foot->text = p;
 
-	while ( p && p->next && (p->next->dle > 0) )
-	    p = p->next;
-
-	if ( p ) {
-	    np = p->next;
-	    p->next = 0;
-	    return np;
-	}
-	return 0;
+	return extrablock(p);
     }
 
     while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
