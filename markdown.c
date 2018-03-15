@@ -1075,8 +1075,7 @@ addfootnote(Line *p, MMIOT* f)
 
     if ( T(p->text)[j] == '=' ) {
 	sscanf(T(p->text)+j, "=%dx%d", &foot->width, &foot->height);
-	while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
-	    ++j;
+	j = nextblank(p, j);
 	j = nextnonblank(p,j);
     }
 
