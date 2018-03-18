@@ -10,7 +10,8 @@
 ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --shared		Build shared libraries (default is static)
---pkg-config		Install pkg-config(1) glue files'
+--pkg-config		Install pkg-config(1) glue files
+--cxx-binding		Install header files with c++ wrappers'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
@@ -37,6 +38,9 @@ locals() {
 		;;
     --PKG-CONFIG)
 		echo PKGCONFIG=T
+		;;
+    --CXX-BINDING)
+		echo CXX_BINDING=T
 		;;
     esac
 }
@@ -224,3 +228,16 @@ if [ "$PKGCONFIG" ]; then
 fi
 
 AC_OUTPUT $GENERATE
+
+if [ "$CXX_BINDING" ]; then
+    LOG "applying c++ glue to mkdio.h"
+    mv mkdio.h mkdio.h$$
+    (   echo '#ifdef __cplusplus'
+	echo 'extern "C" {'
+	echo '#endif'
+	cat mkdio.h$$
+	echo '#ifdef __cplusplus'
+	echo '}'
+	echo '#endif' ) > mkdio.h
+    rm mkdio.h$$
+fi
