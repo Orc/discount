@@ -31,7 +31,7 @@ mkd_initialize()
 }
 
 
-void
+void DESTRUCTOR
 mkd_shlib_destructor()
 {
     mkd_deallocate_tags();

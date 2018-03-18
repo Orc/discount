@@ -831,16 +831,21 @@ AC_TYPE_PID_T () {
 #
 AC_CHECK_NORETURN() {
     AC_PROG_CC
+    AC_CHECK_ATTRIBUTE noreturn
+}
 
-    echo "extern int noreturn  __attribute__((__noreturn__));" > ngc$$.c
+AC_CHECK_ATTRIBUTE() {
+    local __what=`echo $1 | tr 'a-z' 'A-Z'`
+    
+    echo "extern int thing  __attribute__((__"$1"__));" > ngc$$.c
 
-    TLOGN "Checking __attribute__((__noreturn__)) "
+    TLOGN "Checking __attribute__((__${1}__)) "
     if $AC_CC -c ngc$$.c; then
 	TLOG "(yes)"
-	AC_DEFINE 'NORETURN' ' __attribute__((__noreturn__))'
+	AC_DEFINE $__what ' __attribute__((__'$1'__))'
     else
 	TLOG "(no)"
-	AC_DEFINE 'NORETURN' ''
+	AC_DEFINE $__what ''
     fi
     rm -f ngc$$.o ngc$$.c
 }
