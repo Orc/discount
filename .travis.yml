@@ -1,0 +1,12 @@
+language: c
+
+compiler:
+  - clang
+  - gcc
+
+script:
+  - ./configure.sh
+  - make
+
+after_success:
+  - make test
