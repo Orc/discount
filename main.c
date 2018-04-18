@@ -151,7 +151,8 @@ main(int argc, char **argv)
 	case 't':   text = hoptarg(&blob);
 		    use_mkd_line = 1;
 		    break;
-	case 'T':   toc = 1;
+	case 'T':   flags |= MKD_TOC;
+		    toc = 1;
 		    break;
 	case 'C':   extra_footnote_prefix = hoptarg(&blob);
 		    break;

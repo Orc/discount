@@ -38,7 +38,7 @@ mkd_toc(Document *p, char **doc)
     for ( tp = p->code; tp ; tp = tp->next ) {
 	if ( tp->typ == SOURCE ) {
 	    for ( srcp = tp->down; srcp; srcp = srcp->next ) {
-		if ( srcp->typ == HDR && srcp->text ) {
+		if ( (srcp->typ == HDR) && srcp->text ) {
 	    
 		    while ( last_hnumber > srcp->hnumber ) {
 			if ( (last_hnumber - srcp->hnumber) > 1 )
