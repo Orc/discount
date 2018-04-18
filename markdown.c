@@ -868,7 +868,7 @@ listitem(Paragraph *p, int indent, DWORD flags, linefn check)
 	    ischeck = CHECK_NOT;
 	    if ( strncmp(T(t->text)+t->dle, "[ ]", 3) == 0 )
 		ischeck = CHECK_NO;
-	    else if ( strncmp(T(t->text)+t->dle, "[x]", 3) == 0 )
+	    else if ( strncasecmp(T(t->text)+t->dle, "[x]", 3) == 0 )
 		ischeck = CHECK_YES;
 
 	    if ( ischeck != CHECK_NOT ) {
