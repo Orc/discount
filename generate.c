@@ -1730,8 +1730,12 @@ listcontent(Paragraph *p, int flags, MMIOT *f)
 #endif
 	Qprintf(f, ">");
 #ifdef GITHUB_CHECKBOX
-	if ( flags & GITHUB_CHECK )
-	    Qprintf(f, "&#x%d;", flags & IS_CHECKED ? 2611 : 2610);
+	if ( flags & GITHUB_CHECK ) {
+	    Qprintf(f, "<input type=\"checkbox\"");
+	    if ( flags & IS_CHECKED )
+		Qprintf(f, " checked=\"checked\"");
+	    Qprintf(f, "/>");
+	}
 #endif
 
     ___mkd_emblock(f);
