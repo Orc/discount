@@ -1718,25 +1718,24 @@ printhtml(Line *t, MMIOT *f)
 }
 
 
+#ifdef GITHUB_CHECKBOX
 static void
-listcontent(Paragraph *p, int flags, MMIOT *f)
+li_htmlify(Paragraph *p, char *arguments, int flags, MMIOT *f)
 {
     ___mkd_emblock(f);
 
     Qprintf(f, "<li");
-#ifdef GITHUB_CHECKBOX
-	if ( flags & GITHUB_CHECK )
-	    Qprintf(f, " class=\"github_checkbox\"");
-#endif
-	Qprintf(f, ">");
-#ifdef GITHUB_CHECKBOX
-	if ( flags & GITHUB_CHECK ) {
-	    Qprintf(f, "<input type=\"checkbox\"");
-	    if ( flags & IS_CHECKED )
-		Qprintf(f, " checked=\"checked\"");
-	    Qprintf(f, "/>");
-	}
-#endif
+    if ( arguments )
+	Qprintf(f, " %s", arguments);
+    if ( flags & GITHUB_CHECK )
+	Qprintf(f, " class=\"github_checkbox\"");
+    Qprintf(f, ">");
+    if ( flags & GITHUB_CHECK ) {
+	Qprintf(f, "<input type=\"checkbox\"");
+	if ( flags & IS_CHECKED )
+	    Qprintf(f, " checked=\"checked\"");
+	Qprintf(f, "/>");
+    }
 
     ___mkd_emblock(f);
 
@@ -1748,6 +1747,7 @@ listcontent(Paragraph *p, int flags, MMIOT *f)
      Qprintf(f, "</li>");
     ___mkd_emblock(f);
 }
+#endif
 
 
 static void
@@ -1803,7 +1803,11 @@ listdisplay(int typ, Paragraph *p, MMIOT* f)
 	Qprintf(f, ">\n");
 
 	for ( ; p ; p = p->next ) {
-	    listcontent(p->down, p->flags, f);
+#ifdef GITHUB_CHECKBOX
+	    li_htmlify(p->down, p->ident, p->flags, f);
+#else
+	    htmlify(p->down, "li", p->ident, f);
+#endif
 	    Qchar('\n', f);
 	}
 
