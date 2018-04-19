@@ -1718,6 +1718,18 @@ printhtml(Line *t, MMIOT *f)
 }
 
 
+static void
+htmlify_paragraphs(Paragraph *p, MMIOT *f)
+{
+    ___mkd_emblock(f);
+
+    while (( p = display(p, f) )) {
+	___mkd_emblock(f);
+	Qstring("\n\n", f);
+    }
+}
+
+
 #ifdef GITHUB_CHECKBOX
 static void
 li_htmlify(Paragraph *p, char *arguments, int flags, MMIOT *f)
@@ -1737,12 +1749,7 @@ li_htmlify(Paragraph *p, char *arguments, int flags, MMIOT *f)
 	Qprintf(f, "/>");
     }
 
-    ___mkd_emblock(f);
-
-    while (( p = display(p, f) )) {
-	___mkd_emblock(f);
-	Qstring("\n", f);
-    }
+    htmlify_paragraphs(p, f);
 
      Qprintf(f, "</li>");
     ___mkd_emblock(f);
@@ -1756,12 +1763,8 @@ htmlify(Paragraph *p, char *block, char *arguments, MMIOT *f)
     ___mkd_emblock(f);
     if ( block )
 	Qprintf(f, arguments ? "<%s %s>" : "<%s>", block, arguments);
-    ___mkd_emblock(f);
 
-    while (( p = display(p, f) )) {
-	___mkd_emblock(f);
-	Qstring("\n\n", f);
-    }
+    htmlify_paragraphs(p, f);
 
     if ( block )
 	 Qprintf(f, "</%s>", block);
