@@ -11,7 +11,8 @@ ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --shared		Build shared libraries (default is static)
 --pkg-config		Install pkg-config(1) glue files
---cxx-binding		Install header files with c++ wrappers'
+--cxx-binding		Install header files with c++ wrappers
+--github-checkbox	Enable github-style checkboxes in lists'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
@@ -41,6 +42,9 @@ locals() {
 		;;
     --CXX-BINDING)
 		echo CXX_BINDING=T
+		;;
+    --GITHUB-CHECKBOX)
+		echo GITHUB_CHECKBOX=T
 		;;
     esac
 }
@@ -214,6 +218,10 @@ if [ "$H1TITLE" ]; then
     AC_DEFINE USE_H1TITLE 1
 else
     AC_SUB 'H1TITLE' ''
+fi
+
+if [ "$GITHUB_CHECKBOX" ]; then
+    AC_DEFINE 'GITHUB_CHECKBOX' '1'
 fi
 
 
