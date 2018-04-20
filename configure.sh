@@ -12,7 +12,9 @@ ac_help='--enable-amalloc	Enable memory allocation debugging
 --shared		Build shared libraries (default is static)
 --pkg-config		Install pkg-config(1) glue files
 --cxx-binding		Install header files with c++ wrappers
---github-checkbox	Enable github-style checkboxes in lists'
+--github-checkbox[=input] Enable github-style checkboxes in lists
+			(if =input, use <input checkbox>, otherwise
+			use html ballot entities)'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
@@ -45,6 +47,10 @@ locals() {
 		;;
     --GITHUB-CHECKBOX)
 		echo GITHUB_CHECKBOX=T
+		;;
+    --GITHUB-CHECKBOX=INPUT)
+		echo GITHUB_CHECKBOX=T
+		echo GITHUB_CHECKBOX_AS_INPUT=T
 		;;
     esac
 }
@@ -222,6 +228,7 @@ fi
 
 if [ "$GITHUB_CHECKBOX" ]; then
     AC_DEFINE 'GITHUB_CHECKBOX' '1'
+    test "$GITHUB_CHECKBOX_AS_INPUT" && AC_DEFINE 'CHECKBOX_AS_INPUT' '1'
 fi
 
 
