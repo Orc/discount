@@ -79,9 +79,9 @@ __mkd_enqueue(Document* a, Cstring *line)
 void
 __mkd_trim_line(Line *p, int clip)
 {
-    if ( clip > S(p->text) )
-	clip = S(p->text);
-    if ( clip ) {
+    if ( clip >= S(p->text) )
+	S(p->text) = p->dle = 0;
+    else if ( clip > 0 ) {
 	CLIP(p->text, 0, clip);
 	p->dle = mkd_firstnonblank(p);
     }
