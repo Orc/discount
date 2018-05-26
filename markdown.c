@@ -170,8 +170,10 @@ splitline(Line *t, int cutpoint)
 	tmp->next = t->next;
 	t->next = tmp;
 
-	tmp->dle = t->dle;
 	SUFFIX(tmp->text, T(t->text)+cutpoint, S(t->text)-cutpoint);
+	EXPAND(tmp->text) = 0;
+	S(tmp->text)--;
+	
 	S(t->text) = cutpoint;
     }
 }
