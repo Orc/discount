@@ -102,5 +102,14 @@ stuff
 </form>
 </blockquote>'
 
+try 'multi-line html with trailing text' \
+'<p>test test test
+    test test test</p>+' \
+'<p>test test test
+    test test test</p>
+
+
+<p>+</p>'
+
 summary $0
 exit $rc
