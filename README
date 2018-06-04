@@ -1,4 +1,4 @@
-DISCOUNT is a implementation of John Gruber & Aaron Schwartz's
+DISCOUNT is a implementation of John Gruber & Aaron Swartz's
  Markdown markup language.   It implements, as far as I can tell,
 all of the language as described in
  <http://daringfireball.net/projects/markdown/syntax>
