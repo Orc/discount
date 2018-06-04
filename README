@@ -1,6 +1,7 @@
-DISCOUNT is a implementation of John Gruber's Markdown markup
-language.   It implements, as far as I can tell, all of the language
-as described in <http://daringfireball.net/projects/markdown/syntax>
+DISCOUNT is a implementation of John Gruber & Aaron Schwartz's
+ Markdown markup language.   It implements, as far as I can tell,
+all of the language as described in
+ <http://daringfireball.net/projects/markdown/syntax>
 and passes the Markdown test suite at
 <http://daringfireball.net/projects/downloads/MarkdownTest_1.0.zip>
 
