@@ -22,7 +22,6 @@ unrecognized code!
 <p>unrecognized code!
 ```</p>'
 
-# no <pre/> proves it’s the inline variant of `code` delimitation
 try 'fenced code disabled backtick as inline code' \
 '```
 inline code?
