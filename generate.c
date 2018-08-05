@@ -1744,7 +1744,7 @@ li_htmlify(Paragraph *p, char *arguments, int flags, MMIOT *f)
     Qprintf(f, ">");
 #if CHECKBOX_AS_INPUT
     if ( flags & GITHUB_CHECK ) {
-	Qprintf(f, "<input type=\"checkbox\"");
+	Qprintf(f, "<input disabled=\"\" type=\"checkbox\"");
 	if ( flags & IS_CHECKED )
 	    Qprintf(f, " checked=\"checked\"");
 	Qprintf(f, "/>");
