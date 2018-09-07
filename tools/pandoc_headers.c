@@ -26,7 +26,7 @@
 #include "amalloc.h"
 #include "gethopt.h"
 
-char *pgm = "check pandoc";
+char *pgm = "pandoc headers";
 
 void
 fail(char *why, ...)
@@ -82,19 +82,16 @@ char **argv;
 	fail("could not compile input?");
 	
     if (show_author) {
-	res = mkd_doc_author(p);
-	printf("author:"); if ( res ) printf("%s", res);
-	putchar('\n');
+	if ( res = mkd_doc_author(p) )
+	    printf("author: %s\n", res);
     }
     if (show_title) {
-	res = mkd_doc_title(p);
-	printf("title :"); if ( res ) printf("%s", res);
-	putchar('\n');
+	if ( res = mkd_doc_title(p) )
+	    printf("title : %s\n", res);
     }
     if (show_date) {
-	res = mkd_doc_date(p);
-	printf("date  :"); if ( res ) printf("%s", res);
-	putchar('\n');
+	if ( res = mkd_doc_date(p) )
+	    printf("date   : %s\n", res);
     }
     mkd_cleanup(p);
     exit(0);

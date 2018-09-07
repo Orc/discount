@@ -27,6 +27,15 @@ summary() {
 }
 
 
+try_header() {
+    testcase=`./echo -n "  $1" '........................................................' | ./cols 50`
+    __tests=`expr $__tests + 1`
+
+    test "$VERBOSE" && ./echo -n "$testcase"
+}
+
+
+
 try() {
     unset FLAGS
     while [ "$1" ]; do
@@ -37,11 +46,7 @@ try() {
 	esac
     done
 
-    testcase=`./echo -n "  $1" '........................................................' | ./cols 50`
-    __tests=`expr $__tests + 1`
-
-
-    test "$VERBOSE" && ./echo -n "$testcase"
+    try_header $1
 
     case "$2" in
     -t*) Q=`./markdown $FLAGS "$2"` ;;

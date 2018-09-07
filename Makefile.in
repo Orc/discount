@@ -19,7 +19,7 @@ OBJS=mkdio.o markdown.o dumptree.o generate.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o \
      github_flavoured.o setup.o tags.o html5.o flags.o \
      @AMALLOC@ @H1TITLE@
-TESTFRAMEWORK=echo cols branch
+TESTFRAMEWORK=echo cols branch pandoc_headers
 
 # modules that markdown, makepage, mkd2html, &tc use
 COMMON=pgm_options.o gethopt.o notspecial.o
@@ -118,10 +118,13 @@ verify: echo tools/checkbits.sh
 	@./echo -n "headers ... "; tools/checkbits.sh && echo "GOOD"
 
 test:	$(PGMS) $(TESTFRAMEWORK) verify
-	@for x in tests/*.t; do \
+	@for x in $${TESTS:-tests/*.t}; do \
 	    @LD_LIBRARY_PATH@=`pwd` sh $$x || exit 1; \
 	done
 
+pandoc_headers: tools/pandoc_headers.c config.h
+	$(CC) $(CFLAGS) $(LFLAGS) -o pandoc_headers \
+				     tools/pandoc_headers.c $(COMMON) -lmarkdown 
 branch: tools/branch.c config.h
 	$(CC) -o branch tools/branch.c
 cols:   tools/cols.c config.h
