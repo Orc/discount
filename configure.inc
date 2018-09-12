@@ -845,7 +845,7 @@ AC_CHECK_ATTRIBUTE() {
 	AC_DEFINE $__what ' __attribute__((__'$1'__))'
     else
 	TLOG "(no)"
-	AC_DEFINE $__what ''
+	AC_DEFINE $__what '/**/'
     fi
     rm -f ngc$$.o ngc$$.c
 }
