@@ -17,8 +17,8 @@ MKDLIB=libmarkdown
 OBJS=mkdio.o markdown.o dumptree.o generate.o \
      resource.o docheader.o version.o toc.o css.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o \
-     github_flavoured.o setup.o tags.o html5.o flags.o \
-     @AMALLOC@ @H1TITLE@
+     github_flavoured.o setup.o tags.o html5.o \
+     @AMALLOC@ @H1TITLE@ flags.o
 TESTFRAMEWORK=echo cols branch pandoc_headers
 
 # modules that markdown, makepage, mkd2html, &tc use
