@@ -1,3 +1,8 @@
+LIBTOOL=libtool --tag=CC
+
+.c.o:
+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -c -o $@ $<
+
 CC=@CC@ -I.
 LFLAGS=-L.
 CFLAGS=@CFLAGS@
@@ -29,8 +34,10 @@ MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 all: $(PGMS) $(SAMPLE_PGMS) $(TESTFRAMEWORK)
 
 install: $(PGMS) $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR) $(DESTDIR)$(PKGDIR)
-	@INSTALL_PROGRAM@ $(PGMS) $(DESTDIR)$(BINDIR)
-	./librarian.sh install libmarkdown VERSION $(DESTDIR)$(LIBDIR)
+	for x in $(PGMS); do \
+	    $(LIBTOOL) --mode=install @INSTALL_PROGRAM@ $$x $(DESTDIR)$(BINDIR)/$$x; \
+	done
+	$(LIBTOOL) --mode=install @INSTALL_LIB@ $(MKDLIB).la $(DESTDIR)$(LIBDIR)/$(MKDLIB).la
 	@INSTALL_DATA@ mkdio.h $(DESTDIR)$(INCDIR)
 	@MK_PKGCONFIG@@INSTALL_DATA@ $(MKDLIB).pc $(DESTDIR)$(PKGDIR)
 
@@ -39,7 +46,7 @@ install.everything: install install.samples install.man
 install.samples: $(SAMPLE_PGMS) install $(DESTDIR)$(BINDIR)
 	@INSTALL_DIR@ $(DESTDIR)$(MANDIR)/man1
 	for x in $(SAMPLE_PGMS); do \
-	    @INSTALL_PROGRAM@ $$x $(DESTDIR)$(BINDIR)/$(SAMPLE_PFX)$$x; \
+	    $(LIBTOOL) --mode=install @INSTALL_PROGRAM@ $$x $(DESTDIR)$(BINDIR)/$(SAMPLE_PFX)$$x; \
 	    @INSTALL_DATA@ $$x.1 $(DESTDIR)$(MANDIR)/man1/$(SAMPLE_PFX)$$x.1; \
 	done
 
@@ -75,7 +82,7 @@ $(DESTDIR)$(LIBDIR):
 @MK_PKGCONFIG@	@INSTALL_DIR@ $(DESTDIR)$(PKGDIR)
 
 version.o: version.c VERSION branch
-	$(CC) $(CFLAGS) -DBRANCH=`./branch` -DVERSION=\"`cat VERSION`\" -c version.c
+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -DBRANCH=`./branch` -DVERSION=\"`cat VERSION`\" -c version.c
 
 VERSION:
 	@true
@@ -87,20 +94,19 @@ blocktags: mktags
 
 # example programs
 @THEME@theme:  theme.o $(COMMON) $(MKDLIB) mkdio.h
-@THEME@	$(CC) $(CFLAGS) $(LFLAGS) -o theme theme.o $(COMMON) -lmarkdown @LIBS@
+@THEME@	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(LFLAGS) -o theme theme.o $(COMMON) $(MKDLIB).la @LIBS@
 
-
-mkd2html:  mkd2html.o $(MKDLIB) mkdio.h gethopt.h $(COMMON)
-	$(CC) $(CFLAGS) $(LFLAGS) -o mkd2html mkd2html.o $(COMMON) -lmarkdown @LIBS@
+mkd2html:  mkd2html.o $(COMMON) $(MKDLIB)
+	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(LFLAGS) -o mkd2html mkd2html.o $(COMMON) $(MKDLIB).la @LIBS@
 
 markdown: main.o $(COMMON) $(MKDLIB)
-	$(CC) $(CFLAGS) $(LFLAGS) -o markdown main.o $(COMMON) -lmarkdown @LIBS@
+	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(LFLAGS) -o markdown main.o $(COMMON) $(MKDLIB).la @LIBS@
 	
-makepage:  makepage.c $(COMMON) $(MKDLIB) mkdio.h
-	$(CC) $(CFLAGS) $(LFLAGS) -o makepage makepage.c $(COMMON) -lmarkdown @LIBS@
+makepage:  makepage.o $(COMMON) $(MKDLIB)
+	$(LIBTOOL) --mode=link $(CC) $(CFLAGS) $(LFLAGS) -o makepage makepage.o $(COMMON) $(MKDLIB).la @LIBS@
 
 pgm_options.o: pgm_options.c mkdio.h config.h
-	$(CC) $(CFLAGS) -I. -c pgm_options.c
+	$(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -I. -c pgm_options.c
 
 notspecial.o: notspecial.c
 	$(CC) $(CFLAGS) -I. -c notspecial.c
@@ -111,8 +117,12 @@ gethopt.o: gethopt.c
 main.o: main.c mkdio.h config.h
 	$(CC) $(CFLAGS) -I. -c main.c
 
-$(MKDLIB): $(OBJS)
-	./librarian.sh make $(MKDLIB) VERSION $(OBJS)
+libtool-version-info: VERSION
+	awk -F. '{ printf "%d:%d:0\n", $$1 - 1, $$2 }' < VERSION > libtool-version-info
+
+$(MKDLIB): $(MKDLIB).la
+$(MKDLIB).la: $(OBJS) libtool-version-info
+	$(LIBTOOL) --mode=link @CC@ $(LDFLAGS) -o $(MKDLIB).la $(OBJS:S/.o/.lo/g) -version-info `cat libtool-version-info` -rpath $(LIBDIR)
 
 verify: echo tools/checkbits.sh
 	@./echo -n "headers ... "; tools/checkbits.sh && echo "GOOD"
