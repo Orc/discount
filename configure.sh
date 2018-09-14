@@ -59,6 +59,12 @@ VERSION=`cat VERSION`
 TARGET=markdown
 . ./configure.inc
 
+# if there's a makefile here, it's likely that it's a discount
+# makefile and there's bits of an old configuration here.  So
+# blow everything away before we start the configuration.
+
+test -f Makefile && make spotless 2>/dev/null >/dev/null
+
 AC_INIT $TARGET
 AC_SUB 'PACKAGE_NAME' lib$TARGET
 AC_SUB 'PACKAGE_VERSION' $VERSION
