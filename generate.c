@@ -50,7 +50,7 @@ pushc(char c, MMIOT *f)
 
 /* look <i> characters ahead of the cursor.
  */
-static inline unsigned int
+static inline int
 peek(MMIOT *f, int i)
 {
 
