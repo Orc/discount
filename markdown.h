@@ -232,7 +232,7 @@ extern void ___mkd_initmmiot(MMIOT *, void *);
 extern void ___mkd_freemmiot(MMIOT *, void *);
 extern void ___mkd_freeLineRange(Line *, Line *);
 extern void ___mkd_xml(char *, int, FILE *);
-extern void ___mkd_reparse(char *, int, int, MMIOT*, char*);
+extern void ___mkd_reparse(char *, int, DWORD, MMIOT*, char*);
 extern void ___mkd_emblock(MMIOT*);
 extern void ___mkd_tidy(Cstring *);
 

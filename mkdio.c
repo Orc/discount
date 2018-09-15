@@ -95,7 +95,7 @@ __mkd_trim_line(Line *p, int clip)
 typedef int (*getc_func)(void*);
 
 Document *
-populate(getc_func getc, void* ctx, int flags)
+populate(getc_func getc, void* ctx, DWORD flags)
 {
     Cstring line;
     Document *a = __mkd_new_Document();
@@ -203,7 +203,7 @@ mkd_generatehtml(Document *p, FILE *output)
 /* convert some markdown text to html
  */
 int
-markdown(Document *document, FILE *out, int flags)
+markdown(Document *document, FILE *out, DWORD flags)
 {
     if ( mkd_compile(document, flags) ) {
 	mkd_generatehtml(document, out);
@@ -272,7 +272,7 @@ mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 /*  ___mkd_reparse() a line
  */
 static void
-mkd_parse_line(char *bfr, int size, MMIOT *f, int flags)
+mkd_parse_line(char *bfr, int size, MMIOT *f, DWORD flags)
 {
     ___mkd_initmmiot(f, 0);
     f->flags = flags & USER_FLAGS;

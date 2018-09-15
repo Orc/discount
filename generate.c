@@ -199,7 +199,7 @@ Qem(MMIOT *f, char c, int count)
 /* generate html from a markup fragment
  */
 void
-___mkd_reparse(char *bfr, int size, int flags, MMIOT *f, char *esc)
+___mkd_reparse(char *bfr, int size, DWORD flags, MMIOT *f, char *esc)
 {
     MMIOT sub;
     struct escaped e;
@@ -1732,7 +1732,7 @@ htmlify_paragraphs(Paragraph *p, MMIOT *f)
 
 #ifdef GITHUB_CHECKBOX
 static void
-li_htmlify(Paragraph *p, char *arguments, int flags, MMIOT *f)
+li_htmlify(Paragraph *p, char *arguments, DWORD flags, MMIOT *f)
 {
     ___mkd_emblock(f);
 

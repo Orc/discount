@@ -44,3 +44,17 @@ The standard ``make install'' rule just installs the binaries. If you
 want to install the sample programs, they are installed with
 ``make install.samples'';  to install manpages, ``make install.man''.
 A shortcut to install everything is ``make install.everything''
+
+
+4) Assorted platform gotchas
+
+   1.  On NetBSD (version 8 for certain) running configure.sh by
+       itself will result in logging output being mixed in with diagnostic
+       output on the screen instead of having it written to config.log.
+       If, instead, you do `ksh ./configure.sh`, it will be much less
+       garbled (the shell defaults all fds > stderr to close on exec,
+       so my redirecting stdout fails after the first subprocess.)
+   2.  On 9Front (and maybe every other extant plan9 variant) the
+       system mkfile sets the `T' flag in CFLAGS; there are several
+       places where I typedef voids to opaque structure pointers and
+       this makes the build die when it attempts to link anything.
