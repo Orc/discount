@@ -83,6 +83,7 @@ extern char* mkd_h1_title(MMIOT *);
 #endif
 
 
+int
 main(argc, argv)
 char **argv;
 {

@@ -526,6 +526,7 @@ struct h_opt opts[] = {
 } ;
 #define NROPTS (sizeof opts / sizeof opts[0])
 
+int
 main(argc, argv)
 char **argv;
 {
