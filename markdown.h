@@ -4,6 +4,10 @@
 #include "config.h"
 #include "cstring.h"
 
+/* flags, captured into a named type
+ */
+typedef DWORD mkd_flag_t;
+
 /* each input line is read into a Line, which contains the line,
  * the offset of the first non-space character [this assumes 
  * that all tabs will be expanded to spaces!], and a pointer to
@@ -191,8 +195,6 @@ struct string_stream {
     int   size;		/* and how much is there? */
 } ;
 
-
-typedef DWORD mkd_flag_t;
 
 extern int  mkd_firstnonblank(Line *);
 extern int  mkd_compile(Document *, mkd_flag_t);

@@ -25,6 +25,8 @@ mkd_toc(Document *p, char **doc)
     Cstring res;
     int size;
     int first = 1;
+    extern void Csreparse(Cstring *, char *, int, mkd_flag_t);
+    
     
     if ( !(doc && p && p->ctx) ) return -1;
 
