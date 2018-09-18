@@ -189,7 +189,7 @@ splitline(Line *t, int cutpoint)
  * types.
  */
 static void
-checkline(Line *l, DWORD flags)
+checkline(Line *l, mkd_flag_t flags)
 {
     int eol, i;
     int dashes = 0, spaces = 0,
@@ -381,7 +381,7 @@ iscode(Line *t)
 
 
 static inline int
-ishr(Line *t, DWORD flags)
+ishr(Line *t, mkd_flag_t flags)
 {
     if ( ! (t->flags & CHECKED) )
 	checkline(t, flags);
@@ -393,7 +393,7 @@ ishr(Line *t, DWORD flags)
 
 
 static int
-issetext(Line *t, int *htyp, DWORD flags)
+issetext(Line *t, int *htyp, mkd_flag_t flags)
 {
     Line *n;
     
@@ -415,7 +415,7 @@ issetext(Line *t, int *htyp, DWORD flags)
 
 
 static int
-ishdr(Line *t, int *htyp, DWORD flags)
+ishdr(Line *t, int *htyp, mkd_flag_t flags)
 {
     /* ANY leading `#`'s make this into an ETX header
      */
@@ -431,7 +431,7 @@ ishdr(Line *t, int *htyp, DWORD flags)
 
 
 static inline int
-end_of_block(Line *t, DWORD flags)
+end_of_block(Line *t, mkd_flag_t flags)
 {
     int dummy;
     
@@ -443,7 +443,7 @@ end_of_block(Line *t, DWORD flags)
 
 
 static Line*
-is_discount_dt(Line *t, int *clip, DWORD flags)
+is_discount_dt(Line *t, int *clip, mkd_flag_t flags)
 {
     if ( !(flags & MKD_NODLDISCOUNT)
 	   && t
@@ -472,7 +472,7 @@ is_extra_dd(Line *t)
 
 
 static Line*
-is_extra_dt(Line *t, int *clip, DWORD flags)
+is_extra_dt(Line *t, int *clip, mkd_flag_t flags)
 {
     if ( flags & MKD_DLEXTRA
 	   && t
@@ -496,7 +496,7 @@ is_extra_dt(Line *t, int *clip, DWORD flags)
 
 
 static Line*
-isdefinition(Line *t, int *clip, int *kind, DWORD flags)
+isdefinition(Line *t, int *clip, int *kind, mkd_flag_t flags)
 {
     Line *ret;
 
@@ -510,7 +510,7 @@ isdefinition(Line *t, int *clip, int *kind, DWORD flags)
 
 
 static int
-islist(Line *t, int *clip, DWORD flags, int *list_type)
+islist(Line *t, int *clip, mkd_flag_t flags, int *list_type)
 {
     int i, j;
     char *q;
@@ -623,7 +623,7 @@ codeblock(Paragraph *p)
 
 
 static int
-iscodefence(Line *r, int size, line_type kind, DWORD flags)
+iscodefence(Line *r, int size, line_type kind, mkd_flag_t flags)
 {
     if ( !(flags & MKD_FENCEDCODE) )
 	return 0;
@@ -639,7 +639,7 @@ iscodefence(Line *r, int size, line_type kind, DWORD flags)
 
 
 static Paragraph *
-fencedcodeblock(ParagraphRoot *d, Line **ptr, DWORD flags)
+fencedcodeblock(ParagraphRoot *d, Line **ptr, mkd_flag_t flags)
 {
     Line *first, *r;
     Paragraph *ret;
@@ -694,7 +694,7 @@ centered(Line *first, Line *last)
 
 
 static int
-endoftextblock(Line *t, int toplevelblock, DWORD flags)
+endoftextblock(Line *t, int toplevelblock, mkd_flag_t flags)
 {
     int z;
 
@@ -714,7 +714,7 @@ endoftextblock(Line *t, int toplevelblock, DWORD flags)
 
 
 static Line *
-textblock(Paragraph *p, int toplevel, DWORD flags)
+textblock(Paragraph *p, int toplevel, mkd_flag_t flags)
 {
     Line *t, *next;
 
@@ -749,7 +749,7 @@ szmarkerclass(char *p)
 #define iscsschar(c) (isalpha(c) || (c == '-') || (c == '_') )
 
 static int
-isdivmarker(Line *p, int start, DWORD flags)
+isdivmarker(Line *p, int start, mkd_flag_t flags)
 {
     char *s;
     int last, i;
@@ -788,7 +788,7 @@ isdivmarker(Line *p, int start, DWORD flags)
  * way the markdown sample web form at Daring Fireball works.
  */
 static Line *
-quoteblock(Paragraph *p, DWORD flags)
+quoteblock(Paragraph *p, mkd_flag_t flags)
 {
     Line *t, *q;
     int qp;
@@ -848,7 +848,7 @@ typedef int (*linefn)(Line *);
  * marker, but multiple paragraphs need to start with a 4-space indent.
  */
 static Line *
-listitem(Paragraph *p, int indent, DWORD flags, linefn check)
+listitem(Paragraph *p, int indent, mkd_flag_t flags, linefn check)
 {
     Line *t, *q;
     int clip = indent;
@@ -1404,7 +1404,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
  * prepare and compile `text`, returning a Paragraph tree.
  */
 int
-mkd_compile(Document *doc, DWORD flags)
+mkd_compile(Document *doc, mkd_flag_t flags)
 {
     if ( !doc )
 	return 0;

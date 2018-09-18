@@ -2,7 +2,7 @@
 #include "markdown.h"
 
 struct flagnames {
-    DWORD flag;
+    mkd_flag_t flag;
     char *name;
 };
 
@@ -43,7 +43,7 @@ static struct flagnames flagnames[] = {
 
 
 void
-mkd_flags_are(FILE *f, DWORD flags, int htmlplease)
+mkd_flags_are(FILE *f, mkd_flag_t flags, int htmlplease)
 {
     int i;
     int not, set, even=1;

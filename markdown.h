@@ -114,7 +114,7 @@ typedef struct mmiot {
     struct escaped *esc;
     char *ref_prefix;
     struct footnote_list *footnotes;
-    DWORD flags;
+    mkd_flag_t flags;
 #define MKD_NOLINKS	0x00000001
 #define MKD_NOIMAGE	0x00000002
 #define MKD_NOPANTS	0x00000004
@@ -192,8 +192,10 @@ struct string_stream {
 } ;
 
 
+typedef DWORD mkd_flag_t;
+
 extern int  mkd_firstnonblank(Line *);
-extern int  mkd_compile(Document *, DWORD);
+extern int  mkd_compile(Document *, mkd_flag_t);
 extern int  mkd_document(Document *, char **);
 extern int  mkd_generatehtml(Document *, FILE *);
 extern int  mkd_css(Document *, char **);
@@ -202,19 +204,19 @@ extern int  mkd_generatecss(Document *, FILE *);
 extern int  mkd_xml(char *, int , char **);
 extern int  mkd_generatexml(char *, int, FILE *);
 extern void mkd_cleanup(Document *);
-extern int  mkd_line(char *, int, char **, DWORD);
-extern int  mkd_generateline(char *, int, FILE*, DWORD);
+extern int  mkd_line(char *, int, char **, mkd_flag_t);
+extern int  mkd_generateline(char *, int, FILE*, mkd_flag_t);
 #define mkd_text mkd_generateline
 extern void mkd_basename(Document*, char *);
 
 typedef int (*mkd_sta_function_t)(const int,const void*);
-extern void mkd_string_to_anchor(char*,int, mkd_sta_function_t, void*, int, DWORD);
+extern void mkd_string_to_anchor(char*,int, mkd_sta_function_t, void*, int, mkd_flag_t);
 
-extern Document *mkd_in(FILE *, DWORD);
-extern Document *mkd_string(const char*,int, DWORD);
+extern Document *mkd_in(FILE *, mkd_flag_t);
+extern Document *mkd_string(const char*, int, mkd_flag_t);
 
-extern Document *gfm_in(FILE *, DWORD);
-extern Document *gfm_string(const char*,int, DWORD);
+extern Document *gfm_in(FILE *, mkd_flag_t);
+extern Document *gfm_string(const char*,int, mkd_flag_t);
 
 extern void mkd_initialize();
 extern void mkd_shlib_destructor();
@@ -232,7 +234,7 @@ extern void ___mkd_initmmiot(MMIOT *, void *);
 extern void ___mkd_freemmiot(MMIOT *, void *);
 extern void ___mkd_freeLineRange(Line *, Line *);
 extern void ___mkd_xml(char *, int, FILE *);
-extern void ___mkd_reparse(char *, int, DWORD, MMIOT*, char*);
+extern void ___mkd_reparse(char *, int, mkd_flag_t, MMIOT*, char*);
 extern void ___mkd_emblock(MMIOT*);
 extern void ___mkd_tidy(Cstring *);
 

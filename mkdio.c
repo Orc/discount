@@ -95,7 +95,7 @@ __mkd_trim_line(Line *p, int clip)
 typedef int (*getc_func)(void*);
 
 Document *
-populate(getc_func getc, void* ctx, DWORD flags)
+populate(getc_func getc, void* ctx, mkd_flag_t flags)
 {
     Cstring line;
     Document *a = __mkd_new_Document();
@@ -149,7 +149,7 @@ populate(getc_func getc, void* ctx, DWORD flags)
 /* convert a file into a linked list
  */
 Document *
-mkd_in(FILE *f, DWORD flags)
+mkd_in(FILE *f, mkd_flag_t flags)
 {
     return populate((getc_func)fgetc, f, flags & INPUT_MASK);
 }
@@ -171,7 +171,7 @@ __mkd_io_strget(struct string_stream *in)
 /* convert a block of text into a linked list
  */
 Document *
-mkd_string(const char *buf, int len, DWORD flags)
+mkd_string(const char *buf, int len, mkd_flag_t flags)
 {
     struct string_stream about;
 
@@ -203,7 +203,7 @@ mkd_generatehtml(Document *p, FILE *output)
 /* convert some markdown text to html
  */
 int
-markdown(Document *document, FILE *out, DWORD flags)
+markdown(Document *document, FILE *out, mkd_flag_t flags)
 {
     if ( mkd_compile(document, flags) ) {
 	mkd_generatehtml(document, out);
@@ -219,7 +219,7 @@ markdown(Document *document, FILE *out, DWORD flags)
 void
 mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 				       void *out, int labelformat,
-				       DWORD flags)
+				       mkd_flag_t flags)
 {
     static const unsigned char hexchars[] = "0123456789abcdef";
     unsigned char c;
@@ -272,7 +272,7 @@ mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 /*  ___mkd_reparse() a line
  */
 static void
-mkd_parse_line(char *bfr, int size, MMIOT *f, DWORD flags)
+mkd_parse_line(char *bfr, int size, MMIOT *f, mkd_flag_t flags)
 {
     ___mkd_initmmiot(f, 0);
     f->flags = flags & USER_FLAGS;
@@ -284,7 +284,7 @@ mkd_parse_line(char *bfr, int size, MMIOT *f, DWORD flags)
 /* ___mkd_reparse() a line, returning it in malloc()ed memory
  */
 int
-mkd_line(char *bfr, int size, char **res, DWORD flags)
+mkd_line(char *bfr, int size, char **res, mkd_flag_t flags)
 {
     MMIOT f;
     int len;
@@ -313,7 +313,7 @@ mkd_line(char *bfr, int size, char **res, DWORD flags)
 /* ___mkd_reparse() a line, writing it to a FILE
  */
 int
-mkd_generateline(char *bfr, int size, FILE *output, DWORD flags)
+mkd_generateline(char *bfr, int size, FILE *output, mkd_flag_t flags)
 {
     MMIOT f;
     int status;

@@ -140,7 +140,7 @@ dumptree(Paragraph *pp, Stack *sp, FILE *f)
 
 
 int
-mkd_dump(Document *doc, FILE *out, DWORD flags, char *title)
+mkd_dump(Document *doc, FILE *out, mkd_flag_t flags, char *title)
 {
     Stack stack;
 
