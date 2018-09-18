@@ -364,10 +364,17 @@ AC_PROG_CC () {
     test "$AC_CC" && return 0
 
     cat > ngc$$.c << \EOF
-#include <stdio.h>
+extern void say(void*);
 int main()
 {
-    puts("hello, sailor");
+    say("hello, sailor");
+}
+EOF
+    cat > ngf$$.c << \EOF
+#include <stdio.h>
+void say(char* message)
+{
+    puts(message);
 }
 EOF
 
@@ -394,8 +401,9 @@ EOF
     fi
     echo "checking out the C compiler"
 
-    $AC_CC -o ngc$$ ngc$$.c
+    $AC_CC -o ngc$$ ngc$$.c ngf$$.c
     status=$?
+    echo "compile status = $status"
 
     TLOGN " ($AC_CC)"
 
@@ -429,7 +437,7 @@ EOF
 	fi
 	if [ "$LDFLAGS" ]; then
 	    test "$LDFLAGS" && echo "validating LDFLAGS=${LDFLAGS}"
-	    if $AC_CC $CFLAGS $LDFLAGS -o ngc$$ ngc$$.c; then
+	    if $AC_CC $CFLAGS $LDFLAGS -o ngc$$ ngc$$.c ngf$$.c; then
 		AC_LDFLAGS=${LDFLAGS:-"-g"}
 		test "$LDFLAGS" && TLOG "LDFLAGS=\"${LDFLAGS}\" are okay"
 	    elif [ "$LDFLAGS" ]; then
@@ -440,7 +448,7 @@ EOF
 	fi
 	
 	# macos-specific(?) test for .dSYM resource directories
-	$AC_CC $AC_CFLAGS $AC_LDFLAGS -o ngc$$ ngc$$.c
+	$AC_CC $AC_CFLAGS $AC_LDFLAGS -o ngc$$ ngc$$.c ngf$$.c
 	ls -dl ngc$$*
 	test -d ngc$$.dSYM && __MACOS_DSYM=1
 	
@@ -448,7 +456,7 @@ EOF
 	AC_FAIL " does not compile code properly"
     fi
 
-    __remove ngc$$ ngc$$.c ngc$$.o
+    __remove ngc$$ ngc$$.c ngc$$.o ngf$$.o ngf$$.c
 
     return $status
 }
