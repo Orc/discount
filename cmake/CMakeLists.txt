@@ -17,6 +17,9 @@ set(${PROJECT_NAME}_MAKE_INSTALL ON CACHE BOOL
 set(${PROJECT_NAME}_INSTALL_SAMPLES OFF CACHE BOOL
     "Set to ON to install sample programs (default is OFF)")
 
+set(${PROJECT_NAME}_ONLY_LIBRARY OFF CACHE BOOL
+    "Set to ON to only build markdown library (default is OFF)")
+
 # Check headers
 include(CheckIncludeFile)
 check_include_file(libgen.h HAVE_LIBGEN_H)
@@ -141,28 +144,30 @@ add_library(libmarkdown
 set_target_properties(libmarkdown PROPERTIES
     OUTPUT_NAME markdown)
 
-add_library(common OBJECT
-    "${_ROOT}/pgm_options.c"
-    "${_ROOT}/gethopt.c")
+if(NOT ${PROJECT_NAME}_ONLY_LIBRARY)
+    add_library(common OBJECT
+        "${_ROOT}/pgm_options.c"
+        "${_ROOT}/gethopt.c")
 
-add_executable(markdown
-    "${_ROOT}/main.c"
-    $<TARGET_OBJECTS:common>)
+    add_executable(markdown
+        "${_ROOT}/main.c"
+        $<TARGET_OBJECTS:common>)
 
-target_link_libraries(markdown PRIVATE libmarkdown)
+    target_link_libraries(markdown PRIVATE libmarkdown)
 
-add_executable(mkd2html
-    "${_ROOT}/mkd2html.c"
-    $<TARGET_OBJECTS:common>
-    "${_ROOT}/notspecial.c")
+    add_executable(mkd2html
+        "${_ROOT}/mkd2html.c"
+        $<TARGET_OBJECTS:common>
+        "${_ROOT}/notspecial.c")
 
-target_link_libraries(mkd2html PRIVATE libmarkdown)
+    target_link_libraries(mkd2html PRIVATE libmarkdown)
 
-add_executable(makepage
-    "${_ROOT}/makepage.c"
-    $<TARGET_OBJECTS:common>)
+    add_executable(makepage
+        "${_ROOT}/makepage.c"
+        $<TARGET_OBJECTS:common>)
 
-target_link_libraries(makepage PRIVATE libmarkdown)
+    target_link_libraries(makepage PRIVATE libmarkdown)
+endif()
 
 if(${PROJECT_NAME}_MAKE_INSTALL)
     string(TOLOWER ${PROJECT_NAME} _PACKAGE_NAME)
