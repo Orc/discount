@@ -38,7 +38,12 @@ Configure.sh has a few options that can be set:
 --cxx-binding		Wrap mkdio.h with (conditional) 'extern "C"' for c++
 			binding.
 
-3) Installing sample programs and manpages
+3) Testing
+
+``make test'' runs discount against a collection of test cases.
+
+
+4) Installing sample programs and manpages
 
 The standard ``make install'' rule just installs the binaries. If you
 want to install the sample programs, they are installed with
@@ -46,7 +51,7 @@ want to install the sample programs, they are installed with
 A shortcut to install everything is ``make install.everything''
 
 
-4) Assorted platform gotchas
+5) Assorted platform gotchas
 
    1.  On NetBSD (version 8 for certain) running configure.sh by
        itself will result in logging output being mixed in with diagnostic
