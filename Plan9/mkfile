@@ -2,37 +2,44 @@ BIN=/$objtype/bin
 CC='cc'
 CFLAGS='-D_BSD_EXTENSION -D_C99_SNPRINTF_EXTENSION'
 
-markdown:
-	ape/psh -c 'cd .. && $CC mktags.c -o mktags && ./mktags > blocktags && make'
+markdown:V:	../markdown
 
-none:V: markdown
+../markdown: ../config.h
+	ape/psh -c 'cd .. && $CC mktags.c -o mktags && ./mktags > blocktags && make'
 
 test: markdown
 	ape/psh -c 'cd ..&& make test'
 
-install: markdown
+install:V: ../markdown
 	cp ../markdown $BIN/markdown
 
-install.progs: install
+install.progs:V: install
 	cp ../makepage $BIN/makepage
 	cp ../mkd2html $BIN/mkd2html
 
-install.libs: install
+install.libs:V: install
 	cp ../mkdio.h /sys/include/ape/mkdio.h
 	cp ../libmarkdown.a /$objtype/lib/ape/libmarkdown.a
 
-install.man: install
+install.man:V: install
 	cp markdown.1 /sys/man/1/markdown
 	cp markdown.2 /sys/man/2/markdown
 	cp markdown.6 /sys/man/6/markdown
 
 installall:V: install.libs install.man install.progs
 
-config:
+uninstall:V:
+	rm -f $BIN/markdown $BIN/makepage $BIN/mkd2html
+	rm -f /sys/include/ape/mkdio.h /$objtype/lib/ape/libmarkdown.a
+	rm -f /sys/man/1/markdown /sys/man/2/markdown /sys/man/6/markdown
+
+../config.h:
 	ape/psh -c 'cd .. && ./configure.sh $CONFIG'
 
-clean:
+config:V: ../config.h
+
+clean:V:
 	ape/psh -c 'cd .. && make clean'
 
-nuke:
+nuke:V:
 	ape/psh -c 'cd .. && make distclean'
