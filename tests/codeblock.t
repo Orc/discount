@@ -178,5 +178,13 @@ sailor
 sailor
 </code></pre>'
 
+
+try -ffencedcode 'fenced code block with html in the middle' \
+'~~~~
+<h1>hello, sailor</h1>
+~~~~' \
+'<pre><code>&lt;h1&gt;hello, sailor&lt;/h1&gt;
+</code></pre>'
+
 summary $0
 exit $rc
