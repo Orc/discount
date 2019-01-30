@@ -1182,6 +1182,7 @@ compile_document(Line *ptr, MMIOT *f)
     Paragraph *p = 0;
     struct kw *tag;
     int eaten, unclosed;
+    int previous_was_break = 1;
 
     while ( ptr ) {
 	if ( !(f->flags & MKD_NOHTML) && (tag = isopentag(ptr)) ) {
@@ -1207,6 +1208,7 @@ compile_document(Line *ptr, MMIOT *f)
 		p->down = compile(p->text, 1, f);
 		p->text = 0;
 	    }
+	    previous_was_break = 1;
 	}
 	else if ( isfootnote(ptr) ) {
 	    /* footnotes, like cats, sleep anywhere; pull them
@@ -1214,12 +1216,16 @@ compile_document(Line *ptr, MMIOT *f)
 	     * later processing
 	     */
 	    ptr = consume(addfootnote(ptr, f), &eaten);
+	    previous_was_break = 1;
 	}
+	else if ( iscodefence(ptr,3,0,f->flags) && previous_was_break && (p=fencedcodeblock(&d, &ptr, f->flags)) )
+	    /* yay, it's already done */ ;
 	else {
 	    /* source; cache it up to wait for eof or the
 	     * next html/style block
 	     */
 	    ATTACH(source,ptr);
+	    previous_was_break = blankline(ptr);
 	    ptr = ptr->next;
 	}
     }

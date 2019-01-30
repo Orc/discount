@@ -167,5 +167,16 @@ code
 '<pre><code class="lang_name">code
 </code></pre>'
 
+try -ffencedcode 'fenced code block with blank line in the middle' \
+'```
+hello
+
+sailor
+```' \
+'<pre><code>hello
+
+sailor
+</code></pre>'
+
 summary $0
 exit $rc
