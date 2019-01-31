@@ -1679,7 +1679,7 @@ printcode(Line *t, char *lang, MMIOT *f)
     int blanks;
 
     Qstring("<pre><code", f);
-    if (lang) {
+    if (lang && lang[0]) {
       Qstring(" class=\"", f);
       Qstring(lang, f);
       Qstring("\"", f);
