@@ -186,5 +186,14 @@ try -ffencedcode 'fenced code block with html in the middle' \
 '<pre><code>&lt;h1&gt;hello, sailor&lt;/h1&gt;
 </code></pre>'
 
+try -ffencedcode 'fenced code block with trailing spaces in list item' \
+'1.  ~~~~    
+    test me
+    ~~~~' \
+'<ol>
+<li><pre><code>test me
+</code></pre></li>
+</ol>'
+
 summary $0
 exit $rc
