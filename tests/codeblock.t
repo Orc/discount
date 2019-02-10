@@ -195,5 +195,22 @@ try -ffencedcode 'fenced code block with trailing spaces in list item' \
 </code></pre></li>
 </ol>'
 
+try -ffencedcode 'unterminated fenced code block' \
+'~~~~
+foo' \
+'<p>~~~~
+foo</p>'
+
+try -ffencedcode 'paragraph, then code block' \
+'foo
+
+~~~~
+bar
+~~~~' \
+'<p>foo</p>
+
+<pre><code>bar
+</code></pre>'
+
 summary $0
 exit $rc
