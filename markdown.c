@@ -1169,6 +1169,14 @@ consume(Line *ptr, int *eaten)
 }
 
 
+typedef ANCHOR(Line) textspool;
+
+static void
+unspool(textspool *spooled)
+{
+}
+
+
 /*
  * top-level compilation; break the document into
  * style, html, and source blocks with footnote links
@@ -1218,9 +1226,18 @@ compile_document(Line *ptr, MMIOT *f)
 	    ptr = consume(addfootnote(ptr, f), &eaten);
 	    previous_was_break = 1;
 	}
-	else if ( iscodefence(ptr,3,0,f->flags) && previous_was_break && (p=fencedcodeblock(&d, &ptr, f->flags)) )
-	    /* yay, it's already done */ ;
+	else if ( previous_was_break && iscodefence(ptr,3,0,f->flags)) {
+	    if ( T(source) ) {
+		E(source)->next = 0;
+		p = Pp(&d, 0, SOURCE);
+		p->down = compile(T(source), 1, f);
+		T(source) = E(source) = 0;
+	    }
+	    if ( !fencedcodeblock(&d, &ptr, f->flags) ) /* just source */
+		goto attach;
+	}
 	else {
+    attach:
 	    /* source; cache it up to wait for eof or the
 	     * next html/style block
 	     */
