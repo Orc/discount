@@ -1169,11 +1169,19 @@ consume(Line *ptr, int *eaten)
 }
 
 
-typedef ANCHOR(Line) textspool;
+typedef ANCHOR(Line) Cache;
 
 static void
-unspool(textspool *spooled)
+uncache(Cache *cache, ParagraphRoot *d, MMIOT *f)
 {
+    Paragraph *p;
+
+    if ( T(*cache) ) {
+	E(*cache)->next = 0;
+	p = Pp(d, 0, SOURCE);
+	p->down = compile(T(*cache), 1, f);
+	T(*cache) = E(*cache) = 0;
+    }
 }
 
 
@@ -1186,7 +1194,7 @@ static Paragraph *
 compile_document(Line *ptr, MMIOT *f)
 {
     ParagraphRoot d = { 0, 0 };
-    ANCHOR(Line) source = { 0, 0 };
+    Cache source = { 0, 0 };
     Paragraph *p = 0;
     struct kw *tag;
     int eaten, unclosed;
@@ -1198,12 +1206,7 @@ compile_document(Line *ptr, MMIOT *f)
 	    /* If we encounter a html/style block, compile and save all
 	     * of the cached source BEFORE processing the html/style.
 	     */
-	    if ( T(source) ) {
-		E(source)->next = 0;
-		p = Pp(&d, 0, SOURCE);
-		p->down = compile(T(source), 1, f);
-		T(source) = E(source) = 0;
-	    }
+	    uncache(&source, &d, f);
 	    
 	    if ( f->flags & MKD_NOSTYLE )
 		blocktype = HTML;
@@ -1227,12 +1230,7 @@ compile_document(Line *ptr, MMIOT *f)
 	    previous_was_break = 1;
 	}
 	else if ( previous_was_break && iscodefence(ptr,3,0,f->flags)) {
-	    if ( T(source) ) {
-		E(source)->next = 0;
-		p = Pp(&d, 0, SOURCE);
-		p->down = compile(T(source), 1, f);
-		T(source) = E(source) = 0;
-	    }
+	    uncache(&source, &d, f);
 	    if ( !fencedcodeblock(&d, &ptr, f->flags) ) /* just source */
 		goto attach;
 	}
@@ -1246,14 +1244,10 @@ compile_document(Line *ptr, MMIOT *f)
 	    ptr = ptr->next;
 	}
     }
-    if ( T(source) ) {
-	/* if there's any cached source at EOF, compile
-	 * it now.
-	 */
-	E(source)->next = 0;
-	p = Pp(&d, 0, SOURCE);
-	p->down = compile(T(source), 1, f);
-    }
+    /* if there's any cached source at EOF, compile
+     * it now.
+     */
+    uncache(&source, &d, f);
     return T(d);
 }
 
