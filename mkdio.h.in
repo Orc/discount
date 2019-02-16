@@ -33,8 +33,6 @@ void mkd_cleanup(MMIOT*);
 int mkd_dump(MMIOT*, FILE*, mkd_flag_t, char*);
 int markdown(MMIOT*, FILE*, mkd_flag_t);
 int mkd_line(char *, int, char **, mkd_flag_t);
-typedef int (*mkd_sta_function_t)(const int,const void*);
-void mkd_string_to_anchor(char *, int, mkd_sta_function_t, void*, int);
 int mkd_xhtmlpage(MMIOT*,mkd_flag_t,FILE*);
 
 /* header block access
