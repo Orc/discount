@@ -64,7 +64,8 @@ mkd_toc(Document *p, char **doc)
 		    Csprintf(&res, "%*s<li><a href=\"#", srcp->hnumber, "");
 		    mkd_string_to_anchor(T(srcp->text->text),
 					 S(srcp->text->text),
-					 (mkd_sta_function_t)Csputc, &res,1,p->ctx->flags);
+					 (mkd_sta_function_t)Csputc,
+					 &res,1,p->ctx);
 		    Csprintf(&res, "\">");
 		    Csreparse(&res, T(srcp->text->text),
 				    S(srcp->text->text), IS_LABEL);

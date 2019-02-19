@@ -214,58 +214,96 @@ markdown(Document *document, FILE *out, mkd_flag_t flags)
 }
 
 
+/* anchor_format a string, returning the formatted string in malloc()ed space
+ * MKD_URLENCODEDANCHOR is now perverted to being a html5 anchor
+ *
+ * !labelformat:  print all characters
+ * labelformat && h4anchor: prefix nonalpha label with L,
+ *                          expand all nonalnum, _, ':', '.' to hex
+ *                          except space which maps to -
+ * labelformat && !h4anchor:expand space to -, other isspace() & '%' to hex
+ */
+static char *
+mkd_anchor_format(char *s, int len, int labelformat, mkd_flag_t flags)
+{
+    char *res;
+    unsigned char c;
+    int i, needed, out = 0;
+    int h4anchor = !(flags & MKD_URLENCODEDANCHOR);
+    static const unsigned char hexchars[] = "0123456789abcdef";
+
+    needed = labelformat ? (4*len) : len;
+
+    if ( (res = malloc(needed)) == NULL )
+	return NULL;
+
+    if ( h4anchor && labelformat && !isalpha(s[0]) )
+	res[out++] = 'L';
+	
+    
+    for ( i=0; i < len ; i++ ) {
+	c = s[i];
+	if ( labelformat ) {
+	    if ( h4anchor
+		    ? (isalnum(c) || (c == '_') || (c == ':') || (c == '.' ) )
+		    : !(isspace(c) || c == '%') )
+		res[out++] = c;
+	    else if ( c == ' ' )
+		res[out++] = '-';
+	    else {
+		    res[out++] = h4anchor ? '-' : '%';
+		    res[out++] = hexchars[c >> 4 & 0xf];
+		    res[out++] = hexchars[c      & 0xf];
+		    if ( h4anchor )
+			res[out++] = '-';
+	    }
+	}
+	else
+	    res[out++] = c;
+    }
+    
+    res[out++] = 0;
+    return res;
+} /* mkd_anchor_format */
+
+
 /* write out a Cstring, mangled into a form suitable for `<a href=` or `<a id=`
  */
 void
 mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 				       void *out, int labelformat,
-				       mkd_flag_t flags)
+				       MMIOT *f)
 {
-    static const unsigned char hexchars[] = "0123456789abcdef";
-    unsigned char c;
-
-    int i, size;
+    char *res;
     char *line;
-    /* MKD_URLENCODEDANCHOR is now perverted to being a html5 anchor
-     *
-     * !labelformat:  print all characters
-     * labelformat && h4anchor: prefix nonalpha label with L,
-     *                          expand all nonalnum, _, ':', '.' to hex
-     *                          except space which maps to -
-     * labelformat && !h4anchor:expand space to -, other isspace() & '%' to hex
-     */
-    int h4anchor = !(flags & MKD_URLENCODEDANCHOR);
+    int size;
+
+    int i;
 
     size = mkd_line(s, len, &line, IS_LABEL);
 
-    if ( h4anchor && labelformat && (size>0) && !isalpha(line[0]) )
-	(*outchar)('L',out);
-    
-    for ( i=0; i < size ; i++ ) {
-	c = line[i];
-	if ( labelformat ) {
-	    if ( h4anchor
-		    ? (isalnum(c) || (c == '_') || (c == ':') || (c == '.' ) )
-		    : !(isspace(c) || c == '%') )
-		(*outchar)(c, out);
-	    else {
-		if ( c == ' ' )
-		    (*outchar)('-', out);
-		else {
-		    (*outchar)(h4anchor ? '-' : '%', out);
-		    (*outchar)(hexchars[c >> 4 & 0xf], out);
-		    (*outchar)(hexchars[c      & 0xf], out);
-		    if ( h4anchor )
-			 (*outchar)('-', out);
-		}
-	    }
-	}
-	else
-	    (*outchar)(c,out);
+    if ( !line )
+	return;
+
+    if ( f->cb->e_anchor )
+	res = (*(f->cb->e_anchor))(line, size, f->cb->e_data);
+    else
+	res = mkd_anchor_format(line, size, labelformat, f->flags);
+
+    free(line);
+
+    if ( !res )
+	return;
+
+    for ( i=0; res[i]; i++ )
+	(*outchar)(res[i], out);
+
+    if ( f->cb->e_anchor ) {
+	if ( f->cb->e_free )
+	    (*(f->cb->e_free))(res, f->cb->e_data);
     }
-	
-    if (line)
-	free(line);
+    else 
+	free(res);
 }
 
 
@@ -351,6 +389,19 @@ mkd_e_flags(Document *f, mkd_callback_t edit)
 	if ( f->cb.e_flags != edit )
 	    f->dirty = 1;
 	f->cb.e_flags = edit;
+    }
+}
+
+
+/* set the anchor formatter
+ */
+void
+mkd_e_anchor(Document *f, mkd_callback_t format)
+{
+    if ( f ) {
+	if ( f->cb.e_anchor != format )
+	    f->dirty = 1;
+	f->cb.e_anchor = format;
     }
 }
 

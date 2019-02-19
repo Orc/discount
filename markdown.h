@@ -90,6 +90,7 @@ typedef struct callback_data {
     void *e_data;		/* private data for callbacks */
     mkd_callback_t e_url;	/* url edit callback */
     mkd_callback_t e_flags;	/* extra href flags callback */
+    mkd_callback_t e_anchor;	/* callback for anchor types */
     mkd_free_t e_free;		/* edit/flags callback memory deallocator */
 } Callback_data;
 
@@ -212,7 +213,7 @@ extern int  mkd_generateline(char *, int, FILE*, mkd_flag_t);
 extern void mkd_basename(Document*, char *);
 
 typedef int (*mkd_sta_function_t)(const int,const void*);
-extern void mkd_string_to_anchor(char*,int, mkd_sta_function_t, void*, int, mkd_flag_t);
+extern void mkd_string_to_anchor(char*,int, mkd_sta_function_t, void*, int, MMIOT *);
 
 extern Document *mkd_in(FILE *, mkd_flag_t);
 extern Document *mkd_string(const char*, int, mkd_flag_t);

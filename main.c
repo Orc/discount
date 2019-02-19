@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #include "config.h"
 #include "amalloc.h"
@@ -60,9 +61,48 @@ complain(char *fmt, ...)
 }
 
 
+char *
+anchor_format(char *input, void *ctx)
+{
+    int i, j, size;
+    char* ret;
+
+    if ( !input )
+	return NULL;
+
+     size = strlen(input);
+
+     ret = malloc(1+size);
+
+     if ( !ret )
+	 return NULL;
+     
+
+    while ( size && isspace(input[size-1]) )
+	--size;
+    
+    for ( j=i=0; i < size; i++ ) {
+	if (isalnum(input[i]) || strchr("-_+", input[i]) )
+	    ret[j++] = input[i];
+	else if ( input[i] == ' ' )
+	    ret[j++] = '-';
+    }
+    ret[j++] = 0;
+    
+    return ret;
+}
+
+void
+free_it(char *object, void *ctx)
+{
+    if ( object )
+	free(object);
+}
+
+
 struct h_opt opts[] = {
-    { 0, "html5",  '5', 0,          "recognise html5 block elements" },
-    { 0, "base",   'b', "url-base", "URL prefix" },
+    { 0, "html5",  '5', 0,           "recognise html5 block elements" },
+    { 0, "base",   'b', "url-base",  "URL prefix" },
     { 0, "debug",  'd', 0,           "debugging" },
     { 0, "version",'V', 0,           "show version info" },
     { 0, 0,        'E', "flags",     "url flags" },
@@ -76,6 +116,7 @@ struct h_opt opts[] = {
     { 0, "toc",    'T', 0,           "output a TOC" },
     { 0, 0,        'C', "prefix",    "prefix for markdown extra footnotes" },
     { 0, 0,        'o', "file",       "write output to file" },
+    { 0, "squash", 'x', 0,           "squash toc labels to be more like github" },
 };
 #define NROPTS (sizeof opts/sizeof opts[0])
 
@@ -92,6 +133,7 @@ main(int argc, char **argv)
     int styles = 0;
     int use_mkd_line = 0;
     int github_flavoured = 0;
+    int squash = 0;
     char *extra_footnote_prefix = 0;
     char *urlflags = 0;
     char *text = 0;
@@ -165,6 +207,8 @@ main(int argc, char **argv)
 			exit(1);
 		    }
 		    break;
+	case 'x':   squash = 1;
+		    break;
 	}
     }
 
@@ -212,6 +256,10 @@ main(int argc, char **argv)
 	if ( urlflags ) {
 	    mkd_e_data(doc, urlflags);
 	    mkd_e_flags(doc, e_flags);
+	}
+	if ( squash ) {
+	    mkd_e_anchor(doc, (mkd_callback_t) anchor_format);
+	    mkd_e_free(doc, free_it);
 	}
 	if ( extra_footnote_prefix )
 	    mkd_ref_prefix(doc, extra_footnote_prefix);
