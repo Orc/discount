@@ -17,7 +17,12 @@
 static char *
 onlyifset(Line *l)
 {
-    char *ret = T(l->text) + l->dle;
+    char *ret;
+
+    if ( l->dle < 0 || l->dle >= S(l->text) )
+	return 0;
+
+    ret = T(l->text) + l->dle;
 
     return ret[0] ? ret : 0;
 }
