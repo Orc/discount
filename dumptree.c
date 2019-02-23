@@ -108,7 +108,10 @@ dumptree(Paragraph *pp, Stack *sp, FILE *f)
 	    changepfx(sp, '`');
 	printpfx(sp, f);
 
-	d = fprintf(f, "[%s", Pptype(pp->typ));
+	if ( pp->typ == HDR )
+	    d += fprintf(f, "[h%d", pp->hnumber);
+	else
+	    d = fprintf(f, "[%s", Pptype(pp->typ));
 	if ( pp->ident )
 	    d += fprintf(f, " %s", pp->ident);
 
