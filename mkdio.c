@@ -104,7 +104,7 @@ populate(getc_func getc, void* ctx, mkd_flag_t flags)
 
     if ( !a ) return 0;
 
-    a->tabstop = (flags & MKD_TABSTOP) ? 4 : TABSTOP;
+    a->tabstop = is_flag_set(flags, MKD_TABSTOP) ? 4 : TABSTOP;
 
     CREATE(line);
 
@@ -128,7 +128,7 @@ populate(getc_func getc, void* ctx, mkd_flag_t flags)
 
     DELETE(line);
 
-    if ( (pandoc == 3) && !(flags & (MKD_NOHEADER|MKD_STRICT)) ) {
+    if ( (pandoc == 3) && !(is_flag_set(flags, MKD_NOHEADER) || is_flag_set(flags, MKD_STRICT)) ) {
 	/* the first three lines started with %, so we have a header.
 	 * clip the first three lines out of content and hang them
 	 * off header.
@@ -191,7 +191,7 @@ mkd_generatehtml(Document *p, FILE *output)
     int szdoc;
 
     DO_OR_DIE( szdoc = mkd_document(p,&doc) );
-    if ( p->ctx->flags & MKD_CDATA )
+    if ( is_flag_set(p->ctx->flags, MKD_CDATA) )
 	DO_OR_DIE( mkd_generatexml(doc, szdoc, output) );
     else if ( fwrite(doc, szdoc, 1, output) != 1 )
 	return EOF;
@@ -229,7 +229,7 @@ mkd_anchor_format(char *s, int len, int labelformat, mkd_flag_t flags)
     char *res;
     unsigned char c;
     int i, needed, out = 0;
-    int h4anchor = !(flags & MKD_URLENCODEDANCHOR);
+    int h4anchor = !is_flag_set(flags, MKD_URLENCODEDANCHOR);
     static const unsigned char hexchars[] = "0123456789abcdef";
 
     needed = labelformat ? (4*len) : len;
@@ -357,7 +357,7 @@ mkd_generateline(char *bfr, int size, FILE *output, mkd_flag_t flags)
     int status;
 
     mkd_parse_line(bfr, size, &f, flags);
-    if ( flags & MKD_CDATA )
+    if ( is_flag_set(flags, MKD_CDATA) )
 	status = mkd_generatexml(T(f.out), S(f.out), output) != EOF;
     else
 	status = fwrite(T(f.out), S(f.out), 1, output) == S(f.out);

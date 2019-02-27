@@ -999,8 +999,12 @@ AC_SCALAR_TYPES () {
 
 	while [ $# -gt 0 ]; do
 	    case "$1" in
-	    sub)
-		(   echo "s:@DWORD@:uint32_t:g"
+	    sub) (  if [ -z "$__i" ] ; then
+			echo "s:@SCALAR_HEADER_INCLUDE@::g"
+		    else
+			echo "s:@SCALAR_HEADER_INCLUDE@:#include <$__i>:g"
+		    fi
+		    echo "s:@DWORD@:uint32_t:g"
 		    echo "s:@WORD@:uint16_t:g"
 		    echo "s:@BYTE@:uint8_t:g" ) >> "$__cwd"/config.sub
 		;;
@@ -1067,6 +1071,7 @@ EOF
 	    while [ "$1" ]; do
 		case "$1" in
 		sub)if ./ngc$$ sub >> "$__cwd"/config.sub; then
+			echo "s:@SCALAR_HEADER_INCLUDE@::g" >> "$__cwd"/config.sub
 			rc=0
 		    fi;;
 		*)  if ./ngc$$ >> "$__cwd"/config.h; then

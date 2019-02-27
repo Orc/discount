@@ -32,7 +32,7 @@ mkd_toc(Document *p, char **doc)
 
     *doc = 0;
     
-    if ( ! (p->ctx->flags & MKD_TOC) ) return 0;
+    if ( ! is_flag_set(p->ctx->flags, MKD_TOC) ) return 0;
 
     CREATE(res);
     RESERVE(res, 100);

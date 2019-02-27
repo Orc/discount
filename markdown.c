@@ -219,7 +219,7 @@ checkline(Line *l, mkd_flag_t flags)
 	case '_':  UNLESS_FENCED(underscores = 1); break;
 	case '*':  stars = 1; break;
 	default:
-	    if (flags & MKD_FENCEDCODE) {
+	    if ( is_flag_set(flags, MKD_FENCEDCODE) ) {
 		switch (c) {
 		case '~':  if (other) return; is_fence_char = 1; tildes = 1; break;
 		case '`':  if (other) return; is_fence_char = 1; backticks = 1; break;
@@ -445,7 +445,7 @@ end_of_block(Line *t, mkd_flag_t flags)
 static Line*
 is_discount_dt(Line *t, int *clip, mkd_flag_t flags)
 {
-    if ( !(flags & MKD_NODLDISCOUNT)
+    if ( !is_flag_set(flags, MKD_NODLDISCOUNT)
 	   && t
 	   && t->next
 	   && (S(t->text) > 2)
@@ -474,7 +474,7 @@ is_extra_dd(Line *t)
 static Line*
 is_extra_dt(Line *t, int *clip, mkd_flag_t flags)
 {
-    if ( flags & MKD_DLEXTRA
+    if ( is_flag_set(flags, MKD_DLEXTRA)
 	   && t
 	   && t->next && S(t->text) && T(t->text)[0] != '='
 		      && T(t->text)[S(t->text)-1] != '=') {
@@ -518,21 +518,22 @@ islist(Line *t, int *clip, mkd_flag_t flags, int *list_type)
     if ( end_of_block(t, flags) )
 	return 0;
 
-    if ( !(flags & (MKD_NODLIST|MKD_STRICT)) && isdefinition(t,clip,list_type,flags) )
+    if ( !(is_flag_set(flags, MKD_NODLIST) || is_flag_set(flags, MKD_STRICT))
+				      && isdefinition(t,clip,list_type,flags) )
 	return DL;
 
     if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
 	i = nextnonblank(t, t->dle+1);
 	*clip = (i > 4) ? 4 : i;
 	*list_type = UL;
-	return (flags & MKD_EXPLICITLIST) ? UL : AL;
+	return is_flag_set(flags, MKD_EXPLICITLIST) ? UL : AL;
     }
 
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
 	if ( T(t->text)[j-1] == '.' ) {
 
-	    if ( !(flags & (MKD_NOALPHALIST|MKD_STRICT))
-				    && (j == t->dle + 2)
+	    if ( !(is_flag_set(flags, MKD_NOALPHALIST) || is_flag_set(flags, MKD_STRICT))
+			  && (j == t->dle + 2)
 			  && isalpha(T(t->text)[t->dle]) ) {
 		j = nextnonblank(t,j);
 		*clip = (j > 4) ? 4 : j;
@@ -625,7 +626,7 @@ codeblock(Paragraph *p)
 static int
 iscodefence(Line *r, int size, line_type kind, mkd_flag_t flags)
 {
-    if ( !(flags & MKD_FENCEDCODE) )
+    if ( !is_flag_set(flags, MKD_FENCEDCODE) )
 	return 0;
 
     if ( !(r->flags & CHECKED) )
@@ -754,7 +755,7 @@ isdivmarker(Line *p, int start, mkd_flag_t flags)
     char *s;
     int last, i;
 
-    if ( flags & (MKD_NODIVQUOTE|MKD_STRICT) )
+    if ( is_flag_set(flags, MKD_NODIVQUOTE) || is_flag_set(flags, MKD_STRICT) )
 	return 0;
 
     start = nextnonblank(p, start);
@@ -1079,7 +1080,7 @@ addfootnote(Line *p, MMIOT* f)
     /* consume the closing ]: */
     j = nextnonblank(p, j+2);
 
-    if ( (f->flags & MKD_EXTRA_FOOTNOTE) && (T(foot->tag)[0] == '^') ) {
+    if ( is_flag_set(f->flags, MKD_EXTRA_FOOTNOTE) && (T(foot->tag)[0] == '^') ) {
 	/* markdown extra footnote: All indented lines past this point;
 	 * the first line includes the footnote reference, so we need to
 	 * snip that out as we go.
@@ -1201,14 +1202,14 @@ compile_document(Line *ptr, MMIOT *f)
     int previous_was_break = 1;
 
     while ( ptr ) {
-	if ( !(f->flags & MKD_NOHTML) && (tag = isopentag(ptr)) ) {
+	if ( !is_flag_set(f->flags, MKD_NOHTML) && (tag = isopentag(ptr)) ) {
 	    int blocktype;
 	    /* If we encounter a html/style block, compile and save all
 	     * of the cached source BEFORE processing the html/style.
 	     */
 	    uncache(&source, &d, f);
 	    
-	    if ( f->flags & MKD_NOSTYLE )
+	    if (is_flag_set(f->flags, MKD_NOSTYLE) )
 		blocktype = HTML;
 	    else
 		blocktype = strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML;
@@ -1267,7 +1268,7 @@ actually_a_table(MMIOT *f, Line *pp)
     int c;
 
     /* tables need to be turned on */
-    if ( f->flags & (MKD_STRICT|MKD_NOTABLES) )
+    if ( is_flag_set(f->flags, MKD_STRICT) || is_flag_set(f->flags, MKD_NOTABLES) )
 	return 0;
 
     /* tables need three lines */
@@ -1326,7 +1327,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	if ( iscode(ptr) ) {
 	    p = Pp(&d, ptr, CODE);
 	    
-	    if ( f->flags & MKD_1_COMPAT) {
+	    if ( is_flag_set(f->flags, MKD_1_COMPAT) ) {
 		/* HORRIBLE STANDARDS KLUDGE: the first line of every block
 		 * has trailing whitespace trimmed off.
 		 */
@@ -1381,7 +1382,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 					 * processing with textblock()
 					 */
 	    
-	    if ( !(f->flags & MKD_NOHTML) && (tag = isopentag(ptr)) ) {
+	    if ( !is_flag_set(f->flags, MKD_NOHTML) && (tag = isopentag(ptr)) ) {
 		/* possibly an html block
 		 */
 		

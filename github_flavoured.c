@@ -30,7 +30,7 @@ gfm_populate(getc_func getc, void* ctx, int flags)
 
     if ( !a ) return 0;
 
-    a->tabstop = (flags & MKD_TABSTOP) ? 4 : TABSTOP;
+    a->tabstop = is_flag_set(flags, MKD_TABSTOP) ? 4 : TABSTOP;
 
     CREATE(line);
 
@@ -59,7 +59,8 @@ gfm_populate(getc_func getc, void* ctx, int flags)
 
     DELETE(line);
 
-    if ( (pandoc == 3) && !(flags & (MKD_NOHEADER|MKD_STRICT)) ) {
+    if ( (pandoc == 3) && !(is_flag_set(flags, MKD_NOHEADER)
+     || is_flag_set(flags, MKD_STRICT)) ) {
 	/* the first three lines started with %, so we have a header.
 	 * clip the first three lines out of content and hang them
 	 * off header.
