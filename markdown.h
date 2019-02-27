@@ -4,9 +4,19 @@
 #include "config.h"
 #include "cstring.h"
 
+#ifdef HAVE_INTTYPES_H
+#   include <inttypes.h>
+#elif HAVE_STDINT_H
+#   include <stdint.h>
+#endif
+
 /* flags, captured into a named type
  */
 typedef DWORD mkd_flag_t;
+
+#define is_flag_set(flags, item)	((flags) & (item))
+#define set_flag(flags, item)		((flags) |= (item))
+#define clear_flag(flags, item)		((flags) &= ~(item))
 
 /* each input line is read into a Line, which contains the line,
  * the offset of the first non-space character [this assumes 

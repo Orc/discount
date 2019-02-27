@@ -3,6 +3,12 @@
 
 #include <stdio.h>
 
+#if HAVE_INTTYPES_H
+#   include <inttypes.h>
+#elif HAVE_STDINT_H
+#   include <stdint.h>
+#endif
+
 typedef void MMIOT;
 
 typedef @DWORD@ mkd_flag_t;

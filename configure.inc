@@ -476,13 +476,20 @@ acLookFor () {
     esac
     oldifs="$IFS"
     for program in $*; do
-	IFS=":"
-	for x in $path; do
-	    if [ $__mode $x/$program -a -f $x/$program ]; then
-		echo $x/$program
+	case "$program" in
+	/*) if [ $__mode $program -a -f $program ]; then
+		echo $program
 		break 2
-	    fi
-	done
+	    fi ;;
+	*)
+	    IFS=":"
+	    for x in $path; do
+		if [ $__mode $x/$program -a -f $x/$program ]; then
+		    echo $x/$program
+		    break 3
+		fi
+	    done ;;
+	esac
     done
     IFS="$oldifs"
     unset __mode
@@ -722,7 +729,15 @@ AC_PROG () {
 
     if set | grep -v PROG_$PN >/dev/null; then
 	TLOGN "looking for $1"
-	DEST=`acLookFor $1`
+	
+	__pgm=`eval echo \\$$PN`
+	if [ "$__pgm" ]; then
+	    TLOGN " (defined as $__pgm)"
+	    DEST=`acLookFor $__pgm`
+	else
+	    DEST=`acLookFor $1`
+	fi
+	
 	if [ "$DEST" ]; then
 	    eval PROG_$PN="$DEST"
 	    AC_SUB $PN $DEST
@@ -968,7 +983,41 @@ AC_SCALAR_TYPES () {
 #	TLOG " (defined in WinDef.h)"
 #	return 0
 #    fi
+
+    # try first to define them with the (allegedly) standard
+    # unsigned scalar types
+    #
+    unset __i;
+    if AC_QUIET AC_CHECK_HEADERS inttypes.h; then
+	__i=inttypes.h
+    elif AC_QUIET AC_CHECK_HEADERS stdint.h; then
+	__i=stdint.h
+    fi
+    if AC_QUIET AC_CHECK_TYPE uint32_t $__i && \
+       AC_QUIET AC_CHECK_TYPE uint16_t $__i &&  \
+       AC_QUIET AC_CHECK_TYPE uint8_t $__i; then
+
+	while [ $# -gt 0 ]; do
+	    case "$1" in
+	    sub)
+		(   echo "s:@DWORD@:uint32_t:g"
+		    echo "s:@WORD@:uint16_t:g"
+		    echo "s:@BYTE@:uint8_t:g" ) >> "$__cwd"/config.sub
+		;;
+	    *)  (   echo "#define DWORD uint32_t"
+		    echo "#define WORD uint16_t"
+		    echo "#define BYTE uint8_t" ) >> "$__cwd"/config.h
+		;;
+	    esac
+	    shift
+	done
+	TLOG " (using standard types ${__i:+in <$__i>})"
+	return 0
+    fi
 	
+    # and if that fails do a brute-force program that does sizeof()ication
+    # to figure things out
+    #
     cat > ngc$$.c << EOF
 #include <stdio.h>
 #include <string.h>
