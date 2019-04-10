@@ -432,6 +432,18 @@ mkd_e_data(Document *f, void *data)
 }
 
 
+/* set the code block display callback
+ */
+void
+mkd_e_code_format(Document *f, mkd_callback_t codefmt)
+{
+    if ( f && (f->cb.e_codefmt != codefmt) ) {
+	f->dirty = 1;
+	f->cb.e_codefmt = codefmt;
+    }
+}
+
+
 /* set the href prefix for markdown extra style footnotes
  */
 void

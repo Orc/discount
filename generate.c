@@ -1691,6 +1691,42 @@ printcode(Line *t, char *lang, MMIOT *f)
 {
     int blanks;
 
+    if ( f->cb->e_codefmt ) {
+	/* external code block formatter;  copy the text into a buffer,
+	 * call the formatter to style it, then dump that styled text
+	 * directly to the queue
+	 */
+	char *text;
+	char *fmt;
+	int size, copy_p;
+	Line *p;
+
+	for (size=0, p = t; p; p = p->next )
+	    size += 1+S(p->text);
+
+	text = malloc(1+size);
+
+	for ( copy_p = 0; t ; t = t->next ) {
+	    memcpy(text+copy_p, T(t->text), S(t->text));
+	    copy_p += S(t->text);
+	    text[copy_p++] = '\n';
+	}
+	text[copy_p] = 0;
+	
+	fmt = (*(f->cb->e_codefmt))(text, copy_p, (lang && lang[0]) ? lang : 0);
+	free(text);
+
+	if ( fmt ) {
+	    Qwrite(fmt, strlen(fmt), f);
+	    if ( f->cb->e_free )
+		(*(f->cb->e_free))(fmt, f->cb->e_data);
+	    return;
+	}
+	/* otherwise the external formatter failed and we need to 
+	 * fall back to the traditional codeblock format
+	 */
+    }
+    
     Qstring("<pre><code", f);
     if (lang && lang[0]) {
       Qstring(" class=\"", f);

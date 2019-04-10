@@ -102,6 +102,7 @@ typedef struct callback_data {
     mkd_callback_t e_flags;	/* extra href flags callback */
     mkd_callback_t e_anchor;	/* callback for anchor types */
     mkd_free_t e_free;		/* edit/flags callback memory deallocator */
+    mkd_callback_t e_codefmt;	/* codeblock formatter (for highlighting) */
 } Callback_data;
 
 
