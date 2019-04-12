@@ -106,7 +106,7 @@ char **argv;
     hopterr(&flags, 1);
     while ( res = gethopt(&flags, opts, NROPTS) ) {
 	if ( res == HOPTERR ) {
-	    hoptusage(argv[0], opts, NROPTS, "source [dest]");
+	    hoptusage(pgm, opts, NROPTS, "source [dest]");
 	    exit(1);
 	}
 	
@@ -168,7 +168,7 @@ char **argv;
 	break;
 
     default:
-	hoptusage(argv[0], opts, NROPTS, "source [dest]");
+	hoptusage(pgm, opts, NROPTS, "source [dest]");
 	exit(1);
     }
 
