@@ -68,7 +68,7 @@ typedef void   (*mkd_free_t)(char*, void*);
 void mkd_e_url(void *, mkd_callback_t);
 void mkd_e_flags(void *, mkd_callback_t);
 void mkd_e_anchor(void *, mkd_callback_t);
-void mkd_e_codefmt(void*, mkd_callback_t);
+void mkd_e_code_format(void*, mkd_callback_t);
 void mkd_e_free(void *, mkd_free_t );
 void mkd_e_data(void *, void *);
 
