@@ -69,9 +69,10 @@ fail(char *why, ...)
 }
 
 
-enum { ADD_CSS, ADD_HEADER, ADD_FOOTER };
+enum { GFM, ADD_CSS, ADD_HEADER, ADD_FOOTER };
 
 struct h_opt opts[] = {
+    { GFM,           "gfm",'G', 0,       "Github style markdown" },
     { ADD_CSS,       "css", 0, "url",    "Additional css for this page" },
     { ADD_HEADER, "header", 0, "header", "Additonal headers for this page" },
     { ADD_FOOTER, "footer", 0, "footer", "Additional footers for this page" },
@@ -91,6 +92,7 @@ char **argv;
     char *source = 0, *dest = 0;
     MMIOT *mmiot;
     int i;
+    int gfm = 0;
     FILE *input, *output; 
     STRING(char*) css, headers, footers;
     struct h_opt *res;
@@ -120,6 +122,9 @@ char **argv;
 	case ADD_FOOTER:
 	    EXPAND(footers) = hoptarg(&flags);
 	    break;
+	case GFM:
+	    gfm = 1;
+	    break;
 	default:
 	    fprintf(stderr, "unknown option?\n");
 	    break;
@@ -145,6 +150,7 @@ char **argv;
 	    fail("out of memory allocating name buffers");
 
 	strcpy(source, argv[0]);
+	strcpy(dest, argv[argc-1]);
 	if (( p = strrchr(source, '/') ))
 	    p = source;
 	else
@@ -155,7 +161,6 @@ char **argv;
 	    if ( (input = fopen(source, "r")) == 0 )
 		fail("can't open either %s or %s", argv[0], source);
 	}
-	strcpy(dest, source);
 
 	if ( notspecial(dest) ) {
 	    if (( dot = strrchr(dest, '.') ))
@@ -172,7 +177,9 @@ char **argv;
 	exit(1);
     }
 
-    if ( (mmiot = mkd_in(input, 0)) == 0 )
+    mmiot = gfm ? gfm_in(input, 0) : mkd_in(input, 0);
+
+    if ( mmiot == 0 )
 	fail("can't read %s", source ? source : "stdin");
 
     if ( !mkd_compile(mmiot, 0) )
