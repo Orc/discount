@@ -45,12 +45,11 @@ locals() {
     --CXX-BINDING)
 		echo CXX_BINDING=T
 		;;
-    --GITHUB-CHECKBOX)
-		echo GITHUB_CHECKBOX=T
+    --GITHUB-CHECKBOX|--GITHUB-CHECKBOX=ENTITY)
+		echo GITHUB_CHECKBOX_STYLE=entity
 		;;
     --GITHUB-CHECKBOX=INPUT)
-		echo GITHUB_CHECKBOX=T
-		echo GITHUB_CHECKBOX_AS_INPUT=T
+		echo GITHUB_CHECKBOX_STYLE=input
 		;;
     esac
 }
@@ -79,8 +78,9 @@ done
 # theme wants the old behavior of --with-(foo)
 #
 case "`echo "$WITH_DL" | $AC_UPPERCASE`" in
-    EXTRA)         THEME_CF="MKD_DLEXTRA|MKD_NODLDISCOUNT";;
-    BOTH)          THEME_CF="MKD_DLEXTRA";;
+    DISCOUNT)      THEME_CF="MKD_DLDISCOUNT";;
+    EXTRA)         THEME_CF="MKD_DLEXTRA";;
+    BOTH)          THEME_CF="MKD_DLIST";;
 esac
 test "$WITH_FENCED_CODE" && THEME_CF="${THEME_CF:+$THEME_CF|}MKD_FENCEDCODE"
 
@@ -232,9 +232,10 @@ else
     AC_SUB 'H1TITLE' ''
 fi
 
-if [ "$GITHUB_CHECKBOX" ]; then
-    AC_DEFINE 'GITHUB_CHECKBOX' '1'
-    test "$GITHUB_CHECKBOX_AS_INPUT" && AC_DEFINE 'CHECKBOX_AS_INPUT' '1'
+if [ "$GITHUB_CHECKBOX_STYLE" = "entity" ]; then
+    AC_DEFINE 'CHECKBOX_AS_INPUT' '0'
+else
+    AC_DEFINE 'CHECKBOX_AS_INPUT' '1'
 fi
 
 

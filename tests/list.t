@@ -124,7 +124,7 @@ try 'blockquote inside a list' \
 <blockquote><p>This is a quote insde a list item.</p></blockquote></li>
 </ul>'
 
-try 'dl followed by non-dl' \
+try -fdlist 'dl followed by non-dl' \
     '=a=
     test
 2. here' \
@@ -137,7 +137,7 @@ try 'dl followed by non-dl' \
 <li>here</li>
 </ol>'
 
-try 'non-dl followed by dl' \
+try -fdlist 'non-dl followed by dl' \
     '1. hello
 =sailor=
     hi!' \

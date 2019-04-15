@@ -7,7 +7,9 @@ char markdown_version[] = BRANCH VERSION
 #if USE_AMALLOC
 		" DEBUG"
 #endif
-#if GITHUB_CHECKBOX
-		" GITHUB_CHECKBOX"
+#if CHECKBOX_AS_INPUT
+		" GHC=INPUT"
+#else
+		" GHC=ENTITY"
 #endif
 		;

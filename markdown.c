@@ -445,7 +445,7 @@ end_of_block(Line *t, mkd_flag_t flags)
 static Line*
 is_discount_dt(Line *t, int *clip, mkd_flag_t flags)
 {
-    if ( !is_flag_set(flags, MKD_NODLDISCOUNT)
+    if ( is_flag_set(flags, MKD_DLDISCOUNT)
 	   && t
 	   && t->next
 	   && (S(t->text) > 2)
@@ -518,8 +518,7 @@ islist(Line *t, int *clip, mkd_flag_t flags, int *list_type)
     if ( end_of_block(t, flags) )
 	return 0;
 
-    if ( !(is_flag_set(flags, MKD_NODLIST) || is_flag_set(flags, MKD_STRICT))
-				      && isdefinition(t,clip,list_type,flags) )
+    if ( is_flag_set(flags, MKD_DLIST) && isdefinition(t,clip,list_type,flags) )
 	return DL;
 
     if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
@@ -532,7 +531,7 @@ islist(Line *t, int *clip, mkd_flag_t flags, int *list_type)
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
 	if ( T(t->text)[j-1] == '.' ) {
 
-	    if ( !(is_flag_set(flags, MKD_NOALPHALIST) || is_flag_set(flags, MKD_STRICT))
+	    if ( !is_flag_set(flags, MKD_NOALPHALIST)
 			  && (j == t->dle + 2)
 			  && isalpha(T(t->text)[t->dle]) ) {
 		j = nextnonblank(t,j);
@@ -755,7 +754,7 @@ isdivmarker(Line *p, int start, mkd_flag_t flags)
     char *s;
     int last, i;
 
-    if ( is_flag_set(flags, MKD_NODIVQUOTE) || is_flag_set(flags, MKD_STRICT) )
+    if ( is_flag_set(flags, MKD_NODIVQUOTE) )
 	return 0;
 
     start = nextnonblank(p, start);
@@ -854,20 +853,17 @@ listitem(Paragraph *p, int indent, mkd_flag_t flags, linefn check)
     Line *t, *q;
     int clip = indent;
     int z;
-#ifdef GITHUB_CHECKBOX
     int firstpara = 1;
     int ischeck;
 #define CHECK_NOT 0
 #define CHECK_NO 1
 #define CHECK_YES 2
-#endif
 
     for ( t = p->text; t ; t = q) {
 	UNCHECK(t);
 	__mkd_trim_line(t, clip);
 
-#ifdef GITHUB_CHECKBOX
-	if ( firstpara ) {
+	if ( firstpara && !is_flag_set(flags, MKD_NORMAL_LISTITEM) ) {
 	    ischeck = CHECK_NOT;
 	    if ( strncmp(T(t->text)+t->dle, "[ ]", 3) == 0 )
 		ischeck = CHECK_NO;
@@ -882,7 +878,6 @@ listitem(Paragraph *p, int indent, mkd_flag_t flags, linefn check)
 	    }
 	    firstpara = 0;
 	}
-#endif
 
         /* even though we had to trim a long leader off this item,
          * the indent for trailing paragraphs is still 4...
@@ -1268,7 +1263,7 @@ actually_a_table(MMIOT *f, Line *pp)
     int c;
 
     /* tables need to be turned on */
-    if ( is_flag_set(f->flags, MKD_STRICT) || is_flag_set(f->flags, MKD_NOTABLES) )
+    if ( is_flag_set(f->flags, MKD_NOTABLES) )
 	return 0;
 
     /* tables need three lines */

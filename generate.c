@@ -1352,7 +1352,6 @@ text(MMIOT *f)
 		    break;
 	/* A^B -> A<sup>B</sup> */
 	case '^':   if ( is_flag_set(f->flags, MKD_NOSUPERSCRIPT)
-			    || is_flag_set(f->flags, MKD_STRICT)
 			    || is_flag_set(f->flags, MKD_TAGTEXT)
 			    || (f->last == 0)
 			    || ((ispunct(f->last) || isspace(f->last))
@@ -1390,7 +1389,7 @@ text(MMIOT *f)
 		    break;
 	case '_':
 	/* Underscores don't count if they're in the middle of a word */
-		    if ( !(is_flag_set(f->flags, MKD_NORELAXED) || is_flag_set(f->flags, MKD_STRICT))
+		    if ( !is_flag_set(f->flags, MKD_NORELAXED)
 				&& isthisalnum(f,-1) && isthisalnum(f,1) ) {
 			Qchar(c, f);
 			break;
@@ -1413,7 +1412,6 @@ text(MMIOT *f)
 		    break;
 	
 	case '~':   if ( is_flag_set(f->flags, MKD_NOSTRIKETHROUGH)
-			 || is_flag_set(f->flags, MKD_STRICT)
 			 || is_flag_set(f->flags, MKD_TAGTEXT)
 			 || ! tickhandler(f,c,2,0, delspan) )
 			Qchar(c, f);
@@ -1437,8 +1435,7 @@ text(MMIOT *f)
 				}
 				
 				break;
-		    case '^':   if ( is_flag_set(f->flags, MKD_STRICT)
-					|| is_flag_set(f->flags, MKD_NOSUPERSCRIPT) ) {
+		    case '^':   if ( is_flag_set(f->flags, MKD_NOSUPERSCRIPT) ) {
 				    Qchar('\\', f);
 				    shift(f,-1);
 				    break;
@@ -1779,7 +1776,6 @@ htmlify_paragraphs(Paragraph *p, MMIOT *f)
 }
 
 
-#ifdef GITHUB_CHECKBOX
 static void
 li_htmlify(Paragraph *p, char *arguments, mkd_flag_t flags, MMIOT *f)
 {
@@ -1808,7 +1804,6 @@ li_htmlify(Paragraph *p, char *arguments, mkd_flag_t flags, MMIOT *f)
      Qprintf(f, "</li>");
     ___mkd_emblock(f);
 }
-#endif
 
 
 static void
@@ -1860,11 +1855,7 @@ listdisplay(int typ, Paragraph *p, MMIOT* f)
 	Qprintf(f, ">\n");
 
 	for ( ; p ; p = p->next ) {
-#ifdef GITHUB_CHECKBOX
 	    li_htmlify(p->down, p->ident, p->flags, f);
-#else
-	    htmlify(p->down, "li", p->ident, f);
-#endif
 	    Qchar('\n', f);
 	}
 

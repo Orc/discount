@@ -263,8 +263,10 @@ main(int argc, char **argv)
     if ( version ) {
 	printf("%s: discount %s%s", pgm, markdown_version,
 				  with_html5 ? " +html5":"");
-	if ( version > 1 )
+	if ( version == 2 )
 	    mkd_flags_are(stdout, flags, 0);
+	if ( version >= 3 )
+	    printf(" MARKDOWN_FLAGS=0x%08x", flags);
 	putchar('\n');
 	exit(0);
     }
@@ -308,7 +310,7 @@ main(int argc, char **argv)
 	if ( squash )
 	    mkd_e_anchor(doc, (mkd_callback_t) anchor_format);
 	if ( use_e_codefmt )
-	    mkd_e_code_format(doc, external_codefmt);
+	    mkd_e_code_format(doc, (mkd_callback_t)external_codefmt);
 
 	if ( use_e_codefmt || squash )
 	    mkd_e_free(doc, free_it);
