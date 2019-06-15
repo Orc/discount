@@ -72,4 +72,6 @@
 #define TABSTOP 8
 #define HAVE_MALLOC_H    0
 
+#define DESTRUCTOR
+
 #endif /* __AC_MARKDOWN_D */
