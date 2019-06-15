@@ -34,7 +34,7 @@ version.obj: version.c VERSION config.h
 	$(CC) $(CFLAGS) -DBRANCH="" -DVERSION=\"$(VERSION)\" /c version.c
 
 mkdio.h: mkdio.h.in
-	powershell.exe -Command "(gc mkdio.h.in) -replace '@DWORD@', 'unsigned long' | Out-File mkdio.h"
+	powershell.exe -Command "(gc mkdio.h.in) -replace '@DWORD@', 'unsigned long' -replace '@SCALAR_HEADER_INCLUDE@', '' | Out-File mkdio.h"
 
 mkdio.obj: mkdio.h
 
@@ -49,8 +49,8 @@ mktags: mktags.obj
 blocktags: mktags
 	.\mktags.exe > blocktags
 
-mkd2html:  mkd2html.obj $(MKDLIB) mkdio.h gethopt.h gethopt.obj
-	$(CC) $(CFLAGS) $(LFLAGS) mkd2html.obj gethopt.obj $(MKDLIB)
+mkd2html:  mkd2html.obj $(MKDLIB) mkdio.h gethopt.h gethopt.obj notspecial.obj
+	$(CC) $(CFLAGS) $(LFLAGS) mkd2html.obj gethopt.obj notspecial.obj $(MKDLIB)
 
 markdown: main.obj $(COMMON) $(MKDLIB)
 	$(CC) $(CFLAGS) $(LFLAGS) /Femarkdown main.obj $(COMMON) $(MKDLIB)
