@@ -20,6 +20,9 @@ set(${PROJECT_NAME}_INSTALL_SAMPLES OFF CACHE BOOL
 set(${PROJECT_NAME}_ONLY_LIBRARY OFF CACHE BOOL
     "Set to ON to only build markdown library (default is OFF)")
 
+set(${PROJECT_NAME}_CXX_BINDING OFF CACHE BOOL
+    "Set to ON to install header files with c++ wrappers (default is OFF)")
+
 # Check headers
 include(CheckIncludeFile)
 check_include_file(libgen.h HAVE_LIBGEN_H)
@@ -110,6 +113,13 @@ set_property(SOURCE "${_ROOT}/version.c" APPEND PROPERTY COMPILE_DEFINITIONS
 configure_file("${_ROOT}/mkdio.h.in"
     "${_ROOT}/mkdio.h"
     @ONLY)
+if(${PROJECT_NAME}_CXX_BINDING)
+    message(STATUS "Applying c++ glue to mkdio.h")
+    file(READ "${_ROOT}/mkdio.h" _ROOT_MKDIO_H)
+    file(WRITE "${_ROOT}/mkdio.h" "#ifdef __cplusplus\nextern \"C\" {\n#endif\n")
+    file(APPEND "${_ROOT}/mkdio.h" "${_ROOT_MKDIO_H}")
+    file(APPEND "${_ROOT}/mkdio.h" "#ifdef __cplusplus\n}\n#endif\n")
+endif()
 
 include_directories("${_ROOT}")
 
