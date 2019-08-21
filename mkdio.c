@@ -379,6 +379,16 @@ mkd_e_url(Document *f, mkd_callback_t edit)
     }
 }
 
+void
+mkd_e_latex(Document *f, mkd_callback_t edit)
+{
+    if ( f ) {
+        if ( f->cb.e_latex != edit )
+            f->dirty = 1;
+        f->cb.e_latex = edit;
+    }
+}
+
 
 /* set the url options callback
  */

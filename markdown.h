@@ -99,6 +99,7 @@ typedef void  (*mkd_free_t)(char*, void*);
 typedef struct callback_data {
     void *e_data;		/* private data for callbacks */
     mkd_callback_t e_url;	/* url edit callback */
+    mkd_callback_t e_latex; /* latex edit callback */
     mkd_callback_t e_flags;	/* extra href flags callback */
     mkd_callback_t e_anchor;	/* callback for anchor types */
     mkd_free_t e_free;		/* edit/flags callback memory deallocator */

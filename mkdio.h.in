@@ -66,6 +66,7 @@ typedef char * (*mkd_callback_t)(const char*, const int, void*);
 typedef void   (*mkd_free_t)(char*, void*);
 
 void mkd_e_url(void *, mkd_callback_t);
+void mkd_e_latex(void *, mkd_callback_t);
 void mkd_e_flags(void *, mkd_callback_t);
 void mkd_e_anchor(void *, mkd_callback_t);
 void mkd_e_code_format(void*, mkd_callback_t);

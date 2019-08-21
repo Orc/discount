@@ -1256,18 +1256,32 @@ smartypants(int c, int *flags, MMIOT *f)
 static int
 mathhandler(MMIOT *f, int e1, int e2)
 {
-    int i = 0;
+	int i = 0;
+	while(peek(f, ++i) != EOF) {
+		if (peek(f, i) == e1 && peek(f, i+1) == e2) {
+			int charcount = (i+1) + 2;
 
-    while(peek(f, ++i) != EOF) {
-        if (peek(f, i) == e1 && peek(f, i+1) == e2) {
-	    cputc(peek(f,-1), f);
-	    cputc(peek(f, 0), f);
-	    while ( i-- > -1 )
-		cputc(pull(f), f);
-            return 1;
-        }
-    }
-    return 0;
+			char* math = (char*)malloc(sizeof(char)*(charcount+1));
+			math[0] = peek(f, -1);
+			math[1] = peek(f, 0);
+
+			while ( i-- > -1 )
+				math[charcount-i-2] = pull(f);
+			math[charcount] = '\0';
+
+			char* edit;
+			if ( f->cb && f->cb->e_latex && (edit = (*f->cb->e_latex)(math, charcount+1, NULL)) ) {
+				Qstring(edit, f);
+				if ( f->cb->e_free )
+					(*f->cb->e_free)(edit, NULL);
+			} else
+				Qstring(math, f);
+
+			free(math);
+			return 1;
+		}
+	}
+	return 0;
 }
 
 
@@ -1462,7 +1476,14 @@ text(MMIOT *f)
 		    case '(':   if ( is_flag_set(f->flags, MKD_LATEX)
 				   && mathhandler(f, '\\', (c =='(')?')':']') )
 				    break;
-				/* else fall through to default */
+				Qchar(c, f);
+				break;
+
+		    case '$':	if ( is_flag_set(f->flags, MKD_LATEX) ) {
+				    Qchar(c, f);
+				    break;
+				}
+
 			
 		    default:    if ( escaped(f,c) ||
 				     strchr(">#.-+{}]![*_\\()`", c) )
@@ -1489,21 +1510,52 @@ text(MMIOT *f)
 			Qchar(c, f);
 		    break;
 
-	case '$':   if ( is_flag_set(f->flags, MKD_LATEX) && (peek(f, 1) == '$') ) {
-			pull(f);
-			if ( mathhandler(f, '$', '$') )
-			    break;
-			Qchar('$', f);
-		    }
-		    /* fall through to default */
-	
+	case '$': if ( is_flag_set(f->flags, MKD_LATEX) ) {
+			if (peek(f, 1) == '$' ) {
+				pull(f);
+				if ( mathhandler(f, '$', '$') )
+					break;
+				Qchar('$', f);
+			}
+			else {
+				int c2;
+				int i = 1;
+
+				while ( ((c2=peek(f,i)) != '$') && (c2 != EOF) )
+					i++;
+
+				if ( c2 != EOF ) {
+					int charcount = i+1;
+
+					// Make string with found latex code
+					char* math = (char*)malloc(sizeof(char)*(charcount+1));
+					math[0] = '$';
+					while (i-- > 0 )
+						math[charcount-i-1] = pull(f);
+					math[charcount] = '\0';
+
+					char* edit;
+					if ( f->cb && f->cb->e_latex && (edit = (*f->cb->e_latex)(math, charcount+1, NULL)) ) {
+						Qstring(edit, f);
+						if ( f->cb->e_free )
+							(*f->cb->e_free)(edit, NULL);
+					} else
+						Qstring(math, f);
+
+					free(math);
+					break;
+				}
+			}
+		}
+		/* fall through to default */
+
 	default:    f->last = c;
-		    Qchar(c, f);
-		    break;
+			Qchar(c, f);
+			break;
 	}
-    }
-    /* truncate the input string after we've finished processing it */
-    S(f->in) = f->isp = 0;
+	}
+	/* truncate the input string after we've finished processing it */
+	S(f->in) = f->isp = 0;
 } /* text */
 
 
