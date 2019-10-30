@@ -100,12 +100,12 @@ populate(getc_func getc, void* ctx, mkd_flag_t *flags)
     Cstring line;
     Document *a = __mkd_new_Document();
     int c;
-    int pandoc = 0;
+    int pandoc = (flags && !is_flag_set(flags, MKD_NOHEADER)) ? 0 : EOF;
 
     if ( !a ) return 0;
 
 
-    a->tabstop = is_flag_set(flags, MKD_TABSTOP) ? 4 : TABSTOP;
+    a->tabstop = (flags && is_flag_set(flags, MKD_TABSTOP)) ? 4 : TABSTOP;
 
     CREATE(line);
 
@@ -129,7 +129,7 @@ populate(getc_func getc, void* ctx, mkd_flag_t *flags)
 
     DELETE(line);
 
-    if ( (pandoc == 3) && !is_flag_set(flags, MKD_NOHEADER) ) {
+    if ( pandoc == 3 ) {
 	/* the first three lines started with %, so we have a header.
 	 * clip the first three lines out of content and hang them
 	 * off header.
