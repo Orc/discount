@@ -1474,8 +1474,11 @@ mkd_compile(Document *doc, mkd_flag_t* flags)
     doc->ctx->ref_prefix= doc->ref_prefix;
     doc->ctx->cb        = &(doc->cb);
     sayflags("flags", flags, stderr);
-    COPY_FLAGS(doc->ctx->flags,*flags);
-    sayflags("used ", &(doc->ctx->flags), stderr);
+    if (flags)
+	COPY_FLAGS(doc->ctx->flags, *flags);
+    else
+	mkd_init_flags(&doc->ctx->flags);
+    sayflags("used ", &doc->ctx->flags, stderr);
     CREATE(doc->ctx->in);
     doc->ctx->footnotes = malloc(sizeof doc->ctx->footnotes[0]);
     doc->ctx->footnotes->reference = 0;
