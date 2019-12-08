@@ -317,7 +317,10 @@ static void
 mkd_parse_line(char *bfr, int size, MMIOT *f, mkd_flag_t *flags)
 {
     ___mkd_initmmiot(f, 0);
-    COPY_FLAGS(f->flags, *flags);
+    if ( flags )
+	COPY_FLAGS(f->flags, *flags);
+    else
+	mkd_init_flags(&f->flags);
     ___mkd_reparse(bfr, size, NULL, f, 0);
     ___mkd_emblock(f);
 }
@@ -361,7 +364,7 @@ mkd_generateline(char *bfr, int size, FILE *output, mkd_flag_t* flags)
     int status;
 
     mkd_parse_line(bfr, size, &f, flags);
-    if ( is_flag_set(flags, MKD_CDATA) )
+    if ( flags && is_flag_set(flags, MKD_CDATA) )
 	status = mkd_generatexml(T(f.out), S(f.out), output) != EOF;
     else
 	status = fwrite(T(f.out), S(f.out), 1, output) == S(f.out);
