@@ -52,8 +52,6 @@ enum {
 
 typedef struct { char bit[MKD_NR_FLAGS]; } mkd_flag_t;
 
-void ___mkd_or_flags(mkd_flag_t* dst, mkd_flag_t* src);
-int ___mkd_and_flags(mkd_flag_t* dst, mkd_flag_t* src);
 void mkd_init_flags(mkd_flag_t *p);
 
 #define is_flag_set(flags, item)	((flags)->bit[item])
@@ -62,14 +60,13 @@ void mkd_init_flags(mkd_flag_t *p);
 
 #define COPY_FLAGS(dst,src)	memcpy(&dst,&src,sizeof dst)
 
-#define OR_FLAGS(dst,src)	___mkd_or_flags(dst,src)
-#define AND_FLAGS(dst,src)	___mkd_and_flags(dst,src)
+void ___mkd_or_flags(mkd_flag_t* dst, mkd_flag_t* src);
+int ___mkd_different(mkd_flag_t* dst, mkd_flag_t* src);
+int ___mkd_any_flags(mkd_flag_t* dst, mkd_flag_t* src);
 
-#define MKD_DLIST	MKD_DLDISCOUNT|MKD_DLEXTRA
-#define MKD_STRICT	MKD_NOSUPERSCRIPT|MKD_NORELAXED|MKD_NOSTRIKETHROUGH| \
-			MKD_NOHEADER|MKD_NOALPHALIST|MKD_NODIVQUOTE| \
-			MKD_NOTABLES|MKD_NO_EXT|MKD_NOSTYLE|MKD_NORMAL_LISTITEM| \
-			MKD_TABSTOP
+#define ADD_FLAGS(dst,src)	___mkd_or_flags(dst,src)
+#define DIFFERENT(dst,src)	___mkd_different(dst,src)
+#define ANY_FLAGS(dst,src)	___mkd_any_flags(dst,src)
 
 /* each input line is read into a Line, which contains the line,
  * the offset of the first non-space character [this assumes 

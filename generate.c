@@ -216,9 +216,9 @@ ___mkd_reparse(char *bfr, int size, mkd_flag_t* flags, MMIOT *f, char *esc)
 
     ___mkd_initmmiot(&sub, f->footnotes);
     
-    COPY_FLAGS(sub.flags,f->flags);
+    COPY_FLAGS(sub.flags, f->flags);
     if ( flags )
-	OR_FLAGS(&sub.flags, flags);
+	ADD_FLAGS(&sub.flags, flags);
     sub.cb = f->cb;
     sub.ref_prefix = f->ref_prefix;
 
@@ -693,8 +693,6 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 {
     linkytype *tag;
     static mkd_flag_t tagtext = { {[MKD_TAGTEXT] = 1} };
-    mkd_flag_t flags;
-
 
     if ( image )
 	tag = &imaget;
@@ -710,8 +708,7 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
     else
 	tag = &linkt;
 
-    COPY_FLAGS(flags, f->flags);
-    if ( AND_FLAGS(&flags, &tag->flags) )
+    if ( ANY_FLAGS(&f->flags, &tag->flags) )
 	return 0;
 
     if ( is_flag_set(&f->flags, IS_LABEL) )

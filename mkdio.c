@@ -463,6 +463,33 @@ mkd_ref_prefix(Document *f, char *data)
     }
 }
 
+#if 0
+static void
+sayflags(char *pfx, mkd_flag_t* flags, FILE *output)
+{
+    int i;
+
+    fprintf(output, "%.*s/", (int)strlen(pfx), "            ");
+    for (i=0; i<MKD_NR_FLAGS; i++)
+	fputc( (i==0) || (i % 10) ? ' ' : (i/10)+'0', output);
+    fputc('\\', output);
+    fputc('\n', output);
+    fprintf(output, "%s|", pfx);
+    for (i=0; i<MKD_NR_FLAGS; i++)
+	fputc((i%10)+'0', output);
+    fputc('|', output);
+    fputc('\n', output);
+    fprintf(output, "%.*s\\", (int)strlen(pfx), "            ");
+    for (i=0;i<MKD_NR_FLAGS; i++)
+	fputc(is_flag_set(flags, i)?'X':' ', output);
+    fputc('/', output);
+    fputc('\n', output);
+}
+#else
+#define sayflags(pfx,flags,output) 1
+#endif
+
+
 
 void
 ___mkd_or_flags(mkd_flag_t *dst, mkd_flag_t *src)
@@ -476,16 +503,44 @@ ___mkd_or_flags(mkd_flag_t *dst, mkd_flag_t *src)
 
 
 int
-___mkd_and_flags(mkd_flag_t *dst, mkd_flag_t *src)
+___mkd_different(mkd_flag_t *dst, mkd_flag_t *src)
+{
+    int i;
+    mkd_flag_t zeroes;
+
+    if ( dst == 0 || src == 0 ) {
+	mkd_init_flags(&zeroes);
+	if ( !dst )
+	    dst = &zeroes;
+	if ( !src )
+	    src = &zeroes;
+    }
+
+    for (i=0; i < MKD_NR_FLAGS; i++)
+	if ( is_flag_set(src,i) != is_flag_set(dst,i) )
+	    return 1;
+
+    return 0;
+}
+
+int
+___mkd_any_flags(mkd_flag_t *dst, mkd_flag_t *src)
 {
     int i;
     int count = 0;
+    mkd_flag_t zeroes;
+
+    if ( dst == 0 || src == 0 ) {
+	mkd_init_flags(&zeroes);
+	if ( !dst )
+	    dst = &zeroes;
+	if ( !src )
+	    src = &zeroes;
+    }
 
     for (i=0; i < MKD_NR_FLAGS; i++)
 	if ( is_flag_set(src,i) && is_flag_set(dst,i) )
 	    ++count;
-	else
-	    clear_mkd_flag(dst, i);
 
     return count;
 }

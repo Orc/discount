@@ -1414,33 +1414,6 @@ compile(Line *ptr, int toplevel, MMIOT *f)
  */
 
 
-#if DEBUG
-static void
-sayflags(char *pfx, mkd_flag_t* flags, FILE *output)
-{
-    int i;
-    
-    fprintf(output, "%.*s/", (int)strlen(pfx), "            ");
-    for (i=0; i<MKD_NR_FLAGS; i++)
-	fputc( (i==0) || (i % 10) ? ' ' : (i/10)+'0', output);
-    fputc('\\', output);
-    fputc('\n', output);
-    fprintf(output, "%s|", pfx);
-    for (i=0; i<MKD_NR_FLAGS; i++)
-	fputc((i%10)+'0', output);
-    fputc('|', output);
-    fputc('\n', output);
-    fprintf(output, "%.*s\\", (int)strlen(pfx), "            ");
-    for (i=0;i<MKD_NR_FLAGS; i++)
-	fputc(is_flag_set(flags, i)?'X':' ', output);
-    fputc('/', output);
-    fputc('\n', output);
-}
-#else
-#define sayflags(pfx,flags,output) 1
-#endif
-
-
 /*
  * prepare and compile `text`, returning a Paragraph tree.
  */
@@ -1451,34 +1424,25 @@ mkd_compile(Document *doc, mkd_flag_t* flags)
 	return 0;
 
     if ( doc->compiled ) {
-	mkd_flag_t changed;
-
-	if ( flags )
-	    COPY_FLAGS(changed, *flags);
-	else
-	    mkd_init_flags(&changed);
-
-	if ( AND_FLAGS(&changed, &(doc->ctx->flags)) && !doc->dirty )
-	    return 1;
-	else {
+	if ( doc->dirty || DIFFERENT(flags, &doc->ctx->flags) ) {
 	    doc->compiled = doc->dirty = 0;
 	    if ( doc->code)
 		___mkd_freeParagraph(doc->code);
 	    if ( doc->ctx->footnotes )
 		___mkd_freefootnotes(doc->ctx);
 	}
+	else
+	    return 1;
     }
 
     doc->compiled = 1;
     memset(doc->ctx, 0, sizeof(MMIOT) );
     doc->ctx->ref_prefix= doc->ref_prefix;
     doc->ctx->cb        = &(doc->cb);
-    sayflags("flags", flags, stderr);
     if (flags)
 	COPY_FLAGS(doc->ctx->flags, *flags);
     else
 	mkd_init_flags(&doc->ctx->flags);
-    sayflags("used ", &doc->ctx->flags, stderr);
     CREATE(doc->ctx->in);
     doc->ctx->footnotes = malloc(sizeof doc->ctx->footnotes[0]);
     doc->ctx->footnotes->reference = 0;
