@@ -2,7 +2,7 @@
 #include "markdown.h"
 
 struct flagnames {
-    mkd_flag_t flag;
+    int flag;
     char *name;
 };
 
@@ -41,8 +41,15 @@ static struct flagnames flagnames[] = {
 #define NR(x)	(sizeof x/sizeof x[0])
 
 
+int
+mkd_flag_isset(mkd_flag_t *flags, int i)
+{
+    return flags ? is_flag_set(flags, i) : 0;
+}
+
+
 void
-mkd_flags_are(FILE *f, mkd_flag_t flags, int htmlplease)
+mkd_flags_are(FILE *f, mkd_flag_t* flags, int htmlplease)
 {
     int i;
     int not, set, even=1;
@@ -51,7 +58,7 @@ mkd_flags_are(FILE *f, mkd_flag_t flags, int htmlplease)
     if ( htmlplease )
 	fprintf(f, "<table class=\"mkd_flags_are\">\n");
     for (i=0; i < NR(flagnames); i++) {
-	set = flags & flagnames[i].flag;
+	set = mkd_flag_isset(flags, flagnames[i].flag);
 	name = flagnames[i].name;
 	if ( not = (*name == '!') ) {
 	    ++name;
@@ -88,5 +95,11 @@ void
 mkd_mmiot_flags(FILE *f, MMIOT *m, int htmlplease)
 {
     if ( m )
-	mkd_flags_are(f, m->flags, htmlplease);
+	mkd_flags_are(f, &(m->flags), htmlplease);
+}
+
+void
+mkd_init_flags(mkd_flag_t *p)
+{
+    memset(p, 0, sizeof(*p));
 }

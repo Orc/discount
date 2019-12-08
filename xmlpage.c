@@ -11,7 +11,7 @@
 
 
 int
-mkd_xhtmlpage(Document *p, mkd_flag_t flags, FILE *out)
+mkd_xhtmlpage(Document *p, mkd_flag_t* flags, FILE *out)
 {
     char *title;
     extern char *mkd_doc_title(Document *);

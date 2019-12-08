@@ -17,7 +17,7 @@ mkd_h1(Paragraph *p)
 }
 
 char *
-mkd_h1_title(Document *doc, int flags)
+mkd_h1_title(Document *doc, mkd_flag_t* flags)
 {
     Paragraph *title;
 
@@ -28,8 +28,10 @@ mkd_h1_title(Document *doc, int flags)
 	  /* assert that a H1 header is one line long, so that's
 	   * the only thing needed
 	    */
+	  set_mkd_flag(flags, MKD_TAGTEXT);
 	  size = mkd_line(T(title->text->text),
-			  S(title->text->text), &generated, flags|MKD_TAGTEXT);
+			  S(title->text->text), &generated, flags);
+	  clear_mkd_flag(flags, MKD_TAGTEXT);
 	  if ( size ) return generated;
     }
     return 0;

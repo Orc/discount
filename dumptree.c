@@ -115,8 +115,8 @@ dumptree(Paragraph *pp, Stack *sp, FILE *f)
 	if ( pp->ident )
 	    d += fprintf(f, " %s", pp->ident);
 
-	if ( pp->flags )
-	    d += fprintf(f, " %x", pp->flags);
+	if ( pp->para_flags )
+	    d += fprintf(f, " %x", pp->para_flags);
 	    
 	if ( pp->align > 1 )
 	    d += fprintf(f, ", <%s>", Begin[pp->align]);
@@ -141,7 +141,7 @@ dumptree(Paragraph *pp, Stack *sp, FILE *f)
 
 
 int
-mkd_dump(Document *doc, FILE *out, mkd_flag_t flags, char *title)
+mkd_dump(Document *doc, FILE *out, mkd_flag_t *flags, char *title)
 {
     Stack stack;
 

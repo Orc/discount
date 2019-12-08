@@ -37,13 +37,21 @@ char **argv;
     MMIOT *doc;
     char *q;
     int version = 0;
-    int ret;
-    mkd_flag_t flags = 0;
+    int ret, i;
+    DWORD bits;
+    mkd_flag_t flags;
     struct h_opt *opt;
     struct h_context blob;
 
-    if ( (q = getenv("MARKDOWN_FLAGS")) )
-	flags = strtol(q, 0, 0);
+    mkd_init_flags(&flags);
+    
+    if ( (q = getenv("MARKDOWN_FLAGS")) ) {
+	bits = strtol(q, 0, 0);
+
+	for ( i=0; i < 8*sizeof(bits); i++)
+	    if ( bits & (1<<i) )
+		mkd_set_flag_num(&flags, i);
+    }
 
     hoptset(&blob, argc, argv);
     hopterr(&blob, 1);
@@ -57,17 +65,22 @@ char **argv;
 	case 'V':   version++;
 		    break;
 	case 'F':   if ( strcmp(hoptarg(&blob), "?") == 0 ) {
-			show_flags(0,0);
+			show_flags(0,0,0);
 			exit(0);
 		    }
-		    else
-			flags = strtol(hoptarg(&blob), 0, 0);
+		    else {
+			bits = strtol(hoptarg(&blob), 0, 0);
+
+			for (i=0; i < 8*sizeof(bits); i++)
+			    if ( bits & (1<<i) )
+				mkd_set_flag_num(&flags, i);
+		    }
 		    break;
 	case 'f':   if ( strcmp(hoptarg(&blob), "?") == 0 ) {
-			show_flags(1,version);
+			show_flags(1,version,0);
 			exit(0);
 		    }
-		    else if ( q = set_flag(&flags, hoptarg(&blob)) )
+		    else if ( q = mkd_set_flag_string(&flags, hoptarg(&blob)) )
 			fprintf(stderr, "unknown option <%s>\n", q);
 		    break;
 	}
@@ -79,7 +92,7 @@ char **argv;
     if ( version ) {
 	printf("%s: discount %s", pgm, markdown_version);
 	if ( version > 1 )
-	    mkd_flags_are(stdout, flags, 0);
+	    mkd_flags_are(stdout, &flags, 0);
 	putchar('\n');
 	exit(0);
     }    
@@ -89,12 +102,12 @@ char **argv;
 	exit(1);
     }
 
-    if ( (doc = mkd_in(stdin, flags)) == 0 ) {
+    if ( (doc = mkd_in(stdin, &flags)) == 0 ) {
 	perror( (argc > 1) ? argv[1] : "stdin" );
 	exit(1);
     }
 
-    ret = mkd_xhtmlpage(doc, flags, stdout);
+    ret = mkd_xhtmlpage(doc, &flags, stdout);
 
     mkd_cleanup(doc);
 

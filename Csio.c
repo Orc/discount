@@ -50,7 +50,7 @@ Cswrite(Cstring *iot, char *bfr, int size)
 /* reparse() into a cstring
  */
 void
-Csreparse(Cstring *iot, char *buf, int size, mkd_flag_t flags)
+Csreparse(Cstring *iot, char *buf, int size, mkd_flag_t* flags)
 {
     MMIOT f;
     ___mkd_initmmiot(&f, 0);

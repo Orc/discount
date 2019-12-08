@@ -12,11 +12,64 @@
 
 /* flags, captured into a named type
  */
-typedef DWORD mkd_flag_t;
+enum { 
+	MKD_NOLINKS,		/* don't do link processing, block <a> tags  */
+	MKD_NOIMAGE,		/* don't do image processing, block <img> */
+	MKD_NOPANTS,		/* don't run smartypants() */
+	MKD_NOHTML,		/* don't allow raw html through AT ALL */
+	MKD_NORMAL_LISTITEM,	/* disable github-style checkbox lists */
+	MKD_TAGTEXT,		/* process text inside an html tag; no <em>, no <bold>,
+				 * no html or [] expansion */
+	MKD_NO_EXT,		/* don't allow pseudo-protocols */
+	MKD_NOEXT,		/* ^^^ (aliased for user convenience) */
+	MKD_CDATA,		/* generate code for xml ![CDATA[...]] */
+	MKD_NOSUPERSCRIPT,	/* no A^B */
+	MKD_NORELAXED,		/* emphasis happens /everywhere/ */
+	MKD_NOTABLES,		/* disallow tables */
+	MKD_NOSTRIKETHROUGH,	/* forbid ~~strikethrough~~ */
+	MKD_1_COMPAT,		/* compatibility with MarkdownTest_1.0 */
+	MKD_TOC,		/* do table-of-contents processing */
+	MKD_AUTOLINK,		/* make http://foo.com link even without <>s */
+	MKD_NOHEADER,		/* don't process header blocks */
+	MKD_TABSTOP,		/* expand tabs to 4 spaces */
+	MKD_SAFELINK,		/* paranoid check for link protocol */
+	MKD_NODIVQUOTE,	/* forbid >%class% blocks */
+	MKD_NOALPHALIST,	/* forbid alphabetic lists */
+	MKD_EXTRA_FOOTNOTE,	/* enable markdown extra-style footnotes */
+	MKD_NOSTYLE,		/* don't extract <style> blocks */
+	MKD_DLDISCOUNT,		/* enable discount-style definition lists */
+	MKD_DLEXTRA,		/* enable extra-style definition lists */
+	MKD_FENCEDCODE,		/* enabled fenced code blocks */
+	MKD_IDANCHOR,		/* use id= anchors for TOC links */
+	MKD_GITHUBTAGS,		/* allow dash and underscore in element names */
+	MKD_URLENCODEDANCHOR,	/* urlencode non-identifier chars instead of replacing with dots */
+	MKD_LATEX,		/* handle embedded LaTeX escapes */
+	MKD_EXPLICITLIST,	/* don't combine numbered/bulletted lists */
+			/* end of user flags */
+	IS_LABEL,
+	MKD_NR_FLAGS };
 
-#define is_flag_set(flags, item)	((flags) & (item))
-#define set_flag(flags, item)		((flags) |= (item))
-#define clear_flag(flags, item)		((flags) &= ~(item))
+
+typedef struct { char bit[MKD_NR_FLAGS]; } mkd_flag_t;
+
+void ___mkd_or_flags(mkd_flag_t* dst, mkd_flag_t* src);
+int ___mkd_and_flags(mkd_flag_t* dst, mkd_flag_t* src);
+void mkd_init_flags(mkd_flag_t *p);
+
+#define is_flag_set(flags, item)	((flags)->bit[item])
+#define set_mkd_flag(flags, item)	((flags)->bit[item] = 1)
+#define clear_mkd_flag(flags, item)	((flags)->bit[item] = 0)
+
+#define COPY_FLAGS(dst,src)	memcpy(&dst,&src,sizeof dst)
+
+#define OR_FLAGS(dst,src)	___mkd_or_flags(dst,src)
+#define AND_FLAGS(dst,src)	___mkd_and_flags(dst,src)
+
+#define MKD_DLIST	MKD_DLDISCOUNT|MKD_DLEXTRA
+#define MKD_STRICT	MKD_NOSUPERSCRIPT|MKD_NORELAXED|MKD_NOSTRIKETHROUGH| \
+			MKD_NOHEADER|MKD_NOALPHALIST|MKD_NODIVQUOTE| \
+			MKD_NOTABLES|MKD_NO_EXT|MKD_NOSTYLE|MKD_NORMAL_LISTITEM| \
+			MKD_TABSTOP
 
 /* each input line is read into a Line, which contains the line,
  * the offset of the first non-space character [this assumes 
@@ -31,7 +84,7 @@ typedef struct line {
     Cstring text;
     struct line *next;
     int dle;			/* leading indent on the line */
-    int flags;			/* special attributes for this line */
+    int line_flags;		/* special attributes for this line */
 #define PIPECHAR	0x01		/* line contains a | */
 #define CHECKED		0x02
 
@@ -55,7 +108,7 @@ typedef struct paragraph {
 	   HDR, HR, TABLE, SOURCE } typ;
     enum { IMPLICIT=0, PARA, CENTER} align;
     int hnumber;		/* <Hn> for typ == HDR */
-    int flags;
+    int para_flags;
 #define GITHUB_CHECK		0x01
 #define IS_CHECKED		0x02
 } Paragraph;
@@ -74,7 +127,7 @@ typedef struct footnote {
     int height, width;		/* dimensions (for image link) */
     int dealloc;		/* deallocation needed? */
     int refnumber;
-    int flags;
+    int fn_flags;
 #define EXTRA_FOOTNOTE	0x01
 #define REFERENCED	0x02
 } Footnote;
@@ -129,46 +182,6 @@ typedef struct mmiot {
     char *ref_prefix;
     struct footnote_list *footnotes;
     mkd_flag_t flags;
-#define MKD_NOLINKS	0x00000001
-#define MKD_NOIMAGE	0x00000002
-#define MKD_NOPANTS	0x00000004
-#define MKD_NOHTML	0x00000008
-#define MKD_NORMAL_LISTITEM 0x00000010
-#define MKD_TAGTEXT	0x00000020
-#define MKD_NO_EXT	0x00000040
-#define MKD_CDATA	0x00000080
-#define MKD_NOSUPERSCRIPT 0x00000100
-#define MKD_NORELAXED	0x00000200
-#define MKD_NOTABLES	0x00000400
-#define MKD_NOSTRIKETHROUGH 0x00000800
-#define MKD_TOC		0x00001000
-#define MKD_1_COMPAT	0x00002000
-#define MKD_AUTOLINK	0x00004000
-#define MKD_SAFELINK	0x00008000
-#define MKD_NOHEADER	0x00010000
-#define MKD_TABSTOP	0x00020000
-#define MKD_NODIVQUOTE	0x00040000
-#define MKD_NOALPHALIST	0x00080000
-#define MKD_EXTRA_FOOTNOTE 0x00200000
-#define MKD_NOSTYLE	0x00400000
-#define MKD_DLDISCOUNT  0x00800000
-#define	MKD_DLEXTRA	0x01000000
-#define MKD_FENCEDCODE	0x02000000
-#define MKD_IDANCHOR	0x04000000
-#define MKD_GITHUBTAGS	0x08000000
-#define MKD_URLENCODEDANCHOR 0x10000000
-#define IS_LABEL	0x20000000
-#define MKD_LATEX	0x40000000
-#define MKD_EXPLICITLIST	0x80000000
-#define USER_FLAGS	0xFFFFFFFF
-#define INPUT_MASK	(MKD_NOHEADER|MKD_TABSTOP)
-
-/* composite flags */
-#define MKD_DLIST	MKD_DLDISCOUNT|MKD_DLEXTRA
-#define MKD_STRICT	MKD_NOSUPERSCRIPT|MKD_NORELAXED|MKD_NOSTRIKETHROUGH| \
-			MKD_NOHEADER|MKD_NOALPHALIST|MKD_NODIVQUOTE| \
-			MKD_NOTABLES|MKD_NO_EXT|MKD_NOSTYLE|MKD_NORMAL_LISTITEM| \
-			MKD_TABSTOP
 
     Callback_data *cb;
 } MMIOT;
@@ -213,7 +226,7 @@ struct string_stream {
 
 
 extern int  mkd_firstnonblank(Line *);
-extern int  mkd_compile(Document *, mkd_flag_t);
+extern int  mkd_compile(Document *, mkd_flag_t*);
 extern int  mkd_document(Document *, char **);
 extern int  mkd_generatehtml(Document *, FILE *);
 extern int  mkd_css(Document *, char **);
@@ -222,19 +235,19 @@ extern int  mkd_generatecss(Document *, FILE *);
 extern int  mkd_xml(char *, int , char **);
 extern int  mkd_generatexml(char *, int, FILE *);
 extern void mkd_cleanup(Document *);
-extern int  mkd_line(char *, int, char **, mkd_flag_t);
-extern int  mkd_generateline(char *, int, FILE*, mkd_flag_t);
+extern int  mkd_line(char *, int, char **, mkd_flag_t*);
+extern int  mkd_generateline(char *, int, FILE*, mkd_flag_t*);
 #define mkd_text mkd_generateline
 extern void mkd_basename(Document*, char *);
 
 typedef int (*mkd_sta_function_t)(const int,const void*);
 extern void mkd_string_to_anchor(char*,int, mkd_sta_function_t, void*, int, MMIOT *);
 
-extern Document *mkd_in(FILE *, mkd_flag_t);
-extern Document *mkd_string(const char*, int, mkd_flag_t);
+extern Document *mkd_in(FILE *, mkd_flag_t*);
+extern Document *mkd_string(const char*, int, mkd_flag_t*);
 
-extern Document *gfm_in(FILE *, mkd_flag_t);
-extern Document *gfm_string(const char*,int, mkd_flag_t);
+extern Document *gfm_in(FILE *, mkd_flag_t*);
+extern Document *gfm_string(const char*,int, mkd_flag_t*);
 
 extern void mkd_initialize();
 extern void mkd_shlib_destructor();
@@ -252,7 +265,7 @@ extern void ___mkd_initmmiot(MMIOT *, void *);
 extern void ___mkd_freemmiot(MMIOT *, void *);
 extern void ___mkd_freeLineRange(Line *, Line *);
 extern void ___mkd_xml(char *, int, FILE *);
-extern void ___mkd_reparse(char *, int, mkd_flag_t, MMIOT*, char*);
+extern void ___mkd_reparse(char *, int, mkd_flag_t*, MMIOT*, char*);
 extern void ___mkd_emblock(MMIOT*);
 extern void ___mkd_tidy(Cstring *);
 
