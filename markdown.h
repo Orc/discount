@@ -12,16 +12,15 @@
 
 /* flags, captured into a named type
  */
-enum { 
-	MKD_NOLINKS,		/* don't do link processing, block <a> tags  */
+enum {  MKD_NOLINKS=0,		/* don't do link processing, block <a> tags  */
 	MKD_NOIMAGE,		/* don't do image processing, block <img> */
 	MKD_NOPANTS,		/* don't run smartypants() */
 	MKD_NOHTML,		/* don't allow raw html through AT ALL */
 	MKD_NORMAL_LISTITEM,	/* disable github-style checkbox lists */
-	MKD_TAGTEXT,		/* process text inside an html tag; no <em>, no <bold>,
-				 * no html or [] expansion */
+	MKD_TAGTEXT,		/* process text inside an html tag */
 	MKD_NO_EXT,		/* don't allow pseudo-protocols */
-	MKD_NOEXT,		/* ^^^ (aliased for user convenience) */
+#define MKD_NOEXT MKD_NO_EXT
+	MKD_EXPLICITLIST,	/* don't combine numbered/bulletted lists */
 	MKD_CDATA,		/* generate code for xml ![CDATA[...]] */
 	MKD_NOSUPERSCRIPT,	/* no A^B */
 	MKD_NORELAXED,		/* emphasis happens /everywhere/ */
@@ -33,7 +32,7 @@ enum {
 	MKD_NOHEADER,		/* don't process header blocks */
 	MKD_TABSTOP,		/* expand tabs to 4 spaces */
 	MKD_SAFELINK,		/* paranoid check for link protocol */
-	MKD_NODIVQUOTE,	/* forbid >%class% blocks */
+	MKD_NODIVQUOTE,		/* forbid >%class% blocks */
 	MKD_NOALPHALIST,	/* forbid alphabetic lists */
 	MKD_EXTRA_FOOTNOTE,	/* enable markdown extra-style footnotes */
 	MKD_NOSTYLE,		/* don't extract <style> blocks */
@@ -44,7 +43,6 @@ enum {
 	MKD_GITHUBTAGS,		/* allow dash and underscore in element names */
 	MKD_URLENCODEDANCHOR,	/* urlencode non-identifier chars instead of replacing with dots */
 	MKD_LATEX,		/* handle embedded LaTeX escapes */
-	MKD_EXPLICITLIST,	/* don't combine numbered/bulletted lists */
 			/* end of user flags */
 	IS_LABEL,
 	MKD_NR_FLAGS };

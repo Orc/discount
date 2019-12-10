@@ -109,7 +109,7 @@ show_flags(int byname, int verbose, mkd_flag_t *flags)
 	qsort(opts, NR(opts), sizeof(opts[0]), (stfu)sort_by_name);
     
 	for (i=0; i < NR(opts); i++) {
-	    if ( opts[i].special || (opts[i].alias && !verbose) )
+	    if ( opts[i].alias && !verbose )
 		continue;
 	    if ( (flags==0) || is_flag_set(flags, opts[i].flag) )
 		fprintf(stderr, "%16s : %s\n", opts[i].name, opts[i].desc);
@@ -163,7 +163,6 @@ set_standard(mkd_flag_t *flags, int enable)
 	set_mkd_flag(flags,   MKD_NOSUPERSCRIPT);
 	set_mkd_flag(flags,   MKD_NORMAL_LISTITEM);
 	set_mkd_flag(flags,   MKD_NO_EXT);
-	set_mkd_flag(flags,   MKD_NOEXT);
 	set_mkd_flag(flags,   MKD_NOSUPERSCRIPT);
 	set_mkd_flag(flags,   MKD_NORELAXED);
 	set_mkd_flag(flags,   MKD_NOTABLES);
