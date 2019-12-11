@@ -68,21 +68,14 @@ AC_INIT $TARGET
 AC_SUB 'PACKAGE_NAME' lib$TARGET
 AC_SUB 'PACKAGE_VERSION' $VERSION
 
-for banned_with in dl fenced-code id-anchor github-tags urlencoded-anchor; do
-    banned_with_variable_ref=\$WITH_`echo "$banned_with" | $AC_UPPERCASE | tr - _`
-    if [ "`eval echo "$banned_with_variable_ref"`" ]; then
-	LOG "Setting theme default --with-$banned_with."
-    fi
-done
-
-# theme wants the old behavior of --with-(foo)
+# define definition list type defaults (for theme)
 #
 case "`echo "$WITH_DL" | $AC_UPPERCASE`" in
-    DISCOUNT)      THEME_CF="MKD_DLDISCOUNT";;
-    EXTRA)         THEME_CF="MKD_DLEXTRA";;
-    BOTH)          THEME_CF="MKD_DLIST";;
+    DISCOUNT)      AC_DEFINE THEME_DL_MODE 1 ;;
+    EXTRA)         AC_DEFINE THEME_DL_MODE 2 ;;
+    BOTH)          AC_DEFINE THEME_DL_MODE 3 ;;
 esac
-test "$WITH_FENCED_CODE" && THEME_CF="${THEME_CF:+$THEME_CF|}MKD_FENCEDCODE"
+test "$WITH_FENCED_CODE" && AC_DEFINE THEME_FENCED_CODE 1
 
 AC_DEFINE THEME_CF "$THEME_CF"
 
