@@ -445,6 +445,36 @@ static struct _keyword {
 #define NR(x)	(sizeof x / sizeof x[0])
 
 
+/* set up flags to pass into the grinder
+ */
+static void
+setup_flags(mkd_flag_t *flagp, int where)
+{
+    mkd_init_flags(flagp);
+
+#ifdef THEME_DL_MODE
+    switch (THEME_DL_MODE) {
+    case 3: mkd_set_flag_num(flagp, MKD_DLEXTRA);
+    case 1: mkd_set_flag_num(flagp, MKD_DLDISCOUNT);
+	    break;
+    case 2: mkd_set_flag_num(flagp, MKD_DLEXTRA);
+	    break;
+    }
+#endif
+#ifdef THEME_FENCED_CODE
+    mkd_set_flag_num(flagp, MKD_FENCEDCODE);
+#endif
+
+    mkd_set_flag_num(flagp, MKD_TOC);
+    if ( where & INTAG ) 
+	mkd_set_flag_num(flagp, MKD_TAGTEXT);
+    else if ( where & INHEAD ) {
+	mkd_set_flag_num(flagp, MKD_NOIMAGE);
+	mkd_set_flag_num(flagp, MKD_NOLINKS);
+    }
+}
+
+
 /* spin() - run through the theme template, looking for <?theme expansions
  */
 void
@@ -479,16 +509,7 @@ spin(FILE *template, MMIOT *doc, FILE *output)
 		for (i=0; i < NR(keyword); i++)
 		    if ( thesame(p, keyword[i].kw) ) {
 			if ( everywhere || (keyword[i].where & where) ) {
-			    
-			    mkd_init_flags(&flags);
-			    mkd_set_flag_num(&flags, THEME_CF);
-			    mkd_set_flag_num(&flags, MKD_TOC);
-			    if ( where & INTAG ) 
-				mkd_set_flag_num(&flags, MKD_TAGTEXT);
-			    else if ( where & INHEAD ) {
-				mkd_set_flag_num(&flags, MKD_NOIMAGE);
-				mkd_set_flag_num(&flags, MKD_NOLINKS);
-			    }
+			    setup_flags(&flags, where);
 			    (*keyword[i].what)(doc,output,&flags,where);
 			}
 			break;
@@ -664,3 +685,4 @@ char **argv;
     mkd_cleanup(doc);
     exit(0);
 }
+
