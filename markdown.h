@@ -219,7 +219,25 @@ struct string_stream {
     int   size;		/* and how much is there? */
 } ;
 
+/*
+ * sneakily back-define the published interface (leaving the old functions for v2 compatability)
+ */
 
+#define mkd_in mkd3_in
+#define mkd_string mkd3_string
+#define gfm_in gfm3_in
+#define gfm_string gfm3_string
+#define mkd_compile mkd3_compile
+#define mkd_dump mkd3_dump
+#define markdown markdown3
+#define mkd_line mkd3_line
+#define mkd_xhtmlpage mkd3_xhtmlpage
+#define mkd_generateline mkd3_generateline
+#define mkd_flags_are mkd3_flags_are
+
+
+/* the published interface (plus a few local functions that I need to fix)
+ */
 extern int  mkd_firstnonblank(Line *);
 extern int  mkd_compile(Document *, mkd_flag_t*);
 extern int  mkd_document(Document *, char **);

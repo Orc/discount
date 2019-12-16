@@ -55,6 +55,22 @@ void mkd_set_flag_num(mkd_flag_t*, unsigned long);/* set a specific flag */
 void mkd_clr_flag_num(mkd_flag_t*, unsigned long);/* clear a specific flag */
 void mkd_set_flag_bitmap(mkd_flag_t*,long);	/* set a bunch of flags */
 
+
+/*
+ * sneakily back-define the published interface (leaving the old functions for v2 compatability)
+ */
+#define mkd_in mkd3_in
+#define mkd_string mkd3_string
+#define gfm_in gfm3_in
+#define gfm_string gfm3_string
+#define mkd_compile mkd3_compile
+#define mkd_dump mkd3_dump
+#define markdown markdown3
+#define mkd_line mkd3_line
+#define mkd_xhtmlpage mkd3_xhtmlpage
+#define mkd_generateline mkd3_generateline
+#define mkd_flags_are mkd3_flags_are
+
 /* line builder for markdown()
  */
 MMIOT *mkd_in(FILE*,mkd_flag_t*);		/* assemble input from a file */
