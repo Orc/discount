@@ -55,10 +55,10 @@ void mkd_set_flag_num(mkd_flag_t*, unsigned long);/* set a specific flag */
 void mkd_clr_flag_num(mkd_flag_t*, unsigned long);/* clear a specific flag */
 void mkd_set_flag_bitmap(mkd_flag_t*,long);	/* set a bunch of flags */
 
-
 /*
  * sneakily back-define the published interface (leaving the old functions for v2 compatability)
  */
+
 #define mkd_in mkd3_in
 #define mkd_string mkd3_string
 #define gfm_in gfm3_in

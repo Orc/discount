@@ -20,8 +20,8 @@
 #include <libgen.h>
 #endif
 
-static void set_dlist(mkd_flag_t *, int);
-static void set_standard(mkd_flag_t *, int);
+static void set_dlist(mkd_flag_t *flags, int enable);
+extern void ___mkd_strict_mode(mkd_flag_t *flags, int enable);
 
 static struct _special {
     char *name;
@@ -29,7 +29,7 @@ static struct _special {
 } special[] = { 
     { "definitionlist", set_dlist },
     { "dlist",          set_dlist },
-    { "standard",       set_standard },
+    { "standard",       ___mkd_strict_mode },
 };
 
 static struct _opt {
@@ -133,47 +133,6 @@ show_flags(int byname, int verbose, mkd_flag_t *flags)
     }
 }
 
-static void
-set_dlist(mkd_flag_t *flags, int enable)
-{
-    if ( enable ) {
-	set_mkd_flag(flags, MKD_DLDISCOUNT);
-	set_mkd_flag(flags, MKD_DLEXTRA);
-    }
-    else {
-	clear_mkd_flag(flags, MKD_DLDISCOUNT);
-	clear_mkd_flag(flags, MKD_DLEXTRA);
-    }
-}
-
-
-static void
-set_standard(mkd_flag_t *flags, int enable)
-{
-    if ( enable ) {
-	clear_mkd_flag(flags, MKD_FENCEDCODE);
-	clear_mkd_flag(flags, MKD_LATEX);
-	clear_mkd_flag(flags, MKD_TABSTOP);
-	clear_mkd_flag(flags, MKD_EXTRA_FOOTNOTE);
-	clear_mkd_flag(flags, MKD_AUTOLINK);
-	clear_mkd_flag(flags, MKD_SAFELINK);
-	clear_mkd_flag(flags, MKD_TOC);
-	clear_mkd_flag(flags, MKD_DLDISCOUNT);
-	clear_mkd_flag(flags, MKD_DLEXTRA);
-	set_mkd_flag(flags,   MKD_NOSUPERSCRIPT);
-	set_mkd_flag(flags,   MKD_NORMAL_LISTITEM);
-	set_mkd_flag(flags,   MKD_NO_EXT);
-	set_mkd_flag(flags,   MKD_NOSUPERSCRIPT);
-	set_mkd_flag(flags,   MKD_NORELAXED);
-	set_mkd_flag(flags,   MKD_NOTABLES);
-	set_mkd_flag(flags,   MKD_NOSTRIKETHROUGH);
-	set_mkd_flag(flags,   MKD_NOHEADER);
-	set_mkd_flag(flags,   MKD_NODIVQUOTE);
-	set_mkd_flag(flags,   MKD_NOALPHALIST);
-	set_mkd_flag(flags,   MKD_NOSTYLE);
-    }
-}
-    
 
 static void
 handle_special(mkd_flag_t *flags, char *opt, int enable)
@@ -186,6 +145,7 @@ handle_special(mkd_flag_t *flags, char *opt, int enable)
 	    return;
 	}
 }
+
 
 char *
 mkd_set_flag_string(mkd_flag_t *flags, char *optionstring)
@@ -265,4 +225,17 @@ mkd_set_flag_bitmap(mkd_flag_t *p, long bits)
     for (i=0; i < 8*sizeof(long) && i < MKD_NR_FLAGS; i++)
 	if ( bits & (1<<i) )
 	    set_mkd_flag(p, i);
+}
+
+static void
+set_dlist(mkd_flag_t *flags, int enable)
+{
+    if ( enable ) {
+	set_mkd_flag(flags, MKD_DLDISCOUNT);
+	set_mkd_flag(flags, MKD_DLEXTRA);
+    }
+    else {
+	clear_mkd_flag(flags, MKD_DLDISCOUNT);
+	clear_mkd_flag(flags, MKD_DLEXTRA);
+    }
 }

@@ -1,39 +1,89 @@
+/* markdown: a C implementation of John Gruber's Markdown markup language.
+ *
+ * Copyright (C) 2007-2011 David L Parsons.
+ * The redistribution terms are provided in the COPYRIGHT file that must
+ * be distributed with this source code.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <errno.h>
+#include <string.h>
+#include <stdarg.h>
+
+#include "config.h"
+#include "markdown.h"
+#include "amalloc.h"
+
+#if HAVE_LIBGEN_H
+#include <libgen.h>
+#endif
+
 /*
  * discount2 shim layer
  */
-#include <stdio.h>
-#include "markdown.h"
 
-#define MKD2_NOLINKS	0x00000001
-#define MKD2_NOIMAGE	0x00000002
-#define MKD2_NOPANTS	0x00000004
-#define MKD2_NOHTML	0x00000008
-#define MKD2_NORMAL_LISTITEM 0x00000010
-#define MKD2_TAGTEXT	0x00000020
-#define MKD2_NO_EXT	0x00000040
-#define MKD2_CDATA	0x00000080
-#define MKD2_NOSUPERSCRIPT 0x00000100
-#define MKD2_NORELAXED	0x00000200
-#define MKD2_NOTABLES	0x00000400
-#define MKD2_NOSTRIKETHROUGH 0x00000800
-#define MKD2_TOC	0x00001000
-#define MKD2_1_COMPAT	0x00002000
-#define MKD2_AUTOLINK	0x00004000
-#define MKD2_SAFELINK	0x00008000
-#define MKD2_NOHEADER	0x00010000
-#define MKD2_TABSTOP	0x00020000
-#define MKD2_NODIVQUOTE	0x00040000
-#define MKD2_NOALPHALIST 0x00080000
-#define MKD2_EXTRA_FOOTNOTE 0x00200000
-#define MKD2_NOSTYLE	0x00400000
-#define MKD2_DLDISCOUNT	0x00800000
-#define	MKD2_DLEXTRA	0x01000000
-#define MKD2_FENCEDCODE	0x02000000
-#define MKD2_IDANCHOR	0x04000000
-#define MKD2_GITHUBTAGS	0x08000000
-#define MKD2_URLENCODEDANCHOR 0x10000000
-#define MKD2_LATEX	0x40000000
-#define MKD2_EXPLICITLIST 0x80000000
+/* 2.2.6 flags */
+#define MKD2_NOLINKS		0x00000001
+#define MKD2_NOIMAGE		0x00000002
+#define MKD2_NOPANTS		0x00000004
+#define MKD2_NOHTML		0x00000008
+#define MKD2_STRICT		0x00000010
+#define MKD2_TAGTEXT		0x00000020
+#define MKD2_NO_EXT		0x00000040
+#define MKD2_CDATA		0x00000080
+#define MKD2_NOSUPERSCRIPT	0x00000100
+#define MKD2_NORELAXED		0x00000200
+#define MKD2_NOTABLES		0x00000400
+#define MKD2_NOSTRIKETHROUGH	0x00000800
+#define MKD2_TOC		0x00001000
+#define MKD2_1_COMPAT		0x00002000
+#define MKD2_AUTOLINK		0x00004000
+#define MKD2_SAFELINK		0x00008000
+#define MKD2_NOHEADER		0x00010000
+#define MKD2_TABSTOP		0x00020000
+#define MKD2_NODIVQUOTE		0x00040000
+#define MKD2_NOALPHALIST	0x00080000
+#define MKD2_NODLIST		0x00100000
+#define MKD2_EXTRA_FOOTNOTE	0x00200000
+#define MKD2_NOSTYLE		0x00400000
+#define MKD2_NODLDISCOUNT	0x00800000
+#define	MKD2_DLEXTRA		0x01000000
+#define MKD2_FENCEDCODE		0x02000000
+#define MKD2_IDANCHOR		0x04000000
+#define MKD2_GITHUBTAGS		0x08000000
+#define MKD2_URLENCODEDANCHOR	0x10000000
+#define MKD2_LATEX		0x40000000
+#define MKD2_EXPLICITLIST	0x80000000
+
+
+void
+___mkd_strict_mode(mkd_flag_t *flags, int enable)
+{
+    if ( enable ) {
+	clear_mkd_flag(flags, MKD_FENCEDCODE);
+	clear_mkd_flag(flags, MKD_LATEX);
+	clear_mkd_flag(flags, MKD_TABSTOP);
+	clear_mkd_flag(flags, MKD_EXTRA_FOOTNOTE);
+	clear_mkd_flag(flags, MKD_AUTOLINK);
+	clear_mkd_flag(flags, MKD_SAFELINK);
+	clear_mkd_flag(flags, MKD_TOC);
+	clear_mkd_flag(flags, MKD_DLDISCOUNT);
+	clear_mkd_flag(flags, MKD_DLEXTRA);
+	set_mkd_flag(flags,   MKD_NOSUPERSCRIPT);
+	set_mkd_flag(flags,   MKD_NORMAL_LISTITEM);
+	set_mkd_flag(flags,   MKD_NO_EXT);
+	set_mkd_flag(flags,   MKD_NOSUPERSCRIPT);
+	set_mkd_flag(flags,   MKD_NORELAXED);
+	set_mkd_flag(flags,   MKD_NOTABLES);
+	set_mkd_flag(flags,   MKD_NOSTRIKETHROUGH);
+	set_mkd_flag(flags,   MKD_NOHEADER);
+	set_mkd_flag(flags,   MKD_NODIVQUOTE);
+	set_mkd_flag(flags,   MKD_NOALPHALIST);
+	set_mkd_flag(flags,   MKD_NOSTYLE);
+    }
+}
 
 
 /*
@@ -46,12 +96,16 @@ convert_v2flags(DWORD bitmask, mkd_flag_t *blob)
     DWORD bit;
 
     mkd_init_flags(blob);
+    set_mkd_flag(blob, MKD_DLDISCOUNT);	/* default for discount dls changed from on to off in v3 */
+
     
     for (i=0; i < sizeof(DWORD)*4; i++) {
 
 	bit = 1<<i;
 
 	switch ( bitmask & (1<<i) ) {
+	case MKD2_STRICT:	___mkd_strict_mode(blob, 1);
+				break;
 	case MKD2_NOLINKS:	set_mkd_flag(blob,MKD_NOLINKS);
 				break;
 	case MKD2_NOIMAGE:	set_mkd_flag(blob,MKD_NOIMAGE);
@@ -59,8 +113,6 @@ convert_v2flags(DWORD bitmask, mkd_flag_t *blob)
 	case MKD2_NOPANTS:	set_mkd_flag(blob,MKD_NOPANTS);
 				break;
 	case MKD2_NOHTML:	set_mkd_flag(blob,MKD_NOHTML);
-				break;
-	case MKD2_NORMAL_LISTITEM: set_mkd_flag(blob,MKD_NORMAL_LISTITEM);
 				break;
 	case MKD2_TAGTEXT:	set_mkd_flag(blob,MKD_TAGTEXT);
 				break;
@@ -96,7 +148,7 @@ convert_v2flags(DWORD bitmask, mkd_flag_t *blob)
 				break;
 	case MKD2_NOSTYLE:	set_mkd_flag(blob,MKD_NOSTYLE);
 				break;
-	case MKD2_DLDISCOUNT:	set_mkd_flag(blob,MKD_DLDISCOUNT);
+	case MKD2_NODLDISCOUNT:	clear_mkd_flag(blob,MKD_DLDISCOUNT);
 				break;
 	case MKD2_DLEXTRA:	set_mkd_flag(blob,MKD_DLEXTRA);
 				break;

@@ -1432,9 +1432,8 @@ make)   FLAGS="$AC_CFLAGS -dynamiclib"
 	VFLAGS="-current_version \$VERSION -compatibility_version \$MAJOR"
 
 	rm -f \$LIBRARY
-	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
-	    $PROG_LN_S \$FULLNAME \$LIBRARY
-	fi
+	$AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@" || exit \$?
+	$PROG_LN_S \$FULLNAME \$LIBRARY
 	;;
 files)  echo "\$FULLNAME"
 	;;
@@ -1489,11 +1488,10 @@ make)   FLAGS="$AC_CFLAGS -shared"
 	test "$USE_SONAME" && VFLAGS="-Wl,-soname,\$LIBNAME.\$MAJOR"
 
 	rm -f \$LIBRARY \$LIBNAME \$LIBNAME.\$MAJOR
-	if $AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@"; then
-	    $PROG_LN_S \$FULLNAME \$LIBRARY
-	    $PROG_LN_S \$FULLNAME \$LIBNAME
-	    $PROG_LN_S \$FULLNAME \$LIBNAME.\$MAJOR
-	fi
+	$AC_CC \$FLAGS \$VFLAGS -o \$FULLNAME "\$@" || exit \$?
+	$PROG_LN_S \$FULLNAME \$LIBRARY
+	$PROG_LN_S \$FULLNAME \$LIBNAME
+	$PROG_LN_S \$FULLNAME \$LIBNAME.\$MAJOR
 	;;
 files)  echo "\$FULLNAME" "\$LIBNAME" "\$LIBNAME.\$MAJOR"
 	;;
