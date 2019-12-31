@@ -192,7 +192,10 @@ if(${PROJECT_NAME}_MAKE_INSTALL)
     target_include_directories(libmarkdown INTERFACE
       $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
-    set(_TARGETS libmarkdown markdown)
+    set(_TARGETS libmarkdown)
+    if(NOT ${PROJECT_NAME}_ONLY_LIBRARY)
+        list(APPEND _TARGETS markdown)
+    endif()
     if(${PROJECT_NAME}_INSTALL_SAMPLES)
         list(APPEND _TARGETS mkd2html makepage)
     endif()
