@@ -21,22 +21,28 @@ Markdown
 .Ft void
 .Fn mkd_e_free "MMIOT *document" "mkd_free_t dealloc"
 .Ft void
+.Fn mkd_e_code "MMIOT *document" "mkd_callback_t edit"
+.Ft void
 .Fn mkd_e_data  "MMIOT *document" "void *data"
 .Sh DESCRIPTION
 .Pp
 .Nm Discount
 provides a small set of data access functions to let a
-library user modify the targets given in a `[]' link, and to
-add additional flags to the generated link.
+library user modify the generated html.
+.Bl -tag -width "!mkd_e_flags!"
+.It Fn mkd_e_url
+ modifies the target given in a `[]` link; 
+.It Fn mkd_e_flags
+ adds additional flags to a `[]` link;
+.It Fn mkd_e_code 
+lets you manipulate the contents of a code block.
+.El
 .Pp
 The data access functions are passed a character pointer to
 the url being generated, the size of the url, and a data pointer
 pointing to a user data area (set by the
 .Fn mkd_e_data
-function.)     After the callback function is called (either
-.Fn mkd_e_url 
-or
-.Fn mkd_e_flags )
+function.)     After the callback function is called
 the data freeing function (if supplied) is called and passed the
 character pointer and user data pointer.
 .Sh EXAMPLE
