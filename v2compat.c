@@ -98,12 +98,13 @@ convert_v2flags(DWORD bitmask, mkd_flag_t *blob)
     mkd_init_flags(blob);
     set_mkd_flag(blob, MKD_DLDISCOUNT);	/* default for discount dls changed from on to off in v3 */
 
+
     
-    for (i=0; i < sizeof(DWORD)*4; i++) {
+    for (i=0; i < sizeof(DWORD)*8; i++) {
 
-	bit = 1<<i;
+	bit = 1L << i;
 
-	switch ( bitmask & (1<<i) ) {
+	switch ( bitmask & bit ) {
 	case MKD2_STRICT:	___mkd_strict_mode(blob, 1);
 				break;
 	case MKD2_NOLINKS:	set_mkd_flag(blob,MKD_NOLINKS);
