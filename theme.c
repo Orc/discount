@@ -450,8 +450,6 @@ static struct _keyword {
 static void
 setup_flags(mkd_flag_t *flagp, int where)
 {
-    mkd_init_flags(flagp);
-
 #ifdef THEME_DL_MODE
     switch (THEME_DL_MODE) {
     case 3: mkd_set_flag_num(flagp, MKD_DLEXTRA);
@@ -482,9 +480,12 @@ spin(FILE *template, MMIOT *doc, FILE *output)
 {
     int c;
     int *p;
-    mkd_flag_t flags;
+    mkd_flag_t *flags = mkd_flags();
     int where = 0x0;
     int i;
+    
+    if ( !flags )
+	fail("cannot initialize mkd_flags");
 
     prepare(template);
 
@@ -509,8 +510,8 @@ spin(FILE *template, MMIOT *doc, FILE *output)
 		for (i=0; i < NR(keyword); i++)
 		    if ( thesame(p, keyword[i].kw) ) {
 			if ( everywhere || (keyword[i].where & where) ) {
-			    setup_flags(&flags, where);
-			    (*keyword[i].what)(doc,output,&flags,where);
+			    setup_flags(flags, where);
+			    (*keyword[i].what)(doc,output,flags,where);
 			}
 			break;
 		    }
@@ -538,6 +539,7 @@ spin(FILE *template, MMIOT *doc, FILE *output)
 
 	putc(c, output);
     }
+    free(flags);
 } /* spin */
 
 
@@ -561,11 +563,17 @@ char **argv;
     char *template = "page.theme";
     char *source = "stdin";
     FILE *tmplfile;
-    mkd_flag_t flags;
     int force = 0;
     MMIOT *doc;
     struct stat sourceinfo;
     char *q;
+    mkd_flag_t *flags = mkd_flags();
+
+    if ( !flags ) {
+	perror("mkd_flags");
+	exit(1);
+    }
+    
 
     struct h_opt *opt;
     struct h_context blob;
@@ -595,7 +603,7 @@ char **argv;
 			show_flags(1,0, 0);
 			exit(0);
 		    }
-		    else if ( q = mkd_set_flag_string(&flags, hoptarg(&blob)) )
+		    else if ( q = mkd_set_flag_string(flags, hoptarg(&blob)) )
 			fprintf(stderr,"%s: unknown option <%s>", pgm, q);
 		    break;		    
 	case 'o':   output_file = hoptarg(&blob);
@@ -674,7 +682,7 @@ char **argv;
 	fail("out of memory");
 #endif
 
-    if ( !mkd_compile(doc, &flags) )
+    if ( !mkd_compile(doc, flags) )
 	fail("couldn't compile input");
 
     if ( tmplfile )
@@ -683,6 +691,7 @@ char **argv;
 	mkd_generatehtml(doc, stdout);
 
     mkd_cleanup(doc);
+    free(flags);
     exit(0);
 }
 

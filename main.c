@@ -168,7 +168,6 @@ int
 main(int argc, char **argv)
 {
     int rc;
-    mkd_flag_t flags;
     int debug = 0;
     int toc = 0;
     int content = 1;
@@ -188,16 +187,18 @@ main(int argc, char **argv)
     MMIOT *doc;
     struct h_context blob;
     struct h_opt *opt;
+    mkd_flag_t *flags = mkd_flags();
+
+    if ( !flags )
+	perror("new_flags");
 
     hoptset(&blob, argc, argv);
     hopterr(&blob, 1);
 
     pgm = basename(argv[0]);
 
-    mkd_init_flags(&flags);
-
     if ( q = getenv("MARKDOWN_FLAGS") )
-	mkd_set_flag_bitmap(&flags, strtol(q,0,0));
+	mkd_set_flag_bitmap(flags, strtol(q,0,0));
 
     while ( opt=gethopt(&blob, opts, NROPTS) ) {
 	if ( opt == HOPTERR ) {
@@ -221,10 +222,10 @@ main(int argc, char **argv)
 			exit(0);
 		    }
 		    else if ( strcmp(q, "??") == 0 ) {
-			show_flags(1, version, &flags);
+			show_flags(1, version, flags);
 			exit(0);
 		    }
-		    else if ( q=mkd_set_flag_string(&flags, hoptarg(&blob)) )
+		    else if ( q=mkd_set_flag_string(flags, hoptarg(&blob)) )
 			complain("unknown option <%s>", q);
 		    break;
 	case 'F':   q = hoptarg(&blob);
@@ -233,11 +234,11 @@ main(int argc, char **argv)
 			exit(0);
 		    }
 		    else if ( strcmp(q, "??") == 0 ) {
-			show_flags(0, version, &flags);
+			show_flags(0, version, flags);
 			exit(0);
 		    }
 		    else
-			mkd_set_flag_bitmap(&flags,strtol(q, 0, 0));
+			mkd_set_flag_bitmap(flags,strtol(q, 0, 0));
 		    break;
 	case 'G':   github_flavoured = 1;
 		    break;
@@ -250,7 +251,7 @@ main(int argc, char **argv)
 	case 't':   text = hoptarg(&blob);
 		    use_mkd_line = 1;
 		    break;
-	case 'T':   mkd_set_flag_num(&flags, MKD_TOC);
+	case 'T':   mkd_set_flag_num(flags, MKD_TOC);
 		    toc = 1;
 		    break;
 	case 'C':   extra_footnote_prefix = hoptarg(&blob);
@@ -267,7 +268,7 @@ main(int argc, char **argv)
 	case 'x':   squash = 1;
 		    break;
 	case 'X':   use_e_codefmt = 1;
-		    mkd_set_flag_num(&flags, MKD_FENCEDCODE);
+		    mkd_set_flag_num(flags, MKD_FENCEDCODE);
 		    break;
 	}
     }
@@ -277,7 +278,7 @@ main(int argc, char **argv)
 	printf("%s: discount %s%s", pgm, markdown_version,
 				  with_html5 ? " +html5":"");
 	if ( version == 2 )
-	    mkd_flags_are(stdout, &flags, 0);
+	    mkd_flags_are(stdout, flags, 0);
 	putchar('\n');
 	exit(0);
     }
@@ -289,11 +290,11 @@ main(int argc, char **argv)
 	mkd_with_html5_tags();
 
     if ( use_mkd_line )
-	rc = mkd_generateline( text, strlen(text), stdout, &flags);
+	rc = mkd_generateline( text, strlen(text), stdout, flags);
     else {
 	if ( text ) {
-	    doc = github_flavoured ? gfm_string(text, strlen(text), &flags)
-				   : mkd_string(text, strlen(text), &flags) ;
+	    doc = github_flavoured ? gfm_string(text, strlen(text), flags)
+				   : mkd_string(text, strlen(text), flags) ;
 
 	    if ( !doc ) {
 		perror(text);
@@ -306,8 +307,8 @@ main(int argc, char **argv)
 		exit(1);
 	    }
 
-	    doc = github_flavoured ? gfm_in(stdin,&flags)
-				   : mkd_in(stdin,&flags);
+	    doc = github_flavoured ? gfm_in(stdin,flags)
+				   : mkd_in(stdin,flags);
 	    if ( !doc ) {
 		perror(argc ? argv[0] : "stdin");
 		exit(1);
@@ -331,10 +332,10 @@ main(int argc, char **argv)
 	    mkd_ref_prefix(doc, extra_footnote_prefix);
 
 	if ( debug )
-	    rc = mkd_dump(doc, stdout, &flags, argc ? basename(argv[0]) : "stdin");
+	    rc = mkd_dump(doc, stdout, flags, argc ? basename(argv[0]) : "stdin");
 	else {
 	    rc = 1;
-	    if ( mkd_compile(doc, &flags) ) {
+	    if ( mkd_compile(doc, flags) ) {
 		rc = 0;
 		if ( styles )
 		    mkd_generatecss(doc, stdout);
@@ -347,6 +348,7 @@ main(int argc, char **argv)
 	mkd_cleanup(doc);
     }
     mkd_deallocate_tags();
+    free(flags);
     adump();
     exit( (rc == 0) ? 0 : errno );
 }
