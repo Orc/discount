@@ -27,5 +27,8 @@ try -bHOHO 'empty []() with baseurl' '[]()' '<p><a href=""></a></p>'
 try 'unclosed html block' '<table></table' '<p><table>&lt;/table</p>'
 try 'unclosed style block' '<style>' '<p><style></p>'
 
+try -ftoc 'empty header with toc' '##' '<a name="L-23-"></a>
+<h1>#</h1>'
+
 summary $0
 exit $rc
