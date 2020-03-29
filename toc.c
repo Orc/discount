@@ -28,14 +28,14 @@ mkd_toc(Document *p, char **doc)
     Cstring res;
     int size;
     int first = 1;
-#if 0
+#if HAVE_NAMED_INITIALIZERS
     static mkd_flag_t islabel = { { [IS_LABEL] = 1 } };
 #else
     mkd_flag_t islabel;
 
     mkd_init_flags(&islabel);
-#endif
     set_mkd_flag(&islabel, IS_LABEL);
+#endif
     
     
     if ( !(doc && p && p->ctx) ) return -1;
