@@ -348,7 +348,7 @@ main(int argc, char **argv)
 	mkd_cleanup(doc);
     }
     mkd_deallocate_tags();
-    free(flags);
+    mkd_free_flags(flags);
     adump();
     exit( (rc == 0) ? 0 : errno );
 }

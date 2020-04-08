@@ -114,3 +114,9 @@ mkd_flags()
 
     return p;
 }
+
+void
+mkd_free_flags(mkd_flag_t *rip)
+{
+    if (rip) free(rip);
+}

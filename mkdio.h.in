@@ -49,7 +49,8 @@ int mkd_flag_isset(mkd_flag_t*, int);		/* check a flag status */
 void mkd_flag_set(mkd_flag_t*, int);		/* set a flag */
 void mkd_flag_clear(mkd_flag_t*, int);		/* clear a flag */
 
-mkd_flag_t *mkd_flags();			/* create a flag structure */
+mkd_flag_t *mkd_flags();			/* create a flag blob */
+void mkd_free_flags(mkd_flag_t*);		/* delete a flag blob */
 char *mkd_set_flag_string(mkd_flag_t*, char*);	/* set named flags */
 void mkd_set_flag_num(mkd_flag_t*, unsigned long);/* set a specific flag */
 void mkd_clr_flag_num(mkd_flag_t*, unsigned long);/* clear a specific flag */
