@@ -539,7 +539,7 @@ spin(FILE *template, MMIOT *doc, FILE *output)
 
 	putc(c, output);
     }
-    free(flags);
+    mkd_free_flags(flags);
 } /* spin */
 
 
@@ -691,7 +691,7 @@ char **argv;
 	mkd_generatehtml(doc, stdout);
 
     mkd_cleanup(doc);
-    free(flags);
+    mkd_free_flags(flags);
     exit(0);
 }
 

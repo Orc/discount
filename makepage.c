@@ -112,7 +112,7 @@ char **argv;
 
     mkd_cleanup(doc);
 
-    free(flags);
+    mkd_free_flags(flags);
 
     return (ret == EOF);
 }
