@@ -947,30 +947,30 @@ definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 		S(q->text)--;
 	    }
 
-    dd_block:
-	p = Pp(&d, text, LISTITEM);
+	do {
+	    p = Pp(&d, text, LISTITEM);
 
-	text = listitem(p, clip, &(f->flags), (kind==2) ? is_extra_dd : 0);
-	p->down = compile(p->text, 0, f);
-	p->text = labels; labels = 0;
+	    text = listitem(p, clip, &(f->flags), (kind==2) ? is_extra_dd : 0);
+	    p->down = compile(p->text, 0, f);
+	    p->text = labels; labels = 0;
 
-	if ( para && p->down ) p->down->align = PARA;
+	    if ( para && p->down ) p->down->align = PARA;
 
-	if ( (q = skipempty(text)) == 0 )
-	    break;
+	    if ( (q = skipempty(text)) == 0 )
+		goto flee;
 
-	if ( para = (q != text) ) {
-	    Line anchor;
+	    if ( para = (q != text) ) {
+		Line anchor;
 
-	    anchor.next = text;
-	    ___mkd_freeLineRange(&anchor,q);
-	    text = q;
+		anchor.next = text;
+		___mkd_freeLineRange(&anchor,q);
+		text = q;
 	    
-	}
+	    }
 
-	if ( kind == 2 && is_extra_dd(q) )
-	    goto dd_block;
+	} while ( kind == 2 && is_extra_dd(q) );
     }
+flee:
     top->text = 0;
     top->down = T(d);
     return text;
