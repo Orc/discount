@@ -26,8 +26,6 @@
 #endif
 
 #ifndef HAVE_BASENAME
-#include <string.h>
-
 char*
 basename(char *p)
 {

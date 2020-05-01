@@ -52,7 +52,7 @@ function (in the module basename.c) is implemented by means of
 mkd callbacks;  it modifies urls that start with a `/' so that
 they begin with a user-supplied url base by allocating a new
 string and filling it with the base + the url.  Discount plugs
-that url in in place of the original, then calls the basename
+that url in place of the original, then calls the basename
 free function (it only does this when
 .Fn mkd_e_url
 or
