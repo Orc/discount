@@ -220,7 +220,7 @@ struct string_stream {
 } ;
 
 /*
- * sneakily back-define the published interface (leaving the old functions for v2 compatability)
+ * sneakily back-define the published interface (leaving the old functions for v2 compatibility)
  */
 
 #define mkd_in mkd3_in

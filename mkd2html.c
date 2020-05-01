@@ -74,7 +74,7 @@ enum { GFM, ADD_CSS, ADD_HEADER, ADD_FOOTER };
 struct h_opt opts[] = {
     { GFM,           "gfm",'G', 0,       "Github style markdown" },
     { ADD_CSS,       "css", 0, "url",    "Additional css for this page" },
-    { ADD_HEADER, "header", 0, "header", "Additonal headers for this page" },
+    { ADD_HEADER, "header", 0, "header", "Additional headers for this page" },
     { ADD_FOOTER, "footer", 0, "footer", "Additional footers for this page" },
 };
 #define NROPTS (sizeof opts/sizeof opts[0])
