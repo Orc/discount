@@ -28,7 +28,7 @@ OBJS=mkdio.o markdown.o dumptree.o generate.o \
      resource.o docheader.o version.o toc.o css.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o \
      github_flavoured.o setup.o tags.o html5.o \
-     @AMALLOC@ @H1TITLE@ flags.o v2compat.o
+     @AMALLOC@ @H1TITLE@ flags.o v2compat.o flagprocs.o
 TESTFRAMEWORK=echo cols branch pandoc_headers
 
 # modules that markdown, makepage, mkd2html, &tc use
@@ -174,6 +174,7 @@ emmatch.o: emmatch.c config.h cstring.h amalloc.h markdown.h
 generate.o: generate.c config.h cstring.h amalloc.h markdown.h
 main.o: main.c config.h amalloc.h
 pgm_options.o: pgm_options.c pgm_options.h config.h amalloc.h
+flagprocs.o: flagprocs.c pgm_options.h markdown.h config.h amalloc.h
 makepage.o: makepage.c
 markdown.o: markdown.c config.h cstring.h amalloc.h markdown.h
 mkd2html.o: mkd2html.c config.h mkdio.h cstring.h amalloc.h

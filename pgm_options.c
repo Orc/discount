@@ -197,36 +197,6 @@ mkd_set_flag_string(mkd_flag_t *flags, char *optionstring)
     return 0;
 }
 
-
-void
-mkd_set_flag_num(mkd_flag_t *p, unsigned long bit)
-{
-    if ( p && (bit < MKD_NR_FLAGS) )
-	set_mkd_flag(p, bit);
-}
-
-
-void
-mkd_clr_flag_num(mkd_flag_t *p, unsigned long bit)
-{
-    if ( p && (bit < MKD_NR_FLAGS) )
-	clear_mkd_flag(p, bit);
-}
-
-
-void
-mkd_set_flag_bitmap(mkd_flag_t *p, long bits)
-{
-    int i;
-    
-    if ( p == 0 )
-	return;
-
-    for (i=0; i < 8*sizeof(long) && i < MKD_NR_FLAGS; i++)
-	if ( bits & (1<<i) )
-	    set_mkd_flag(p, i);
-}
-
 static void
 set_dlist(mkd_flag_t *flags, int enable)
 {

@@ -150,6 +150,7 @@ add_library(libmarkdown
     "${_ROOT}/blocktags" "${_ROOT}/tags.c"
     "${_ROOT}/html5.c"
     "${_ROOT}/v2compat.c"
+    "${_ROOT}/flagprocs.c"
     "${_ROOT}/flags.c")
 
 set_target_properties(libmarkdown PROPERTIES
