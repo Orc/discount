@@ -20,7 +20,7 @@ char **argv;
 
     if ( fgets(line, sizeof line, pipe) != 0 ) {
 	strtok(line, "\n");
-	if ( strcmp(line, "master" ) != 0 )
+	if ( strcmp(line, "main" ) != 0 )
 	    printf("\"(%s)\"", line);
     }
     pclose(pipe);
