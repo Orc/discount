@@ -232,7 +232,7 @@ mkd_anchor_format(char *s, int len, int labelformat, mkd_flag_t flags)
     int h4anchor = !is_flag_set(flags, MKD_URLENCODEDANCHOR);
     static const unsigned char hexchars[] = "0123456789abcdef";
 
-    needed = labelformat ? (4*len) : len;
+    needed = (labelformat ? (4*len) : len) + 2 /* 'L', trailing null */;
 
     if ( (res = malloc(needed)) == NULL )
 	return NULL;
