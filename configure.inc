@@ -231,7 +231,7 @@ EOF
 
     LOGN "looking for the $B function"
 
-    if $AC_CC $AC_CFLAGS $AC_LDFLAGS -o ngc$$ ngc$$.c $LIBS; then
+    if $AC_CC $AC_CPPFLAGS $AC_CFLAGS $AC_LDFLAGS -o ngc$$ ngc$$.c $LIBS; then
 	AC_DEFINE `echo ${2:-HAVE_$B} | $AC_UPPERCASE` 1
 	TLOG " (found)"
 	rc=0
