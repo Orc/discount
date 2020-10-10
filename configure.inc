@@ -231,7 +231,7 @@ EOF
 
     LOGN "looking for the $B function"
 
-    if $AC_CC $AC_CFLAGS $AC_LDFLAGS -o ngc$$ ngc$$.c $LIBS; then
+    if $AC_CC $AC_CPPFLAGS $AC_CFLAGS $AC_LDFLAGS -o ngc$$ ngc$$.c $LIBS; then
 	AC_DEFINE `echo ${2:-HAVE_$B} | $AC_UPPERCASE` 1
 	TLOG " (found)"
 	rc=0
@@ -1428,7 +1428,7 @@ LIBNAME=\$LIBRARY.dylib
 FULLNAME=\$LIBNAME
 
 case "\$ACTION" in
-make)   FLAGS="$AC_CFLAGS -dynamiclib"
+make)   FLAGS="$AC_CFLAGS $AC_LDFLAGS -dynamiclib"
 	VFLAGS="-current_version \$VERSION -compatibility_version \$MAJOR"
 
 	rm -f \$LIBRARY
@@ -1483,7 +1483,7 @@ LIBNAME=\$LIBRARY.so
 FULLNAME=\$LIBNAME.\$VERSION
 
 case "\$ACTION" in
-make)   FLAGS="$AC_CFLAGS -shared"
+make)   FLAGS="$AC_CFLAGS $AC_LDFLAGS -shared"
 	unset VFLAGS
 	test "$USE_SONAME" && VFLAGS="-Wl,-soname,\$LIBNAME.\$MAJOR"
 
