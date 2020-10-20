@@ -189,6 +189,11 @@ if(${PROJECT_NAME}_MAKE_INSTALL)
             "${CMAKE_INSTALL_LIBDIR}/cmake/${_PACKAGE_NAME}"
             CACHE STRING "CMake packages")
     endif()
+    if(NOT DEFINED CMAKE_INSTALL_PKGCONFIGDIR)
+        set(CMAKE_INSTALL_PKGCONFIGDIR
+            "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+            CACHE STRING "The pkg-config packages")
+    endif()
     install(FILES "${_ROOT}/mkdio.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
     target_include_directories(libmarkdown INTERFACE
@@ -223,6 +228,22 @@ if(${PROJECT_NAME}_MAKE_INSTALL)
         DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
     unset(_TARGETS)
     unset(_PACKAGE_NAME)
+    set(prefix "${CMAKE_INSTALL_PREFIX}")
+    set(libdir "${CMAKE_INSTALL_FULL_LIBDIR}")
+    set(PACKAGE_NAME "libmarkdown")
+    set(PACKAGE_VERSION "${${PROJECT_NAME}_VERSION}")
+    set(LIBS)
+    configure_file("${_ROOT}/${PACKAGE_NAME}.pc.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}.pc"
+        @ONLY)
+    install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE_NAME}.pc"
+        DESTINATION "${CMAKE_INSTALL_PKGCONFIGDIR}")
+    unset(prefix)
+    unset(libdir)
+    unset(PACKAGE_NAME)
+    unset(PACKAGE_VERSION)
+    unset(LIBS)
 endif()
 
 unset(_ROOT)
