@@ -859,7 +859,7 @@ AC_CHECK_NORETURN() {
 }
 
 AC_CHECK_ATTRIBUTE() {
-    acca_what=`echo $1 | AC_UPPERCASE`
+    acca_what=`echo $1 | $AC_UPPERCASE`
     
     echo "extern int thing  __attribute__((__"$1"__));" > ngc$$.c
 
