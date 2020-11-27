@@ -567,16 +567,16 @@ char **argv;
     MMIOT *doc;
     struct stat sourceinfo;
     char *q;
+    
+    struct h_opt *opt;
+    struct h_context blob;
+    
     mkd_flag_t *flags = mkd_flags();
 
     if ( !flags ) {
 	perror("mkd_flags");
 	exit(1);
     }
-    
-
-    struct h_opt *opt;
-    struct h_context blob;
 
     hoptset(&blob, argc, argv);
     hopterr(&blob, 1);
