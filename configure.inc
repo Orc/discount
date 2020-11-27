@@ -182,7 +182,7 @@ AC_CHECK_HEADERS () {
 	LOGN "looking for header $__hdr"
 
 	if $AC_CPP_FILTER ngc$$.c >/dev/null; then
-	    AC_DEFINE 'HAVE_'`echo $__hdr | $AC_UPPERCASE | tr './' '_'` 1
+	    AC_DEFINE 'HAVE_'`echo $__hdr | $AC_UPPERCASE | tr './' '__'` 1
 	    rc=0
 	    LOG " (found)"
 	else
@@ -622,22 +622,22 @@ EOF
 # usage: AC_LIBRARY function library [alternate ...]
 #
 AC_LIBRARY() {
-    local SRC=$1
+    acl_SRC=$1
     shift
 
     # first see if the function can be found in any of the
     # current libraries
-    LOGN "Looking for the ${SRC} function"
-    if AC_QUIET AC_CHECK_FUNCS $SRC; then
+    LOGN "Looking for the ${acl_SRC} function"
+    if AC_QUIET AC_CHECK_FUNCS $acl_SRC; then
 	AC_DEFINE HAVE_LIB`echo $1 | sed -e 's/-l//' | $AC_UPPERCASE`
 	LOG "(found)"
 	return 0
     fi
 
     # then search through the supplied list of libraries
-    local __libs="$LIBS"
+    acl_libs="$LIBS"
     for x in "$@"; do
-	LIBS="$__libs $x"
+	LIBS="$acl_libs $x"
 	if AC_QUIET AC_CHECK_FUNCS $SRC; then
 	    AC_DEFINE HAVE_LIB`echo $1 | sed -e 's/-l//' | $AC_UPPERCASE`
 	    LOG " (in $x)"
@@ -645,7 +645,7 @@ AC_LIBRARY() {
 	fi
     done
     LOG " (not found)"
-    LIBS="$__libs"	# reset LIBS if we couldn't find anything
+    LIBS="$acl_libs"	# reset LIBS if we couldn't find anything
     return 1
 }
 
@@ -858,17 +858,17 @@ AC_CHECK_NORETURN() {
 }
 
 AC_CHECK_ATTRIBUTE() {
-    local __what=`echo $1 | tr 'a-z' 'A-Z'`
+    acca_what=`echo $1 | tr 'a-z' 'A-Z'`
     
     echo "extern int thing  __attribute__((__"$1"__));" > ngc$$.c
 
     TLOGN "Checking __attribute__((__${1}__)) "
     if $AC_CC -c ngc$$.c; then
 	TLOG "(yes)"
-	AC_DEFINE $__what ' __attribute__((__'$1'__))'
+	AC_DEFINE $acca_what ' __attribute__((__'$1'__))'
     else
 	TLOG "(no)"
-	AC_DEFINE $__what '/**/'
+	AC_DEFINE $acca_what '/**/'
     fi
     rm -f ngc$$.o ngc$$.c
 }
