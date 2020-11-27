@@ -607,6 +607,7 @@ EOF
     AC_PATH=${WITH_PATH:-$PATH}
     AC_PROG_CPP
     AC_PROG_INSTALL
+    AC_TR
 
     ac_os=`uname -s`
     _os=`echo $ac_os | $AC_UPPERCASE | sed -e 's/[^A-Z0-9_].*$//'`
@@ -858,7 +859,7 @@ AC_CHECK_NORETURN() {
 }
 
 AC_CHECK_ATTRIBUTE() {
-    acca_what=`echo $1 | tr 'a-z' 'A-Z'`
+    acca_what=`echo $1 | AC_UPPERCASE`
     
     echo "extern int thing  __attribute__((__"$1"__));" > ngc$$.c
 
