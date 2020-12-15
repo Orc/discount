@@ -15,7 +15,7 @@
 #include "markdown.h"
 #include "amalloc.h"
 
-/* inport from Csio.c */
+/* import from Csio.c */
 extern void Csreparse(Cstring *, char *, int, mkd_flag_t*);
     
 /* write an header index
