@@ -215,7 +215,7 @@ checkline(Line *l, mkd_flag_t flags)
 	switch (c) {
 	case '-':  UNLESS_FENCED(dashes = 1); break;
 	case ' ':  UNLESS_FENCED(spaces = 1); break;
-	case '=':  equals = 1; break;
+	case '=':  UNLESS_FENCED(equals = 1); break;
 	case '_':  UNLESS_FENCED(underscores = 1); break;
 	case '*':  stars = 1; break;
 	default:
