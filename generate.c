@@ -921,7 +921,7 @@ subspan(MMIOT *f, int size)
     Qstring("</sub>", f);
 }
 
-/*  suppan() -- write out a chunk of text, blocking with <sup>...</sup>
+/*  supspan() -- write out a chunk of text, blocking with <sup>...</sup>
  */
 static void
 supspan(MMIOT *f, int size)
@@ -931,14 +931,14 @@ supspan(MMIOT *f, int size)
     Qstring("</sup>", f);
 }
 
-/*  highlightspan() -- write out a chunk of text, blocking with <span style="background-color:yellow">...</span>
+/*  highlightspan() -- write out a chunk of text, blocking with <mark>...</mark>
  */
 static void
 highlightspan(MMIOT *f, int size)
 {
-    Qstring("<span style=\"background-color:yellow\">", f);
+    Qstring("<mark>", f);
     ___mkd_reparse(cursor(f)-1, size, 0, f, 0);
-    Qstring("</span>", f);
+    Qstring("</mark>", f);
 }
 
 
@@ -1389,6 +1389,7 @@ text(MMIOT *f)
 			Qchar(c, f);
 		    break;
 
+#ifdef TYPORA
 	/* A^B^ -> A<sup>B</sup> */
 	case '^':   if ( is_flag_set(f->flags, MKD_NOSUPERSCRIPT)
 			 || is_flag_set(f->flags, MKD_STRICT)
@@ -1396,7 +1397,46 @@ text(MMIOT *f)
 			 || ! tickhandler(f,c,1,0, supspan))
 			Qchar(c, f);
 		    break;
+#else /* !TYPORA */
+	/* A^B -> A<sup>B</sup> */
+	case '^':   if ( is_flag_set(f->flags, MKD_NOSUPERSCRIPT)
+			    || is_flag_set(f->flags, MKD_STRICT)
+			    || is_flag_set(f->flags, MKD_TAGTEXT)
+			    || (f->last == 0)
+			    || ((ispunct(f->last) || isspace(f->last))
+						    && f->last != ')')
+			    || isthisspace(f,1) )
+			Qchar(c,f);
+		    else {
+			char *sup = cursor(f);
+			int len = 0;
 
+			if ( peek(f,1) == '(' ) {
+			    int here = mmiottell(f);
+			    pull(f);
+
+			    if ( (len = parenthetical('(',')',f)) <= 0 ) {
+				mmiotseek(f,here);
+				Qchar(c, f);
+				break;
+			    }
+			    sup++;
+			}
+			else {
+			    while ( isthisalnum(f,1+len) )
+				++len;
+			    if ( !len ) {
+				Qchar(c,f);
+				break;
+			    }
+			    shift(f,len);
+			}
+			Qstring("<sup>",f);
+			___mkd_reparse(sup, len, 0, f, "()");
+			Qstring("</sup>", f);
+		    }
+		    break;
+#endif /* TYPORA */
 	case '_':
 	/* Underscores don't count if they're in the middle of a word */
 		    if ( !(is_flag_set(f->flags, MKD_NORELAXED) || is_flag_set(f->flags, MKD_STRICT))
