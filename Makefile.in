@@ -140,7 +140,7 @@ test:	$(PGMS) $(TESTFRAMEWORK) verify
 
 pandoc_headers.o: tools/pandoc_headers.c config.h
 	$(BUILD) -c -o pandoc_headers.o tools/pandoc_headers.c
-pandoc_headers: pandoc_headers.o $(MKDLIB)
+pandoc_headers: pandoc_headers.o $(COMMON) $(MKDLIB)
 	$(LINK) -o pandoc_headers pandoc_headers.o $(COMMON) -lmarkdown 
 
 branch.o: tools/branch.c config.h
