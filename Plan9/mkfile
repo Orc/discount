@@ -5,10 +5,10 @@ CFLAGS='-D_BSD_EXTENSION -D_C99_SNPRINTF_EXTENSION'
 markdown:V:	../markdown
 
 ../markdown: ../config.h
-	ape/psh -c 'cd .. && $CC mktags.c -o mktags && ./mktags > blocktags && make'
+	ape/psh -c 'cd .. && make'
 
 test: markdown
-	ape/psh -c 'cd ..&& make test'
+	ape/psh -c 'cd .. && make test'
 
 install:V: ../markdown
 	cp ../markdown $BIN/markdown
