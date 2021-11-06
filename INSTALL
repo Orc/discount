@@ -63,3 +63,5 @@ A shortcut to install everything is ``make install.everything''
        system mkfile sets the `T' flag in CFLAGS; there are several
        places where I typedef voids to opaque structure pointers and
        this makes the build die when it attempts to link anything.
+       This was fixed by explicitly setting CFLAGS in Plan9/mkfile in
+       <https://github.com/Orc/discount/commit/311b33218f60ffd342264e97faee8cf7b7853044>.
