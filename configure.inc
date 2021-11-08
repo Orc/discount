@@ -474,25 +474,25 @@ acLookFor () {
     *)	    __mode=-x
 	    ;;
     esac
-    oldifs="$IFS"
     for program in $*; do
 	case "$program" in
 	/*) if [ $__mode $program -a -f $program ]; then
 		echo $program
-		break 2
+		return
 	    fi ;;
 	*)
+	    oldifs="$IFS"
 	    IFS=":"
 	    for x in $path; do
 		if [ $__mode $x/$program -a -f $x/$program ]; then
 		    echo $x/$program
-		    break 3
+		    IFS="$oldifs"
+		    return
 		fi
-	    done ;;
+	    done
+	    IFS="$oldifs" ;;
 	esac
     done
-    IFS="$oldifs"
-    unset __mode
 }
 
 
