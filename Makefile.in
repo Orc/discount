@@ -30,7 +30,7 @@ OBJS=mkdio.o markdown.o dumptree.o generate.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o \
      github_flavoured.o setup.o tags.o html5.o \
      @AMALLOC@ @H1TITLE@ flags.o v2compat.o flagprocs.o
-TESTFRAMEWORK=echo cols branch pandoc_headers
+TESTFRAMEWORK=echo cols branch pandoc_headers space2nl
 
 # modules that markdown, makepage, mkd2html, &tc use
 COMMON=pgm_options.o gethopt.o notspecial.o
@@ -152,7 +152,10 @@ cols.o:	tools/cols.c config.h
 	$(BUILD) -c -o cols.o tools/cols.c
 cols:   cols.o
 	$(LINK) -o cols cols.o
-	
+space2nl.o: tools/space2nl.c config.h
+	$(BUILD) -c -o space2nl.o tools/space2nl.c
+space2nl: space2nl.o
+	$(LINK) -o space2nl space2nl.o
 echo.o:	tools/echo.c config.h
 	$(BUILD) -c -o echo.o tools/echo.c
 echo:   echo.o

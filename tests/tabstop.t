@@ -4,7 +4,7 @@ rc=0
 unset MARKDOWN_FLAGS
 unset MKD_TABSTOP
 
-eval `./markdown -V | tr ' ' '\n' | grep TAB`
+eval `./markdown -V | ./space2nl | grep TAB`
 
 if [ "${TAB:-4}" -eq 8 ]; then
     title "dealing with tabstop derangement"

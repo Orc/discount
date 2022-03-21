@@ -12,3 +12,6 @@ cols.c:         a format prettifier for test progress output (truncates
 echo.c:         echo, localized so configure.sh doesn't have to thrash around
 		figuring whether the system echo uses -n or /c (or whatever)
 		to do output w/o a trailing newline
+pandoc_headers.c:
+		display the pandoc headers (if any) on a document.
+space2nl.c:	convert spaces to newlines.
