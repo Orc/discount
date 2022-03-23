@@ -293,7 +293,7 @@ extern int  __mkd_io_strget(struct string_stream *);
 
 /* toc uniquifier
  */
-extern char *___mkd_uniquetag(ParagraphRoot *, char *, int);
+extern void ___mkd_uniquify(ParagraphRoot *, Paragraph *);
     
 /* utility function to do some operation and exit the current function
  * if it fails

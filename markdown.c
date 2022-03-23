@@ -123,7 +123,7 @@ isopentag(Line *p)
 	 * the !-- doesn't need to end in a whitespace
 	 */
 	return &comment;
-    
+
     /* find how long the tag is so we can check to see if
      * it's a block-level tag
      */
@@ -171,7 +171,7 @@ splitline(Line *t, int cutpoint)
 	SUFFIX(tmp->text, T(t->text)+cutpoint, S(t->text)-cutpoint);
 	EXPAND(tmp->text) = 0;
 	S(tmp->text)--;
-	
+
 	S(t->text) = cutpoint;
     }
 }
@@ -198,7 +198,7 @@ checkline(Line *l, mkd_flag_t *flags)
     l->line_flags |= CHECKED;
     l->kind = chk_text;
     l->count = 0;
-    
+
     if (l->dle >= 4) { l->kind=chk_code; return; }
 
     for ( eol = S(l->text); eol > l->dle && isspace(T(l->text)[eol-1]); --eol )
@@ -286,10 +286,10 @@ htmlblock(Paragraph *p, struct kw *tag, int *unclosed)
     int i, closing, depth=0;
 
     *unclosed = 0;
-    
+
     if ( tag == &comment )
 	return commentblock(p, unclosed);
-    
+
     if ( tag->selfclose ) {
 	ret = f.t->next;
 	f.t->next = 0;
@@ -394,7 +394,7 @@ static int
 issetext(Line *t, int *htyp, mkd_flag_t *flags)
 {
     Line *n;
-    
+
     /* check for setext-style HEADER
      *                        ======
      */
@@ -432,10 +432,10 @@ static inline int
 end_of_block(Line *t, mkd_flag_t *flags)
 {
     int dummy;
-    
+
     if ( !t )
 	return 0;
-	
+
     return ( (S(t->text) <= t->dle) || ishr(t, flags) || ishdr(t, &dummy, flags) );
 }
 
@@ -477,7 +477,7 @@ is_extra_dt(Line *t, int *clip, mkd_flag_t* flags)
 	   && t->next && S(t->text) && T(t->text)[0] != '='
 		      && T(t->text)[S(t->text)-1] != '=') {
 	Line *x;
-    
+
 	if ( iscode(t) || end_of_block(t, flags) )
 	    return 0;
 
@@ -485,7 +485,7 @@ is_extra_dt(Line *t, int *clip, mkd_flag_t* flags)
 	    *clip = x->dle+2;
 	    return t;
 	}
-	
+
 	if ( x=is_extra_dt(t->next, clip, flags) )
 	    return x;
     }
@@ -512,7 +512,7 @@ islist(Line *t, int *clip, mkd_flag_t *flags, int *list_type)
 {
     int i, j;
     char *q;
-    
+
     if ( end_of_block(t, flags) )
 	return 0;
 
@@ -563,7 +563,7 @@ headerblock(Paragraph *pp, int htyp)
 	    /* p->text is header, p->next->text is -'s or ='s
 	     */
 	    pp->hnumber = (T(p->next->text)[0] == '=') ? 1 : 2;
-	    
+
 	    ret = p->next->next;
 	    ___mkd_freeLine(p->next);
 	    p->next = 0;
@@ -818,14 +818,14 @@ quoteblock(Paragraph *p, mkd_flag_t *flags)
     if ( isdivmarker(p->text,0,flags) ) {
 	char *prefix = "class";
 	int i;
-	
+
 	q = p->text;
 	p->text = p->text->next;
 
 	if ( (i = szmarkerclass(1+T(q->text))) == 3 )
 	    /* and this would be an "%id:" prefix */
 	    prefix="id";
-	    
+
 	if ( p->ident = malloc(4+strlen(prefix)+S(q->text)) )
 	    sprintf(p->ident, "%s=\"%.*s\"", prefix, S(q->text)-(i+2),
 						     T(q->text)+(i+1) );
@@ -936,7 +936,7 @@ definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 
 	if ( para = (text != q->next) )
 	    ___mkd_freeLineRange(q, text);
-	
+
 	q->next = 0; 
 	if ( kind == 1 /* discount dl */ )
 	    for ( q = labels; q; q = q->next ) {
@@ -963,7 +963,7 @@ definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 		anchor.next = text;
 		___mkd_freeLineRange(&anchor,q);
 		text = q;
-	    
+
 	    }
 
 	} while ( kind == 2 && is_extra_dd(q) );
@@ -984,7 +984,7 @@ enumerated_block(Paragraph *top, int clip, MMIOT *f, int list_class)
     int para = 0, z;
 
     while (( text = q )) {
-	
+
 	p = Pp(&d, text, LISTITEM);
 	text = listitem(p, clip, &(f->flags), 0);
 
@@ -1031,7 +1031,7 @@ static Line *
 extrablock(Line *p)
 {
     Line *np;
-    
+
     while ( p && p->next ) {
 	np = p->next;
 
@@ -1057,7 +1057,7 @@ addfootnote(Line *p, MMIOT* f)
     Line *np = p->next;
 
     Footnote *foot = &EXPAND(f->footnotes->note);
-    
+
     CREATE(foot->tag);
     CREATE(foot->link);
     CREATE(foot->title);
@@ -1201,7 +1201,7 @@ compile_document(Line *ptr, MMIOT *f)
 	     * of the cached source BEFORE processing the html/style.
 	     */
 	    uncache(&source, &d, f);
-	    
+
 	    if (is_flag_set(&(f->flags), MKD_NOSTYLE) )
 		blocktype = HTML;
 	    else
@@ -1242,6 +1242,13 @@ compile_document(Line *ptr, MMIOT *f)
      * it now.
      */
     uncache(&source, &d, f);
+
+    /* if tables of contents are enabled, walk the document giving
+     * all the headers unique labels
+     */
+    if ( is_flag_set(&(f->flags), MKD_TOC) )
+	___mkd_uniquify(&d, T(d)->down);
+
     return T(d);
 }
 
@@ -1319,14 +1326,14 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 
 	if ( iscode(ptr) ) {
 	    p = Pp(&d, ptr, CODE);
-	    
+
 	    if ( is_flag_set(&(f->flags), MKD_1_COMPAT) ) {
 		/* HORRIBLE STANDARDS KLUDGE: the first line of every block
 		 * has trailing whitespace trimmed off.
 		 */
 		___mkd_tidy(&p->text->text);
 	    }
-	    
+
 	    ptr = codeblock(p);
 	}
 	else if ( iscodefence(ptr,3,0,&(f->flags)) && (p=fencedcodeblock(&d, &ptr, &(f->flags))) )
@@ -1356,9 +1363,6 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	else if ( ishdr(ptr, &hdr_type, &(f->flags) ) ) {
 	    p = Pp(&d, ptr, HDR);
 	    ptr = headerblock(p, hdr_type);
-	    if ( is_flag_set(&(f->flags), MKD_TOC) )
-		p->label = ___mkd_uniquetag(&d, T(p->text->text),
-						S(p->text->text));
 	}
 	else {
 	    /* either markup or an html block element
@@ -1377,11 +1381,11 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 					 * remains empty and ready for
 					 * processing with textblock()
 					 */
-	    
+
 	    if ( !is_flag_set(&(f->flags), MKD_NOHTML) && (tag = isopentag(ptr)) ) {
 		/* possibly an html block
 		 */
-		
+
 		ptr = htmlblock(p, tag, &unclosed);
 		if ( ! unclosed ) {
 		    p->typ = HTML;

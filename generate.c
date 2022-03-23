@@ -1525,14 +1525,14 @@ printheader(Paragraph *pp, MMIOT *f)
 {
     if ( is_flag_set(&f->flags, MKD_IDANCHOR) ) {
 	Qprintf(f, "<h%d", pp->hnumber);
-	if ( is_flag_set(&f->flags, MKD_TOC) ) {
+	if ( pp->label && is_flag_set(&f->flags, MKD_TOC) ) {
 	    Qstring(" id=\"", f);
 	    Qanchor(pp->label, f);
 	    Qchar('"', f);
 	}
 	Qchar('>', f);
     } else {
-	if ( is_flag_set(&f->flags, MKD_TOC) ) {
+	if ( pp->label && is_flag_set(&f->flags, MKD_TOC) ) {
 	    Qstring("<a name=\"", f);
 	    Qanchor(pp->label, f);
 	    Qstring("\"></a>\n", f);
