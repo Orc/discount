@@ -105,12 +105,12 @@ try '-T -ftoc' 'uniquifying duplicate labels' \
 # this' \
 '<ul>
  <li><a href="#this">this</a></li>
- <li><a href="#this_1">this</a></li>
+ <li><a href="#this_0">this</a></li>
 </ul>
 <a name="this"></a>
 <h1>this</h1>
 
-<a name="this_1"></a>
+<a name="this_0"></a>
 <h1>this</h1>'
   
 

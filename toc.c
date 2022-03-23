@@ -117,14 +117,12 @@ decollide(Paragraph *current, Cstring *name, int suffix)
     int seq = 0;
     char *sufp;
 
-#if 0
     /* first decollide all the children
      */
     for ( content = current; content; content = content->next ) {
 	if ( content->down )
 	    decollide(content->down, name, suffix);
     }
-#endif
 
 restart:
     for ( content = current; content; content = content->next ) {
