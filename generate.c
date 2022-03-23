@@ -183,10 +183,9 @@ Qprintf(MMIOT *f, char *fmt, ...)
 /* Qanchor() prints out a suitable-for-id-tag version of a string
  */
 static void
-Qanchor(struct line *p, MMIOT *f)
+Qanchor(char *name, MMIOT *f)
 {
-    mkd_string_to_anchor(T(p->text), S(p->text),
-			 (mkd_sta_function_t)Qchar, f, 1, f);
+    mkd_string_to_anchor(name, strlen(name), (mkd_sta_function_t)Qchar, f, 1, f);
 }
 
 
@@ -1528,14 +1527,14 @@ printheader(Paragraph *pp, MMIOT *f)
 	Qprintf(f, "<h%d", pp->hnumber);
 	if ( is_flag_set(&f->flags, MKD_TOC) ) {
 	    Qstring(" id=\"", f);
-	    Qanchor(pp->text, f);
+	    Qanchor(pp->label, f);
 	    Qchar('"', f);
 	}
 	Qchar('>', f);
     } else {
 	if ( is_flag_set(&f->flags, MKD_TOC) ) {
 	    Qstring("<a name=\"", f);
-	    Qanchor(pp->text, f);
+	    Qanchor(pp->label, f);
 	    Qstring("\"></a>\n", f);
 	}
 	Qprintf(f, "<h%d>", pp->hnumber);

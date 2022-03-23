@@ -49,6 +49,8 @@ ___mkd_freeParagraph(Paragraph *p)
 	___mkd_freeParagraph(p->down);
     if (p->text)
 	___mkd_freeLines(p->text);
+    if (p->label)
+	free(p->label);
     if (p->ident)
 	free(p->ident);
     if (p->lang)

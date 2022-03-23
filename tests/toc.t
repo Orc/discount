@@ -92,4 +92,27 @@ try '-T -ftoc,html5anchor' 'html5 multibyte chars' \
 <h1>It’s an apostrophe</h1>'
 
 summary $0
+
+
+# Check that the uniquifier works
+#
+
+title "uniquifying duplicate headers"
+
+
+try '-T -ftoc' 'uniquifying duplicate labels' \
+'# this
+# this' \
+'<ul>
+ <li><a href="#this">this</a></li>
+ <li><a href="#this_1">this</a></li>
+</ul>
+<a name="this"></a>
+<h1>this</h1>
+
+<a name="this_1"></a>
+<h1>this</h1>'
+  
+
+summary $0
 exit $rc

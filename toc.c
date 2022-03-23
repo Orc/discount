@@ -72,8 +72,7 @@ mkd_toc(Document *p, char **doc)
 			++last_hnumber;
 		    }
 		    Csprintf(&res, "%*s<li><a href=\"#", srcp->hnumber, "");
-		    mkd_string_to_anchor(T(srcp->text->text),
-					 S(srcp->text->text),
+		    mkd_string_to_anchor(srcp->label, strlen(srcp->label),
 					 (mkd_sta_function_t)Csputc,
 					 &res,1,p->ctx);
 		    Csprintf(&res, "\">");
@@ -101,6 +100,40 @@ mkd_toc(Document *p, char **doc)
     }
     DELETE(res);
     return size;
+}
+
+
+char *
+___mkd_uniquetag(ParagraphRoot *pr, char *name, int length)
+{
+    Paragraph *content;
+    char *label;
+    int suffix;
+    int seq = 0;
+
+    if ( !(pr && name) ) return 0;
+
+    
+    suffix = length;
+    
+    label = calloc(1, suffix+20);
+
+    strcpy(label, name);
+
+restart:
+    for ( content = T(*pr); content; content = content->next ) {
+	
+	if ( content->text && content->typ == HDR ) {
+
+	    if ( content->label && strcmp(label, content->label) == 0 ) {
+		/* collision; bump trailing sequence and try again
+		  */
+		sprintf(label+suffix, "_%d", ++seq);
+		goto restart;
+	    }
+	}
+    }
+    return label;
 }
 
 

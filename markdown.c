@@ -20,8 +20,6 @@
 
 typedef int (*stfu)(const void*,const void*);
 
-typedef ANCHOR(Paragraph) ParagraphRoot;
-
 static Paragraph *Pp(ParagraphRoot *, Line *, int);
 static Paragraph *compile(Line *, int, MMIOT *);
 
@@ -1358,6 +1356,9 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	else if ( ishdr(ptr, &hdr_type, &(f->flags) ) ) {
 	    p = Pp(&d, ptr, HDR);
 	    ptr = headerblock(p, hdr_type);
+	    if ( is_flag_set(&(f->flags), MKD_TOC) )
+		p->label = ___mkd_uniquetag(&d, T(p->text->text),
+						S(p->text->text));
 	}
 	else {
 	    /* either markup or an html block element

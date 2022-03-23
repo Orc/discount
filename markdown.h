@@ -96,6 +96,7 @@ typedef struct paragraph {
     struct paragraph *next;	/* next paragraph */
     struct paragraph *down;	/* recompiled contents of this paragraph */
     struct line *text;		/* all the text in this paragraph */
+    char *label;		/* toc label, uniqued */
     char *ident;		/* %id% tag for QUOTE */
     char *lang;			/* lang attribute for CODE */
     enum { WHITESPACE=0, CODE, QUOTE, MARKUP,
@@ -107,6 +108,8 @@ typedef struct paragraph {
 #define GITHUB_CHECK		0x01
 #define IS_CHECKED		0x02
 } Paragraph;
+
+typedef ANCHOR(Paragraph) ParagraphRoot;
 
 enum { ETX, SETEXT };	/* header types */
 
@@ -288,6 +291,10 @@ extern void __mkd_trim_line(Line *, int);
 
 extern int  __mkd_io_strget(struct string_stream *);
 
+/* toc uniquifier
+ */
+extern char *___mkd_uniquetag(ParagraphRoot *, char *, int);
+    
 /* utility function to do some operation and exit the current function
  * if it fails
  */
