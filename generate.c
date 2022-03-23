@@ -911,6 +911,37 @@ delspan(MMIOT *f, int size)
     Qstring("</del>", f);
 }
 
+/*  subspan() -- write out a chunk of text, blocking with <sub>...</sub>
+ */
+static void
+subspan(MMIOT *f, int size)
+{
+    Qstring("<sub>", f);
+    ___mkd_reparse(cursor(f)-1, size, 0, f, 0);
+    Qstring("</sub>", f);
+}
+
+/*  supspan() -- write out a chunk of text, blocking with <sup>...</sup>
+ */
+static void
+supspan(MMIOT *f, int size)
+{
+    Qstring("<sup>", f);
+    ___mkd_reparse(cursor(f)-1, size, 0, f, 0);
+    Qstring("</sup>", f);
+}
+
+/*  highlightspan() -- write out a chunk of text, blocking with <mark>...</mark>
+ */
+static void
+highlightspan(MMIOT *f, int size)
+{
+    Qstring("<mark>", f);
+    ___mkd_reparse(cursor(f)-1, size, 0, f, 0);
+    Qstring("</mark>", f);
+}
+
+
 
 /*  codespan() -- write out a chunk of text as code, trimming one
  *                space off the front and/or back as appropriate.
@@ -1350,6 +1381,23 @@ text(MMIOT *f)
 	case '[':   if ( tag_text(f) || !linkylinky(0, f) )
 			Qchar(c, f);
 		    break;
+	
+	case '=': if ( is_flag_set(f->flags, MKD_NOSUPERSCRIPT)
+			 || is_flag_set(f->flags, MKD_STRICT)
+			 || is_flag_set(f->flags, MKD_TAGTEXT)
+			 || ! tickhandler(f,c,2,0, highlightspan))
+			Qchar(c, f);
+		    break;
+
+#ifdef TYPORA
+	/* A^B^ -> A<sup>B</sup> */
+	case '^':   if ( is_flag_set(f->flags, MKD_NOSUPERSCRIPT)
+			 || is_flag_set(f->flags, MKD_STRICT)
+			 || is_flag_set(f->flags, MKD_TAGTEXT)
+			 || ! tickhandler(f,c,1,0, supspan))
+			Qchar(c, f);
+		    break;
+#else /* !TYPORA */
 	/* A^B -> A<sup>B</sup> */
 	case '^':   if ( is_flag_set(f->flags, MKD_NOSUPERSCRIPT)
 			    || is_flag_set(f->flags, MKD_STRICT)
@@ -1388,6 +1436,7 @@ text(MMIOT *f)
 			Qstring("</sup>", f);
 		    }
 		    break;
+#endif /* TYPORA */
 	case '_':
 	/* Underscores don't count if they're in the middle of a word */
 		    if ( !(is_flag_set(f->flags, MKD_NORELAXED) || is_flag_set(f->flags, MKD_STRICT))
@@ -1415,7 +1464,7 @@ text(MMIOT *f)
 	case '~':   if ( is_flag_set(f->flags, MKD_NOSTRIKETHROUGH)
 			 || is_flag_set(f->flags, MKD_STRICT)
 			 || is_flag_set(f->flags, MKD_TAGTEXT)
-			 || ! tickhandler(f,c,2,0, delspan) )
+			 || ! (tickhandler(f,c,2,0, delspan) || tickhandler(f,c,1,0, subspan)))
 			Qchar(c, f);
 		    break;
 
