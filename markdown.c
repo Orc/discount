@@ -1247,7 +1247,7 @@ compile_document(Line *ptr, MMIOT *f)
      * all the headers unique labels
      */
     if ( is_flag_set(&(f->flags), MKD_TOC) )
-	___mkd_uniquify(&d, T(d)->down);
+	___mkd_uniquify(&d, T(d));
 
     return T(d);
 }

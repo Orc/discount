@@ -186,7 +186,9 @@ ___mkd_uniquify(ParagraphRoot *pr, Paragraph *pp)
 
     /* unique all the headers at this level */
     for (content = pp; content; content = content->next) {
-	if ( content->typ == HDR && T(content->text->text) )
+	if ( content->typ == SOURCE )
+	    ___mkd_uniquify(pr, content->down);
+	else if ( content->typ == HDR && T(content->text->text) )
 	    content->label = uniquename(pr, &(content->text->text));
     }
 
