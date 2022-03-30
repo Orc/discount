@@ -911,6 +911,7 @@ delspan(MMIOT *f, int size)
     Qstring("</del>", f);
 }
 
+#ifdef TYPORA
 /*  subspan() -- write out a chunk of text, blocking with <sub>...</sub>
  */
 static void
@@ -920,6 +921,7 @@ subspan(MMIOT *f, int size)
     ___mkd_reparse(cursor(f)-1, size, 0, f, 0);
     Qstring("</sub>", f);
 }
+
 
 /*  supspan() -- write out a chunk of text, blocking with <sup>...</sup>
  */
@@ -931,6 +933,7 @@ supspan(MMIOT *f, int size)
     Qstring("</sup>", f);
 }
 
+
 /*  highlightspan() -- write out a chunk of text, blocking with <mark>...</mark>
  */
 static void
@@ -940,6 +943,7 @@ highlightspan(MMIOT *f, int size)
     ___mkd_reparse(cursor(f)-1, size, 0, f, 0);
     Qstring("</mark>", f);
 }
+#endif
 
 
 
@@ -1382,6 +1386,7 @@ text(MMIOT *f)
 			Qchar(c, f);
 		    break;
 	
+#ifdef TYPORA
 	case '=': if ( is_flag_set(f->flags, MKD_NOSUPERSCRIPT)
 			 || is_flag_set(f->flags, MKD_STRICT)
 			 || is_flag_set(f->flags, MKD_TAGTEXT)
@@ -1389,7 +1394,6 @@ text(MMIOT *f)
 			Qchar(c, f);
 		    break;
 
-#ifdef TYPORA
 	/* A^B^ -> A<sup>B</sup> */
 	case '^':   if ( is_flag_set(f->flags, MKD_NOSUPERSCRIPT)
 			 || is_flag_set(f->flags, MKD_STRICT)
