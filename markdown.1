@@ -20,6 +20,7 @@
 .Op Fl S
 .Op Fl s Pa text
 .Op Fl t Pa text
+.Op Fl toc
 .Op Pa textfile
 .Sh DESCRIPTION
 The
@@ -181,6 +182,11 @@ Use the
 .Xr markdown 3
 function to format
 .Ar text .
+.It Fl toc
+Set the table-of-content flag, then dump the table of contents
+before the formatted text (a shorthand for 
+.Fl -T -toc
+)
 .El
 .Sh RETURN VALUES
 The
