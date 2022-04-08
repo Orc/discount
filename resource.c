@@ -22,6 +22,8 @@
 void
 ___mkd_freeLine(Line *ptr)
 {
+    if ( ptr->fence_class )
+	free(ptr->fence_class);
     DELETE(ptr->text);
     free(ptr);
 }

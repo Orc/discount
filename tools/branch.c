@@ -21,7 +21,7 @@ char **argv;
     if ( fgets(line, sizeof line, pipe) != 0 ) {
 	strtok(line, "\n");
 	if ( strcmp(line, "main" ) != 0 )
-	    printf("\"(%s)\"", line);
+	    printf("\"(%s)-\"", line);
     }
     pclose(pipe);
 #endif

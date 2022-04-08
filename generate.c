@@ -1664,6 +1664,23 @@ printtable(Paragraph *pp, MMIOT *f)
 }
 
 
+static Line *
+printfenced(Line *t, MMIOT *f)
+{
+    Qstring("<pre><code", f);
+    if ( t->fence_class )
+	Qprintf(f, " class=\"%s\"", t->fence_class);
+    Qstring(">\n", f);
+    while ( (t = t->next) && t->is_fenced ) {
+	code(f, T(t->text), S(t->text));
+	Qchar('\n', f);
+    }
+
+    Qstring("</code></pre>\n", f);
+    return t;
+}
+
+
 static int
 printblock(Paragraph *pp, MMIOT *f)
 {
@@ -1672,8 +1689,13 @@ printblock(Paragraph *pp, MMIOT *f)
     Line *t = pp->text;
     int align = pp->align;
 
-    while (t) {
-	if ( S(t->text) ) {
+    Qstring(Begin[align], f);
+    do {
+	if ( t->is_fenced ) {
+	    text(f);
+	    t = printfenced(t, f);
+	}
+	else if ( S(t->text) ) {
 	    if ( t->next && S(t->text) > 2
 			 && T(t->text)[S(t->text)-2] == ' '
 			 && T(t->text)[S(t->text)-1] == ' ' ) {
@@ -1688,9 +1710,7 @@ printblock(Paragraph *pp, MMIOT *f)
 		    pushc('\n', f);
 	    }
 	}
-	t = t->next;
-    }
-    Qstring(Begin[align], f);
+    } while (t && (t = t->next) );
     text(f);
     Qstring(End[align], f);
     return 1;

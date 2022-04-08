@@ -176,7 +176,7 @@ splitline(Line *t, int cutpoint)
     }
 }
 
-#define UNCHECK(l) ((l)->line_flags &= ~CHECKED)
+#define UNCHECK(t) ((t)->is_checked = 0)
 
 #define UNLESS_FENCED(t) if (fenced) { \
     other = 1; l->count += (c == ' ' ? 0 : -1); \
@@ -195,9 +195,10 @@ checkline(Line *l, mkd_flag_t *flags)
 	stars = 0, tildes = 0, other = 0,
 	backticks = 0, fenced = 0;
 
-    l->line_flags |= CHECKED;
+    l->is_checked = 1;
     l->kind = chk_text;
     l->count = 0;
+
 
     if (l->dle >= 4) { l->kind=chk_code; return; }
 
@@ -206,7 +207,6 @@ checkline(Line *l, mkd_flag_t *flags)
 
     for (i=l->dle; i<eol; i++) {
 	register int c = T(l->text)[i];
-	int is_fence_char = 0;
 
 	if ( c != ' ' ) l->count++;
 
@@ -219,17 +219,10 @@ checkline(Line *l, mkd_flag_t *flags)
 	default:
 	    if ( is_flag_set(flags, MKD_FENCEDCODE) ) {
 		switch (c) {
-		case '~':  if (other) return; is_fence_char = 1; tildes = 1; break;
-		case '`':  if (other) return; is_fence_char = 1; backticks = 1; break;
-		}
-		if (is_fence_char) {
-		    fenced = 1;
-		    break;
+		case '~':   fenced++; tildes = 1; break;
+		case '`':   fenced++; backticks = 1; break;
 		}
 	    }
-	    other = 1;
-	    l->count--;
-	    if (!fenced) return;
 	}
     }
 
@@ -247,6 +240,10 @@ checkline(Line *l, mkd_flag_t *flags)
     else if ( equals ) { l->kind = chk_equal; }
     else if ( tildes ) { l->kind = chk_tilde; }
     else if ( backticks ) { l->kind = chk_backtick; }
+    if ( fenced > 1 ) {
+	l->is_fenced = 1;
+	l->count = fenced;
+    }
 }
 
 
@@ -381,7 +378,7 @@ iscode(Line *t)
 static inline int
 ishr(Line *t, mkd_flag_t *flags)
 {
-    if ( ! (t->line_flags & CHECKED) )
+    if ( ! (t->is_checked) )
 	checkline(t, flags);
 
     if ( t->count > 2 )
@@ -400,7 +397,7 @@ issetext(Line *t, int *htyp, mkd_flag_t *flags)
      */
 
     if ( (n = t->next) ) {
-	if ( !(n->line_flags & CHECKED) )
+	if ( !(n->is_checked) )
 	    checkline(n, flags);
 
 	if ( n->kind == chk_dash || n->kind == chk_equal ) {
@@ -626,7 +623,7 @@ iscodefence(Line *r, int size, line_type kind, mkd_flag_t *flags)
     if ( !is_flag_set(flags, MKD_FENCEDCODE) )
 	return 0;
 
-    if ( !(r->line_flags & CHECKED) )
+    if ( !(r->is_checked) )
 	checkline(r, flags);
 
     if ( kind )
@@ -636,40 +633,52 @@ iscodefence(Line *r, int size, line_type kind, mkd_flag_t *flags)
 }
 
 
-static Paragraph *
-fencedcodeblock(ParagraphRoot *d, Line **ptr, mkd_flag_t *flags)
+static Line *
+fencedcodechunk(Line *first, mkd_flag_t *flags)
 {
-    Line *first, *r;
-    Paragraph *ret;
-
-    first = (*ptr);
+    Line *r, *q;
 
     /* don't allow zero-length code fences
     */
-    if ( (first->next == 0) || iscodefence(first->next, first->count, 0, flags) )
-	return 0;
+    if ( (first->next == 0) || iscodefence(first->next, first->count, first->kind, flags) ) {
+	first->kind = chk_text;
+	first->is_fenced = 0;
+	if ( first->next) {
+	    first->next->kind = chk_text;
+	    first->next->is_fenced = 0;
+	}
+	return first->next;
+    }
 
-    /* find the closing fence, discard the fences,
-    * return a Paragraph with the contents
-    */
-    for ( r = first; r && r->next; r = r->next )
-	if ( iscodefence(r->next, first->count, first->kind, flags) ) {
-	    (*ptr) = r->next->next;
-	    ret = Pp(d, first->next, CODE);
+    /* find the closing fence, return a pointer to the Line
+     * past the closing fence
+     */
+    for ( r = first->next; r; r = r->next ) {
+	fprintf(stderr, "? %.*s\n", S(r->text), T(r->text));
+
+	if ( iscodefence(r, first->count, first->kind, flags) ) {
 	    if (S(first->text) - first->count > 0) {
 		char *lang_attr = T(first->text) + first->count;
+
 		while ( *lang_attr != 0 && *lang_attr == ' ' ) lang_attr++;
-		ret->lang = strdup(lang_attr);
+
+		if ( lang_attr && *lang_attr ) {
+		    first->fence_class = strdup(lang_attr);
+		}
 	    }
-	    else {
-		ret->lang = 0;
+
+	    for ( q = first; q && (q != r); q = q->next )
+		q->is_fenced = 1;
+
+	    S(first->text) = S(r->text) = 0;
+	    r->is_fenced = 0;
+
+	    return r->next;
 	}
-	___mkd_freeLine(first);
-	___mkd_freeLine(r->next);
-	r->next = 0;
-	return ret;
     }
-    return 0;
+    first->is_fenced = 0;
+    first->kind = chk_text;
+    return first;
 }
 
 
@@ -717,7 +726,9 @@ textblock(Paragraph *p, int toplevel, mkd_flag_t *flags)
     Line *t, *next;
 
     for ( t = p->text; t ; t = next ) {
-	if ( ((next = t->next) == 0) || endoftextblock(next, toplevel, flags) ) {
+	if ( iscodefence(t, t->count, 0, flags) )
+	    next = fencedcodechunk(t, flags);
+	else if ( ((next = t->next) == 0) || endoftextblock(next, toplevel, flags) ) {
 	    p->align = centered(p->text, t);
 	    t->next = 0;
 	    return next;
@@ -804,7 +815,7 @@ quoteblock(Paragraph *p, mkd_flag_t *flags)
 	    if ( T(t->text)[qp] == ' ' )
 		qp++;
 	    __mkd_trim_line(t,qp);
-	    UNCHECK(t);
+	    checkline(t, flags);
 	}
 
 	q = skipempty(t->next);
@@ -859,6 +870,7 @@ listitem(Paragraph *p, int indent, mkd_flag_t *flags, linefn check)
 
     for ( t = p->text; t ; t = q) {
 	UNCHECK(t);
+
 	__mkd_trim_line(t, clip);
 
 	if ( firstpara && !is_flag_set(flags, MKD_NORMAL_LISTITEM) ) {
@@ -1223,13 +1235,7 @@ compile_document(Line *ptr, MMIOT *f)
 	    ptr = consume(addfootnote(ptr, f), &eaten);
 	    previous_was_break = 1;
 	}
-	else if ( previous_was_break && iscodefence(ptr,3,0,&(f->flags)) ) {
-	    uncache(&source, &d, f);
-	    if ( !fencedcodeblock(&d, &ptr, &(f->flags)) ) /* just source */
-		goto attach;
-	}
 	else {
-    attach:
 	    /* source; cache it up to wait for eof or the
 	     * next html/style block
 	     */
@@ -1278,7 +1284,7 @@ actually_a_table(MMIOT *f, Line *pp)
 
     /* all lines must contain |'s */
     for (r = pp; r; r = r->next )
-	if ( !(r->line_flags & PIPECHAR) ) {
+	if ( !(r->has_pipechar) ) {
 	    return 0;
 	}
 
@@ -1336,8 +1342,6 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 
 	    ptr = codeblock(p);
 	}
-	else if ( iscodefence(ptr,3,0,&(f->flags)) && (p=fencedcodeblock(&d, &ptr, &(f->flags))) )
-	    /* yay, it's already done */ ;
 	else if ( ishr(ptr, &(f->flags)) ) {
 	    p = Pp(&d, 0, HR);
 	    r = ptr;

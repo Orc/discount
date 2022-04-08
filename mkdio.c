@@ -63,7 +63,7 @@ __mkd_enqueue(Document* a, Cstring *line)
 	}
 	else if ( c >= ' ' ) {
 	    if ( c == '|' )
-		p->line_flags |= PIPECHAR;
+		p->has_pipechar = 1;
 	    EXPAND(p->text) = c;
 	    ++xp;
 	}

@@ -79,11 +79,11 @@ typedef struct line {
     Cstring text;
     struct line *next;
     int dle;			/* leading indent on the line */
-    int line_flags;		/* special attributes for this line */
-#define PIPECHAR	0x01		/* line contains a | */
-#define CHECKED		0x02
-
+    int has_pipechar;		/* line contains a | */
+    int is_checked;
     line_type kind;
+    int is_fenced;		/* line inside a fenced code block (ick) */
+    char *fence_class;		/* fenced code class (ick) */
     int count;
 } Line;
 
