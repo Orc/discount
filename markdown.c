@@ -193,7 +193,7 @@ checkline(Line *l, mkd_flag_t *flags)
     int dashes = 0, spaces = 0,
 	equals = 0, underscores = 0,
 	stars = 0, tildes = 0, other = 0,
-	backticks = 0, fenced = 0;
+	backticks = 0, fenced = 0, others = 0;
 
     l->is_checked = 1;
     l->kind = chk_text;
@@ -217,6 +217,7 @@ checkline(Line *l, mkd_flag_t *flags)
 	case '_':  UNLESS_FENCED(underscores = 1); break;
 	case '*':  stars = 1; break;
 	default:
+	    others = 1;
 	    if ( is_flag_set(flags, MKD_FENCEDCODE) ) {
 		switch (c) {
 		case '~':   fenced++; tildes = 1; break;
@@ -226,24 +227,26 @@ checkline(Line *l, mkd_flag_t *flags)
 	}
     }
 
-    if ( dashes + equals + underscores + stars + tildes + backticks > 1 )
-	return;
-
-    if ( spaces ) {
-	if ( (underscores || stars || dashes) )
-	    l->kind = chk_hr;
-	return;
-    }
-
-    if ( stars || underscores ) { l->kind = chk_hr; }
-    else if ( dashes ) { l->kind = chk_dash; }
-    else if ( equals ) { l->kind = chk_equal; }
-    else if ( tildes ) { l->kind = chk_tilde; }
-    else if ( backticks ) { l->kind = chk_backtick; }
     if ( fenced > 1 ) {
 	l->is_fenced = 1;
 	l->count = fenced;
     }
+
+    if ( dashes + equals + underscores + stars + tildes + backticks > 1 )
+	return;
+
+    if ( !others ) {
+	if (underscores || stars )
+	    l->kind = chk_hr;
+	else if ( dashes )
+	    l->kind = chk_dash;
+	else if ( equals )
+	    l->kind = chk_equal;
+	return;
+    }
+
+    if ( tildes ) { l->kind = chk_tilde; }
+    else if ( backticks ) { l->kind = chk_backtick; }
 }
 
 
@@ -654,8 +657,6 @@ fencedcodechunk(Line *first, mkd_flag_t *flags)
      * past the closing fence
      */
     for ( r = first->next; r; r = r->next ) {
-	fprintf(stderr, "? %.*s\n", S(r->text), T(r->text));
-
 	if ( iscodefence(r, first->count, first->kind, flags) ) {
 	    if (S(first->text) - first->count > 0) {
 		char *lang_attr = T(first->text) + first->count;
@@ -1234,6 +1235,18 @@ compile_document(Line *ptr, MMIOT *f)
 	     */
 	    ptr = consume(addfootnote(ptr, f), &eaten);
 	    previous_was_break = 1;
+	}
+	else if (iscodefence(ptr, 2, 0, &(f->flags))) {
+	    Line *more = ptr;
+
+	    /* scoop up _everything_ in a fenced code block, including html & footnotes
+	     */
+
+	    ATTACH(source,more);
+	    while ( (more = more->next) && !iscodefence(more, ptr->count, ptr->kind, &(f->flags)) )
+		ATTACH(source,more);
+
+	    ptr = more;
 	}
 	else {
 	    /* source; cache it up to wait for eof or the
