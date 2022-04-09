@@ -1243,10 +1243,16 @@ compile_document(Line *ptr, MMIOT *f)
 	     */
 
 	    ATTACH(source,more);
+	    Cache checkpoint = source;
 	    while ( (more = more->next) && !iscodefence(more, ptr->count, ptr->kind, &(f->flags)) )
 		ATTACH(source,more);
 
-	    ptr = more;
+	    if ( more )
+		ptr = more;
+	    else {
+		source = checkpoint;
+		ptr = ptr->next;
+	    }
 	}
 	else {
 	    /* source; cache it up to wait for eof or the
