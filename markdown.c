@@ -194,6 +194,7 @@ checkline(Line *l, mkd_flag_t *flags)
 	equals = 0, underscores = 0,
 	stars = 0, tildes = 0, other = 0,
 	backticks = 0, fenced = 0, others = 0;
+    register int c,  previous = 0;
 
     l->is_checked = 1;
     l->kind = chk_text;
@@ -205,10 +206,26 @@ checkline(Line *l, mkd_flag_t *flags)
     for ( eol = S(l->text); eol > l->dle && isspace(T(l->text)[eol-1]); --eol )
 	;
 
-    for (i=l->dle; i<eol; i++) {
-	register int c = T(l->text)[i];
+    if ( is_flag_set(flags, MKD_FENCEDCODE) ) {
+	for ( i=l->dle; i<eol; i++ ) {
+	    c = T(l->text)[i];
 
-	if ( c != ' ' ) l->count++;
+	    if ( c != '~' && c != '`' && previous && previous != c )
+		break;
+	    l->count++;
+	    previous = c;
+	}
+
+	if ( l->count > 1 ) {
+	    l->kind = (previous == '`' ? chk_backtick : chk_tilde);
+	    l->is_fenced = 1;
+	    return;
+	}
+    }
+
+    for (i=l->dle; i<eol; i++) {
+
+	if ( (c = T(l->text)[i]) != ' ' ) l->count++;
 
 	switch (c) {
 	case '-':  UNLESS_FENCED(dashes = 1); break;
@@ -217,19 +234,8 @@ checkline(Line *l, mkd_flag_t *flags)
 	case '_':  UNLESS_FENCED(underscores = 1); break;
 	case '*':  stars = 1; break;
 	default:
-	    others = 1;
-	    if ( is_flag_set(flags, MKD_FENCEDCODE) ) {
-		switch (c) {
-		case '~':   fenced++; tildes = 1; break;
-		case '`':   fenced++; backticks = 1; break;
-		}
-	    }
+	    others = 1; break;
 	}
-    }
-
-    if ( fenced > 1 ) {
-	l->is_fenced = 1;
-	l->count = fenced;
     }
 
     if ( dashes + equals + underscores + stars + tildes + backticks > 1 )
