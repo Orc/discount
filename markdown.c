@@ -178,10 +178,6 @@ splitline(Line *t, int cutpoint)
 
 #define UNCHECK(t) ((t)->is_checked = 0)
 
-#define UNLESS_FENCED(t) if (fenced) { \
-    other = 1; l->count += (c == ' ' ? 0 : -1); \
-  } else { t; }
-
 /*
  * walk a line, seeing if it's any of half a dozen interesting regular
  * types.
@@ -193,13 +189,13 @@ checkline(Line *l, mkd_flag_t *flags)
     int dashes = 0, spaces = 0,
 	equals = 0, underscores = 0,
 	stars = 0, tildes = 0, other = 0,
-	backticks = 0, fenced = 0, others = 0;
-    register int c,  previous = 0;
+	backticks = 0;
+    register int c,  first;
 
     l->is_checked = 1;
     l->kind = chk_text;
+    l->is_fenced = 0;
     l->count = 0;
-
 
     if (l->dle >= 4) { l->kind=chk_code; return; }
 
@@ -207,19 +203,22 @@ checkline(Line *l, mkd_flag_t *flags)
 	;
 
     if ( is_flag_set(flags, MKD_FENCEDCODE) ) {
-	for ( i=l->dle; i<eol; i++ ) {
-	    c = T(l->text)[i];
+	first = T(l->text)[l->dle];
 
-	    if ( c != '~' && c != '`' && previous && previous != c )
-		break;
-	    l->count++;
-	    previous = c;
-	}
+	if ( first == '~' || first == '`' ) {
+	    for ( i=l->dle; i<eol; i++ ) {
+		c = T(l->text)[i];
 
-	if ( l->count > 1 ) {
-	    l->kind = (previous == '`' ? chk_backtick : chk_tilde);
-	    l->is_fenced = 1;
-	    return;
+		if ( (c != '~') && (c != '`') && (c != first) )
+		    break;
+		l->count++;
+	    }
+
+	    if ( l->count > 1 ) {
+		l->kind = (first == '`' ? chk_backtick : chk_tilde);
+		l->is_fenced = 1;
+		return;
+	    }
 	}
     }
 
@@ -228,20 +227,19 @@ checkline(Line *l, mkd_flag_t *flags)
 	if ( (c = T(l->text)[i]) != ' ' ) l->count++;
 
 	switch (c) {
-	case '-':  UNLESS_FENCED(dashes = 1); break;
-	case ' ':  UNLESS_FENCED(spaces = 1); break;
+	case '-':  dashes = 1; break;
+	case ' ':  spaces = 1; break;
 	case '=':  equals = 1; break;
-	case '_':  UNLESS_FENCED(underscores = 1); break;
+	case '_':  underscores = 1; break;
 	case '*':  stars = 1; break;
-	default:
-	    others = 1; break;
+	default:   other = 1; break;
 	}
     }
 
     if ( dashes + equals + underscores + stars + tildes + backticks > 1 )
 	return;
 
-    if ( !others ) {
+    if ( !other ) {
 	if (underscores || stars )
 	    l->kind = chk_hr;
 	else if ( dashes )
@@ -634,6 +632,10 @@ iscodefence(Line *r, int size, line_type kind, mkd_flag_t *flags)
 
     if ( !(r->is_checked) )
 	checkline(r, flags);
+
+    if ( !r->is_fenced )
+	return 0;
+
 
     if ( kind )
 	return (r->kind == kind) && (r->count >= size);

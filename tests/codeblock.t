@@ -1,6 +1,6 @@
 . tests/functions.sh
 
-title "code blocks"
+title "traditional code blocks"
 
 rc=0
 MARKDOWN_FLAGS=
@@ -11,6 +11,10 @@ try 'format for code block html' \
     '<pre><code>this is
 code
 </code></pre>'
+
+summary $0
+
+title "fenced code blocks"
 
 try 'fenced code disabled backtick' \
 '```
@@ -246,6 +250,20 @@ bar
 bar
 </code></pre>
 </p>'
+
+
+try -ffencedcode 'checkline misparse as fenced code' \
+'[`label`](#code)
+```class
+content
+```
+' \
+'<p><a href="#code"><code>label</code></a>
+<pre><code class="class">
+content
+</code></pre>
+</p>'
+
 
 summary $0
 exit $rc
