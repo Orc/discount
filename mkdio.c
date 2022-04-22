@@ -100,7 +100,10 @@ populate(getc_func getc, void* ctx, mkd_flag_t *flags)
     Cstring line;
     Document *a = __mkd_new_Document();
     int c;
-    int pandoc = (flags && !is_flag_set(flags, MKD_NOHEADER)) ? 0 : EOF;
+    int pandoc = 0;
+
+    if ( flags && is_flag_set(flags, MKD_NOHEADER) )
+	pandoc= EOF;
 
     if ( !a ) return 0;
 
