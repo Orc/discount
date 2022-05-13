@@ -115,6 +115,26 @@ mkd_flags()
     return p;
 }
 
+
+mkd_flag_t *
+mkd_copy_flags(mkd_flag_t *original)
+{
+    int i;
+
+    if ( original ) {
+	mkd_flag_t *copy = mkd_flags();
+
+	if ( copy == NULL ) return 0;
+
+	for ( i=0; i < sizeof *copy; i++ )
+	    copy->bit[i] = original->bit[i];
+
+	return copy;
+    }
+    else
+	return mkd_flags();
+}
+
 void
 mkd_free_flags(mkd_flag_t *rip)
 {
