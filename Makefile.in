@@ -133,10 +133,13 @@ $(MKDLIB): $(OBJS)
 verify: echo tools/checkbits.sh
 	@./echo -n "headers ... "; tools/checkbits.sh && echo "GOOD"
 
-test:	$(PGMS) $(TESTFRAMEWORK) verify
+test:	$(PGMS) $(TESTFRAMEWORK) verify exorcise
 	@for x in $${TESTS:-tests/*.t}; do \
 	    @LD_LIBRARY_PATH@=`pwd` sh $$x || exit 1; \
 	done
+
+exorcise:
+	@BUILD="$(BUILD)" LINK="$(LINK)" make -C tests/exercisers
 
 pandoc_headers.o: tools/pandoc_headers.c config.h
 	$(BUILD) -c -o pandoc_headers.o tools/pandoc_headers.c

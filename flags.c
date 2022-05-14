@@ -119,16 +119,12 @@ mkd_flags()
 mkd_flag_t *
 mkd_copy_flags(mkd_flag_t *original)
 {
-    if ( original ) {
-	mkd_flag_t *copy = mkd_copy_flags(original);
+    mkd_flag_t *copy = mkd_flags();
+	
+    if ( original && copy )
+	*copy = *original;
 
-	if ( copy )
-	    *copy = *original;
-
-	return copy;
-    }
-    else
-	return mkd_flags();
+    return copy;
 }
 
 void
