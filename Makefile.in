@@ -167,6 +167,7 @@ echo:   echo.o
 clean:
 	rm -f $(PGMS) $(TESTFRAMEWORK) $(SAMPLE_PGMS) *.o
 	rm -f $(MKDLIB) `./librarian.sh files $(MKDLIB) VERSION`
+	@make -C tests/exercisers clean
 
 distclean spotless: clean
 	@DISTCLEAN@ @GENERATED_FILES@ @CONFIGURE_FILES@ ./mktags ./blocktags

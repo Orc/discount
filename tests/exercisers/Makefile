@@ -14,4 +14,4 @@ run:
 	@for x in $(THINGS); do ./$$x || exit 1; done
 
 clean:
-	rm -f $(THINGS)
+	rm -f $(THINGS) *.o
