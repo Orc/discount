@@ -2,6 +2,7 @@
 #include <mkdio.h>
 #include <stdlib.h>
 
+void
 say(char *what)
 {
     fputs(what,stdout);
