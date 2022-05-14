@@ -11,7 +11,10 @@ flags: flags.c
 	$(LINK) -lmarkdown -o flags flags.o
 
 run:
-	@for x in $(THINGS); do ./$$x || exit 1; done
+	@for x in $(THINGS); do @LD_LIBRARY_PATH@=$(TOPDIR) ./$$x || exit 1; done
 
 clean:
 	rm -f $(THINGS) *.o
+
+spotless: clean
+	rm -f Makefile
