@@ -2,33 +2,38 @@
 #include <mkdio.h>
 #include <stdlib.h>
 
+say(char *what)
+{
+    fputs(what,stdout);
+    fflush(stdout);
+}
+
+
 int
 main()
 {
     mkd_flag_t *flags = mkd_flags();
 
 
-    fprintf(stderr, "check flag functions: ");
-    fprintf(stderr, "set ");
+    say("check flag functions: ");
+    say("set ");
     mkd_set_flag_num(flags, MKD_DLDISCOUNT);
 
-    fprintf(stderr, "set(0) ");
+    say("set(0) ");
     mkd_set_flag_num(0, MKD_DLDISCOUNT);
 
-    fprintf(stderr, "clear ");
+    say("clear ");
     mkd_clr_flag_num(flags, MKD_DLDISCOUNT);
 
-    fprintf(stderr, "clear(0) ");
+    say("clear(0) ");
     mkd_clr_flag_num(0, MKD_DLDISCOUNT);
 
-    fprintf(stderr, "copy ");
-
+    say("copy ");
     (void)mkd_copy_flags(flags);
 
-    fprintf(stderr, "copy(0) ");
-
+    say("copy(0) ");
     (void)mkd_copy_flags(0);
 
-    fprintf(stderr, "ok\n");
+    say("ok\n");
     exit(0);
 }
