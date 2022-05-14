@@ -5,8 +5,10 @@ THINGS=flags
 
 
 all: programs run
+	@:
 
 programs: $(THINGS)
+	@:
 
 flags: flags.c
 	$(BUILD) -I$(TOPDIR) -c flags.c
