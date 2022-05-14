@@ -7,8 +7,8 @@ THINGS=flags
 all: $(THINGS) run
 
 flags: flags.c
-	$(BUILD) -c flags.c
-	$(LINK) -lmarkdown -o flags flags.o
+	$(BUILD) -I$(TOPDIR) -c flags.c
+	$(LINK) -L$(TOPDIR) -lmarkdown -o flags flags.o
 
 run:
 	@for x in $(THINGS); do @LD_LIBRARY_PATH@=$(TOPDIR) ./$$x || exit 1; done
