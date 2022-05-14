@@ -119,15 +119,11 @@ mkd_flags()
 mkd_flag_t *
 mkd_copy_flags(mkd_flag_t *original)
 {
-    int i;
-
     if ( original ) {
-	mkd_flag_t *copy = mkd_flags();
+	mkd_flag_t *copy = mkd_copy_flags(original);
 
-	if ( copy == NULL ) return 0;
-
-	for ( i=0; i < sizeof *copy; i++ )
-	    copy->bit[i] = original->bit[i];
+	if ( copy )
+	    *copy = *original;
 
 	return copy;
     }
