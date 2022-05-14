@@ -135,7 +135,7 @@ verify: echo tools/checkbits.sh
 
 test:	$(PGMS) $(TESTFRAMEWORK) verify exorcise
 	@for x in $${TESTS:-tests/*.t}; do \
-	    sh $$x || exit 1; \
+	    @LD_LIBRARY_PATH@=. sh $$x || exit 1; \
 	done
 
 exorcise:
