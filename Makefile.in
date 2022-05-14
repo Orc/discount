@@ -135,11 +135,11 @@ verify: echo tools/checkbits.sh
 
 test:	$(PGMS) $(TESTFRAMEWORK) verify exorcise
 	@for x in $${TESTS:-tests/*.t}; do \
-	    TOPDIR=`pwd` sh $$x || exit 1; \
+	    sh $$x || exit 1; \
 	done
 
 exorcise:
-	@BUILD="$(BUILD)" @LD_LIBRARY_PATH@=`pwd` LINK="$(LINK)" make -C tests/exercisers
+	@BUILD="$(BUILD)" TOPDIR=`pwd` LINK="$(LINK)" make -C tests/exercisers
 
 pandoc_headers.o: tools/pandoc_headers.c config.h
 	$(BUILD) -c -o pandoc_headers.o tools/pandoc_headers.c
