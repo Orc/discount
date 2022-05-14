@@ -38,6 +38,7 @@ COMMON=pgm_options.o gethopt.o notspecial.o
 MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 
 all: $(PGMS) $(SAMPLE_PGMS) $(TESTFRAMEWORK)
+	@BUILD="$(BUILD)" TOPDIR=`pwd` LINK="$(LINK)" make -C tests/exercisers programs
 
 install: $(PGMS) $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR) $(DESTDIR)$(PKGDIR)
 	$(INSTALL_PROGRAM) $(PGMS) $(DESTDIR)$(BINDIR)
