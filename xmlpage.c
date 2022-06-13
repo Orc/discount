@@ -9,13 +9,14 @@
 #include <stdlib.h>
 #include <markdown.h>
 
+extern char *mkd_doc_title(Document *);
+#if USE_H1TITLE
+extern char* mkd_h1_title(Document *);
+#endif
 
 int
 mkd_xhtmlpage(Document *p, mkd_flag_t* flags, FILE *out)
 {
-    char *title;
-    extern char *mkd_doc_title(Document *);
-    
     if ( mkd_compile(p, flags) ) {
 	DO_OR_DIE( fprintf(out, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 				"<!DOCTYPE html "
@@ -25,9 +26,13 @@ mkd_xhtmlpage(Document *p, mkd_flag_t* flags, FILE *out)
 
 	DO_OR_DIE( fprintf(out, "<head>\n") );
 	DO_OR_DIE( fprintf(out, "<title>") );
-	if ( title = mkd_doc_title(p) ) {
+#if USE_H1TITLE
+	char *title = mkd_doc_title(p) || mkd_h1_title(p);
+#else
+	char *title = mkd_doc_title(p);
+#endif
+	if ( title )
 	    DO_OR_DIE( fprintf(out, "%s", title) );
-	}
 	DO_OR_DIE( fprintf(out, "</title>\n") );
 	DO_OR_DIE( mkd_generatecss(p, out) );
 	DO_OR_DIE( fprintf(out, "</head>\n"
