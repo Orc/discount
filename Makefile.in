@@ -38,7 +38,7 @@ COMMON=pgm_options.o gethopt.o notspecial.o
 MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 
 all: $(PGMS) $(SAMPLE_PGMS) $(TESTFRAMEWORK)
-	cd tests/exercisers; BUILD="$(BUILD)" TOPDIR=`cd ../..;pwd` LINK="$(LINK)" make programs
+	@cd tests/exercisers; BUILD="$(BUILD)" TOPDIR=`cd ../..;pwd` LINK="$(LINK)" make programs
 
 install: $(PGMS) $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR) $(DESTDIR)$(PKGDIR)
 	$(INSTALL_PROGRAM) $(PGMS) $(DESTDIR)$(BINDIR)
@@ -140,7 +140,7 @@ test:	$(PGMS) $(TESTFRAMEWORK) verify exorcise
 	done
 
 exorcise:
-	cd tests/exercisers; BUILD="$(BUILD)" TOPDIR=`cd ../..;pwd` LINK="$(LINK)" make
+	@cd tests/exercisers; BUILD="$(BUILD)" TOPDIR=`cd ../..;pwd` LINK="$(LINK)" make
 
 pandoc_headers.o: tools/pandoc_headers.c config.h
 	$(BUILD) -c -o pandoc_headers.o tools/pandoc_headers.c
