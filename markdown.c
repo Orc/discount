@@ -1251,15 +1251,17 @@ compile_document(Line *ptr, MMIOT *f)
 	     */
 
 	    ATTACH(source,more);
-	    Cache checkpoint = source;
-	    while ( (more = more->next) && !iscodefence(more, ptr->count, ptr->kind, &(f->flags)) )
-		ATTACH(source,more);
 
-	    if ( more )
-		ptr = more;
-	    else {
-		source = checkpoint;
-		ptr = ptr->next;
+	    {   Cache checkpoint = source;
+		while ( (more = more->next) && !iscodefence(more, ptr->count, ptr->kind, &(f->flags)) )
+		    ATTACH(source,more);
+
+		if ( more )
+		    ptr = more;
+		else {
+		    source = checkpoint;
+		    ptr = ptr->next;
+		}
 	    }
 	}
 	else {
