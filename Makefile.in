@@ -140,7 +140,7 @@ test:	$(PGMS) $(TESTFRAMEWORK) verify exorcise
 	done
 
 exorcise:
-	@BUILD="$(BUILD)" TOPDIR=`cd ../..;pwd` LINK="$(LINK)" make -C tests/exercisers
+	cd tests/exercisers; BUILD="$(BUILD)" TOPDIR=`cd ../..;pwd` LINK="$(LINK)" make
 
 pandoc_headers.o: tools/pandoc_headers.c config.h
 	$(BUILD) -c -o pandoc_headers.o tools/pandoc_headers.c
