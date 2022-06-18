@@ -38,7 +38,7 @@ COMMON=pgm_options.o gethopt.o notspecial.o
 MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 
 all: $(PGMS) $(SAMPLE_PGMS) $(TESTFRAMEWORK)
-	@BUILD="$(BUILD)" TOPDIR=`pwd` LINK="$(LINK)" make -C tests/exercisers programs
+	cd tests/exercisers; BUILD="$(BUILD)" TOPDIR=`pwd` LINK="$(LINK)" make programs
 
 install: $(PGMS) $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR) $(DESTDIR)$(PKGDIR)
 	$(INSTALL_PROGRAM) $(PGMS) $(DESTDIR)$(BINDIR)
@@ -168,7 +168,7 @@ echo:   echo.o
 clean:
 	rm -f $(PGMS) $(TESTFRAMEWORK) $(SAMPLE_PGMS) *.o
 	rm -f $(MKDLIB) `./librarian.sh files $(MKDLIB) VERSION`
-	@make -C tests/exercisers clean
+	@cd tests/exercisers; make clean
 
 distclean spotless: clean
 	@DISTCLEAN@ @GENERATED_FILES@ @CONFIGURE_FILES@ ./mktags ./blocktags
