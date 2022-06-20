@@ -195,7 +195,7 @@ char **argv;
     /* print a header */
 
     fprintf(output,
-	"<!doctype html public \"-//W3C//DTD HTML 4.0 Transitional //EN\">\n"
+	"<!doctype html>\n"
 	"<html>\n"
 	"<head>\n"
 	"  <meta name=\"GENERATOR\" content=\"mkd2html %s\">\n", markdown_version);
