@@ -236,7 +236,7 @@ fi
 
 [ "$WITH_PANDOC_HEADER" ] && AC_DEFINE 'PANDOC_HEADER' '1'
 
-GENERATE="Makefile version.c mkdio.h tests/exercisers/Makefile"
+GENERATE="Makefile version.c mkdio.h"
 
 if [ "$PKGCONFIG" ]; then
     GENERATE="$GENERATE libmarkdown.pc"

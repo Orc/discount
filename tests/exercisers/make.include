@@ -1,0 +1,19 @@
+exercisers=tests/exercisers
+
+EXERCISE=$(exercisers)/flags
+
+TESTFRAMEWORK += $(EXERCISE)
+
+$(exercisers)/flags: $(exercisers)/flags.o
+	$(LINK) -o $@ $< -lmarkdown
+	
+$(exercisers)/flags.o: $(exercisers)/flags.c
+	$(BUILD) -c -o $@ $<
+
+all_subdirs:: $(EXERCISE)
+	
+verify_subdirs:: $(EXERCISE)
+	@for x in $(EXERCISE); do $$x || exit 1; done
+
+clean_subdirs::
+	rm -f $(EXERCISE) $(exercisers)/*.o

@@ -37,8 +37,7 @@ COMMON=pgm_options.o gethopt.o notspecial.o
 
 MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 
-all: $(PGMS) $(SAMPLE_PGMS) $(TESTFRAMEWORK)
-	@cd tests/exercisers; BUILD="$(BUILD)" TOPDIR=`cd ../..;pwd` LINK="$(LINK)" make programs
+all: $(PGMS) $(SAMPLE_PGMS) $(TESTFRAMEWORK) all_subdirs
 
 install: $(PGMS) $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(INCDIR) $(DESTDIR)$(PKGDIR)
 	$(INSTALL_PROGRAM) $(PGMS) $(DESTDIR)$(BINDIR)
@@ -131,16 +130,13 @@ main.o: main.c mkdio.h config.h
 $(MKDLIB): $(OBJS)
 	./librarian.sh make $(MKDLIB) VERSION $(OBJS)
 
-verify: echo tools/checkbits.sh
+verify: echo tools/checkbits.sh verify_subdirs
 	@./echo -n "headers ... "; tools/checkbits.sh && echo "GOOD"
 
-test:	$(PGMS) $(TESTFRAMEWORK) verify exorcise
+test:	$(PGMS) $(TESTFRAMEWORK) verify
 	@for x in $${TESTS:-tests/*.t}; do \
 	    @LD_LIBRARY_PATH@=. sh $$x || exit 1; \
 	done
-
-exorcise:
-	@cd tests/exercisers; BUILD="$(BUILD)" TOPDIR=`cd ../..;pwd` LINK="$(LINK)" make
 
 pandoc_headers.o: tools/pandoc_headers.c config.h
 	$(BUILD) -c -o pandoc_headers.o tools/pandoc_headers.c
@@ -165,13 +161,14 @@ echo.o:	tools/echo.c config.h
 echo:   echo.o
 	$(LINK) -o echo echo.o
 	
-clean:
+clean: clean_subdirs
 	rm -f $(PGMS) $(TESTFRAMEWORK) $(SAMPLE_PGMS) *.o
 	rm -f $(MKDLIB) `./librarian.sh files $(MKDLIB) VERSION`
-	@cd tests/exercisers; make clean
 
 distclean spotless: clean
 	@DISTCLEAN@ @GENERATED_FILES@ @CONFIGURE_FILES@ ./mktags ./blocktags
+
+include tests/exercisers/make.include
 
 Csio.o: Csio.c cstring.h amalloc.h config.h markdown.h
 amalloc.o: amalloc.c
