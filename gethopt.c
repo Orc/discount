@@ -232,6 +232,36 @@ hoptusage(char *pgm, struct h_opt opts[], int nropts, char *arguments)
     fputc('\n', stderr);
 }
 
+void
+hopthelp(char *pgm, struct h_opt opts[], int nropts)
+{
+    int i;
+
+    fprintf(stdout, "help: %s\n", pgm);
+
+    /* print combined long and short options */
+    for ( i=0; i < nropts; i++ ) {
+	if ( opts[i].optchar && opts[i].optword) {
+		fprintf(stdout, "-%c, -%s", opts[i].optchar, opts[i].optword);
+		if ( opts[i].optdesc )
+		    fprintf(stdout, "\t%s", opts[i].optdesc);
+
+		fputc('\n', stdout);
+	}
+    }
+
+    /* print short options */
+    for ( i=0; i < nropts; i++ ) {
+	if ( opts[i].optchar && !opts[i].optword) {
+		fprintf(stdout, "-%c", opts[i].optchar);
+		if ( opts[i].optdesc )
+		    fprintf(stdout, "\t\t%s", opts[i].optdesc);
+
+		fputc('\n', stdout);
+	}
+    }
+}
+
 
 #if DEBUG
 struct h_opt opts[] = {
