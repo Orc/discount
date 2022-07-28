@@ -39,6 +39,7 @@ enum {  MKD_NOLINKS=0,		/* don't do link processing, block <a> tags  */
 	MKD_DLDISCOUNT,		/* enable discount-style definition lists */
 	MKD_DLEXTRA,		/* enable extra-style definition lists */
 	MKD_FENCEDCODE,		/* enabled fenced code blocks */
+    MKD_FENCEDINLINE,   /* don't format fenced code */
 	MKD_IDANCHOR,		/* use id= anchors for TOC links */
 	MKD_TAGANCHOR,          /* use <a class="anchor"> anchors for TOC links */
 	MKD_GITHUBTAGS,		/* allow dash and underscore in element names */

@@ -265,5 +265,31 @@ content
 </p>'
 
 
+try -ffencedcode 'subitem fenced code' \
+'+ item
+  ```
+  code
+  ```' \
+'<ul>
+<li>item
+<pre><code>
+code
+</code></pre>
+</li>
+</ul>'
+
+
+try -ffencedcode 'subitem fenced code with class' \
+'+ item
+  ```class
+  code
+  ```' \
+'<ul>
+<li>item
+<pre><code class="class">
+code
+</code></pre>
+</li>
+</ul>'
 summary $0
 exit $rc

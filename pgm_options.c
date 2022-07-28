@@ -69,6 +69,7 @@ static struct _opt {
     { "dldiscount",    "discount-style definition lists", 0, 0, 0, 1, MKD_DLDISCOUNT },
     { "dlextra",       "markdown extra-style definition lists", 0, 0, 0, 1, MKD_DLEXTRA },
     { "fencedcode",    "fenced code blocks",         0, 0, 0, 1, MKD_FENCEDCODE },
+    { "fencedinline",  "don't format fenced code",   0, 0, 0, 1, MKD_FENCEDINLINE },
     { "idanchor",      "id= anchors in TOC",         0, 0, 0, 1, MKD_IDANCHOR },
     { "taganchor",     "<a class=\"anchor\"> in TOC",0, 0, 0, 1, MKD_TAGANCHOR },
     { "githubtags",    "- and _ in element names",   0, 0, 0, 1, MKD_GITHUBTAGS },

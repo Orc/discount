@@ -1679,14 +1679,16 @@ printtable(Paragraph *pp, MMIOT *f)
     return 1;
 }
 
-
 static Line *
 printfenced(Line *t, MMIOT *f)
 {
     Qstring("<pre><code", f);
     if ( t->fence_class )
 	Qprintf(f, " class=\"%s\"", t->fence_class);
-    Qstring(">\n", f);
+    Qstring(">", f);
+    if ( !is_flag_set(&f->flags, MKD_FENCEDINLINE) )
+        Qchar('\n', f);
+
     while ( (t = t->next) && t->is_fenced ) {
 	code(f, T(t->text), S(t->text));
 	Qchar('\n', f);
