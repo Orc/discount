@@ -4,7 +4,7 @@ EXERCISE=$(exercisers)/flags
 
 TESTFRAMEWORK += $(EXERCISE)
 
-$(exercisers)/flags: $(exercisers)/flags.o
+$(exercisers)/flags: $(exercisers)/flags.o libmarkdown
 	$(LINK) -o $@ $< -lmarkdown
 	
 $(exercisers)/flags.o: $(exercisers)/flags.c
