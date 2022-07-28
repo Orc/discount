@@ -30,6 +30,7 @@ mkd_toc(Document *p, char **doc)
     Cstring res;
     int size;
     int first = 1;
+    MMIOT *f;
 #if HAVE_NAMED_INITIALIZERS
     static mkd_flag_t islabel = { { [IS_LABEL] = 1 } };
 #else
@@ -43,6 +44,7 @@ mkd_toc(Document *p, char **doc)
     if ( !(doc && p && p->ctx) ) return -1;
 
     *doc = 0;
+    f = p->ctx;
 
     if ( ! is_flag_set(&p->ctx->flags, MKD_TOC) ) return 0;
 
@@ -73,7 +75,19 @@ mkd_toc(Document *p, char **doc)
 			    Csprintf(&res, "%*s<li>\n", last_hnumber+1, "");
 			++last_hnumber;
 		    }
-		    Csprintf(&res, "%*s<li><a href=\"#", srcp->hnumber, "");
+
+		    char *prefix = NULL;
+		    if ( is_flag_set(&f->flags, MKD_TAGANCHOR)) {
+			if ( f->cb && f->cb->e_anchorid )
+			    prefix = (*(f->cb->e_anchorid))(srcp->label,
+				    strlen(srcp->label), f->cb->e_data);
+			else
+			    prefix = "discount-";
+		    } else
+			prefix = "";
+
+		    Csprintf(&res, "%*s<li><a href=\"#%s", srcp->hnumber,
+			    "", prefix ? prefix : "discount-");
 		    mkd_string_to_anchor(srcp->label, strlen(srcp->label),
 					 (mkd_sta_function_t)Csputc,
 					 &res,1,p->ctx);
@@ -81,6 +95,10 @@ mkd_toc(Document *p, char **doc)
 		    Csreparse(&res, T(srcp->text->text),
 				    S(srcp->text->text), &islabel);
 		    Csprintf(&res, "</a>");
+
+		    if ( is_flag_set(&f->flags, MKD_TAGANCHOR) &&
+			    f->cb && f->cb->e_anchorid && f->cb->e_free )
+			    (*(f->cb->e_free))(prefix, f->cb->e_data);
 
 		    first = 0;
 		}

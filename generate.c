@@ -1523,7 +1523,23 @@ text(MMIOT *f)
 static void
 printheader(Paragraph *pp, MMIOT *f)
 {
-    if ( is_flag_set(&f->flags, MKD_IDANCHOR) ) {
+    if ( is_flag_set(&f->flags, MKD_TAGANCHOR) ) {
+	if ( pp->label && is_flag_set(&f->flags, MKD_TOC) ) {
+	    char *prefix = NULL;
+	    if (f->cb && f->cb->e_anchorid)
+		prefix = (*(f->cb->e_anchorid))(pp->label, strlen(pp->label), f->cb->e_data);
+
+	    Qprintf(f, "<h%d id=\"%s", pp->hnumber, prefix ? prefix : "discount-");
+	    Qanchor(pp->label, f);
+	    Qprintf(f, "\"><a class=\"anchor\" href=\"#%s", prefix ? prefix : "discount-");
+	    Qanchor(pp->label, f);
+	    Qstring("\"></a>", f);
+
+	    if (f->cb && f->cb->e_anchorid && f->cb->e_free)
+		(*(f->cb->e_free))(prefix, f->cb->e_data);
+	} else
+	    Qprintf(f, "<h%d>", pp->hnumber);
+    } else if ( is_flag_set(&f->flags, MKD_IDANCHOR) ) {
 	Qprintf(f, "<h%d", pp->hnumber);
 	if ( pp->label && is_flag_set(&f->flags, MKD_TOC) ) {
 	    Qstring(" id=\"", f);

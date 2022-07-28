@@ -415,6 +415,18 @@ mkd_e_anchor(Document *f, mkd_callback_t format)
     }
 }
 
+/* set the anchor id getter
+ */
+void
+mkd_e_anchorid(Document *f, mkd_callback_t anchorid)
+{
+    if ( f ) {
+	if ( f->cb.e_anchorid != anchorid )
+	    f->dirty = 1;
+	f->cb.e_anchorid = anchorid;
+    }
+}
+
 
 /* set the url display/options deallocator
  */

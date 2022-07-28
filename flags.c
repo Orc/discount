@@ -32,6 +32,7 @@ static struct flagnames flagnames[] = {
     { MKD_DLEXTRA,        "DLEXTRA" },
     { MKD_FENCEDCODE,     "FENCEDCODE" },
     { MKD_IDANCHOR,       "IDANCHOR" },
+    { MKD_TAGANCHOR,      "TAGANCHOR" },
     { MKD_GITHUBTAGS,     "GITHUBTAGS" },
     { MKD_NORMAL_LISTITEM,  "NORMAL_LISTITEM" },
     { MKD_URLENCODEDANCHOR, "URLENCODEDANCHOR" },

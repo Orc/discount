@@ -40,6 +40,7 @@ enum {  MKD_NOLINKS=0,		/* don't do link processing, block <a> tags  */
 	MKD_DLEXTRA,		/* enable extra-style definition lists */
 	MKD_FENCEDCODE,		/* enabled fenced code blocks */
 	MKD_IDANCHOR,		/* use id= anchors for TOC links */
+	MKD_TAGANCHOR,          /* use <a class="anchor"> anchors for TOC links */
 	MKD_GITHUBTAGS,		/* allow dash and underscore in element names */
 	MKD_URLENCODEDANCHOR,	/* urlencode non-identifier chars instead of replacing with dots */
 	MKD_LATEX,		/* handle embedded LaTeX escapes */
@@ -150,6 +151,7 @@ typedef struct callback_data {
     mkd_callback_t e_url;	/* url edit callback */
     mkd_callback_t e_flags;	/* extra href flags callback */
     mkd_callback_t e_anchor;	/* callback for anchor types */
+    mkd_callback_t e_anchorid;  /* callback for anchor id */
     mkd_free_t e_free;		/* edit/flags callback memory deallocator */
     mkd_callback_t e_codefmt;	/* codeblock formatter (for highlighting) */
 } Callback_data;
@@ -255,6 +257,7 @@ extern int  mkd_line(char *, int, char **, mkd_flag_t*);
 extern int  mkd_generateline(char *, int, FILE*, mkd_flag_t*);
 #define mkd_text mkd_generateline
 extern void mkd_basename(Document*, char *);
+extern void mkd_anchorid(Document*, char *);
 
 typedef int (*mkd_sta_function_t)(const int,const void*);
 extern void mkd_string_to_anchor(char*,int, mkd_sta_function_t, void*, int, MMIOT *);

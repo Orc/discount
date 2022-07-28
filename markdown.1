@@ -11,6 +11,7 @@
 .Op Fl d
 .Op Fl T
 .Op Fl V
+.Op Fl a, Fl anchor Ar anchorid
 .Op Fl b Ar url-base
 .Op Fl C Ar prefix
 .Op Fl F Pa bitmap
@@ -34,6 +35,9 @@ to stdout.
 .Pp
 The options are as follows:
 .Bl -tag -width "-o file"
+.It Fl a Ar anchorid
+Sets the prefix that is used by heading <a class="anchor"> tags.
+Requires -ftoc,taganchor.
 .It Fl b Ar url-base
 Links in source beginning with / will be prefixed with
 .Ar url-base
@@ -124,6 +128,8 @@ Extract <style> blocks from the output.
 Allow fenced code blocks (not default).
 .It Ar idanchor
 Use id= anchors for table-of-contents links instead of <a name=/> (not default).
+.It Ar taganchor
+Use <a class="anchor" href="..."> anchors for table-of-contents links (not default).
 .It Ar githubtags
 Allow underscore and dash in passed through element names (not default).
 .It Ar urlencodedanchor

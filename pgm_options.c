@@ -70,6 +70,7 @@ static struct _opt {
     { "dlextra",       "markdown extra-style definition lists", 0, 0, 0, 1, MKD_DLEXTRA },
     { "fencedcode",    "fenced code blocks",         0, 0, 0, 1, MKD_FENCEDCODE },
     { "idanchor",      "id= anchors in TOC",         0, 0, 0, 1, MKD_IDANCHOR },
+    { "taganchor",     "<a class=\"anchor\"> in TOC",0, 0, 0, 1, MKD_TAGANCHOR },
     { "githubtags",    "- and _ in element names",   0, 0, 0, 1, MKD_GITHUBTAGS },
     { "urlencodedanchor", "html5-style anchors",     0, 0, 0, 1, MKD_URLENCODEDANCHOR },
     { "html5anchor",   "html5-style anchors",        0, 0, 1, 1, MKD_URLENCODEDANCHOR },

@@ -37,6 +37,7 @@ enum {  MKD_NOLINKS=0,		/* don't do link processing, block <a> tags  */
 	MKD_DLEXTRA,		/* enable extra-style definition lists */
 	MKD_FENCEDCODE,		/* enabled fenced code blocks */
 	MKD_IDANCHOR,		/* use id= anchors for TOC links */
+	MKD_TAGANCHOR,          /* use <a class="anchor"> anchors for TOC links */
 	MKD_GITHUBTAGS,		/* allow dash and underscore in element names */
 	MKD_URLENCODEDANCHOR,	/* urlencode non-identifier chars instead of replacing with dots */
 	MKD_LATEX,		/* handle embedded LaTeX escapes */
@@ -82,6 +83,7 @@ MMIOT *gfm_in(FILE*,mkd_flag_t*);		/* assemble input from a file */
 MMIOT *gfm_string(const char*,int,mkd_flag_t*);	/* assemble input from a buffer */
 
 void mkd_basename(MMIOT*,char*);
+void mkd_anchorid(MMIOT*,char*);
 
 void mkd_initialize();
 void mkd_with_html5_tags();
@@ -130,6 +132,7 @@ typedef void   (*mkd_free_t)(char*, void*);
 void mkd_e_url(void *, mkd_callback_t);
 void mkd_e_flags(void *, mkd_callback_t);
 void mkd_e_anchor(void *, mkd_callback_t);
+void mkd_e_anchorid(void *, mkd_callback_t);
 void mkd_e_code_format(void*, mkd_callback_t);
 void mkd_e_free(void *, mkd_free_t );
 void mkd_e_data(void *, void *);

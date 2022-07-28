@@ -159,6 +159,7 @@ struct h_opt opts[] = {
     { 0, 0,        'o', "file",      "write output to file" },
     { 0, "squash", 'x', 0,           "squash toc labels to be more like github" },
     { 0, "codefmt",'X', 0,           "use an external code formatter" },
+    { 0, "anchorid",'a',"anchorid",  "prefix for heading <a> anchor ids" },
     { 0, "help",   'h', 0,           "print help" },
 };
 #define NROPTS (sizeof opts/sizeof opts[0])
@@ -182,6 +183,7 @@ main(int argc, char **argv)
     char *text = 0;
     char *ofile = 0;
     char *urlbase = 0;
+    char *anchorid = 0;
     char *q;
     MMIOT *doc;
     struct h_context blob;
@@ -206,6 +208,8 @@ main(int argc, char **argv)
 	}
 	switch (opt->optchar) {
 	case '5':   with_html5 = 1;
+		    break;
+	case 'a':   anchorid = hoptarg(&blob);
 		    break;
 	case 'b':   urlbase = hoptarg(&blob);
 		    break;
@@ -316,6 +320,8 @@ main(int argc, char **argv)
 		exit(1);
 	    }
 	}
+	if ( anchorid )
+	    mkd_anchorid(doc, anchorid);
 	if ( urlbase )
 	    mkd_basename(doc, urlbase);
 	if ( urlflags ) {
