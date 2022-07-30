@@ -127,8 +127,11 @@ gethopt.o: gethopt.c
 main.o: main.c mkdio.h config.h
 	$(BUILD) -c main.c
 
-$(MKDLIB): $(OBJS)
+$(MKDLIB): $(OBJS) .libmarkdown
 	./librarian.sh make $(MKDLIB) VERSION $(OBJS)
+
+.libmarkdown: $(OBJS)
+	touch $@
 
 verify: echo tools/checkbits.sh verify_subdirs
 	@./echo -n "headers ... "; tools/checkbits.sh && echo "GOOD"
