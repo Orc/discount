@@ -16,4 +16,4 @@ verify_subdirs:: $(EXERCISE)
 	@for x in $(EXERCISE); do $$x || exit 1; done
 
 clean_subdirs::
-	rm -f $(EXERCISE) $(exercisers)/*.o
+	rm -f $(exercisers)/*.o

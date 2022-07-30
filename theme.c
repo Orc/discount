@@ -93,7 +93,7 @@ pushd(char *d)
 {
     HERE cwd;
     int size;
-    
+
     if ( chdir(d) == -1 )
 	return NOT_HERE;
 
@@ -253,6 +253,28 @@ istag(int *p, char *pat)
 }
 
 
+
+/* set up flags for a specific <?theme inclusion
+ */
+static void
+prepare_flags(mkd_flag_t *flags, int where)
+{
+    if ( where & INTAG )
+	mkd_set_flag_num(flags, MKD_TAGTEXT);
+    else
+	mkd_clr_flag_num(flags, MKD_TAGTEXT);
+
+    if ( where & INHEAD ) {
+	mkd_set_flag_num(flags, MKD_NOIMAGE);
+	mkd_set_flag_num(flags, MKD_NOLINKS);
+    }
+    else {
+	mkd_clr_flag_num(flags, MKD_NOIMAGE);
+	mkd_clr_flag_num(flags, MKD_NOLINKS);
+    }
+}
+
+
 /* finclude() includes some (unformatted) source
  */
 static void
@@ -368,13 +390,12 @@ fauthor(MMIOT *doc, FILE *output, mkd_flag_t *flags, int whence)
 }
 
 
-/* fconfig() prints out a tabular version of
- * tabular versions of the flags.
+/* fconfig() prints out a tabular version of the flags
  */
 static void
 fconfig(MMIOT *doc, FILE *output, mkd_flag_t *flags, int whence)
 {
-    mkd_mmiot_flags(output, doc, (whence & (INHEAD|INTAG)) ? 0 : 1);
+    mkd_flags_are(output, flags, (whence & (INHEAD|INTAG)) ? 0 : 1);
 }
 
 
@@ -445,47 +466,17 @@ static struct _keyword {
 #define NR(x)	(sizeof x / sizeof x[0])
 
 
-/* set up flags to pass into the grinder
- */
-static void
-setup_flags(mkd_flag_t *flagp, int where)
-{
-#ifdef THEME_DL_MODE
-    switch (THEME_DL_MODE) {
-    case 3: mkd_set_flag_num(flagp, MKD_DLEXTRA);
-    case 1: mkd_set_flag_num(flagp, MKD_DLDISCOUNT);
-	    break;
-    case 2: mkd_set_flag_num(flagp, MKD_DLEXTRA);
-	    break;
-    }
-#endif
-#ifdef THEME_FENCED_CODE
-    mkd_set_flag_num(flagp, MKD_FENCEDCODE);
-#endif
-
-    mkd_set_flag_num(flagp, MKD_TOC);
-    if ( where & INTAG ) 
-	mkd_set_flag_num(flagp, MKD_TAGTEXT);
-    else if ( where & INHEAD ) {
-	mkd_set_flag_num(flagp, MKD_NOIMAGE);
-	mkd_set_flag_num(flagp, MKD_NOLINKS);
-    }
-}
 
 
 /* spin() - run through the theme template, looking for <?theme expansions
  */
 void
-spin(FILE *template, MMIOT *doc, FILE *output)
+spin(FILE *template, MMIOT *doc, mkd_flag_t *flags, FILE *output)
 {
     int c;
     int *p;
-    mkd_flag_t *flags = mkd_flags();
     int where = 0x0;
     int i;
-    
-    if ( !flags )
-	fail("cannot initialize mkd_flags");
 
     prepare(template);
 
@@ -510,7 +501,7 @@ spin(FILE *template, MMIOT *doc, FILE *output)
 		for (i=0; i < NR(keyword); i++)
 		    if ( thesame(p, keyword[i].kw) ) {
 			if ( everywhere || (keyword[i].where & where) ) {
-			    setup_flags(flags, where);
+			    prepare_flags(flags,where);
 			    (*keyword[i].what)(doc,output,flags,where);
 			}
 			break;
@@ -539,7 +530,6 @@ spin(FILE *template, MMIOT *doc, FILE *output)
 
 	putc(c, output);
     }
-    mkd_free_flags(flags);
 } /* spin */
 
 
@@ -567,20 +557,36 @@ char **argv;
     MMIOT *doc;
     struct stat sourceinfo;
     char *q;
-    
+    int show_version = 0; /* 0: run the program, 1: show version #, 2: show version# and initial flags */
+
     struct h_opt *opt;
     struct h_context blob;
-    
+
     mkd_flag_t *flags = mkd_flags();
 
-    if ( !flags ) {
+    if ( flags ) {
+#if THEME_DL_MODE > 0
+	switch (THEME_DL_MODE) {
+	case 3: mkd_set_flag_num(flags, MKD_DLEXTRA);
+	case 1: mkd_set_flag_num(flags, MKD_DLDISCOUNT);
+		break;
+	case 2: mkd_set_flag_num(flags, MKD_DLEXTRA);
+		break;
+	}
+#endif
+#ifdef THEME_FENCED_CODE
+	mkd_set_flag_num(flags, MKD_FENCEDCODE);
+#endif
+	mkd_set_flag_num(flags, MKD_TOC);
+    }
+    else {
 	perror("mkd_flags");
 	exit(1);
     }
 
     hoptset(&blob, argc, argv);
     hopterr(&blob, 1);
-    
+
     pgm = basename(argv[0]);
 
     while ( opt = gethopt(&blob, opts, NROPTS) ) {
@@ -599,8 +605,8 @@ char **argv;
 		    break;
 	case 't':   template = hoptarg(&blob);
 		    break;
-	case 'c':   if ( strcmp(hoptarg(&blob), "?") == 0 ) {
-			show_flags(1,0, 0);
+	case 'c':   if ( hoptarg(&blob)[0] == '?' ) {
+			show_flags(1, 0, hoptarg(&blob)[1] == '?' ? flags : 0);
 			exit(0);
 		    }
 		    else if ( q = mkd_set_flag_string(flags, hoptarg(&blob)) )
@@ -608,10 +614,18 @@ char **argv;
 		    break;		    
 	case 'o':   output_file = hoptarg(&blob);
 		    break;
-	case 'V':   printf("theme+discount %s\n", markdown_version);
-		    exit(0);
+	case 'V':   show_version++;
+		    break;
 	}
     }
+
+    if ( show_version ) {
+	fprintf(stderr, "theme+discount %s\n", markdown_version);
+	if ( show_version > 1 )
+	    show_flags(1, 0, flags);
+	exit(0);
+    }
+
 
     tmplfile = open_template(template);
 
@@ -639,7 +653,7 @@ char **argv;
 	if ( !output_file ) {
 	    char *p, *q;
 
-	    
+
 	    if ( (output_file = malloc(strlen(source) + strlen(".html") + 1)) == 0 )
 		fail("out of memory allocating output file name buffer");
 
@@ -686,7 +700,7 @@ char **argv;
 	fail("couldn't compile input");
 
     if ( tmplfile )
-	spin(tmplfile,doc,stdout);
+	spin(tmplfile, doc, flags, stdout);
     else
 	mkd_generatehtml(doc, stdout);
 
