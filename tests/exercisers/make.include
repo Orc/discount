@@ -13,7 +13,7 @@ $(exercisers)/flags.o: $(exercisers)/flags.c
 all_subdirs:: $(EXERCISE)
 	
 verify_subdirs:: $(EXERCISE)
-	@for x in $(EXERCISE); do $$x || exit 1; done
+	@for x in $(EXERCISE); do LD_LIBRARY_PATH="." $$x || exit 1; done
 
 clean_subdirs::
 	rm -f $(exercisers)/*.o
