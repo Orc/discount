@@ -5,11 +5,8 @@ EXERCISE=$(exercisers)/flags
 TESTFRAMEWORK += $(EXERCISE)
 
 $(exercisers)/flags: $(exercisers)/flags.o $(MKDLIB)
-	$(LINK) -o $@ $< -lmarkdown
+	$(LINK) -o $@ $@.o -lmarkdown
 	
-$(exercisers)/flags.o: $(exercisers)/flags.c
-	$(BUILD) -c -o $@ $<
-
 all_subdirs:: $(EXERCISE)
 	
 verify_subdirs:: $(EXERCISE)
