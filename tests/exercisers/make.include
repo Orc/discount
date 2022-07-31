@@ -5,10 +5,13 @@ EXERCISE=$(exercisers)/flags
 TESTFRAMEWORK += $(EXERCISE)
 
 $(exercisers)/flags: $(exercisers)/flags.o $(MKDLIB)
-	$(LINK) -o $@ $@.o -lmarkdown
+	$(LINK) -o $@ $< -lmarkdown
+	
+$(exercisers)/flags.o: $(exercisers)/flags.c
+	$(BUILD) -c -o $@ $<
 
 all_subdirs:: $(EXERCISE)
-
+	
 verify_subdirs:: $(EXERCISE)
 	@for x in $(EXERCISE); do LD_LIBRARY_PATH="." $$x || exit 1; done
 

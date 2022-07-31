@@ -1670,7 +1670,7 @@ printfenced(Line *t, MMIOT *f)
     Qstring("<pre><code", f);
     if ( t->fence_class )
 	Qprintf(f, " class=\"%s\"", t->fence_class);
-    Qstring(">\n", f);
+    Qchar('>', f);
     while ( (t = t->next) && t->is_fenced ) {
 	code(f, T(t->text), S(t->text));
 	Qchar('\n', f);
