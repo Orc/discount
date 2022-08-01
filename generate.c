@@ -1663,21 +1663,75 @@ printtable(Paragraph *pp, MMIOT *f)
     return 1;
 }
 
+/* external formatter caller for code blocks
+ */
+static int
+code_callback(Line *t, char *lang, int fenced, Line **ret, MMIOT *f)
+{
+    if ( f->cb->e_codefmt ) {
+	/* external code block formatter;  copy the text into a buffer,
+	 * call the formatter to style it, then dump that styled text
+	 * directly to the queue
+	 */
+	char *text;
+	char *fmt;
+	int size, copy_p;
+	Line *p;
+
+	for (size=0, p = t; p && (fenced ? p->is_fenced : 1); p = p->next )
+	    size += 1+S(p->text);
+
+	text = malloc(1+size);
+
+	for ( copy_p = 0; t && (fenced ? t->is_fenced : 1); t = t->next ) {
+	    memcpy(text+copy_p, T(t->text), S(t->text));
+	    copy_p += S(t->text);
+	    text[copy_p++] = '\n';
+	}
+	text[copy_p] = 0;
+
+
+	fmt = (*(f->cb->e_codefmt))(text, copy_p, (lang && lang[0]) ? lang : 0);
+	free(text);
+
+	if ( fmt ) {
+	    Qwrite(fmt, strlen(fmt), f);
+	    if ( f->cb->e_free )
+		(*(f->cb->e_free))(fmt, f->cb->e_data);
+	    *ret = t;
+	    return 1;
+	}
+    }
+    /* either the external formatter failed or doesn't exist,
+     * so fall back to the traditional codeblock format
+     */
+    *ret = 0;
+    return 0;
+}
+
+
 
 static Line *
 printfenced(Line *t, MMIOT *f)
 {
+    Line *ret;
+
+
     Qstring("<pre><code", f);
     if ( t->fence_class )
 	Qprintf(f, " class=\"%s\"", t->fence_class);
     Qchar('>', f);
-    while ( (t = t->next) && t->is_fenced ) {
-	code(f, T(t->text), S(t->text));
-	Qchar('\n', f);
+
+    if ( !code_callback(t, t->fence_class, 1, &ret, f) ) {
+	while ( (t = t->next) && t->is_fenced ) {
+	    code(f, T(t->text), S(t->text));
+	    Qchar('\n', f);
+	}
+	ret = t;
     }
 
     Qstring("</code></pre>\n", f);
-    return t;
+    return ret;
 }
 
 
@@ -1713,6 +1767,7 @@ printblock(Paragraph *pp, MMIOT *f)
     } while (t && (t = t->next) );
     text(f);
     Qstring(End[align], f);
+
     return 1;
 }
 
@@ -1721,42 +1776,8 @@ static void
 printcode(Line *t, char *lang, MMIOT *f)
 {
     int blanks;
+    Line *ret;
 
-    if ( f->cb->e_codefmt ) {
-	/* external code block formatter;  copy the text into a buffer,
-	 * call the formatter to style it, then dump that styled text
-	 * directly to the queue
-	 */
-	char *text;
-	char *fmt;
-	int size, copy_p;
-	Line *p;
-
-	for (size=0, p = t; p; p = p->next )
-	    size += 1+S(p->text);
-
-	text = malloc(1+size);
-
-	for ( copy_p = 0; t ; t = t->next ) {
-	    memcpy(text+copy_p, T(t->text), S(t->text));
-	    copy_p += S(t->text);
-	    text[copy_p++] = '\n';
-	}
-	text[copy_p] = 0;
-
-	fmt = (*(f->cb->e_codefmt))(text, copy_p, (lang && lang[0]) ? lang : 0);
-	free(text);
-
-	if ( fmt ) {
-	    Qwrite(fmt, strlen(fmt), f);
-	    if ( f->cb->e_free )
-		(*(f->cb->e_free))(fmt, f->cb->e_data);
-	    return;
-	}
-	/* otherwise the external formatter failed and we need to 
-	 * fall back to the traditional codeblock format
-	 */
-    }
 
     Qstring("<pre><code", f);
     if (lang && lang[0]) {
@@ -1765,16 +1786,19 @@ printcode(Line *t, char *lang, MMIOT *f)
       Qstring("\"", f);
     }
     Qstring(">", f);
-    for ( blanks = 0; t ; t = t->next ) {
-	if ( S(t->text) > t->dle ) {
-	    while ( blanks ) {
+
+    if ( !code_callback(t, lang, 0, &ret, f) ) {
+	for ( blanks = 0; t ; t = t->next ) {
+	    if ( S(t->text) > t->dle ) {
+		while ( blanks ) {
+		    Qchar('\n', f);
+		    --blanks;
+		}
+		code(f, T(t->text), S(t->text));
 		Qchar('\n', f);
-		--blanks;
 	    }
-	    code(f, T(t->text), S(t->text));
-	    Qchar('\n', f);
+	    else blanks++;
 	}
-	else blanks++;
     }
     Qstring("</code></pre>", f);
 }

@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include "config.h"
 #include "amalloc.h"
@@ -97,46 +98,67 @@ free_it(char *object, void *ctx)
 	free(object);
 }
 
+
+char *external_formatter = 0;
+
+
+#define RECEIVER 0
+#define SENDER 1
+
 char *
 external_codefmt(char *src, int len, char *lang)
 {
-    int extra = 0;
-    int i, x;
+    int child_status;
+    int size, bufsize, curr;
     char *res;
 
-    if ( lang == 0 )
-	lang = "generic_code";
+    pid_t child;
 
-    for ( i=0; i < len; i++) {
-	if ( src[i] == '&' )
-	    extra += 5;
-	else if ( src[i] == '<' || src[i] == '>' )
-	    extra += 4;
+    int tochild[2], toparent[2];
+
+    if ( pipe(tochild) != 0 || pipe(toparent) != 0 ) {
+	perror("external_codefmt (pipe)");
+	res = malloc(len+1);
+	strcpy(res, src);
+	return res;
     }
 
-    /* 80 characters for the format wrappers */
-    if ( (res = malloc(len+extra+80+strlen(lang))) ==0 )
-	/* out of memory?  drat! */
-	return 0;
+    if ( (child = fork()) > 0 ) {
 
-    sprintf(res, "<pre><code class=\"%s\">\n", lang);
-    x = strlen(res);
-    for ( i=0; i < len; i++ ) {
-	switch (src[i]) {
-	case '&':   strcpy(&src[x], "&amp;");
-		    x += 5 /*strlen(&amp;)*/ ;
-		    break;
-	case '<':   strcpy(&src[x], "&lt;");
-		    x += 4 /*strlen(&lt;)*/ ;
-		    break;
-	case '>':   strcpy(&src[x], "&gt;");
-		    x += 4 /*strlen(&gt;)*/ ;
-		    break;
-	default:    res[x++] = src[i];
-		    break;
+	close(tochild[RECEIVER]);
+	close(toparent[SENDER]);
+
+	bufsize = 1000;
+	res = malloc(1+bufsize);
+	curr = 0;
+
+	/* parent */
+	write(tochild[SENDER], src, len);
+	close(tochild[SENDER]);
+
+	while ( (size = read(toparent[RECEIVER], res+curr, 1000)) > 0 ) {
+	    curr += size;
+	    res = realloc(res, bufsize += 1000);
 	}
+	res[curr] = 0;
+	waitpid(child, &child_status, WNOHANG);
+
+	close(toparent[RECEIVER]);
+
+	return res;
     }
-    strcpy(&res[x], "</code></pre>\n");
+    else if ( child == 0 ) {
+	close(tochild[SENDER]);
+	close(toparent[RECEIVER]);
+	close(1); dup2(toparent[SENDER], 1);
+	close(0); dup2(tochild[RECEIVER], 0);
+	system(external_formatter);
+	close(0); close(tochild[RECEIVER]);
+	close(1); close(toparent[SENDER]);
+	exit(0);
+    }
+    res = malloc(len+1);
+    strcpy(res, src);
     return res;
 }
 
@@ -158,10 +180,11 @@ struct h_opt opts[] = {
     { 0, 0,        'C', "prefix",    "prefix for markdown extra footnotes" },
     { 0, 0,        'o', "file",      "write output to file" },
     { 0, "squash", 'x', 0,           "squash toc labels to be more like github" },
-    { 0, "codefmt",'X', 0,           "use an external code formatter" },
+    { 0, "codefmt",'X', "command",   "use an external code formatter" },
     { 0, "help",   '?', 0,           "print a detailed usage message" },
 };
 #define NROPTS (sizeof opts/sizeof opts[0])
+
 
 int
 main(int argc, char **argv)
@@ -268,6 +291,8 @@ main(int argc, char **argv)
 		    break;
 	case 'X':   use_e_codefmt = 1;
 		    mkd_set_flag_num(flags, MKD_FENCEDCODE);
+		    external_formatter = hoptarg(&blob);
+		    fprintf(stderr, "selected external formatter (%s)\n", external_formatter);
 		    break;
 	case '?':   hoptdescribe(pgm, opts, NROPTS, "[file]", 1);
 		    return 0;
@@ -323,6 +348,7 @@ main(int argc, char **argv)
 	}
 	if ( squash )
 	    mkd_e_anchor(doc, (mkd_callback_t) anchor_format);
+
 	if ( use_e_codefmt )
 	    mkd_e_code_format(doc, (mkd_callback_t)external_codefmt);
 
