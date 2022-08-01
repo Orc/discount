@@ -159,6 +159,7 @@ struct h_opt opts[] = {
     { 0, 0,        'o', "file",      "write output to file" },
     { 0, "squash", 'x', 0,           "squash toc labels to be more like github" },
     { 0, "codefmt",'X', 0,           "use an external code formatter" },
+    { 0, "help",   '?', 0,           "print a detailed usage message" },
 };
 #define NROPTS (sizeof opts/sizeof opts[0])
 
@@ -268,6 +269,8 @@ main(int argc, char **argv)
 	case 'X':   use_e_codefmt = 1;
 		    mkd_set_flag_num(flags, MKD_FENCEDCODE);
 		    break;
+	case '?':   hoptdescribe(pgm, opts, NROPTS, "[file]", 1);
+		    return 0;
 	}
     }
 

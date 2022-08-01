@@ -49,7 +49,7 @@ hopterr(ctx,val)
 struct h_context *ctx;
 {
     int old = ctx->opterr;
-    
+
     ctx->opterr = !!val;
     return old;
 }
@@ -63,14 +63,14 @@ int nropts;
 {
     int i;
     int dashes;
-    
+
 
     if ( (ctx == 0) || ctx->optend || (ctx->optind >= ctx->argc) )
 	return 0;
-    
+
     ctx->optarg = 0;
     ctx->optopt = 0;
-    
+
     if ( ctx->optchar == 0) {
 	/* check for leading -
 	 */
@@ -99,7 +99,7 @@ int nropts;
 	     */
 	    dashes = 2;
 	}
-	
+
 	for ( i=0; i < nropts; i++ ) {
 	    if ( ! opts[i].optword ) 
 		continue;
@@ -189,47 +189,119 @@ int nropts;
 
 
 void
-hoptusage(char *pgm, struct h_opt opts[], int nropts, char *arguments)
+hoptdescribe(char *pgm, struct h_opt opts[], int nropts, char *arguments, int verbose)
 {
     int i;
-    int optcount;
-    
-    fprintf(stderr, "usage: %s", pgm);
+    int sz;
+
+    if ( verbose ) {
+	fprintf(stderr, "usage: %s", pgm);
+	if ( nropts > 0 )
+	    fprintf(stderr, " [options]");
+	if ( arguments )
+	    fprintf(stderr, " %s", arguments);
+	fputc('\n', stderr);
+    }
+    else
+	fprintf(stderr, "usage: %s", pgm);
 
     /* print out the options that don't have flags first */
-    
-    for ( optcount=i=0; i < nropts; i++ ) {
-	if ( opts[i].optchar && !opts[i].opthasarg) {
-	    if (optcount == 0 )
-		fputs(" [-", stderr);
-	    fputc(opts[i].optchar, stderr);
-	    optcount++;
+
+    if ( verbose ) {
+	int maxoptwidth = 0;
+	int maxargwidth = 0;
+	int hasoptchar = 0;
+	int j;
+
+	if ( nropts > 0 )
+	    fprintf(stderr, "options:\n");
+
+	/* find column widths */
+	for ( i=0; i < nropts; i++ ) {
+	    if ( opts[i].optword && (( sz = strlen(opts[i].optword) ) > maxoptwidth ) )
+		maxoptwidth = sz;
+	    if ( opts[i].opthasarg && (( sz = strlen(opts[i].opthasarg) ) > maxargwidth ) )
+		maxargwidth = sz;
+	    if ( opts[i].optchar )
+		hasoptchar = 1;
+	}
+
+	for ( i=0; i < nropts; i++ ) {
+	    if ( opts[i].optword ) {
+		fprintf(stderr, " -%s", opts[i].optword);
+		j = strlen(opts[i].optword);
+	    }
+	    else j = -2;
+
+	    while ( j++ < maxoptwidth )
+		fputc(' ', stderr);
+
+	    if ( opts[i].optchar )
+		fprintf(stderr, " -%c ", opts[i].optchar);
+	    else if ( hasoptchar )
+		fprintf(stderr, "    ");
+
+	    if ( maxargwidth > 0 ) {
+		if ( opts[i].opthasarg ) {
+		    fprintf(stderr, " [%s]", opts[i].opthasarg);
+		    j = strlen(opts[i].opthasarg);
+		}
+		else { 
+		    fprintf(stderr, "   ");
+		    j = 0;
+		}
+
+		while ( j++ < maxargwidth )
+		    fputc(' ', stderr);
+	    }
+
+	    if ( opts[i].optdesc )
+		fprintf(stderr, " %s", opts[i].optdesc);
+
+	    fputc('\n', stderr);
 	}
     }
-    if ( optcount )
-	fputc(']', stderr);
+    else {
+	int optcount;
 
-    /* print out the options WITH flags */
-    for ( i = 0; i < nropts; i++ )
-	if ( opts[i].optchar && opts[i].opthasarg)
-	    fprintf(stderr, " [-%c %s]", opts[i].optchar, opts[i].opthasarg);
-
-    /* print out the long options */
-    for ( i = 0; i < nropts; i++ )
-	if ( opts[i].optword ) {
-	    fprintf(stderr, " [-%s", opts[i].optword);
-	    if ( opts[i].opthasarg )
-		fprintf(stderr, " %s", opts[i].opthasarg);
-	    fputc(']', stderr);
+	for ( optcount=i=0; i < nropts; i++ ) {
+	    if ( opts[i].optchar && !opts[i].opthasarg) {
+		if (optcount == 0 )
+		    fputs(" [-", stderr);
+		fputc(opts[i].optchar, stderr);
+		optcount++;
+	    }
 	}
+	if ( optcount )
+	    fputc(']', stderr);
 
-    /* print out the arguments string, if any */
+	/* print out the options WITH flags */
+	for ( i = 0; i < nropts; i++ )
+	    if ( opts[i].optchar && opts[i].opthasarg)
+		fprintf(stderr, " [-%c %s]", opts[i].optchar, opts[i].opthasarg);
 
-    if ( arguments )
-	fprintf(stderr, " %s", arguments);
+	/* print out the long options */
+	for ( i = 0; i < nropts; i++ )
+	    if ( opts[i].optword ) {
+		fprintf(stderr, " [-%s", opts[i].optword);
+		if ( opts[i].opthasarg )
+		    fprintf(stderr, " %s", opts[i].opthasarg);
+		fputc(']', stderr);
+	    }
+
+	if ( arguments )
+	    fprintf(stderr, " %s", arguments);
+    }
 
     /* and we're done */
     fputc('\n', stderr);
+}
+
+
+void
+hoptusage(char *pgm, struct h_opt opts[], int nropts, char *arguments)
+{
+    hoptdescribe(pgm, opts, nropts, arguments, 0);
 }
 
 
