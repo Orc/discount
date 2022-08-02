@@ -141,11 +141,14 @@ external_codefmt(char *src, int len, char *lang)
 	    res = realloc(res, bufsize += 1000);
 	}
 	res[curr] = 0;
-	waitpid(child, &child_status, WNOHANG);
+	waitpid(child, &child_status, 0);
 
 	close(toparent[RECEIVER]);
 
-	return res;
+	if ( WIFEXITED(child_status) )
+	    return res;
+	else
+	    free(res);	/* something failed; just return the original string */
     }
     else if ( child == 0 ) {
 	close(tochild[SENDER]);
