@@ -1532,8 +1532,11 @@ text(MMIOT *f)
 		    }
 		    break;
 
-	case '<':   if ( !maybe_tag_or_link(f) )
+	case '<':   if ( !maybe_tag_or_link(f))
+			if(!is_flag_set(f->flags, MKD_1_COMPAT))
 			Qstring("&lt;", f);
+			else
+			Qchar(c, f);
 		    break;
 
 	case '&':   j = (peek(f,1) == '#' ) ? 2 : 1;
