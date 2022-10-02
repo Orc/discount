@@ -1412,9 +1412,16 @@ text(MMIOT *f)
 		    }
 		    break;
 
-	case '~':   if ( is_flag_set(&f->flags, MKD_NOSTRIKETHROUGH)
-			 || is_flag_set(&f->flags, MKD_TAGTEXT)
-			 || ! tickhandler(f,c,2,0, delspan) )
+#ifdef TYPORA
+#define ticktick(f,c) (tickhandler(f,c,2,0,delspan) || tickhandler(f,c,1,0,subspan))
+#else
+#define ticktick(f,c) tickhandler(f,c,2,0,delspan)
+#endif
+
+	case '~':   if ( is_flag_set(f->flags, MKD_NOSTRIKETHROUGH)
+			 || is_flag_set(f->flags, MKD_STRICT)
+			 || is_flag_set(f->flags, MKD_TAGTEXT)
+			 || !ticktick(f,c) )
 			Qchar(c, f);
 		    break;
 
