@@ -7,9 +7,9 @@ MARKDOWN_FLAGS=
 
 SRC='<element-name>content</element-name>'
 
-try 'github tags disabled by default' \
-"$SRC" \
-'<p>&lt;element-name>content&lt;/element-name></p>'
+# try 'github tags disabled by default' \
+# "$SRC" \
+# '<p>&lt;element-name>content&lt;/element-name></p>'
 
 try -fgithubtags 'github tags' \
 "$SRC" \
