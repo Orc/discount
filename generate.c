@@ -1046,49 +1046,36 @@ process_possible_link(MMIOT *f, int size)
 static int
 maybe_tag_or_link(MMIOT *f)
 {
-    int c, size;
-    int maybetag = 1;
+    int c, size=0;
 
     if ( is_flag_set(&f->flags, MKD_TAGTEXT) )
 	return 0;
 
-    for ( size=0; (c = peek(f, size+1)) != '>'; size++) {
-	if ( c == EOF )
-	    return 0;
-	else if ( c == '\\' ) {
-	    maybetag=0;
-	    if ( peek(f, size+2) != EOF )
-		size++;
-	}
-	else if ( isspace(c) )
-	    break;
-	else if ( ! (c == '/'
-		     || (is_flag_set(&f->flags, MKD_GITHUBTAGS) && (c == '-' || c == '_'))
-		     || isalnum(c) ) )
-	    maybetag=0;
-    }
+    c = peek(f, 1);
 
-    if ( size ) {
-	if ( maybetag || (size >= 3 && strncmp(cursor(f), "!--", 3) == 0) ) {
-
-	    /* It is not a html tag unless we find the closing '>' in
-	     * the same block.
-	     */
-	    while ( (c = peek(f, size+1)) != '>' )
+    if ( isalpha(c) || c == '/' || c == '!' ) {
+	/* By decree of Markdown.pl *this is a tag* */
+	while ( (c=peek(f,size+1)) != '>' )
 		if ( c == EOF )
 		    return 0;
 		else
 		    size++;
+    }
 
+    if ( size > 0 ) {
+	if ( process_possible_link(f, size) ) {
+	    shift(f, size+1);
+	    return 1;
+	}
+	else {
+	    int i;
+	    
 	    if ( forbidden_tag(f) )
 		return 0;
 
-	    Qchar('<', f);
-	    while ( ((c = peek(f, 1)) != EOF) && (c != '>') )
-		Qchar(pull(f), f);
-	    return 1;
-	}
-	else if ( !isspace(c) && process_possible_link(f, size) ) {
+	    for ( i=0; i <= size+1; i++ )
+		Qchar(peek(f, i), f);
+
 	    shift(f, size+1);
 	    return 1;
 	}
