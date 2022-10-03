@@ -1059,6 +1059,17 @@ process_possible_link(MMIOT *f, int size)
 } /* process_possible_link */
 
 
+/*
+ * check if a character is one of the things the reference implementation considers valid for starting
+ * a html(ish) tag
+ */
+static inline int
+is_a_strict_tag_prefix(int c)
+{
+    return isalpha(c) || (c == '/') || (c == '!') || (c == '$') || (c == '?');
+}
+
+
 /* a < may be just a regular character, the start of an embedded html
  * tag, or the start of an <automatic link>.    If it's an automatic
  * link, we also need to know if it's an email address because if it
@@ -1075,13 +1086,22 @@ maybe_tag_or_link(MMIOT *f)
 
     c = peek(f, 1);
 
-    if ( isalpha(c) || c == '/' || c == '!' ) {
-	/* By decree of Markdown.pl *this is a tag* */
-	while ( (c=peek(f,size+1)) != '>' )
-	    if ( c == EOF )
+
+    if ( is_a_strict_tag_prefix(c) ) {
+	/* By decree of Markdown.pl *this is a tag* and we want to absorb everything up
+	 * to the next '>', unless interrupted by another '<' OR a '`', at which point
+	 * we kick it back to the caller as plain old text.
+	 */
+	size=1;
+	while ( (c=peek(f,size+1)) != '>' ) {
+	    if ( c == EOF || c == '<' )
 		return 0;
-	    else
-		size++;
+	    if ( is_flag_set(f->flags, MKD_STRICT) ) {
+		if ( c == '`' )
+		    return 0;
+	    }
+	    size++;
+	}
     }
 
     if ( size > 0 ) {
@@ -1095,8 +1115,14 @@ maybe_tag_or_link(MMIOT *f)
 	    if ( forbidden_tag(f) )
 		return 0;
 
-	    for ( i=0; i <= size+1; i++ )
-		Qchar(peek(f, i), f);
+	    for ( i=0; i <= size+1; i++ ) {
+		c = peek(f,i);
+
+		if ( (c == '&') && (i > 0) )
+		    Qstring("&amp;", f);
+		else
+		    Qchar(c, f);
+	    }
 
 	    shift(f, size+1);
 	    return 1;
@@ -1521,8 +1547,12 @@ text(MMIOT *f)
 		    }
 		    break;
 
-	case '<':   if ( !maybe_tag_or_link(f) )
-			Qstring("&lt;", f);
+	case '<':   if ( !maybe_tag_or_link(f) ) {
+			if ( is_flag_set(f->flags, MKD_STRICT) && is_a_strict_tag_prefix(peek(f,1)) )
+			    Qchar(c, f);
+			else
+			    Qstring("&lt;", f);
+		    }
 		    break;
 
 	case '&':   j = (peek(f,1) == '#' ) ? 2 : 1;

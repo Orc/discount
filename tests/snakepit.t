@@ -17,11 +17,11 @@ try '[](unclosed <url)' '[foo](<http://no trailing gt)' \
 
 try '<unfinished <tags> (1)' \
 '<foo [bar](foo)  <s>hi</s>' \
-'<p><foo [bar](foo)  <s>hi</s></p>'
+'<p>&lt;foo <a href="foo">bar</a>  <s>hi</s></p>'
     
 try '<unfinished &<tags> (2)' \
 '<foo [bar](foo)  &<s>hi</s>' \
-'<p><foo [bar](foo)  &<s>hi</s></p>'
+'<p>&lt;foo <a href="foo">bar</a>  &amp;<s>hi</s></p>'
 
 try 'paragraph <br/> oddity' 'EOF  ' '<p>EOF</p>'
     
