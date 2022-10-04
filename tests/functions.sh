@@ -3,13 +3,15 @@ __passed=0
 __failed=0
 __title=
 
+___COLS=60
+
 title() {
     __title="$*"
     if [ "$VERBOSE" ]; then
 	./echo "$__title"
     else
 	./echo -n "$__title" \
-'.................................................................' | ./cols 54
+'.................................................................' | ./cols $(( $___COLS + 4 ))
     fi
 }
 
@@ -28,7 +30,7 @@ summary() {
 
 
 try_header() {
-    testcase=`./echo -n "  $1" '........................................................' | ./cols 50`
+    testcase=`./echo -n "  $1" '........................................................' | ./cols $___COLS `
     __tests=`expr $__tests + 1`
 
     test "$VERBOSE" && ./echo -n "$testcase"
@@ -46,7 +48,7 @@ try() {
 	esac
     done
 
-    try_header $1
+    try_header "$1"
 
     case "$2" in
     -t*) Q=`./markdown $FLAGS "$2"` ;;
@@ -74,7 +76,7 @@ try() {
 }
 
 match() {
-    testcase=`./echo -n "  $1" '........................................................' | ./cols 50`
+    testcase=`./echo -n "  $1" '........................................................' | ./cols $___COLS`
 
     test $VERBOSE && ./echo -n "$testcase"
 
