@@ -25,5 +25,10 @@ try -f1.0 'trailing whitespace (-f1.0)' "$WHITESPACE" '<pre><code>white space''
 and more
 </code></pre>'
 
+for x in tests/data/m_*.text;do
+    result=`echo $x | sed -e 's/.text$/.html/'`
+    try -fstrict,nopants,nosuperscript "`basename $x`" "`cat $x`" "`cat $result`"
+done
+    
 summary $0
 exit $rc

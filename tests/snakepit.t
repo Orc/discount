@@ -24,6 +24,11 @@ try '<unfinished &<tags> (2)' \
 '<p>&lt;foo <a href="foo">bar</a>  &amp;<s>hi</s></p>'
 
 try 'paragraph <br/> oddity' 'EOF  ' '<p>EOF</p>'
+
+for x in tests/data/m_*.text;do
+    result=`echo $x | sed -e 's/.text$/.html/'`
+    try -fstrict,nopants "<tags> (`basename $x`)" "`cat $x`" "`cat $result`"
+done
     
 summary $0
 exit $rc

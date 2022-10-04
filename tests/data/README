@@ -6,3 +6,4 @@ The prefix characters show which test script runs the tests
 
 f  --   markdown extra footnotes (extrafootnotes.t)
 	(f01.text -> f01.html)
+m  --   Markdown.pl conformity (Markdown.pl.t)
