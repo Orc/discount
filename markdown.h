@@ -23,7 +23,7 @@ enum {  MKD_NOLINKS=0,		/* don't do link processing, block <a> tags  */
 	MKD_EXPLICITLIST,	/* don't combine numbered/bulletted lists */
 	MKD_CDATA,		/* generate code for xml ![CDATA[...]] */
 	MKD_NOSUPERSCRIPT,	/* no A^B */
-	MKD_STRICT,		/* conform to Markdown.pl behavior */
+	MKD_STRICT,		/* conform to Markdown standard as implemented in Markdown.pl */
 	MKD_NOTABLES,		/* disallow tables */
 	MKD_NOSTRIKETHROUGH,	/* forbid ~~strikethrough~~ */
 	MKD_1_COMPAT,		/* compatibility with MarkdownTest_1.0 */
