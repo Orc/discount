@@ -1353,6 +1353,7 @@ text(MMIOT *f)
 		    break;
 	/* A^B -> A<sup>B</sup> */
 	case '^':   if ( is_flag_set(&f->flags, MKD_NOSUPERSCRIPT)
+			    || is_flag_set(&f->flags, MKD_STRICT)
 			    || is_flag_set(&f->flags, MKD_TAGTEXT)
 			    || (f->last == 0)
 			    || ((ispunct(f->last) || isspace(f->last))
@@ -1390,7 +1391,7 @@ text(MMIOT *f)
 		    break;
 	case '_':
 	/* Underscores don't count if they're in the middle of a word */
-		    if ( !is_flag_set(&f->flags, MKD_NORELAXED)
+		    if ( !is_flag_set(&f->flags, MKD_STRICT)
 				&& isthisalnum(f,-1) && isthisalnum(f,1) ) {
 			Qchar(c, f);
 			break;
@@ -1418,9 +1419,9 @@ text(MMIOT *f)
 #define ticktick(f,c) tickhandler(f,c,2,0,delspan)
 #endif
 
-	case '~':   if ( is_flag_set(f->flags, MKD_NOSTRIKETHROUGH)
-			 || is_flag_set(f->flags, MKD_STRICT)
-			 || is_flag_set(f->flags, MKD_TAGTEXT)
+	case '~':   if ( is_flag_set(&f->flags, MKD_NOSTRIKETHROUGH)
+			 || is_flag_set(&f->flags, MKD_STRICT)
+			 || is_flag_set(&f->flags, MKD_TAGTEXT)
 			 || !ticktick(f,c) )
 			Qchar(c, f);
 		    break;

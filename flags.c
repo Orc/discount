@@ -15,7 +15,7 @@ static struct flagnames flagnames[] = {
     { MKD_NO_EXT,         "!EXT" },
     { MKD_CDATA,          "CDATA" },
     { MKD_NOSUPERSCRIPT,  "!SUPERSCRIPT" },
-    { MKD_NORELAXED,      "!RELAXED" },
+    { MKD_STRICT,         "STRICT" },
     { MKD_NOTABLES,       "!TABLES" },
     { MKD_NOSTRIKETHROUGH,"!STRIKETHROUGH" },
     { MKD_TOC,            "TOC" },

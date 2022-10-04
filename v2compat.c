@@ -34,7 +34,7 @@
 #define MKD2_NO_EXT		0x00000040
 #define MKD2_CDATA		0x00000080
 #define MKD2_NOSUPERSCRIPT	0x00000100
-#define MKD2_NORELAXED		0x00000200
+#define MKD2_STRICT2   		0x00000200
 #define MKD2_NOTABLES		0x00000400
 #define MKD2_NOSTRIKETHROUGH	0x00000800
 #define MKD2_TOC		0x00001000
@@ -58,6 +58,7 @@
 #define MKD2_EXPLICITLIST	0x80000000
 
 
+#if 0
 void
 ___mkd_strict_mode(mkd_flag_t *flags, int enable)
 {
@@ -75,7 +76,7 @@ ___mkd_strict_mode(mkd_flag_t *flags, int enable)
 	set_mkd_flag(flags,   MKD_NORMAL_LISTITEM);
 	set_mkd_flag(flags,   MKD_NO_EXT);
 	set_mkd_flag(flags,   MKD_NOSUPERSCRIPT);
-	set_mkd_flag(flags,   MKD_NORELAXED);
+	set_mkd_flag(flags,   MKD_STRICT);
 	set_mkd_flag(flags,   MKD_NOTABLES);
 	set_mkd_flag(flags,   MKD_NOSTRIKETHROUGH);
 	set_mkd_flag(flags,   MKD_NOHEADER);
@@ -84,6 +85,7 @@ ___mkd_strict_mode(mkd_flag_t *flags, int enable)
 	set_mkd_flag(flags,   MKD_NOSTYLE);
     }
 }
+#endif
 
 
 /*
@@ -105,7 +107,7 @@ convert_v2flags(DWORD bitmask, mkd_flag_t *blob)
 	bit = 1L << i;
 
 	switch ( bitmask & bit ) {
-	case MKD2_STRICT:	___mkd_strict_mode(blob, 1);
+	case MKD2_STRICT:	set_mkd_flag(blob,MKD_STRICT);
 				break;
 	case MKD2_NOLINKS:	set_mkd_flag(blob,MKD_NOLINKS);
 				break;
@@ -123,7 +125,7 @@ convert_v2flags(DWORD bitmask, mkd_flag_t *blob)
 				break;
 	case MKD2_NOSUPERSCRIPT:set_mkd_flag(blob,MKD_NOSUPERSCRIPT);
 				break;
-	case MKD2_NORELAXED:	set_mkd_flag(blob,MKD_NORELAXED);
+	case MKD2_STRICT2:	set_mkd_flag(blob,MKD_STRICT);
 				break;
 	case MKD2_NOTABLES:	set_mkd_flag(blob,MKD_NOTABLES);
 				break;

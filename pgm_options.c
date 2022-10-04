@@ -21,7 +21,6 @@
 #endif
 
 static void set_dlist(mkd_flag_t *flags, int enable);
-extern void ___mkd_strict_mode(mkd_flag_t *flags, int enable);
 
 static struct _special {
     char *name;
@@ -29,7 +28,6 @@ static struct _special {
 } special[] = { 
     { "definitionlist", set_dlist },
     { "dlist",          set_dlist },
-    { "standard",       ___mkd_strict_mode },
 };
 
 static struct _opt {
@@ -45,8 +43,9 @@ static struct _opt {
     { "tabstop",       "default (4-space) tabstops", 0, 0, 0, 1, MKD_TABSTOP  },
     { "image",         "images",                     0, 1, 0, 1, MKD_NOIMAGE  },
     { "links",         "links",                      0, 1, 0, 1, MKD_NOLINKS  },
-    { "strict",        "emphasis inside words",      0, 0, 0, 1, MKD_NORELAXED  },
-    { "relax",         "emphasis inside words",      0, 1, 1, 1, MKD_NORELAXED  },
+    { "strict",        "conform to the markdown standard",  0, 0, 0, 1, MKD_STRICT   },
+    { "relax",         "conform to the markdown standard",  0, 1, 1, 1, MKD_STRICT   },
+    { "standard",      "conform to the markdown standard", 0, 0, 1, 1, MKD_STRICT },
     { "tables",        "tables",                     0, 1, 0, 1, MKD_NOTABLES },
     { "header",        "pandoc-style headers",       0, 1, 0, 1, MKD_NOHEADER },
     { "html",          "allow raw html",             0, 1, 0, 0, MKD_NOHTML   },
@@ -79,7 +78,6 @@ static struct _opt {
     { "regular-listitem","github-style check items", 0, 0, 1, 1, MKD_NORMAL_LISTITEM } ,
     { "definitionlist","both discount & markdown extra definition lists", 1 },
     { "dlist",         "both discount & markdown extra definition lists", 1, 0, 1 },
-    { "standard",      "conform to the markdown standard", 1 },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])
