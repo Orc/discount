@@ -58,36 +58,6 @@
 #define MKD2_EXPLICITLIST	0x80000000
 
 
-#if 0
-void
-___mkd_strict_mode(mkd_flag_t *flags, int enable)
-{
-    if ( enable ) {
-	clear_mkd_flag(flags, MKD_FENCEDCODE);
-	clear_mkd_flag(flags, MKD_LATEX);
-	clear_mkd_flag(flags, MKD_TABSTOP);
-	clear_mkd_flag(flags, MKD_EXTRA_FOOTNOTE);
-	clear_mkd_flag(flags, MKD_AUTOLINK);
-	clear_mkd_flag(flags, MKD_SAFELINK);
-	clear_mkd_flag(flags, MKD_TOC);
-	clear_mkd_flag(flags, MKD_DLDISCOUNT);
-	clear_mkd_flag(flags, MKD_DLEXTRA);
-	set_mkd_flag(flags,   MKD_NOSUPERSCRIPT);
-	set_mkd_flag(flags,   MKD_NORMAL_LISTITEM);
-	set_mkd_flag(flags,   MKD_NO_EXT);
-	set_mkd_flag(flags,   MKD_NOSUPERSCRIPT);
-	set_mkd_flag(flags,   MKD_STRICT);
-	set_mkd_flag(flags,   MKD_NOTABLES);
-	set_mkd_flag(flags,   MKD_NOSTRIKETHROUGH);
-	set_mkd_flag(flags,   MKD_NOHEADER);
-	set_mkd_flag(flags,   MKD_NODIVQUOTE);
-	set_mkd_flag(flags,   MKD_NOALPHALIST);
-	set_mkd_flag(flags,   MKD_NOSTYLE);
-    }
-}
-#endif
-
-
 /*
  * convert a discount2 bitmap flag into a discount3 flag blob
  */

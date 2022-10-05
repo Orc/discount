@@ -102,13 +102,16 @@ populate(getc_func getc, void* ctx, mkd_flag_t *flags)
     int c;
     int pandoc = 0;
 
-    if ( flags && is_flag_set(flags, MKD_NOHEADER) )
+    if ( flags && (is_flag_set(flags, MKD_NOHEADER) || is_flag_set(flags, MKD_STRICT)) )
 	pandoc= EOF;
 
     if ( !a ) return 0;
 
 
-    a->tabstop = (flags && is_flag_set(flags, MKD_TABSTOP)) ? 4 : TABSTOP;
+    if ( flags && (is_flag_set(flags, MKD_TABSTOP) || is_flag_set(flags, MKD_STRICT)) )
+	a->tabstop = 4;
+    else
+	a->tabstop = TABSTOP;
 
     CREATE(line);
 

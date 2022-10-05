@@ -667,7 +667,7 @@ extra_linky(MMIOT *f, Cstring text, Footnote *ref)
 
 
 
-/* check a url (or url fragment to see that it begins with a known good
+/* check a url (or fragment) to see that it begins with a known good
  * protocol (or no protocol at all)
  */
 static int
@@ -703,10 +703,12 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
     if ( image )
 	tag = &imaget;
     else if ( tag = pseudo(ref->link) ) {
-	if ( is_flag_set(&f->flags, MKD_NO_EXT) || is_flag_set(&f->flags, MKD_SAFELINK) )
+	if ( is_flag_set(&f->flags, MKD_NO_EXT) || is_flag_set(&f->flags, MKD_STRICT)
+						|| is_flag_set(&f->flags, MKD_SAFELINK) )
 	    return 0;
     }
-    else if ( is_flag_set(&f->flags, MKD_SAFELINK) && !safelink(ref->link) )
+    else if ( is_flag_set(&f->flags, MKD_SAFELINK) && !is_flag_set(&f->flags, MKD_STRICT)
+						   && !safelink(ref->link) )
 	/* if MKD_SAFELINK, only accept links that are local or
 	 * a well-known protocol
 	 */
@@ -783,7 +785,11 @@ linkylinky(int image, MMIOT *f)
 		mmiotseek(f, implicit_mark);
 		goodlink = !is_flag_set(&f->flags, MKD_1_COMPAT);
 
-		if ( is_flag_set(&f->flags, MKD_EXTRA_FOOTNOTE) && (!image) && S(name) && T(name)[0] == '^' )
+		if ( is_flag_set(&f->flags, MKD_EXTRA_FOOTNOTE)
+			  && !is_flag_set(&f->flags, MKD_STRICT)
+			  && (!image)
+			  && S(name)
+			  && T(name)[0] == '^' )
 		    extra_footnote = 1;
 	    }
 
@@ -1335,7 +1341,9 @@ text(MMIOT *f)
 
 
     while (1) {
-	if ( is_flag_set(&f->flags, MKD_AUTOLINK) && isalpha(peek(f,1)) && !tag_text(f) )
+	if ( is_flag_set(&f->flags, MKD_AUTOLINK) && !is_flag_set(&f->flags, MKD_STRICT)
+						  && isalpha(peek(f,1))
+						  && !tag_text(f) )
 	    maybe_autolink(f);
 
 	c = pull(f);
@@ -1478,7 +1486,7 @@ text(MMIOT *f)
 				break;
 
 		    case ':': case '|':
-				if ( is_flag_set(&f->flags, MKD_NOTABLES) ) {
+				if ( is_flag_set(&f->flags, MKD_NOTABLES) || is_flag_set(&f->flags, MKD_STRICT) ) {
 				    Qchar('\\', f);
 				    shift(f,-1);
 				    break;
@@ -1491,6 +1499,7 @@ text(MMIOT *f)
 
 		    case '[':
 		    case '(':   if ( is_flag_set(&f->flags, MKD_LATEX)
+				   && !is_flag_set(&f->flags, MKD_STRICT)
 				   && mathhandler(f, '\\', (c =='(')?')':']') )
 				    break;
 				/* else fall through to default */
@@ -1524,7 +1533,9 @@ text(MMIOT *f)
 			Qchar(c, f);
 		    break;
 
-	case '$':   if ( is_flag_set(&f->flags, MKD_LATEX) && (peek(f, 1) == '$') ) {
+	case '$':   if ( is_flag_set(&f->flags, MKD_LATEX)
+				    && !is_flag_set(&f->flags, MKD_STRICT)
+				    && (peek(f, 1) == '$') ) {
 			pull(f);
 			if ( mathhandler(f, '$', '$') )
 			    break;
@@ -1549,14 +1560,14 @@ printheader(Paragraph *pp, MMIOT *f)
 {
     if ( is_flag_set(&f->flags, MKD_IDANCHOR) ) {
 	Qprintf(f, "<h%d", pp->hnumber);
-	if ( pp->label && is_flag_set(&f->flags, MKD_TOC) ) {
+	if ( pp->label && is_flag_set(&f->flags, MKD_TOC) && !is_flag_set(&f->flags, MKD_STRICT) ) {
 	    Qstring(" id=\"", f);
 	    Qanchor(pp->label, f);
 	    Qchar('"', f);
 	}
 	Qchar('>', f);
     } else {
-	if ( pp->label && is_flag_set(&f->flags, MKD_TOC) ) {
+	if ( pp->label && is_flag_set(&f->flags, MKD_TOC) && !is_flag_set(&f->flags, MKD_STRICT) ) {
 	    Qstring("<a name=\"", f);
 	    Qanchor(pp->label, f);
 	    Qstring("\"></a>\n", f);
@@ -2045,7 +2056,8 @@ mkd_document(Document *p, char **res)
     if ( p && p->compiled ) {
 	if ( ! p->html ) {
 	    htmlify(p->code, 0, 0, p->ctx);
-	    if ( is_flag_set(&p->ctx->flags, MKD_EXTRA_FOOTNOTE) )
+	    if ( is_flag_set(&p->ctx->flags, MKD_EXTRA_FOOTNOTE)
+		     && !is_flag_set(&p->ctx->flags, MKD_STRICT) )
 		mkd_extra_footnotes(p->ctx);
 	    p->html = 1;
 	    size = S(p->ctx->out);

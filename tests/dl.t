@@ -32,7 +32,7 @@ try -fdldiscount 'one item with two =tags=' \
 </dl>'
 
 # extra style
-try -fdlextra '=tag= does nothing' "$SRC" \
+try -fdlextra,nodldiscount '=tag= does nothing' "$SRC" \
     '<p>=this=
     is an ugly
 =test=

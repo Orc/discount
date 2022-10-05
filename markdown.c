@@ -202,7 +202,7 @@ checkline(Line *l, mkd_flag_t *flags)
     for ( eol = S(l->text); eol > l->dle && isspace(T(l->text)[eol-1]); --eol )
 	;
 
-    if ( is_flag_set(flags, MKD_FENCEDCODE) ) {
+    if ( is_flag_set(flags, MKD_FENCEDCODE) && !is_flag_set(flags, MKD_STRICT) ) {
 	first = T(l->text)[l->dle];
 
 	if ( first == '~' || first == '`' ) {
@@ -447,9 +447,7 @@ end_of_block(Line *t, mkd_flag_t *flags)
 static Line*
 is_discount_dt(Line *t, int *clip, mkd_flag_t *flags)
 {
-    if ( is_flag_set(flags, MKD_DLDISCOUNT)
-	   && t
-	   && t->next
+    if ( t && t->next
 	   && (S(t->text) > 2)
 	   && (t->dle == 0)
 	   && (T(t->text)[0] == '=')
@@ -476,10 +474,7 @@ is_extra_dd(Line *t)
 static Line*
 is_extra_dt(Line *t, int *clip, mkd_flag_t* flags)
 {
-    if ( is_flag_set(flags, MKD_DLEXTRA)
-	   && t
-	   && t->next && S(t->text) && T(t->text)[0] != '='
-		      && T(t->text)[S(t->text)-1] != '=') {
+    if ( t && t->next && S(t->text) ) {
 	Line *x;
 
 	if ( iscode(t) || end_of_block(t, flags) )
@@ -496,18 +491,23 @@ is_extra_dt(Line *t, int *clip, mkd_flag_t* flags)
     return 0;
 }
 
-
-static Line*
-isdefinition(Line *t, int *clip, int *kind, mkd_flag_t *flags)
+	
+static Line *
+isdefinition(Line *t, int *clip, int *list_type, mkd_flag_t *flags)
 {
     Line *ret;
-
-    *kind = 1;
-    if ( ret = is_discount_dt(t,clip,flags) )
-	return ret;
-
-    *kind=2;
-    return is_extra_dt(t,clip,flags);
+    
+    if ( !is_flag_set(flags, MKD_STRICT) ) {
+	if ( is_flag_set(flags, MKD_DLDISCOUNT) && (ret = is_discount_dt(t,clip,flags)) ) {
+	    *list_type = 1;
+	    return ret;
+	}
+	if ( is_flag_set(flags, MKD_DLEXTRA) && (ret = is_extra_dt(t,clip,flags)) ) {
+	    *list_type = 2;
+	    return ret;
+	}
+    }
+    return 0;
 }
 
 
@@ -520,9 +520,9 @@ islist(Line *t, int *clip, mkd_flag_t *flags, int *list_type)
     if ( end_of_block(t, flags) )
 	return 0;
 
-    if ( (is_flag_set(flags, MKD_DLEXTRA)||is_flag_set(flags, MKD_DLDISCOUNT)) && isdefinition(t,clip,list_type,flags) )
+    if ( isdefinition(t,clip,list_type,flags) )
 	return DL;
-
+	
     if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
 	i = nextnonblank(t, t->dle+1);
 	*clip = (i > 4) ? 4 : i;
@@ -533,7 +533,7 @@ islist(Line *t, int *clip, mkd_flag_t *flags, int *list_type)
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
 	if ( T(t->text)[j-1] == '.' ) {
 
-	    if ( !is_flag_set(flags, MKD_NOALPHALIST)
+	    if ( !(is_flag_set(flags, MKD_NOALPHALIST) || is_flag_set(flags, MKD_STRICT))
 			  && (j == t->dle + 2)
 			  && isalpha(T(t->text)[t->dle]) ) {
 		j = nextnonblank(t,j);
@@ -627,7 +627,7 @@ codeblock(Paragraph *p)
 static int
 iscodefence(Line *r, int size, line_type kind, mkd_flag_t *flags)
 {
-    if ( !is_flag_set(flags, MKD_FENCEDCODE) )
+    if ( !is_flag_set(flags, MKD_FENCEDCODE) || is_flag_set(flags, MKD_STRICT) )
 	return 0;
 
     if ( !(r->is_checked) )
@@ -772,7 +772,7 @@ isdivmarker(Line *p, int start, mkd_flag_t *flags)
     char *s;
     int last, i;
 
-    if ( is_flag_set(flags, MKD_NODIVQUOTE) )
+    if ( is_flag_set(flags, MKD_NODIVQUOTE) || is_flag_set(flags, MKD_STRICT) )
 	return 0;
 
     start = nextnonblank(p, start);
@@ -882,7 +882,7 @@ listitem(Paragraph *p, int indent, mkd_flag_t *flags, linefn check)
 
 	__mkd_trim_line(t, clip);
 
-	if ( firstpara && !is_flag_set(flags, MKD_NORMAL_LISTITEM) ) {
+	if ( firstpara && !(is_flag_set(flags, MKD_NORMAL_LISTITEM) || is_flag_set(flags, MKD_STRICT)) ) {
 	    ischeck = CHECK_NOT;
 	    if ( strncmp(T(t->text)+t->dle, "[ ]", 3) == 0 )
 		ischeck = CHECK_NO;
@@ -949,7 +949,7 @@ definition_block(Paragraph *top, int clip, MMIOT *f, int kind)
 
     while (( labels = q )) {
 
-	if ( (q = isdefinition(labels, &z, &kind, &(f->flags))) == 0 )
+	if ( (q = isdefinition(labels, &z, &kind, &(f->flags))) == NULL )
 	    break;
 
 	if ( (text = skipempty(q->next)) == 0 )
@@ -1094,7 +1094,9 @@ addfootnote(Line *p, MMIOT* f)
     /* consume the closing ]: */
     j = nextnonblank(p, j+2);
 
-    if ( is_flag_set(&(f->flags), MKD_EXTRA_FOOTNOTE) && (T(foot->tag)[0] == '^') ) {
+    if ( is_flag_set(&(f->flags), MKD_EXTRA_FOOTNOTE)
+	     && !is_flag_set(&(f->flags), MKD_STRICT)
+			 && (T(foot->tag)[0] == '^') ) {
 	/* markdown extra footnote: All indented lines past this point;
 	 * the first line includes the footnote reference, so we need to
 	 * snip that out as we go.
@@ -1223,7 +1225,7 @@ compile_document(Line *ptr, MMIOT *f)
 	     */
 	    uncache(&source, &d, f);
 
-	    if (is_flag_set(&(f->flags), MKD_NOSTYLE) )
+	    if ( is_flag_set(&(f->flags), MKD_NOSTYLE) || is_flag_set(&(f->flags), MKD_STRICT) )
 		blocktype = HTML;
 	    else
 		blocktype = strcmp(tag->id, "STYLE") == 0 ? STYLE : HTML;
@@ -1281,7 +1283,7 @@ compile_document(Line *ptr, MMIOT *f)
     /* if tables of contents are enabled, walk the document giving
      * all the headers unique labels
      */
-    if ( is_flag_set(&(f->flags), MKD_TOC) )
+    if ( is_flag_set(&(f->flags), MKD_TOC) && !is_flag_set(&(f->flags), MKD_STRICT) )
 	___mkd_uniquify(&d, T(d));
 
     return T(d);
@@ -1303,7 +1305,7 @@ actually_a_table(MMIOT *f, Line *pp)
     int c;
 
     /* tables need to be turned on */
-    if ( is_flag_set(&(f->flags), MKD_NOTABLES) )
+    if ( is_flag_set(&(f->flags), MKD_NOTABLES) || is_flag_set(&(f->flags), MKD_STRICT) )
 	return 0;
 
     /* tables need three lines */

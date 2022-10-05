@@ -30,7 +30,10 @@ gfm_populate(getc_func getc, void* ctx, mkd_flag_t *flags)
 
     if ( !a ) return 0;
 
-    a->tabstop = is_flag_set(flags, MKD_TABSTOP) ? 4 : TABSTOP;
+    if ( is_flag_set(flags, MKD_TABSTOP) || is_flag_set(flags, MKD_STRICT) )
+	a->tabstop = 4;
+    else
+	a->tabstop = TABSTOP;
 
     CREATE(line);
 
