@@ -1773,8 +1773,8 @@ printfenced(Line *t, MMIOT *f)
 static int
 printblock(Paragraph *pp, MMIOT *f)
 {
-    static char *Begin[] = { "", "<p>", "<p style=\"text-align:center;\">"  };
-    static char *End[]   = { "", "</p>","</p>" };
+    static char *Begin[] = { "", "<p>", "<div style=\"text-align:center;\">"  };
+    static char *End[]   = { "", "</p>","</div>" };
     Line *t = pp->text;
     int align = pp->align;
 

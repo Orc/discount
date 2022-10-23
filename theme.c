@@ -1,7 +1,7 @@
 /*
  * theme:  use a template to create a webpage (markdown-style)
  *
- * usage:  theme [-d root] [-p pagename] [-t template] [-o html] [source]
+ * usage:  theme [-m file] [-d root] [-p pagename] [-t template] [-o html] [source]
  *
  */
 /*
@@ -36,6 +36,7 @@
 #include "gethopt.h"
 
 char *pgm = "theme";
+char *m4_file = 0;
 char *output_file = 0;
 char *pagename = 0;
 char *root = 0;
@@ -539,6 +540,7 @@ struct h_opt opts[] = {
     { 0, 0, 'd', "dir",    "set the document root" },
     { 0, 0, 'E', 0,        "do all theme expansions everywhere" },
     { 0, 0, 'f', 0,        "forcibly overwrite existing html files" },
+    { 0, 0, 'm', "file",   "preprocess the input with m4, with `file` containing preprocessing directives" },
     { 0, 0, 'o', "file",   "write output to `file`" },
     { 0, 0, 'p', "title",  "set the page title" },
     { 0, 0, 't', "template",  "use `template` as template file" },
@@ -553,6 +555,7 @@ char **argv;
     char *template = "page.theme";
     char *source = "stdin";
     FILE *tmplfile;
+    FILE *input;
     int force = 0;
     MMIOT *doc;
     struct stat sourceinfo;
@@ -598,6 +601,8 @@ char **argv;
 	case 'd':   root = hoptarg(&blob);
 		    break;
 	case 'E':   everywhere = 1;
+		    break;
+	case 'm':   m4_file = hoptarg(&blob);
 		    break;
 	case 'p':   pagename = hoptarg(&blob);
 		    break;
@@ -683,7 +688,24 @@ char **argv;
     if ( !pagename )
 	pagename = source;
 
-    if ( (doc = mkd_in(stdin, 0)) == 0 )
+    if ( m4_file ) {
+	char *m4_command_line;
+	int len=0;
+
+	len = 8; /* length of 'm4 "',  '" -' & '\0' */
+
+	if ( (m4_command_line = malloc(len + strlen(m4_file))) == NULL )
+	    fail("can't allocate temporary storage?");
+
+	sprintf(m4_command_line, "m4 \"%s\" -", m4_file);
+
+	if ( (input = popen(m4_command_line, "r")) == NULL )
+	    fail("can't run m4 preprocessor (%s)", strerror(errno));
+    }
+    else
+	input = stdin;
+
+    if ( (doc = mkd_in(input, 0)) == 0 )
 	fail("can't read %s", source ? source : "stdin");
 
     if ( fstat(fileno(stdin), &sourceinfo) == 0 )
