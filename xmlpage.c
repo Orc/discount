@@ -34,8 +34,9 @@ mkd_xhtmlpage(Document *p, mkd_flag_t* flags, FILE *out)
 	DO_OR_DIE( fprintf(out, "<head>\n") );
 	DO_OR_DIE( fprintf(out, "<title>") );
 	
-	if ( title = DOCUMENT_TITLE(p) )
+	if ( title = DOCUMENT_TITLE(p) ) {
 	    DO_OR_DIE( fprintf(out, "%s", title) );
+	}
 	DO_OR_DIE( fprintf(out, "</title>\n") );
 	DO_OR_DIE( mkd_generatecss(p, out) );
 	DO_OR_DIE( fprintf(out, "</head>\n"
