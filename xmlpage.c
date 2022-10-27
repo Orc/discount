@@ -32,12 +32,14 @@ mkd_xhtmlpage(Document *p, mkd_flag_t* flags, FILE *out)
 				"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n") );
 
 	DO_OR_DIE( fprintf(out, "<head>\n") );
-	DO_OR_DIE( fprintf(out, "<title>") );
 	
-	if ( title = DOCUMENT_TITLE(p) )
-	    DO_OR_DIE( fprintf(out, "%s", title) );
-	DO_OR_DIE( fprintf(out, "</title>\n") );
+	
+	title = DOCUMENT_TITLE(p);
+	
+	DO_OR_DIE( fprintf(out, "<title>%s</title>", title ? title : "") );
+	
 	DO_OR_DIE( mkd_generatecss(p, out) );
+	
 	DO_OR_DIE( fprintf(out, "</head>\n"
 				"<body>\n") );
 	

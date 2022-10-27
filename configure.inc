@@ -364,7 +364,8 @@ AC_PROG_CC () {
     test "$AC_CC" && return 0
 
     cat > ngc$$.c << \EOF
-void say(char*);
+void
+say(char*);
 int main(void)
 {
     say("hello, sailor");
@@ -372,7 +373,8 @@ int main(void)
 EOF
     cat > ngf$$.c << \EOF
 #include <stdio.h>
-void say(char* message)
+void
+say(char* message)
 {
     puts(message);
 }
