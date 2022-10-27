@@ -21,7 +21,7 @@
 static int need_to_initrng = 1;
 
 void
-mkd_initialize()
+mkd_initialize(void)
 {
 
     if ( need_to_initrng ) {
@@ -32,7 +32,7 @@ mkd_initialize()
 
 
 void DESTRUCTOR
-mkd_shlib_destructor()
+mkd_shlib_destructor(void)
 {
     mkd_deallocate_tags();
 }

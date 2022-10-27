@@ -192,7 +192,7 @@ prepare(FILE *input)
 }
 
 static int
-pull()
+pull(void)
 {
     return psp < S(inbuf) ? T(inbuf)[psp++] : EOF;
 }
@@ -216,7 +216,7 @@ shift(int shiftwidth)
 }
 
 static int*
-cursor()
+cursor(void)
 {
     return T(inbuf) + psp;
 }
@@ -549,8 +549,7 @@ struct h_opt opts[] = {
 #define NROPTS (sizeof opts / sizeof opts[0])
 
 int
-main(argc, argv)
-char **argv;
+main(int argc, char **argv)
 {
     char *template = "page.theme";
     char *source = "stdin";

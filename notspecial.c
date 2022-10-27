@@ -33,8 +33,7 @@ notspecial(char *file)
 #include <stdio.h>
 
 int
-main(argc, argv)
-char **argv;
+main(int argc, char **argv)
 {
     int i;
 

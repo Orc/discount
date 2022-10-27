@@ -134,8 +134,7 @@ if AC_CHECK_HEADERS sys/stat.h && AC_CHECK_FUNCS stat; then
 cat > ngc$$.c << EOF
 #include <sys/stat.h>
 
-main(argc, argv)
-char **argv;
+int main(int argc, char **argv)
 {
    struct stat info;
 

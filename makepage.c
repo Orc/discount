@@ -30,9 +30,7 @@ struct h_opt opts[] = {
 #define NROPTS (sizeof opts / sizeof opts[0])
 
 int
-main(argc, argv)
-int argc;
-char **argv;
+main(int argc, char **argv)
 {
     MMIOT *doc;
     char *q;

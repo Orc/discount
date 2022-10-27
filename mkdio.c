@@ -20,7 +20,7 @@ typedef ANCHOR(Line) LineAnchor;
 /* create a new blank Document
  */
 Document*
-__mkd_new_Document()
+__mkd_new_Document(void)
 {
     Document *ret = calloc(sizeof(Document), 1);
 

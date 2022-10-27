@@ -11,7 +11,7 @@ say(char *what)
 
 
 int
-main()
+main(void)
 {
     mkd_flag_t *flags = mkd_flags();
 

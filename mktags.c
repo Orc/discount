@@ -43,7 +43,7 @@ typedef int (*stfu)(const void*,const void*);
 /* load in the standard collection of html tags that markdown supports
  */
 int
-main()
+main(void)
 {
     int i;
 

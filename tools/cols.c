@@ -2,8 +2,7 @@
 #include <stdlib.h>
 
 int
-main(argc, argv)
-char **argv;
+main(int argc, char **argv)
 {
     register int c;
     int xp;

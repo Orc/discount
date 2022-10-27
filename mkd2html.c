@@ -85,8 +85,7 @@ extern char* mkd_h1_title(MMIOT *);
 
 
 int
-main(argc, argv)
-char **argv;
+main(int argc, char **argv)
 {
     char *h;
     char *source = 0, *dest = 0;

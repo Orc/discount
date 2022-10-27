@@ -265,8 +265,8 @@ extern Document *mkd_string(const char*, int, mkd_flag_t*);
 extern Document *gfm_in(FILE *, mkd_flag_t*);
 extern Document *gfm_string(const char*,int, mkd_flag_t*);
 
-extern void mkd_initialize();
-extern void mkd_shlib_destructor();
+extern void mkd_initialize(void);
+extern void mkd_shlib_destructor(void);
 
 extern void mkd_ref_prefix(Document*, char*);
 
@@ -285,7 +285,7 @@ extern void ___mkd_reparse(char *, int, mkd_flag_t*, MMIOT*, char*);
 extern void ___mkd_emblock(MMIOT*);
 extern void ___mkd_tidy(Cstring *);
 
-extern Document *__mkd_new_Document();
+extern Document *__mkd_new_Document(void);
 extern void __mkd_enqueue(Document*, Cstring *);
 extern void __mkd_trim_line(Line *, int);
 
