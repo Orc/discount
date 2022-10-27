@@ -59,7 +59,7 @@ typedef int (*stfu)(const void*,const void*);
 /* sort the list of extra html block tags for later searching
  */
 void
-mkd_sort_tags()
+mkd_sort_tags(void)
 {
     qsort(T(extratags), S(extratags), sizeof(struct kw), (stfu)casort);
 }
@@ -89,7 +89,7 @@ mkd_search_tags(char *pat, int len)
 /* destroy the extratags list (for shared libraries)
  */
 void
-mkd_deallocate_tags()
+mkd_deallocate_tags(void)
 {
     if ( S(extratags) > 0 )
 	DELETE(extratags);

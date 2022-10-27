@@ -205,8 +205,8 @@ AC_CHECK_FUNCS () {
     B=`echo "$1" | sed -e 's/(.*)//'`
 
     case "$B" in
-    "$1") F="$1()"; need_proto=1 ;;
-    *)    F="$1"  ; unset need_proto ;;
+    "$1") F="$1()"; PROTO="$1(void)"; need_proto=1 ;;
+    *)    F="$1"  ; unset PROTO; unset need_proto ;;
     esac
 
     shift
@@ -218,11 +218,11 @@ AC_CHECK_FUNCS () {
     done
 
     if [ "$need_proto" ]; then
-	echo "void $F;" >> ngc$$.c
+	echo "void $PROTO;" >> ngc$$.c
     fi
 
     cat >> ngc$$.c << EOF
-int main()
+int main(void)
 {
 
     $F;
@@ -263,7 +263,7 @@ AC_CHECK_STRUCT () {
     done
 
     cat >> ngc$$.c << EOF
-int main()
+int main(void)
 {
     struct $struct foo;
 }
@@ -298,7 +298,7 @@ AC_CHECK_TYPE () {
     done
 
     cat >> ngc$$.c << EOF
-int main()
+int main(void)
 {
     $type foo;
 }
@@ -335,7 +335,7 @@ AC_CHECK_FIELD () {
     done
 
     cat >> ngc$$.c << EOF
-int main()
+int main(void)
 {
     struct $struct foo;
 
@@ -364,8 +364,8 @@ AC_PROG_CC () {
     test "$AC_CC" && return 0
 
     cat > ngc$$.c << \EOF
-extern void say(void*);
-int main()
+void say(char*);
+int main(void)
 {
     say("hello, sailor");
 }
@@ -899,7 +899,7 @@ EOF
 # AC_C_VOLATILE checks to see if the compiler supports the volatile keyword
 #
 AC_C_VOLATILE () {
-    echo 'f() { volatile char me=1; }' > ngc$$.c
+    echo 'void f(void) { volatile char me=1; }' > ngc$$.c
     LOGN "checking for \"volatile\" keyword"
 
     if __MAKEDOTO ngc$$.c; then
@@ -917,7 +917,7 @@ AC_C_VOLATILE () {
 # AC_C_INLINE checks to see if compiler supports the inline keyword
 #
 AC_C_INLINE() {
-    echo 'inline int foo() { return 1; }' > ngc$$.c
+    echo 'inline int foo(void) { return 1; }' > ngc$$.c
     LOGN 'Checking for "inline" keyword'
     if __MAKEDOTO ngc$$.c; then
 	rc=0
@@ -956,7 +956,7 @@ AC_WHATIS() {
 	    echo "#include <${x}>"
 	done
 
-	echo "main() { printf(\"${MACRO}=\\\"${__fmt}\\\"\\n\", ${MACRO}); }" )  > _ngc$$.c
+	echo "int main(void) { printf(\"${MACRO}=\\\"${__fmt}\\\"\\n\", ${MACRO}); }" )  > _ngc$$.c
 
     if $AC_CC $AC_CFLAGS -o _ngc$$ _ngc$$.c; then
 	./_ngc$$
@@ -1037,8 +1037,7 @@ say(char *w, char *v)
 }
 
 int
-main(argc, argv)
-char **argv;
+main(int argc, char **argv)
 {
     unsigned long v_long;
     unsigned int v_int;
@@ -1227,7 +1226,7 @@ AC_CHECK_FLOCK() {
 #include <sys/types.h>
 #include <fcntl.h>
 
-int main()
+int main(void)
 {
     int x = open("ngc$$.c", O_RDWR, 0666);
     int y = open("ngc$$.c", O_RDWR, 0666);
@@ -1281,7 +1280,7 @@ AC_CHECK_RESOLVER () {
 #include <arpa/nameser.h>
 #include <resolv.h>
 
-int main()
+int main(void)
 {
     char bfr[256];
 
@@ -1325,7 +1324,7 @@ AC_CHECK_ALLOCA () {
 #else
 # include <stdlib.h>
 #endif
-int main()
+int main(void)
 {
 	alloca(10);
 }
@@ -1361,7 +1360,7 @@ AC_CHECK_BASENAME() {
 
 extern char *basename(char*);
 
-int main()
+int main(void)
 {
     char *a = basename("/a/test");
     char *b = basename("/a/nother");
@@ -1592,7 +1591,11 @@ AC_PROG_INSTALL () {
     fi
 
     # see if we can strip binaries
-    echo 'main() { puts("hello, sailor!"); }' > ngc$$.c
+    cat > ngc$$.c << EOF
+#include <stdio.h>
+int main(void) { puts("hello, sailor!"); }
+EOF
+
     if $AC_CC -o ngc$$ ngc$$.c; then
 	if $PROG_INSTALL -s -m 444 ngc$$ inst$$; then
 	    _strip="-s"
@@ -1747,9 +1750,7 @@ cat > ngc$$.c << \EOF
 #include <stdio.h>
 
 int
-main(argc, argv)
-int argc;
-char **argv;
+main(int argc, char **argv)
 {
     char *p;
     

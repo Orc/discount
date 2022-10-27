@@ -4,8 +4,7 @@
 
 
 int
-main(argc, argv)
-char **argv;
+main(int argc, char **argv)
 {
     int nl = 1;
     int i;

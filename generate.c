@@ -638,8 +638,7 @@ printlinkyref(MMIOT *f, linkytype *tag, char *link, int size)
  * define a prefix tag instead of just `fn`
  */
 static char *
-p_or_nothing(p)
-MMIOT *p;
+p_or_nothing(MMIOT *p)
 {
     return p->ref_prefix ? p->ref_prefix : "fn";
 }

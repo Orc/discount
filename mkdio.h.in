@@ -47,7 +47,7 @@ typedef void mkd_flag_t;
 
 int mkd_flag_isset(mkd_flag_t*, int);		/* check a flag status */
 
-mkd_flag_t *mkd_flags();			/* create a flag blob */
+mkd_flag_t *mkd_flags(void);			/* create a flag blob */
 mkd_flag_t *mkd_copy_flags(mkd_flag_t*);	/* copy a flag blob */
 void mkd_free_flags(mkd_flag_t*);		/* delete a flag blob */
 char *mkd_set_flag_string(mkd_flag_t*, char*);	/* set named flags */
@@ -83,9 +83,9 @@ MMIOT *gfm_string(const char*,int,mkd_flag_t*);	/* assemble input from a buffer 
 
 void mkd_basename(MMIOT*,char*);
 
-void mkd_initialize();
-void mkd_with_html5_tags();
-void mkd_shlib_destructor();
+void mkd_initialize(void);
+void mkd_with_html5_tags(void);
+void mkd_shlib_destructor(void);
 
 /* compilation, debugging, cleanup
  */
