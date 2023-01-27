@@ -540,7 +540,7 @@ MF_PATH_INCLUDE () {
 # and fd 5 points to what used to be fd 1
 #
 AC_INIT () {
-    __config_files="config.cmd config.sub config.h config.mak"
+    __config_files="config.cmd config.sub config.h config.mak config.sed"
     rm -f $__config_files
     __cwd=`pwd`
     exec 5>&1 1>"$__cwd"/config.log 2>&1
