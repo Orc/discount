@@ -78,6 +78,7 @@ static struct _opt {
     { "regular-listitem","github-style check items", 0, 0, 1, 1, MKD_NORMAL_LISTITEM } ,
     { "definitionlist","both discount & markdown extra definition lists", 1 },
     { "dlist",         "both discount & markdown extra definition lists", 1, 0, 1 },
+    { "alt_as_title",  "use the alt text as a title if there isn't one (images)", 0, 0, 0, 1, MKD_ALT_AS_TITLE },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])

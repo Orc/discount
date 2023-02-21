@@ -43,6 +43,7 @@ enum {  MKD_NOLINKS=0,		/* don't do link processing, block <a> tags  */
 	MKD_GITHUBTAGS,		/* allow dash and underscore in element names */
 	MKD_URLENCODEDANCHOR,	/* urlencode non-identifier chars instead of replacing with dots */
 	MKD_LATEX,		/* handle embedded LaTeX escapes */
+	MKD_ALT_AS_TITLE,	/* use alt text as the title if no title is listed */
 			/* end of user flags */
 	IS_LABEL,
 	MKD_NR_FLAGS };

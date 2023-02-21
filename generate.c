@@ -559,7 +559,9 @@ typedef struct linkytype {
 } linkytype;
 
 static linkytype imaget = { 0, 0, "<img src=\"", "\"",
-			     1, " alt=\"", "\" />", { { [MKD_NOIMAGE] = 1, [MKD_TAGTEXT] = 1} }, IS_URL };
+			     1, " alt=\"", "\" />", { { [MKD_NOIMAGE] = 1,
+							[MKD_TAGTEXT] = 1,
+							[MKD_ALT_AS_TITLE] = 1 } }, IS_URL };
 static linkytype linkt  = { 0, 0, "<a href=\"", "\"",
 			     0, ">", "</a>", { {[MKD_NOLINKS] = 1} }, IS_URL };
 
@@ -652,7 +654,7 @@ extra_linky(MMIOT *f, Cstring text, Footnote *ref)
     if ( ref->fn_flags & REFERENCED )
 	return 0;
 
-    if ( is_flag_set(&f->flags,IS_LABEL) )
+    if ( is_flag_set(&f->flags, IS_LABEL) )
 	___mkd_reparse(T(text), S(text), &(linkt.flags), f, 0);
     else {
 	ref->fn_flags |= REFERENCED;
@@ -728,9 +730,12 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	    if ( ref->width ) Qprintf(f, " width=\"%d\"", ref->width);
 	}
 
-	if ( S(ref->title) ) {
+	if ( S(ref->title) || (is_flag_set(&f->flags, MKD_ALT_AS_TITLE) && is_flag_set(&tag->flags, MKD_ALT_AS_TITLE)) ) {
 	    Qstring(" title=\"", f);
-	    ___mkd_reparse(T(ref->title), S(ref->title), &tagtext, f, 0);
+	    if ( S(ref->title) )
+		___mkd_reparse(T(ref->title), S(ref->title), &tagtext, f, 0);
+	    else
+		___mkd_reparse(T(text), S(text), &tagtext, f, 0);
 	    Qchar('"', f);
 	}
 
