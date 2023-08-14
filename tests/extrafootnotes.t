@@ -28,6 +28,20 @@ yes?<a href="#footref:1" rev="footnote">&#8617;</a></li>
 </ol>
 </div>'
 
+try -ffootnote 'footnotes(two adjacent footnotes)' 'Hello[^1][^2]
+
+[^1]: world
+[^2]: from Hamburg' '<p>Hello<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup><sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup></p>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+world<a href="#fnref:1" rev="footnote">&#8617;</a></li>
+<li id="fn:2">
+from Hamburg<a href="#fnref:2" rev="footnote">&#8617;</a></li>
+</ol>
+</div>'
+
 try -fnofootnote 'footnotes (-fnofootnote)' "$FOOTIE" \
 '<p>I haz a footnote<a href="yes?">^1</a></p>'
 

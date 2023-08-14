@@ -775,26 +775,29 @@ linkylinky(int image, MMIOT *f)
 	else {
 	    int goodlink, implicit_mark = mmiottell(f);
 
-	    if ( isspace(peek(f,1)) )
-		pull(f);
-
-	    if ( peek(f,1) == '[' ) {
-		pull(f);	/* consume leading '[' */
-		goodlink = linkylabel(f, &key.tag);
+	    if ( is_flag_set(&f->flags, MKD_EXTRA_FOOTNOTE)
+		      && !is_flag_set(&f->flags, MKD_STRICT)
+		      && (!image)
+		      && S(name)
+		      && T(name)[0] == '^' ) {
+		extra_footnote = 1;
+		goodlink = 1;
 	    }
 	    else {
-		/* new markdown implicit name syntax doesn't
-		 * require a second []
-		 */
-		mmiotseek(f, implicit_mark);
-		goodlink = !is_flag_set(&f->flags, MKD_1_COMPAT);
+		if ( isspace(peek(f,1)) )
+		    pull(f);
 
-		if ( is_flag_set(&f->flags, MKD_EXTRA_FOOTNOTE)
-			  && !is_flag_set(&f->flags, MKD_STRICT)
-			  && (!image)
-			  && S(name)
-			  && T(name)[0] == '^' )
-		    extra_footnote = 1;
+		if ( peek(f,1) == '[' ) {
+		    pull(f);	/* consume leading '[' */
+		    goodlink = linkylabel(f, &key.tag);
+		}
+		else {
+		    /* new markdown implicit name syntax doesn't
+		     * require a second []
+		     */
+		    mmiotseek(f, implicit_mark);
+		    goodlink = !is_flag_set(&f->flags, MKD_1_COMPAT);
+		}
 	    }
 
 	    if ( goodlink ) {
