@@ -60,12 +60,12 @@ changepfx(Stack *sp, char c)
 {
     char ch;
 
-    if ( !S(*sp) ) return;
+    if ( S(*sp) > 0 ) {
+	ch = T(*sp)[S(*sp)-1].c;
 
-    ch = T(*sp)[S(*sp)-1].c;
-
-    if ( ch == '+' || ch == '|' )
-	T(*sp)[S(*sp)-1].c = c;
+	if ( ch == '+' || ch == '|' )
+	    T(*sp)[S(*sp)-1].c = c;
+    }
 }
 
 
@@ -75,23 +75,23 @@ printpfx(Stack *sp, FILE *f)
     int i;
     char c;
 
-    if ( !S(*sp) ) return;
+    if ( S(*sp) > 0 ) {
+	c = T(*sp)[S(*sp)-1].c;
 
-    c = T(*sp)[S(*sp)-1].c;
-
-    if ( c == '+' || c == '-' ) {
-	fprintf(f, "--%c", c);
-	T(*sp)[S(*sp)-1].c = (c == '-') ? ' ' : '|';
-    }
-    else
-	for ( i=0; i < S(*sp); i++ ) {
-	    if ( i )
-		fprintf(f, "  ");
-	    fprintf(f, "%*s%c", T(*sp)[i].indent + 2, " ", T(*sp)[i].c);
-	    if ( T(*sp)[i].c == '`' )
-		T(*sp)[i].c = ' ';
+	if ( c == '+' || c == '-' ) {
+	    fprintf(f, "--%c", c);
+	    T(*sp)[S(*sp)-1].c = (c == '-') ? ' ' : '|';
 	}
-    fprintf(f, "--");
+	else
+	    for ( i=0; i < S(*sp); i++ ) {
+		if ( i )
+		    fprintf(f, "  ");
+		fprintf(f, "%*s%c", T(*sp)[i].indent + 2, " ", T(*sp)[i].c);
+		if ( T(*sp)[i].c == '`' )
+		    T(*sp)[i].c = ' ';
+	    }
+	fprintf(f, "--");
+    }
 }
 
 
@@ -117,7 +117,7 @@ dumptree(Paragraph *pp, Stack *sp, FILE *f)
 
 	if ( pp->para_flags )
 	    d += fprintf(f, " %x", pp->para_flags);
-	    
+
 	if ( pp->align > 1 )
 	    d += fprintf(f, ", <%s>", Begin[pp->align]);
 
@@ -126,6 +126,11 @@ dumptree(Paragraph *pp, Stack *sp, FILE *f)
 
 	if ( count )
 	    d += fprintf(f, ", %d line%s", count, (count==1)?"":"s");
+
+#if EXTENDED_DEBUG
+	if ( pp->text && T(pp->text->text) )
+	    d += fprintf(f, " <%.*s>", S(pp->text->text), T(pp->text->text));
+#endif
 
 	d += fprintf(f, "]");
 
@@ -145,7 +150,7 @@ mkd_dump(Document *doc, FILE *out, mkd_flag_t *flags, char *title)
 {
     Stack stack;
 
-    if (mkd_compile(doc, flags) ) {
+    if ( mkd_compile(doc, flags) && doc->code ) {
 
 	CREATE(stack);
 	pushpfx(fprintf(out, "%s", title), doc->code->next ? '+' : '-', &stack);

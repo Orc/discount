@@ -30,5 +30,60 @@ try 'unclosed style block' '<style>' '<p><style></p>'
 try -ftoc 'empty header with toc' '##' '<a name="L-23-"></a>
 <h1>#</h1>'
 
+try '-x -E aloha' 'using -E to add attributes to links' '[]()' '<p><a href="" aloha></a></p>'
+try '-T' 'excessively long ETX header prefix' '#######################################################################################################################################################################################################################################################################################################################################################################################################' \
+'<ul>
+ <li>
+ <ul>
+  <li>
+  <ul>
+   <li>
+   <ul>
+    <li>
+    <ul>
+     <li>
+     <ul>
+      <li><a href="#L-23-">#</a></li>
+     </ul>
+     </li>
+    </ul>
+    </li>
+   </ul>
+   </li>
+  </ul>
+  </li>
+ </ul>
+ </li>
+</ul>
+<a name="L-23-"></a>
+<h6>#</h6>'
+
+try '-d' 'dump an empty document' '%
+%
+%' ''
+
+RESULT='<table>
+<thead>
+<tr>
+<th>: Y:</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+</tr>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>'
+
+cat << \EOF | try '-F 0x03000000' 'random input that looks like a table' -heredoc "$RESULT"
+: Y:|
+```|
+|
+```|
+EOF
+
 summary $0
 exit $rc

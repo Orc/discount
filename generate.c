@@ -132,13 +132,13 @@ Qchar(int c, MMIOT *f)
 {
     block *cur;
 
-    if ( S(f->Q) == 0 ) {
+    if ( S(f->Q) > 0 )
+	cur = &T(f->Q)[S(f->Q)-1];
+    else {
 	cur = &EXPAND(f->Q);
 	memset(cur, 0, sizeof *cur);
 	cur->b_type = bTEXT;
     }
-    else
-	cur = &T(f->Q)[S(f->Q)-1];
 
     EXPAND(cur->b_text) = c;
 
@@ -504,7 +504,7 @@ linkyurl(MMIOT *f, int image, Footnote *p)
 
     ___mkd_tidy(&p->link);
 
-    if ( mayneedtotrim && (T(p->link)[S(p->link)-1] == '>') )
+    if ( mayneedtotrim && (S(p->link) > 0) && (T(p->link)[S(p->link)-1] == '>') )
 	--S(p->link);
 
     return 1;
@@ -1604,7 +1604,7 @@ splat(Line *p, char *block, Istring align, int force, MMIOT *f)
 
 
     ___mkd_tidy(&p->text);
-    if ( T(p->text)[S(p->text)-1] == '|' )
+    if ( S(p->text) > 0 && (T(p->text)[S(p->text)-1] == '|') )
 	--S(p->text);
 
     Qstring("<tr>\n", f);

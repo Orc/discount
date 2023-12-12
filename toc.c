@@ -160,7 +160,9 @@ uniquename(ParagraphRoot *pr, Cstring *name)
 
     CREATE(label);
     RESERVE(label, suffix + 200);
+
     strcpy(T(label), T(*name));
+    S(label) = S(*name);
 
     decollide(T(*pr), &label, suffix);
 

@@ -51,6 +51,7 @@ try() {
     try_header "$1"
 
     case "$2" in
+    -h*) Q=`./markdown $FLAGS` ;;
     -t*) Q=`./markdown $FLAGS "$2"` ;;
     *)   Q=`./echo "$2" | ./markdown $FLAGS` ;;
     esac

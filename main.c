@@ -236,7 +236,7 @@ main(int argc, char **argv)
 		    break;
 	case 'b':   urlbase = hoptarg(&blob);
 		    break;
-	case 'd':   debug = 1;
+	case 'd':   debug++;
 		    break;
 	case 'V':   version++;
 		    break;
@@ -347,8 +347,12 @@ main(int argc, char **argv)
 	if ( urlbase )
 	    mkd_basename(doc, urlbase);
 	if ( urlflags ) {
-	    mkd_e_data(doc, urlflags);
-	    mkd_e_flags(doc, e_flags);
+	    char *uflagstring = strdup(urlflags);
+
+	    if ( uflagstring ) {
+		mkd_e_data(doc, uflagstring);
+		mkd_e_flags(doc, e_flags);
+	    }
 	}
 	if ( squash )
 	    mkd_e_anchor(doc, (mkd_callback_t) anchor_format);
@@ -362,8 +366,9 @@ main(int argc, char **argv)
 	if ( extra_footnote_prefix )
 	    mkd_ref_prefix(doc, extra_footnote_prefix);
 
-	if ( debug )
+	if ( debug ) {
 	    rc = mkd_dump(doc, stdout, flags, argc ? basename(argv[0]) : "stdin");
+	}
 	else {
 	    rc = 1;
 	    if ( mkd_compile(doc, flags) ) {

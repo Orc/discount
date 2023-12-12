@@ -578,11 +578,10 @@ headerblock(Paragraph *pp, int htyp)
 	     * the leading and trailing `#`'s
 	     */
 
-	    for (i=0; (T(p->text)[i] == T(p->text)[0]) && (i < S(p->text)-1)
-						       && (i < 6); i++)
+	    for (i=0; (T(p->text)[i] == T(p->text)[0]) && (i < S(p->text)-1); i++)
 		;
 
-	    pp->hnumber = i;
+	    pp->hnumber = (i > 6) ? 6 : i;;
 
 	    while ( (i < S(p->text)) && isspace(T(p->text)[i]) )
 		++i;

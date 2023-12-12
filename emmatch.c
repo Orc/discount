@@ -172,17 +172,18 @@ ___mkd_emblock(MMIOT *f)
     int i;
     block *p;
 
-    emblock(f, 0, S(f->Q)-1);
+    if ( S(f->Q) > 0 ) {
+	emblock(f, 0, S(f->Q)-1);
     
-    for (i=0; i < S(f->Q); i++) {
-	p = &T(f->Q)[i];
-	emfill(p);
-	
-	if ( S(p->b_post) ) { SUFFIX(f->out, T(p->b_post), S(p->b_post));
-			      DELETE(p->b_post); }
-	if ( S(p->b_text) ) { SUFFIX(f->out, T(p->b_text), S(p->b_text));
-			      DELETE(p->b_text); }
+	for (i=0; i < S(f->Q); i++) {
+	    p = &T(f->Q)[i];
+	    emfill(p);
+
+	    if ( S(p->b_post) ) { SUFFIX(f->out, T(p->b_post), S(p->b_post));
+				  DELETE(p->b_post); }
+	    if ( S(p->b_text) ) { SUFFIX(f->out, T(p->b_text), S(p->b_text));
+				  DELETE(p->b_text); }
+	}
+	S(f->Q) = 0;
     }
-    
-    S(f->Q) = 0;
 } /* ___mkd_emblock */
