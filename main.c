@@ -62,7 +62,7 @@ complain(char *fmt, ...)
 
 
 void
-callback_free(char *input, void *ctx)
+callback_free(char *input, int size, void *ctx)
 {
     if (input)
 	free(input);
