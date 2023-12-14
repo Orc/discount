@@ -295,25 +295,22 @@ mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
     if ( !line )
 	return;
 
-    if ( f->cb->e_anchor )
-	res = (*(f->cb->e_anchor))(line, size, f->cb->e_data);
+    if ( f->cb->e_anchor.func )
+	res = (*(f->cb->e_anchor.func))(line, size, f->cb->e_anchor.data);
     else
 	res = mkd_anchor_format(line, size, labelformat, &(f->flags));
 
     free(line);
 
-    if ( !res )
-	return;
+    if ( res ) {
+	for ( i=0; res[i]; i++ )
+	    (*outchar)(res[i], out);
 
-    for ( i=0; res[i]; i++ )
-	(*outchar)(res[i], out);
-
-    if ( f->cb->e_anchor ) {
-	if ( f->cb->e_free )
-	    (*(f->cb->e_free))(res, f->cb->e_data);
+	if ( f->cb->e_anchor.free )
+	    (*f->cb->e_anchor.free)(res, i, f);
+	else
+	    free(res);
     }
-    else 
-	free(res);
 }
 
 
@@ -383,12 +380,14 @@ mkd_generateline(char *bfr, int size, FILE *output, mkd_flag_t* flags)
 /* set the url display callback
  */
 void
-mkd_e_url(Document *f, mkd_callback_t edit)
+mkd_e_url(Document *f, mkd_callback_t edit, mkd_callback_t free, void *data)
 {
     if ( f ) {
-	if ( f->cb.e_url != edit )
+	if ( f->cb.e_url.func != edit )
 	    f->dirty = 1;
-	f->cb.e_url = edit;
+	f->cb.e_url.func = edit;
+	f->cb.e_url.data = data;
+	f->cb.e_url.free = free;
     }
 }
 
@@ -396,12 +395,14 @@ mkd_e_url(Document *f, mkd_callback_t edit)
 /* set the url options callback
  */
 void
-mkd_e_flags(Document *f, mkd_callback_t edit)
+mkd_e_flags(Document *f, mkd_callback_t edit, mkd_callback_t free, void *data)
 {
     if ( f ) {
-	if ( f->cb.e_flags != edit )
+	if ( f->cb.e_flags.func != edit )
 	    f->dirty = 1;
-	f->cb.e_flags = edit;
+	f->cb.e_flags.func = edit;
+	f->cb.e_flags.free = free;
+	f->cb.e_flags.data = data;
     }
 }
 
@@ -409,38 +410,14 @@ mkd_e_flags(Document *f, mkd_callback_t edit)
 /* set the anchor formatter
  */
 void
-mkd_e_anchor(Document *f, mkd_callback_t format)
+mkd_e_anchor(Document *f, mkd_callback_t format, mkd_callback_t free, void *data)
 {
     if ( f ) {
-	if ( f->cb.e_anchor != format )
+	if ( f->cb.e_anchor.func != format )
 	    f->dirty = 1;
-	f->cb.e_anchor = format;
-    }
-}
-
-
-/* set the url display/options deallocator
- */
-void
-mkd_e_free(Document *f, mkd_free_t dealloc)
-{
-    if ( f ) {
-	if ( f->cb.e_free != dealloc )
-	    f->dirty = 1;
-	f->cb.e_free = dealloc;
-    }
-}
-
-
-/* set the url display/options context data field
- */
-void
-mkd_e_data(Document *f, void *data)
-{
-    if ( f ) {
-	if ( f->cb.e_data != data )
-	    f->dirty = 1;
-	f->cb.e_data = data;
+	f->cb.e_anchor.func = format;
+	f->cb.e_anchor.free = free;
+	f->cb.e_anchor.data = data;
     }
 }
 
@@ -448,11 +425,13 @@ mkd_e_data(Document *f, void *data)
 /* set the code block display callback
  */
 void
-mkd_e_code_format(Document *f, mkd_callback_t codefmt)
+mkd_e_code_format(Document *f, mkd_callback_t codefmt, mkd_callback_t free, void *data)
 {
-    if ( f && (f->cb.e_codefmt != codefmt) ) {
+    if ( f && (f->cb.e_codefmt.func != codefmt) ) {
 	f->dirty = 1;
-	f->cb.e_codefmt = codefmt;
+	f->cb.e_codefmt.func = codefmt;
+	f->cb.e_codefmt.free = free;
+	f->cb.e_codefmt.data = data;
     }
 }
 

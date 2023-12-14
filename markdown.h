@@ -146,13 +146,17 @@ typedef STRING(block) Qblock;
 typedef char* (*mkd_callback_t)(const char*, const int, void*);
 typedef void  (*mkd_free_t)(char*, void*);
 
-typedef struct callback_data {
-    void *e_data;		/* private data for callbacks */
-    mkd_callback_t e_url;	/* url edit callback */
-    mkd_callback_t e_flags;	/* extra href flags callback */
-    mkd_callback_t e_anchor;	/* callback for anchor types */
-    mkd_free_t e_free;		/* edit/flags callback memory deallocator */
-    mkd_callback_t e_codefmt;	/* codeblock formatter (for highlighting) */
+typedef struct {
+    mkd_callback_t func, free;
+    void *data;
+} One_callback;
+
+
+typedef struct {
+    One_callback e_url;		/* url edit callback */
+    One_callback e_flags;	/* extra href flags callback */
+    One_callback e_anchor;	/* callback for anchor types */
+    One_callback e_codefmt;	/* codeblock formatter (for highlighting) */
 } Callback_data;
 
 

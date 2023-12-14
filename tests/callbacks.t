@@ -9,9 +9,9 @@ try -bZZZ 'url modification' \
 '[a](/b)' \
 '<p><a href="ZZZ/b">a</a></p>'
 
-try -EZZZ 'additional flags' \
+try -EYYY 'additional flags' \
 '[a](/b)' \
-'<p><a href="/b" ZZZ>a</a></p>'
+'<p><a href="/b" YYY>a</a></p>'
 
 summary $0
 exit $rc

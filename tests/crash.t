@@ -23,7 +23,7 @@ try 'dangling list item' ' - ' \
 <li></li>
 </ul>'
 
-try -bHOHO 'empty []() with baseurl' '[]()' '<p><a href=""></a></p>'
+try -bHOHO 'empty []() with baseurl' '[]()' '<p><a href="HOHO"></a></p>'
 try 'unclosed html block' '<table></table' '<p><table>&lt;/table</p>'
 try 'unclosed style block' '<style>' '<p><style></p>'
 
@@ -31,6 +31,9 @@ try -ftoc 'empty header with toc' '##' '<a name="L-23-"></a>
 <h1>#</h1>'
 
 try '-x -E aloha' 'using -E to add attributes to links' '[]()' '<p><a href="" aloha></a></p>'
+try '-b hello -E world' 'using both -E & -b' '[a](/b) [a](/b)' '<p><a href="hello/b" world>a</a> <a href="hello/b" world>a</a></p>'
+try '-x -E aloha' 'using -E to add attributes, but with two links' '[](1.png) [](2.png)' '<p><a href="1.png" aloha></a> <a href="2.png" aloha></a></p>'
+
 try '-T' 'excessively long ETX header prefix' '#######################################################################################################################################################################################################################################################################################################################################################################################################' \
 '<ul>
  <li>

@@ -611,10 +611,10 @@ printlinkyref(MMIOT *f, linkytype *tag, char *link, int size)
     Qstring(tag->link_pfx, f);
 
     if ( tag->kind & IS_URL ) {
-	if ( f->cb && f->cb->e_url && (edit = (*f->cb->e_url)(link, size, f->cb->e_data)) ) {
-
+	if ( f->cb && f->cb->e_url.func && (edit = (*f->cb->e_url.func)(link, size, f->cb->e_url.data)) ) {
 	    puturl(edit, strlen(edit), f, 0);
-	    if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
+	    if ( f->cb->e_url.free )
+		(*f->cb->e_url.free)(edit, strlen(edit), f);
 	}
 	else
 	    puturl(link + tag->szpat, size - tag->szpat, f, 0);
@@ -628,10 +628,11 @@ printlinkyref(MMIOT *f, linkytype *tag, char *link, int size)
 
     Qstring(tag->link_sfx, f);
 
-    if ( f->cb && f->cb->e_flags && (edit = (*f->cb->e_flags)(link, size, f->cb->e_data)) ) {
+    if ( f->cb && f->cb->e_flags.func && (edit = (*f->cb->e_flags.func)(link, size, f->cb->e_flags.data)) ) {
 	Qchar(' ', f);
 	Qstring(edit, f);
-	if ( f->cb->e_free ) (*f->cb->e_free)(edit, f->cb->e_data);
+	if ( f->cb->e_flags.free )
+	    (*f->cb->e_flags.free) (edit, strlen(edit), f);
     }
 } /* printlinkyref */
 
@@ -1710,7 +1711,7 @@ printtable(Paragraph *pp, MMIOT *f)
 static int
 code_callback(Line *t, char *lang, int fenced, Line **ret, MMIOT *f)
 {
-    if ( f->cb->e_codefmt ) {
+    if ( f && f->cb->e_codefmt.func ) {
 	/* external code block formatter;  copy the text into a buffer,
 	 * call the formatter to style it, then dump that styled text
 	 * directly to the queue
@@ -1733,14 +1734,13 @@ code_callback(Line *t, char *lang, int fenced, Line **ret, MMIOT *f)
 	text[copy_p] = 0;
 
 
-	fmt = (*(f->cb->e_codefmt))(text, copy_p, (lang && lang[0]) ? lang : 0);
+	fmt = (*(f->cb->e_codefmt.func))(text, copy_p, (lang && lang[0]) ? lang : 0);
 	free(text);
 
 	if ( fmt ) {
 	    Qwrite(fmt, strlen(fmt), f);
-	    if ( f->cb->e_free )
-		(*(f->cb->e_free))(fmt, f->cb->e_data);
 	    *ret = t;
+	    if ( f->cb->e_codefmt.free ) (*f->cb->e_codefmt.free)(fmt, strlen(fmt), f);
 	    return 1;
 	}
     }

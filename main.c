@@ -61,6 +61,14 @@ complain(char *fmt, ...)
 }
 
 
+void
+callback_free(char *input, void *ctx)
+{
+    if (input)
+	free(input);
+}
+
+
 char *
 anchor_format(char *input, void *ctx)
 {
@@ -91,14 +99,6 @@ anchor_format(char *input, void *ctx)
 
     return ret;
 }
-
-void
-free_it(char *object, void *ctx)
-{
-    if ( object )
-	free(object);
-}
-
 
 char *external_formatter = 0;
 
@@ -346,22 +346,16 @@ main(int argc, char **argv)
 	}
 	if ( urlbase )
 	    mkd_basename(doc, urlbase);
-	if ( urlflags ) {
-	    char *uflagstring = strdup(urlflags);
 
-	    if ( uflagstring ) {
-		mkd_e_data(doc, uflagstring);
-		mkd_e_flags(doc, e_flags);
-	    }
-	}
+	if ( urlflags )
+	    mkd_e_flags(doc, e_flags, NULL, urlflags);
+
 	if ( squash )
-	    mkd_e_anchor(doc, (mkd_callback_t) anchor_format);
+	    mkd_e_anchor(doc, (mkd_callback_t) anchor_format, callback_free, 0);
 
 	if ( use_e_codefmt )
-	    mkd_e_code_format(doc, (mkd_callback_t)external_codefmt);
+	    mkd_e_code_format(doc, (mkd_callback_t)external_codefmt, callback_free, 0);
 
-	if ( use_e_codefmt || squash )
-	    mkd_e_free(doc, free_it);
 
 	if ( extra_footnote_prefix )
 	    mkd_ref_prefix(doc, extra_footnote_prefix);
