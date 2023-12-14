@@ -587,6 +587,12 @@ headerblock(Paragraph *pp, int htyp)
 		++i;
 
 	    CLIP(p->text, 0, i);
+
+	    for (i=S(p->text); (i > 0) && isspace(T(p->text)[i-1]); --i)
+		;
+	    S(p->text) = i;
+	    T(p->text)[i] = 0;
+
 	    UNCHECK(p);
 
 	    for (j=S(p->text); (j > 1) && (T(p->text)[j-1] == '#'); --j)
@@ -595,7 +601,10 @@ headerblock(Paragraph *pp, int htyp)
 	    while ( j && isspace(T(p->text)[j-1]) )
 		--j;
 
-	    S(p->text) = j;
+	    if ( j < S(p->text) ) {
+		T(p->text)[j] = 0;
+		S(p->text) = j;
+	    }
 
 	    ret = p->next;
 	    p->next = 0;

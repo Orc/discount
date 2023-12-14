@@ -65,6 +65,15 @@ try '-d' 'dump an empty document' '%
 %
 %' ''
 
+
+RESULT='<ul>
+ <li><a href="#header">header</a></li>
+</ul>
+<a name="header"></a>
+<h1>header</h1>'
+
+(./echo -n '#header';./rep '	' 400) | try -T 'a header with a bunch of trailing tabs' -heredoc "$RESULT"
+
 RESULT='<table>
 <thead>
 <tr>
