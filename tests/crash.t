@@ -72,7 +72,9 @@ RESULT='<ul>
 <a name="header"></a>
 <h1>header</h1>'
 
-(./echo -n '#header';./rep '	' 400) | try -T 'a header with a bunch of trailing tabs' -heredoc "$RESULT"
+./rep '#header' '\t' 400 | try -T 'a header with a bunch of trailing tabs' -heredoc "$RESULT"
+
+./rep '#header' ' ' 400 |  try -T 'a header with a bunch of trailing spaces' -heredoc "$RESULT"
 
 RESULT='<table>
 <thead>
