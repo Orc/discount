@@ -772,7 +772,8 @@ szmarkerclass(char *p)
  * check if the first line of a quoted block is the special div-not-quote
  * marker %[kind:]name%
  */
-#define iscsschar(c) (isalpha(c) || (c == '-') || (c == '_') )
+
+#define iscsschar(c) (isalpha(c) || (c == '-') || (c == '_') || (c == ' ') )
 
 static int
 isdivmarker(Line *p, int start, mkd_flag_t *flags)
