@@ -20,6 +20,11 @@ that that' \
 
 <div class="that"><p>that that</p></div>'
 
+try 'a >%div% block with two classes' \
+'>%this that%
+this that' \
+'<div class="this that"><p>this that</p></div>'
+
 try '>%class:div%' \
 '>%class:this%
 this this' \
