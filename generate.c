@@ -986,19 +986,20 @@ static int
 maybe_address(char *p, int size)
 {
     int ok = 0;
+    char *q = p;
 
-    for ( ;size && (isalnum(*p) || strchr("._-+*", *p)); ++p, --size)
+    for ( ;size && (isalnum(*q) || strchr("._-+*", *q)); ++q, --size)
 	;
 
-    if ( ! (size && *p == '@') )
+    if ( ! (size && q > p && *q == '@') )
 	return 0;
 
-    --size, ++p;
+    --size, ++q;
 
-    if ( size && *p == '.' ) return 0;
+    if ( size && *q == '.' ) return 0;
 
-    for ( ;size && (isalnum(*p) || strchr("._-+", *p)); ++p, --size )
-	if ( *p == '.' && size > 1 ) ok = 1;
+    for ( ;size && (isalnum(*q) || strchr("._-+", *q)); ++q, --size )
+	if ( *q == '.' && size > 1 ) ok = 1;
 
     return size ? 0 : ok;
 }
