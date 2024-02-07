@@ -1458,7 +1458,7 @@ __AC_ELF_LIBRARIAN() {
     fi
     LDCONFIG=`AC_PATH=/sbin:/usr/sbin:/usr/local/sbin acLookFor ldconfig`
 
-    if [ "$LDCONFIG" ]; then
+    if [ "$LDCONFIG" -a -z "$CONTAINER" ]; then
 	case `uname -s 2>/dev/null | $AC_UPPERCASE` in
 	*BSD)	# *BSD ldconfig, when passed a directory, blows away the
 		# ld.so hints file and replaces it with one that's just

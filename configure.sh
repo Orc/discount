@@ -10,6 +10,7 @@
 ac_help='--enable-amalloc	Enable memory allocation debugging
 --with-tabstops=N	Set tabstops to N characters (default is 4)
 --shared		Build shared libraries (default is static)
+--container		Build inside a container
 --pkg-config		Install pkg-config(1) glue files
 --cxx-binding		Install header files with c++ wrappers
 --github-checkbox[=input] Enable github-style checkboxes in lists
@@ -35,6 +36,9 @@ locals() {
 		echo WITH_${enable}=T ;;
     --DEBIAN-GLITCH)
 		echo DEBIAN_GLITCH=T
+		;;
+    --CONTAINER)
+		echo CONTAINER=T
 		;;
     --H1-TITLE)
 		echo H1TITLE=T
