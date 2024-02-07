@@ -1458,7 +1458,7 @@ __AC_ELF_LIBRARIAN() {
     fi
     LDCONFIG=`AC_PATH=/sbin:/usr/sbin:/usr/local/sbin acLookFor ldconfig`
 
-    if [ "$LDCONFIG" -a -z "$CONTAINER" ]; then
+    if [ "$LDCONFIG" ]; then
 	case `uname -s 2>/dev/null | $AC_UPPERCASE` in
 	*BSD)	# *BSD ldconfig, when passed a directory, blows away the
 		# ld.so hints file and replaces it with one that's just
@@ -1501,7 +1501,10 @@ install)$PROG_INSTALL -c \$FULLNAME "\$1"
 	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME.\$MAJOR
 	$PROG_LN_S -f \$FULLNAME \$1/\$LIBNAME
 EOF
-    test "$LDCONFIG" && echo '	'$LDCONFIG '"$1"' >> librarian.sh
+    if [ "$LDCONFIG" -a -z "$CONTAINER" ]; then
+	echo '	'$LDCONFIG '"$1"' >> librarian.sh
+    fi
+    
     cat >> librarian.sh << EOF
 	;;
 esac
