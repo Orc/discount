@@ -79,5 +79,7 @@ mkd_xml(char *p, int size, char **res)
      */
     EXPAND(f) = 0;
     *res = strdup(T(f));
-    return S(f)-1;
+    size = S(f)-1;
+    DELETE(f);
+    return size;
 }
