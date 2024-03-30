@@ -5,7 +5,7 @@
  *
  */
 /*
- * Copyright (C) 2007 David L Parsons.
+ * Copyright (C) 2007 Jessica L Parsons.
  * The redistribution terms are provided in the COPYRIGHT file that must
  * be distributed with this source code.
  */

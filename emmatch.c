@@ -1,6 +1,6 @@
 /* markdown: a C implementation of John Gruber's Markdown markup language.
  *
- * Copyright (C) 2010 David L Parsons.
+ * Copyright (C) 2010 Jessica L Parsons.
  * The redistribution terms are provided in the COPYRIGHT file that must
  * be distributed with this source code.
  */

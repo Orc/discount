@@ -1,9 +1,9 @@
 /*
  * toc -- spit out a table of contents based on header blocks
  *
- * Copyright (C) 2022 David L Parsons
+ * Copyright (C) 2022 Jessica L Parsons
  * portions Copyright (C) 2011 Stefano D'Angelo
- * Copyright (C) 2008 Jjgod Jiang, David L Parsons
+ * Copyright (C) 2008 Jjgod Jiang, Jessica L Parsons
  *
  * The redistribution terms are provided in the COPYRIGHT file that must
  * be distributed with this source code.

@@ -3,7 +3,7 @@
  * github_flavoured -- implement the obnoxious "returns are hard newlines"
  *                     feature in github flavoured markdown.
  *
- * Copyright (C) 2012 David L Parsons.
+ * Copyright (C) 2012 Jessica L Parsons.
  * The redistribution terms are provided in the COPYRIGHT file that must
  * be distributed with this source code.
  */
