@@ -110,8 +110,10 @@ emmatch(MMIOT *f, int first, int last)
     int e, e2, match;
 
     switch (start->b_count) {
-    case 2: if ( e = empair(f,first,last,match=2) )
-		break;
+    case 2: 
+	    if ( e = empair(f,first,last,match=2) ) { break; }
+	    // If 2 char match doesn't work, try a 1 char match
+	    __attribute__((fallthrough)); 
     case 1: e = empair(f,first,last,match=1);
 	    break;
     case 0: return;
