@@ -939,6 +939,20 @@ delspan(MMIOT *f, int size)
 }
 
 
+/*
+ *  LaTeXspan() -- write out a chunk of text as a section of (unmangled)
+ *                 input for a LaTeX preprocessor
+ */
+static void
+LaTeXspan(MMIOT *f, int size)
+{
+    Qchar('$', f);
+    if ( size > 1 )
+	code(f, cursor(f), size-1);
+    Qchar('$', f);
+}
+
+
 /*  codespan() -- write out a chunk of text as code, trimming one
  *                space off the front and/or back as appropriate.
  */
@@ -1542,15 +1556,17 @@ text(MMIOT *f)
 			Qchar(c, f);
 		    break;
 
-	case '$':   if ( is_flag_set(&f->flags, MKD_LATEX)
-				    && !is_flag_set(&f->flags, MKD_STRICT)
-				    && (peek(f, 1) == '$') ) {
-			pull(f);
-			if ( mathhandler(f, '$', '$') )
+	case '$':   if ( is_flag_set(&f->flags, MKD_LATEX) && !is_flag_set(&f->flags, MKD_STRICT) ) {
+			if ( peek(f,1) == '$' ) {
+			    pull(f);
+			    if ( mathhandler(f, '$', '$') )
+				break;
+			    pull(f);
+			    Qchar('$', f);
+			}
+			else if ( tickhandler(f,c,1,1,LaTeXspan) )
 			    break;
-			Qchar('$', f);
 		    }
-		    /* fall through to default */
 
 	default:    f->last = c;
 		    Qchar(c, f);
