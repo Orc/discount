@@ -947,8 +947,8 @@ static void
 LaTeXspan(MMIOT *f, int size)
 {
     Qchar('$', f);
-    if ( size > 1 )
-	code(f, cursor(f), size-1);
+    if ( size > 0 )
+	code(f, cursor(f)-1, size);
     Qchar('$', f);
 }
 
