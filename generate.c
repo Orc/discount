@@ -1344,10 +1344,12 @@ tickhandler(MMIOT *f, int tickchar, int minticks, int allow_space, spanhandler s
 	    tick = endticks;
 	}
 
-	shift(f, tick);
-	(*spanner)(f,size);
-	shift(f, size+tick-1);
-	return 1;
+	if ( size > 0 ) {
+	    shift(f, tick);
+	    (*spanner)(f,size);
+	    shift(f, size+tick-1);
+	    return 1;
+	}
     }
     return 0;
 }
@@ -1559,9 +1561,9 @@ text(MMIOT *f)
 	case '$':   if ( is_flag_set(&f->flags, MKD_LATEX) && !is_flag_set(&f->flags, MKD_STRICT) ) {
 			if ( peek(f,1) == '$' ) {
 			    pull(f);
-			    if ( mathhandler(f, '$', '$') )
+			    if ( mathhandler(f, '$', '$') ) {
 				break;
-			    pull(f);
+			    }
 			    Qchar('$', f);
 			}
 			else if ( tickhandler(f,c,1,1,LaTeXspan) )
