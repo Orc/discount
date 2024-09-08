@@ -626,8 +626,10 @@ main(int argc, char **argv)
 
     if ( show_version ) {
 	fprintf(stderr, "theme+discount %s\n", markdown_version);
-	if ( show_version > 1 )
-	    show_flags(1, 0, flags);
+	if ( show_version > 1 ) {
+	    mkd_flags_are(stderr, flags, 0);
+	    putc('\n', stderr);
+	}
 	exit(0);
     }
 
