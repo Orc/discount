@@ -1564,11 +1564,12 @@ text(MMIOT *f)
 			    if ( mathhandler(f, '$', '$') ) {
 				break;
 			    }
-			    Qchar('$', f);
+			    shift(f,-1); /* push back the second '$' */ 
 			}
 			else if ( tickhandler(f,c,1,1,LaTeXspan) )
 			    break;
 		    }
+		    /* fall through to default: */
 
 	default:    f->last = c;
 		    Qchar(c, f);

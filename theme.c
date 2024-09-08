@@ -559,6 +559,7 @@ main(int argc, char **argv)
     MMIOT *doc;
     struct stat sourceinfo;
     char *q;
+    char *env;
     int show_version = 0; /* 0: run the program, 1: show version #, 2: show version# and initial flags */
 
     struct h_opt *opt;
@@ -630,6 +631,9 @@ main(int argc, char **argv)
 	exit(0);
     }
 
+
+    if ( env = getenv("THEME_OPTIONS") )
+	mkd_set_flag_string(flags, env);
 
     tmplfile = open_template(template);
 
