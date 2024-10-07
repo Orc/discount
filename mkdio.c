@@ -167,11 +167,11 @@ mkd_in(FILE *f, mkd_flag_t *flags)
 int
 __mkd_io_strget(struct string_stream *in)
 {
-    if ( !in->size ) return EOF;
-
-    --(in->size);
-
-    return *(in->data)++;
+    if ( in->size > 0 ) {
+	--(in->size);
+	return *(in->data)++;
+    }
+    return EOF;
 }
 
 
