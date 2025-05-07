@@ -38,7 +38,7 @@ __mkd_footsort(Footnote *a, Footnote *b)
 	ac = tolower(T(a->tag)[i]);
 	bc = tolower(T(b->tag)[i]);
 
-	if ( isspace(ac) && isspace(bc) )
+	if ( isspace((unsigned char)ac) && isspace((unsigned char)bc) )
 	    continue;
 	if ( ac != bc )
 	    return ac - bc;
@@ -52,7 +52,7 @@ __mkd_footsort(Footnote *a, Footnote *b)
 static int
 nextblank(Line *t, int i)
 {
-    while ( (i < S(t->text)) && !isspace(T(t->text)[i]) )
+    while ( (i < S(t->text)) && !isspace((unsigned char)T(t->text)[i]) )
 	++i;
     return i;
 }
@@ -63,7 +63,7 @@ nextblank(Line *t, int i)
 static int
 nextnonblank(Line *t, int i)
 {
-    while ( (i < S(t->text)) && isspace(T(t->text)[i]) )
+    while ( (i < S(t->text)) && isspace((unsigned char)T(t->text)[i]) )
 	++i;
     return i;
 }
@@ -97,7 +97,7 @@ skipempty(Line *p)
 void
 ___mkd_tidy(Cstring *t)
 {
-    while ( S(*t) && isspace(T(*t)[S(*t)-1]) )
+    while ( S(*t) && isspace((unsigned char)T(*t)[S(*t)-1]) )
 	--S(*t);
 }
 
@@ -129,7 +129,7 @@ isopentag(Line *p)
      */
     for ( i=1; i < len && T(p->text)[i] != '>' 
 		       && T(p->text)[i] != '/'
-		       && !isspace(T(p->text)[i]); ++i )
+		       && !isspace((unsigned char)T(p->text)[i]); ++i )
 	;
 
 
@@ -199,7 +199,7 @@ checkline(Line *l, mkd_flag_t *flags)
 
     if (l->dle >= 4) { l->kind=chk_code; return; }
 
-    for ( eol = S(l->text); eol > l->dle && isspace(T(l->text)[eol-1]); --eol )
+    for ( eol = S(l->text); eol > l->dle && isspace((unsigned char)T(l->text)[eol-1]); --eol )
 	;
 
     if ( is_flag_set(flags, MKD_FENCEDCODE) && !is_flag_set(flags, MKD_STRICT) ) {
@@ -467,7 +467,7 @@ static int
 is_extra_dd(Line *t)
 {
     return (t->dle < 4) && (T(t->text)[t->dle] == ':')
-			&& isspace(T(t->text)[t->dle+1]);
+			&& isspace((unsigned char)T(t->text)[t->dle+1]);
 }
 
 
@@ -523,7 +523,7 @@ islist(Line *t, int *clip, mkd_flag_t *flags, int *list_type)
     if ( isdefinition(t,clip,list_type,flags) )
 	return DL;
 	
-    if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
+    if ( strchr("*-+", T(t->text)[t->dle]) && isspace((unsigned char)T(t->text)[t->dle+1]) ) {
 	i = nextnonblank(t, t->dle+1);
 	*clip = (i > 4) ? 4 : i;
 	*list_type = UL;
@@ -583,12 +583,12 @@ headerblock(Paragraph *pp, int htyp)
 
 	    pp->hnumber = (i > 6) ? 6 : i;;
 
-	    while ( (i < S(p->text)) && isspace(T(p->text)[i]) )
+	    while ( (i < S(p->text)) && isspace((unsigned char)T(p->text)[i]) )
 		++i;
 
 	    CLIP(p->text, 0, i);
 
-	    for (i=S(p->text); (i > 0) && isspace(T(p->text)[i-1]); --i)
+	    for (i=S(p->text); (i > 0) && isspace((unsigned char)T(p->text)[i-1]); --i)
 		;
 	    S(p->text) = i;
 	    T(p->text)[i] = 0;
@@ -598,7 +598,7 @@ headerblock(Paragraph *pp, int htyp)
 	    for (j=S(p->text); (j > 1) && (T(p->text)[j-1] == '#'); --j)
 		;
 
-	    while ( j && isspace(T(p->text)[j-1]) )
+	    while ( j && isspace((unsigned char)T(p->text)[j-1]) )
 		--j;
 
 	    if ( j < S(p->text) ) {
@@ -1120,7 +1120,7 @@ addfootnote(Line *p, MMIOT* f)
 	return np;
     }
 
-    while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
+    while ( (j < S(p->text)) && !isspace((unsigned char)T(p->text)[j]) )
 	EXPAND(foot->link) = T(p->text)[j++];
     EXPAND(foot->link) = 0;
     S(foot->link)--;
@@ -1342,7 +1342,7 @@ actually_a_table(MMIOT *f, Line *pp)
     for ( j=r->dle; j < S(r->text); ++j ) {
 	c = T(r->text)[j];
 
-	if ( !(isspace(c)||(c=='-')||(c==':')||(c=='|')) ) {
+	if ( !(isspace((unsigned char)c)||(c=='-')||(c==':')||(c=='|')) ) {
 	    return 0;
 	}
     }
