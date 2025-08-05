@@ -11,6 +11,8 @@ try 'url contains "' '[hehehe](u"rl)' '<p><a href="u%22rl">hehehe</a></p>'
 try 'url contains <' '[hehehe](u<rl)' '<p><a href="u&lt;rl">hehehe</a></p>'
 try 'url contains whitespace' '[ha](r u)' '<p><a href="r%20u">ha</a></p>'
 
+try 'url with attributes' '[ha](r u){target="_blank"}' '<p><a href="r%20u" target="_blank">ha</a></p>'
+
 # latex collides with this test
 if ./markdown -V | grep LATEX >/dev/null; then
     RESULT='<p><a href="d">a\[b\]c</a></p>'
