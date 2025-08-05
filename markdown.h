@@ -122,8 +122,10 @@ typedef struct footnote {
     Cstring link;		/* what this footnote points to */
     Cstring title;		/* what it's called (TITLE= attribute) */
     Paragraph *text;		/* EXTRA_FOOTNOTE content */
+    Cstring attrib;		/* URL attributes */
     
     int height, width;		/* dimensions (for image link) */
+    int pHeight, pWidth;	/* dimension percent (for image link) */
     int dealloc;		/* deallocation needed? */
     int refnumber;
     int fn_flags;
