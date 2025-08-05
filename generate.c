@@ -357,6 +357,37 @@ linkylabel(MMIOT *f, Cstring *res)
 }
 
 
+/* extract a {}-delimited attribute list from the input stream.
+ */
+static int
+linkyattrib(MMIOT *f, Cstring *res)
+{
+    if ( peek(f,1) == '{' ) {
+	pull(f);
+	int whence = mmiottell(f);
+	char *ptr = cursor(f);
+	int size;
+
+	if ( (size = parenthetical('{','}',f)) != EOF ) {
+	    Cstring alist;
+	    T(alist) = ptr;
+	    S(alist) = size;
+	    alist = Csstrip(alist);
+	    if ( *T(alist) != '{' || *T_END(alist) != '}' ) {
+		*res = alist;
+		return 1;
+	    }
+	    /* Convert '{{...}}' to '{...}' */
+	    else {
+		(void) memmove (ptr + 1, ptr, size);
+		mmiotseek(f, whence + 1);
+	    }
+	}
+    }
+    return 0;
+}
+
+
 /* see if the quote-prefixed linky segment is actually a title.
  */
 static int
@@ -388,6 +419,7 @@ static int
 linkysize(MMIOT *f, Footnote *ref)
 {
     int height=0, width=0;
+    int pHeight=0, pWidth=0;
     int whence = mmiottell(f);
     int c;
 
@@ -397,16 +429,28 @@ linkysize(MMIOT *f, Footnote *ref)
 	for ( c = pull(f); isdigit(c); c = pull(f))
 	    width = (width * 10) + (c - '0');
 
+	if ( c == '%' ) {
+	    pWidth = 1;
+	    c = pull(f);
+	}
+
 	if ( c == 'x' ) {
 	    for ( c = pull(f); isdigit(c); c = pull(f))
 		height = (height*10) + (c - '0');
+
+	    if ( c == '%' ) {
+		pHeight = 1;
+		c = pull(f);
+	    }
 
 	    if ( isspace(c) )
 		c = eatspace(f);
 
 	    if ( (c == ')') || ((c == '\'' || c == '"') && linkytitle(f, c, ref)) ) {
 		ref->height = height;
+		ref->pHeight = pHeight;
 		ref->width  = width;
+		ref->pWidth  = pWidth;
 		return 1;
 	    }
 	}
@@ -727,9 +771,12 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	printlinkyref(f, tag, T(ref->link), S(ref->link));
 
 	if ( tag->WxH ) {
-	    if ( ref->height ) Qprintf(f," height=\"%d\"", ref->height);
-	    if ( ref->width ) Qprintf(f, " width=\"%d\"", ref->width);
+	    if ( ref->height ) Qprintf(f, " height=\"%d%s\"", ref->height, ref->pHeight ? "%" : "");
+	    if ( ref->width  ) Qprintf(f,  " width=\"%d%s\"", ref->width,  ref->pWidth	? "%" : "");
 	}
+
+	if ( S(ref->attrib) /* > 0 */ )
+	    Qprintf(f, " %.*s", S(ref->attrib), T(ref->attrib));
 
 	if ( S(ref->title) || (is_flag_set(&f->flags, MKD_ALT_AS_TITLE) && is_flag_set(&tag->flags, MKD_ALT_AS_TITLE)) ) {
 	    Qstring(" title=\"", f);
@@ -770,8 +817,11 @@ linkylinky(int image, MMIOT *f)
     if ( linkylabel(f, &name) ) {
 	if ( peek(f,1) == '(' ) {
 	    pull(f);
-	    if ( linkyurl(f, image, &key) )
+	    if ( linkyurl(f, image, &key) ) {
+		(void) linkyattrib(f, &key.attrib);
+
 		status = linkyformat(f, name, image, &key);
+	    }
 	}
 	else {
 	    int goodlink, implicit_mark = mmiottell(f);

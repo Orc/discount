@@ -53,6 +53,7 @@
 #define T(x)		(x).text
 #define S(x)		(x).size
 #define ALLOCATED(x)	(x).alloc
+#define T_END(x)	(T(x) + S(x) - (S(x) ? 1 : 0))
 
 /* abstract anchor type that defines a list base
  * with a function that attaches an element to
@@ -72,5 +73,9 @@ typedef STRING(char) Cstring;
 extern void Csputc(int, Cstring *);
 extern int Csprintf(Cstring *, char *, ...);
 extern int Cswrite(Cstring *, char *, int);
+
+extern Cstring Csstrip(Cstring);
+extern Cstring Cskeyword(Cstring);
+extern Cstring Csskipprefix(Cstring, Cstring);
 
 #endif/*_CSTRING_D*/

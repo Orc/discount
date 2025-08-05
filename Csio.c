@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
 #include "cstring.h"
 #include "markdown.h"
 #include "amalloc.h"
@@ -44,6 +45,75 @@ Cswrite(Cstring *iot, char *bfr, int size)
     memcpy(T(*iot)+S(*iot), bfr, size);
     S(*iot) += size;
     return size;
+}
+
+
+/* strip () a cstring
+ */
+Cstring
+Csstrip(Cstring cs)
+{
+    /* Trim leading whitespace */
+    for ( ; S(cs); --S(cs) ) {
+	if ( isspace(*T(cs)) ) {
+	    ++T(cs);
+	    --S(cs);
+	}
+	else
+	    break;
+    }
+
+	/* Trim trailing whitespace */
+    while ( S(cs) ) {
+	if ( isspace(*(T(cs) + S(cs) - 1)) )
+	    --S(cs);
+	else
+	    break;
+    }
+
+    return cs;
+}
+
+
+/* Return cstring keyword
+ */
+Cstring
+Cskeyword(Cstring cs)
+{
+    Cstring token = cs;
+    char *ptr = T(token);
+
+    S(token) = 0;
+    for ( register int i = 0; i < S(cs); ++i, ++ptr ) {
+	if ( isalpha (*ptr) )
+	    ++S(token);
+	else
+	    break;
+    }
+
+    return token;
+}
+
+
+/* Skip prefix cstring
+ */
+Cstring
+Csskipprefix(Cstring base, Cstring prefix)
+{
+    char *prefixEnd = T_END(prefix);
+    char *baseEnd = T_END(base);
+    Cstring after;
+
+    if ( T(prefix) >= T(base) && prefixEnd <= baseEnd ) {
+	T(after) = ++prefixEnd;
+	S(after) = S(base) - (prefixEnd - T(base));
+    }
+    else {
+	T(after) = (char *) NULL;
+	S(after) = 0;
+    }
+
+    return after;
 }
 
 

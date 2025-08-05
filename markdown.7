@@ -597,6 +597,24 @@ Will produce:
     title attribute.</p>
 .Ed
 .Pp
+To create an inline link with additional attributes, supply a set of
+curly braces immediately after the link's closing right parenthesis.
+Within the braces, define attribute=value pairs separated by spaces.
+For example:
+.Bd -literal -offset indent
+    [This link](http://example.net/){target="_blank"} has an additional attribute.
+
+    ![Alt text](/path/to/img.jpg){target="_blank" width="80%" height="80%"}
+.Ed
+.Pp
+Will produce:
+.Bd -literal -offset indent
+    <p><a href="http://example.net/" target="_blank">This link</a>
+    has an additional attribute.</p>
+
+    <p><img src="/path/to/img.jpg" target="_blank" width="80%" height="80%" alt="Alt text" /></p>
+.Ed
+.Pp
 If you're referring to a local resource on the same server, you can
 use relative paths:
 .Bd -literal -offset indent
@@ -892,10 +910,10 @@ attribute text for the image;
 .It
 followed by a set of parentheses, containing the URL or path to
 the image, an optional `size` attribute (in
-.Ar width Li c Ar height
-format) prefixed with a `=`,
-and an optional `title` attribute enclosed in double
-or single quotes.
+.Ar width Li x Ar height
+format; the values may either be sizes or percentages followed by `%`)
+prefixed with a `=`, and an optional `title` attribute enclosed in
+double or single quotes.
 .El
 .Pp
 Reference-style image syntax looks like this:
