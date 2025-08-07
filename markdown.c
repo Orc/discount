@@ -1092,7 +1092,9 @@ addfootnote(Line *p, MMIOT* f)
     CREATE(foot->link);
     CREATE(foot->title);
     foot->text = 0;
-    foot->fn_flags = foot->height = foot->width = 0;
+    foot->fn_flags = 0;
+    DELETE(foot->height);
+    DELETE(foot->width);
 
     /* keep the footnote label */
     for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
@@ -1127,7 +1129,10 @@ addfootnote(Line *p, MMIOT* f)
     j = nextnonblank(p,j);
 
     if ( T(p->text)[j] == '=' ) {
-	sscanf(T(p->text)+j, "=%dx%d", &foot->width, &foot->height);
+	int width, height;
+	sscanf(T(p->text)+j, "=%dx%d", &width, &height);
+	Csprintf (&foot->width,  "%d", width);
+	Csprintf (&foot->height, "%d", height);
 	j = nextblank(p, j);
 	j = nextnonblank(p,j);
     }
