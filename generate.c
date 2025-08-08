@@ -418,8 +418,6 @@ linkytitle(MMIOT *f, char quote, Footnote *ref)
 static int
 linkysize(MMIOT *f, Footnote *ref)
 {
-    int height=0, width=0;
-    int pHeight=0, pWidth=0;
     int whence = mmiottell(f);
     int c;
 
