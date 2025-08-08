@@ -1164,13 +1164,13 @@ addfootnote(Line *p, MMIOT* f)
     if ( ithTMbr(p->text, j) == '=' ) {
 	int end = findSizeEnd(T(p->text), ++j);
 	if ( end > j ) {
-	    Csprintf (&foot->width, "%.*s", T(p->text), end-j);
+	    Csprintf (&foot->width, "%.*s", T(p->text) + j, end-j);
 	    j = end;
 	}
 	if ( ithTMbr(p->text, j) == 'x' ) {
 	    end = findSizeEnd(T(p->text), ++j);
 	    if ( end > j )
-		Csprintf (&foot->height, "%.*s", T(p->text), end-j);
+		Csprintf (&foot->height, "%.*s", T(p->text) + j, end-j);
 	    j = end;
 	}
 	j = nextblank(p, j);
