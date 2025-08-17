@@ -111,7 +111,7 @@ show_flags(int byname, int verbose, mkd_flag_t *flags)
 	    if ( opts[i].alias && !verbose )
 		continue;
 	    if ( (flags==0) || is_flag_set(flags, opts[i].flag) )
-		fprintf(stderr, "%16s : %s\n", opts[i].name, opts[i].desc);
+		fprintf(stderr, "%16s (%2d): %s\n", opts[i].name, opts[i].flag, opts[i].desc);
 	}
     }
     else {

@@ -418,8 +418,6 @@ linkytitle(MMIOT *f, char quote, Footnote *ref)
 static int
 linkysize(MMIOT *f, Footnote *ref)
 {
-    int height=0, width=0;
-    int pHeight=0, pWidth=0;
     int whence = mmiottell(f);
     int c;
 
@@ -427,19 +425,19 @@ linkysize(MMIOT *f, Footnote *ref)
 	pull(f);	/* eat '=' */
 
 	for ( c = pull(f); isdigit(c); c = pull(f))
-	    width = (width * 10) + (c - '0');
+	    Csputc(c, &ref->width);
 
 	if ( c == '%' ) {
-	    pWidth = 1;
+	    Csputc(c, &ref->width);
 	    c = pull(f);
 	}
 
 	if ( c == 'x' ) {
 	    for ( c = pull(f); isdigit(c); c = pull(f))
-		height = (height*10) + (c - '0');
+		Csputc(c, &ref->height);
 
 	    if ( c == '%' ) {
-		pHeight = 1;
+		Csputc(c, &ref->height);
 		c = pull(f);
 	    }
 
@@ -447,10 +445,6 @@ linkysize(MMIOT *f, Footnote *ref)
 		c = eatspace(f);
 
 	    if ( (c == ')') || ((c == '\'' || c == '"') && linkytitle(f, c, ref)) ) {
-		ref->height = height;
-		ref->pHeight = pHeight;
-		ref->width  = width;
-		ref->pWidth  = pWidth;
 		return 1;
 	    }
 	}
@@ -771,8 +765,8 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	printlinkyref(f, tag, T(ref->link), S(ref->link));
 
 	if ( tag->WxH ) {
-	    if ( ref->height ) Qprintf(f, " height=\"%d%s\"", ref->height, ref->pHeight ? "%" : "");
-	    if ( ref->width  ) Qprintf(f,  " width=\"%d%s\"", ref->width,  ref->pWidth	? "%" : "");
+	    if ( S(ref->height) ) Qprintf(f, " height=\"%.*s\"", S(ref->height), T(ref->height));
+	    if ( S(ref->width)  ) Qprintf(f,  " width=\"%.*s\"", S(ref->width),  T(ref->width));
 	}
 
 	if ( S(ref->attrib) /* > 0 */ )

@@ -23,6 +23,11 @@ typedef int (*stfu)(const void*,const void*);
 static Paragraph *Pp(ParagraphRoot *, Line *, int);
 static Paragraph *compile(Line *, int, MMIOT *);
 
+/* get i-th Cstring T member
+ */
+#define ithTMbr(s, i)		T(s)[i]
+
+
 /* case insensitive string sort for Footnote tags.
  */
 int
@@ -35,8 +40,8 @@ __mkd_footsort(Footnote *a, Footnote *b)
 	return S(a->tag) - S(b->tag);
 
     for ( i=0; i < S(a->tag); i++) {
-	ac = tolower(T(a->tag)[i]);
-	bc = tolower(T(b->tag)[i]);
+	ac = tolower(ithTMbr(a->tag, i));
+	bc = tolower(ithTMbr(b->tag, i));
 
 	if ( isspace(ac) && isspace(bc) )
 	    continue;
@@ -47,12 +52,23 @@ __mkd_footsort(Footnote *a, Footnote *b)
 }
 
 
+/* return end of digits string given an offset
+ */
+static int
+endOfDigits(char *t, int start)
+{
+    int end;
+    for ( end = start; isdigit(t[end]); ++end )
+	;
+    return end;
+}
+
 /* find the first blank character after position <i>
  */
 static int
 nextblank(Line *t, int i)
 {
-    while ( (i < S(t->text)) && !isspace(T(t->text)[i]) )
+    while ( (i < S(t->text)) && !isspace(ithTMbr(t->text, i)) )
 	++i;
     return i;
 }
@@ -63,7 +79,7 @@ nextblank(Line *t, int i)
 static int
 nextnonblank(Line *t, int i)
 {
-    while ( (i < S(t->text)) && isspace(T(t->text)[i]) )
+    while ( (i < S(t->text)) && isspace(ithTMbr(t->text, i)) )
 	++i;
     return i;
 }
@@ -97,7 +113,7 @@ skipempty(Line *p)
 void
 ___mkd_tidy(Cstring *t)
 {
-    while ( S(*t) && isspace(T(*t)[S(*t)-1]) )
+    while ( S(*t) && isspace(ithTMbr(*t, S(*t)-1)) )
 	--S(*t);
 }
 
@@ -127,9 +143,9 @@ isopentag(Line *p)
     /* find how long the tag is so we can check to see if
      * it's a block-level tag
      */
-    for ( i=1; i < len && T(p->text)[i] != '>' 
-		       && T(p->text)[i] != '/'
-		       && !isspace(T(p->text)[i]); ++i )
+    for ( i=1; i < len && ithTMbr(p->text, i) != '>'
+		       && ithTMbr(p->text, i) != '/'
+		       && !isspace(ithTMbr(p->text, i)); ++i )
 	;
 
 
@@ -150,7 +166,7 @@ flogetc(FLO *f)
 {
     if ( f && f->t ) {
 	if ( f->i < S(f->t->text) )
-	    return (unsigned char)T(f->t->text)[f->i++];
+	    return (unsigned char)ithTMbr(f->t->text, f->i++);
 	f->t = f->t->next;
 	f->i = 0;
 	return flogetc(f);
@@ -199,15 +215,15 @@ checkline(Line *l, mkd_flag_t *flags)
 
     if (l->dle >= 4) { l->kind=chk_code; return; }
 
-    for ( eol = S(l->text); eol > l->dle && isspace(T(l->text)[eol-1]); --eol )
+    for ( eol = S(l->text); eol > l->dle && isspace(ithTMbr(l->text, eol-1)); --eol )
 	;
 
     if ( is_flag_set(flags, MKD_FENCEDCODE) && !is_flag_set(flags, MKD_STRICT) ) {
-	first = T(l->text)[l->dle];
+	first = ithTMbr(l->text, l->dle);
 
 	if ( first == '~' || first == '`' ) {
 	    for ( i=l->dle; i<eol; i++ ) {
-		c = T(l->text)[i];
+		c = ithTMbr(l->text, i);
 
 		if ( (c != '~') && (c != '`') && (c != first) )
 		    break;
@@ -224,7 +240,7 @@ checkline(Line *l, mkd_flag_t *flags)
 
     for (i=l->dle; i<eol; i++) {
 
-	if ( (c = T(l->text)[i]) != ' ' ) l->count++;
+	if ( (c = ithTMbr(l->text, i)) != ' ' ) l->count++;
 
 	switch (c) {
 	case '-':  dashes = 1; break;
@@ -355,14 +371,17 @@ isfootnote(Line *t)
 {
     int i;
 
-    if ( ( (i = t->dle) > 3) || (T(t->text)[i] != '[') )
+    if ( ( (i = t->dle) > 3) || (ithTMbr(t->text, i) != '[') )
 	return 0;
 
     for ( ++i; i < S(t->text) ; ++i ) {
-	if ( T(t->text)[i] == '[' )
-	    return 0;
-	else if ( T(t->text)[i] == ']' )
-	    return ( T(t->text)[i+1] == ':' ) ;
+	register int c = ithTMbr(t->text, i);
+	switch (c) {
+	    case '[':
+		return 0;
+	    case ']':
+		return ( ithTMbr(t->text, i+1) == ':' );
+	}
     }
     return 0;
 }
@@ -371,7 +390,7 @@ isfootnote(Line *t)
 static inline int
 isquote(Line *t)
 {
-    return (t->dle < 4 && T(t->text)[t->dle] == '>');
+    return (t->dle < 4 && ithTMbr(t->text, t->dle) == '>');
 }
 
 
@@ -421,7 +440,7 @@ ishdr(Line *t, int *htyp, mkd_flag_t *flags)
 {
     /* ANY leading `#`'s make this into an ETX header
      */
-    if ( (t->dle == 0) && (S(t->text) > 1) && (T(t->text)[0] == '#') ) {
+    if ( (t->dle == 0) && (S(t->text) > 1) && (ithTMbr(t->text, 0) == '#') ) {
 	*htyp = ETX;
 	return 1;
     }
@@ -450,8 +469,8 @@ is_discount_dt(Line *t, int *clip, mkd_flag_t *flags)
     if ( t && t->next
 	   && (S(t->text) > 2)
 	   && (t->dle == 0)
-	   && (T(t->text)[0] == '=')
-	   && (T(t->text)[S(t->text)-1] == '=') ) {
+	   && (ithTMbr(t->text, 0) == '=')
+	   && (ithTMbr(t->text, S(t->text)-1) == '=') ) {
 	if ( t->next->dle >= 4 ) {
 	    *clip = 4;
 	    return t;
@@ -466,8 +485,8 @@ is_discount_dt(Line *t, int *clip, mkd_flag_t *flags)
 static int
 is_extra_dd(Line *t)
 {
-    return (t->dle < 4) && (T(t->text)[t->dle] == ':')
-			&& isspace(T(t->text)[t->dle+1]);
+    return (t->dle < 4) && (ithTMbr(t->text, t->dle) == ':')
+			&& isspace(ithTMbr(t->text, t->dle+1));
 }
 
 
@@ -523,7 +542,7 @@ islist(Line *t, int *clip, mkd_flag_t *flags, int *list_type)
     if ( isdefinition(t,clip,list_type,flags) )
 	return DL;
 	
-    if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
+    if ( strchr("*-+", ithTMbr(t->text, t->dle)) && isspace(ithTMbr(t->text, t->dle+1)) ) {
 	i = nextnonblank(t, t->dle+1);
 	*clip = (i > 4) ? 4 : i;
 	*list_type = UL;
@@ -531,11 +550,11 @@ islist(Line *t, int *clip, mkd_flag_t *flags, int *list_type)
     }
 
     if ( (j = nextblank(t,t->dle)) > t->dle ) {
-	if ( T(t->text)[j-1] == '.' ) {
+        if ( ithTMbr(t->text, j-1) == '.' ) {
 
 	    if ( !(is_flag_set(flags, MKD_NOALPHALIST) || is_flag_set(flags, MKD_STRICT))
 			  && (j == t->dle + 2)
-			  && isalpha(T(t->text)[t->dle]) ) {
+			  && isalpha(ithTMbr(t->text, t->dle)) ) {
 		j = nextnonblank(t,j);
 		*clip = (j > 4) ? 4 : j;
 		*list_type = AL;
@@ -566,7 +585,7 @@ headerblock(Paragraph *pp, int htyp)
     case SETEXT:
 	    /* p->text is header, p->next->text is -'s or ='s
 	     */
-	    pp->hnumber = (T(p->next->text)[0] == '=') ? 1 : 2;
+	    pp->hnumber = (ithTMbr(p->next->text, 0) == '=') ? 1 : 2;
 
 	    ret = p->next->next;
 	    ___mkd_freeLine(p->next);
@@ -578,31 +597,31 @@ headerblock(Paragraph *pp, int htyp)
 	     * the leading and trailing `#`'s
 	     */
 
-	    for (i=0; (T(p->text)[i] == T(p->text)[0]) && (i < S(p->text)-1); i++)
+	    for (i=0; (ithTMbr(p->text, i) == ithTMbr(p->text, 0)) && (i < S(p->text)-1); i++)
 		;
 
 	    pp->hnumber = (i > 6) ? 6 : i;;
 
-	    while ( (i < S(p->text)) && isspace(T(p->text)[i]) )
+	    while ( (i < S(p->text)) && isspace(ithTMbr(p->text, i)) )
 		++i;
 
 	    CLIP(p->text, 0, i);
 
-	    for (i=S(p->text); (i > 0) && isspace(T(p->text)[i-1]); --i)
+	    for (i=S(p->text); (i > 0) && isspace(ithTMbr(p->text, i-1)); --i)
 		;
 	    S(p->text) = i;
-	    T(p->text)[i] = 0;
+	    ithTMbr(p->text, i) = 0;
 
 	    UNCHECK(p);
 
-	    for (j=S(p->text); (j > 1) && (T(p->text)[j-1] == '#'); --j)
+	    for (j=S(p->text); (j > 1) && (ithTMbr(p->text, j-1) == '#'); --j)
 		;
 
-	    while ( j && isspace(T(p->text)[j-1]) )
+	    while ( j && isspace(ithTMbr(p->text, j-1)) )
 		--j;
 
 	    if ( j < S(p->text) ) {
-		T(p->text)[j] = 0;
+		ithTMbr(p->text, j) = 0;
 		S(p->text) = j;
 	    }
 
@@ -823,14 +842,14 @@ quoteblock(Paragraph *p, mkd_flag_t *flags)
     for ( t = p->text; t ; t = q ) {
 	if ( isquote(t) ) {
 	    /* clip leading spaces */
-	    for (qp = 0; T(t->text)[qp] != '>'; qp ++)
+	    for (qp = 0; ithTMbr(t->text, qp) != '>'; qp ++)
 		/* assert: the first nonblank character on this line
 		 * will be a >
 		 */;
 	    /* clip '>' */
 	    qp++;
 	    /* clip next space, if any */
-	    if ( T(t->text)[qp] == ' ' )
+	    if ( ithTMbr(t->text, qp) == ' ' )
 		qp++;
 	    __mkd_trim_line(t,qp);
 	    checkline(t, flags);
@@ -1076,6 +1095,20 @@ extrablock(Line *p)
 }
 
 
+/* return end of size string
+ */
+static int
+findSizeEnd(char *t, int start)
+{
+    int end = endOfDigits(t, start);
+
+    if ( end > start && t[end] == '%' )
+	++end;
+
+    return end;
+}
+
+
 /*
  * add a new (image or link) footnote to the footnote table
  */
@@ -1092,11 +1125,13 @@ addfootnote(Line *p, MMIOT* f)
     CREATE(foot->link);
     CREATE(foot->title);
     foot->text = 0;
-    foot->fn_flags = foot->height = foot->width = 0;
+    foot->fn_flags = 0;
+    DELETE(foot->height);
+    DELETE(foot->width);
 
     /* keep the footnote label */
-    for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
-	EXPAND(foot->tag) = T(p->text)[j];
+    for (j=i=p->dle+1; ithTMbr(p->text, j) != ']'; j++)
+	EXPAND(foot->tag) = ithTMbr(p->text, j);
     EXPAND(foot->tag) = 0;
     S(foot->tag)--;
 
@@ -1105,7 +1140,7 @@ addfootnote(Line *p, MMIOT* f)
 
     if ( is_flag_set(&(f->flags), MKD_EXTRA_FOOTNOTE)
 	     && !is_flag_set(&(f->flags), MKD_STRICT)
-			 && (T(foot->tag)[0] == '^') ) {
+		     && (ithTMbr(foot->tag, 0) == '^') ) {
 	/* markdown extra footnote: All indented lines past this point;
 	 * the first line includes the footnote reference, so we need to
 	 * snip that out as we go.
@@ -1120,27 +1155,37 @@ addfootnote(Line *p, MMIOT* f)
 	return np;
     }
 
-    while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
-	EXPAND(foot->link) = T(p->text)[j++];
+    while ( (j < S(p->text)) && !isspace(ithTMbr(p->text, j)) )
+	EXPAND(foot->link) = ithTMbr(p->text, j++);
     EXPAND(foot->link) = 0;
     S(foot->link)--;
     j = nextnonblank(p,j);
 
-    if ( T(p->text)[j] == '=' ) {
-	sscanf(T(p->text)+j, "=%dx%d", &foot->width, &foot->height);
+    if ( ithTMbr(p->text, j) == '=' ) {
+	int end = findSizeEnd(T(p->text), ++j);
+	if ( end > j ) {
+	    Csprintf (&foot->width, "%.*s", end-j, T(p->text) + j);
+	    j = end;
+	}
+	if ( ithTMbr(p->text, j) == 'x' ) {
+	    end = findSizeEnd(T(p->text), ++j);
+	    if ( end > j )
+		Csprintf (&foot->height, "%.*s", end-j, T(p->text) + j);
+	    j = end;
+	}
 	j = nextblank(p, j);
 	j = nextnonblank(p,j);
     }
 
 
-    if ( (j >= S(p->text)) && np && np->dle && tgood(T(np->text)[np->dle]) ) {
+    if ( (j >= S(p->text)) && np && np->dle && tgood(ithTMbr(np->text, np->dle)) ) {
 	___mkd_freeLine(p);
 	p = np;
 	np = p->next;
 	j = p->dle;
     }
 
-    if ( (c = tgood(T(p->text)[j])) ) {
+    if ( (c = tgood(ithTMbr(p->text, j))) ) {
 	/* Try to take the rest of the line as a comment; read to
 	 * EOL, then shrink the string back to before the final
 	 * quote.
@@ -1148,9 +1193,9 @@ addfootnote(Line *p, MMIOT* f)
 	++j;	/* skip leading quote */
 
 	while ( j < S(p->text) )
-	    EXPAND(foot->title) = T(p->text)[j++];
+	    EXPAND(foot->title) = ithTMbr(p->text, j++);
 
-	while ( S(foot->title) && T(foot->title)[S(foot->title)-1] != c )
+	while ( S(foot->title) && ithTMbr(foot->title, S(foot->title)-1) != c )
 	    --S(foot->title);
 	if ( S(foot->title) )	/* skip trailing quote */
 	    --S(foot->title);
@@ -1329,9 +1374,9 @@ actually_a_table(MMIOT *f, Line *pp)
 	}
 
     /* if the header has a leading |, all lines must have leading |'s */
-    if ( T(pp->text)[pp->dle] == '|' ) {
+    if ( ithTMbr(pp->text, pp->dle) == '|' ) {
 	for ( r = pp; r; r = r->next )
-	    if ( T(r->text)[first_nonblank_before(r,pp->dle)] != '|' ) {
+	    if ( ithTMbr(r->text, first_nonblank_before(r,pp->dle)) != '|' ) {
 		return 0;
 	    }
     }
@@ -1340,7 +1385,7 @@ actually_a_table(MMIOT *f, Line *pp)
     r = pp->next;
 
     for ( j=r->dle; j < S(r->text); ++j ) {
-	c = T(r->text)[j];
+	c = ithTMbr(r->text, j);
 
 	if ( !(isspace(c)||(c=='-')||(c==':')||(c=='|')) ) {
 	    return 0;
@@ -1502,7 +1547,7 @@ mkd_compile(Document *doc, mkd_flag_t* flags)
 
     doc->code = compile_document(T(doc->content), doc->ctx);
     qsort(T(doc->ctx->footnotes->note), S(doc->ctx->footnotes->note),
-		        sizeof T(doc->ctx->footnotes->note)[0],
+				sizeof ithTMbr(doc->ctx->footnotes->note, 0),
 			           (stfu)__mkd_footsort);
     memset(&doc->content, 0, sizeof doc->content);
     return 1;
