@@ -123,7 +123,7 @@ typedef struct footnote {
     Cstring title;		/* what it's called (TITLE= attribute) */
     Paragraph *text;		/* EXTRA_FOOTNOTE content */
     
-    int height, width;		/* dimensions (for image link) */
+    Cstring height, width;	/* dimensions (for image link) */
     int dealloc;		/* deallocation needed? */
     int refnumber;
     int fn_flags;

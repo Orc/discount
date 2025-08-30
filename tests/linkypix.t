@@ -17,5 +17,17 @@ try 'image with width' \
     '![picture](pic =200x)' \
     '<p><img src="pic" width="200" alt="picture" /></p>'
 
+try 'image with percentage sizes' \
+    '![picture](pic =20%x20%)' \
+    '<p><img src="pic" height="20%" width="20%" alt="picture" /></p>'
+
+try 'image with percentage height' \
+    '![picture](pic =x20%)' \
+    '<p><img src="pic" height="20%" alt="picture" /></p>'
+
+try 'image with width' \
+    '![picture](pic =20%x)' \
+    '<p><img src="pic" width="20%" alt="picture" /></p>'
+
 summary $0
 exit $rc

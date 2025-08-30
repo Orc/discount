@@ -491,12 +491,12 @@ is_extra_dt(Line *t, int *clip, mkd_flag_t* flags)
     return 0;
 }
 
-	
+
 static Line *
 isdefinition(Line *t, int *clip, int *list_type, mkd_flag_t *flags)
 {
     Line *ret;
-    
+
     if ( !is_flag_set(flags, MKD_STRICT) ) {
 	if ( is_flag_set(flags, MKD_DLDISCOUNT) && (ret = is_discount_dt(t,clip,flags)) ) {
 	    *list_type = 1;
@@ -522,7 +522,7 @@ islist(Line *t, int *clip, mkd_flag_t *flags, int *list_type)
 
     if ( isdefinition(t,clip,list_type,flags) )
 	return DL;
-	
+
     if ( strchr("*-+", T(t->text)[t->dle]) && isspace(T(t->text)[t->dle+1]) ) {
 	i = nextnonblank(t, t->dle+1);
 	*clip = (i > 4) ? 4 : i;
@@ -1077,6 +1077,32 @@ extrablock(Line *p)
 
 
 /*
+ * get the width & height of a footnote image
+ */
+static void
+footnote_height_and_width(char *s, struct footnote *foot)
+{
+    int i = 0;
+
+    if ( isdigit(s[i]) ) { 
+	while ( isdigit(s[i]) )
+	    EXPAND(foot->width) = s[i++];
+	/* specialcase for % width */
+	if ( s[i] == '%' )
+	    EXPAND(foot->width) = '%';
+    }
+    if ( s[i] == 'x' ) {
+	i++;
+	while (isdigit(s[i]) )
+	    EXPAND(foot->height) = s[i++];
+	if ( s[i] == '%' )
+	    EXPAND(foot->height) = '%';
+    }
+
+}
+
+
+/*
  * add a new (image or link) footnote to the footnote table
  */
 static Line*
@@ -1091,8 +1117,10 @@ addfootnote(Line *p, MMIOT* f)
     CREATE(foot->tag);
     CREATE(foot->link);
     CREATE(foot->title);
+    foot->fn_flags = 0;
     foot->text = 0;
-    foot->fn_flags = foot->height = foot->width = 0;
+    CREATE(foot->height);
+    CREATE(foot->width);
 
     /* keep the footnote label */
     for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
@@ -1127,7 +1155,7 @@ addfootnote(Line *p, MMIOT* f)
     j = nextnonblank(p,j);
 
     if ( T(p->text)[j] == '=' ) {
-	sscanf(T(p->text)+j, "=%dx%d", &foot->width, &foot->height);
+	footnote_height_and_width(T(p->text)+j, foot);
 	j = nextblank(p, j);
 	j = nextnonblank(p,j);
     }

@@ -382,24 +382,47 @@ linkytitle(MMIOT *f, char quote, Footnote *ref)
 }
 
 
-/* extract a =HHHxWWW size from the input stream
+/* extract a =WxH size from the input stream
  */
 static int
 linkysize(MMIOT *f, Footnote *ref)
 {
-    int height=0, width=0;
+    Cstring height, width;
     int whence = mmiottell(f);
     int c;
+
+    CREATE(height);
+    CREATE(width);
 
     if ( isspace(peek(f,0)) ) {
 	pull(f);	/* eat '=' */
 
-	for ( c = pull(f); isdigit(c); c = pull(f))
-	    width = (width * 10) + (c - '0');
+	c = peek(f,1);
+
+	if ( isdigit(c) ) {
+	    for ( c = pull(f); isdigit(c); c = pull(f))
+		EXPAND(width) = c;
+	    if ( c == '%' ) {
+		EXPAND(width) = c;
+		c = pull(f);
+	    }
+	}
+	else
+	    pull(f);
 
 	if ( c == 'x' ) {
-	    for ( c = pull(f); isdigit(c); c = pull(f))
-		height = (height*10) + (c - '0');
+
+	    c = pull(f);
+	    if ( isdigit(c) ) {
+		while (isdigit(c) ) {
+		    EXPAND(height) = c;
+		    c = pull(f);
+		}
+		if ( c == '%' ) {
+		    EXPAND(height) = c;
+		    c = pull(f);
+		}
+	    }
 
 	    if ( isspace(c) )
 		c = eatspace(f);
@@ -410,6 +433,8 @@ linkysize(MMIOT *f, Footnote *ref)
 		return 1;
 	    }
 	}
+	DELETE(height);
+	DELETE(width);
     }
     mmiotseek(f, whence);
     return 0;
@@ -727,8 +752,8 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	printlinkyref(f, tag, T(ref->link), S(ref->link));
 
 	if ( tag->WxH ) {
-	    if ( ref->height ) Qprintf(f," height=\"%d\"", ref->height);
-	    if ( ref->width ) Qprintf(f, " width=\"%d\"", ref->width);
+	    if ( S(ref->height) > 0 ) Qprintf(f," height=\"%s\"", T(ref->height));
+	    if ( S(ref->width) > 0 ) Qprintf(f, " width=\"%s\"", T(ref->width));
 	}
 
 	if ( S(ref->title) || (is_flag_set(&f->flags, MKD_ALT_AS_TITLE) && is_flag_set(&tag->flags, MKD_ALT_AS_TITLE)) ) {
@@ -1117,7 +1142,7 @@ maybe_tag_or_link(MMIOT *f)
 	}
 	else {
 	    int i;
-	    
+
 	    if ( forbidden_tag(f) )
 		return 0;
 
