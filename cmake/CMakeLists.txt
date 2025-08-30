@@ -100,35 +100,39 @@ if(NOT HAVE_S_ISCHR OR NOT HAVE_S_ISFIFO OR NOT HAVE_S_ISSOCK)
 endif()
 
 configure_file(config.h.in
-    "${_ROOT}/config.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/config.h"
     @ONLY)
 
 configure_file("${_ROOT}/version.c.in"
-    "${_ROOT}/version.c"
+    "${CMAKE_CURRENT_BINARY_DIR}/version.c"
     @ONLY)
-set_property(SOURCE "${_ROOT}/version.c" APPEND PROPERTY COMPILE_DEFINITIONS
+set_property(SOURCE "${CMAKE_CURRENT_BINARY_DIR}/version.c" APPEND PROPERTY COMPILE_DEFINITIONS
     BRANCH=""
     VERSION="${${PROJECT_NAME}_VERSION}")
 
 configure_file("${_ROOT}/mkdio.h.in"
-    "${_ROOT}/mkdio.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/mkdio.h"
     @ONLY)
 if(${PROJECT_NAME}_CXX_BINDING)
     message(STATUS "Applying c++ glue to mkdio.h")
-    file(READ "${_ROOT}/mkdio.h" _ROOT_MKDIO_H)
-    file(WRITE "${_ROOT}/mkdio.h" "#ifdef __cplusplus\nextern \"C\" {\n#endif\n")
-    file(APPEND "${_ROOT}/mkdio.h" "${_ROOT_MKDIO_H}")
-    file(APPEND "${_ROOT}/mkdio.h" "#ifdef __cplusplus\n}\n#endif\n")
+    file(READ "${CMAKE_CURRENT_BINARY_DIR}/mkdio.h" _ROOT_MKDIO_H)
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/mkdio.h" "#ifdef __cplusplus\nextern \"C\" {\n#endif\n")
+    file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/mkdio.h" "${_ROOT_MKDIO_H}")
+    file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/mkdio.h" "#ifdef __cplusplus\n}\n#endif\n")
 endif()
-
-include_directories("${_ROOT}")
 
 add_executable(mktags
     "${_ROOT}/mktags.c")
 
-add_custom_command(OUTPUT "${_ROOT}/blocktags"
-    COMMAND mktags > blocktags
+set(BLOCKTAGS_FILE "${CMAKE_CURRENT_BINARY_DIR}/blocktags")
+add_custom_command(OUTPUT "${BLOCKTAGS_FILE}"
+    COMMAND mktags > ${BLOCKTAGS_FILE}
     WORKING_DIRECTORY "${_ROOT}")
+
+target_include_directories(mktags
+    PRIVATE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+)
 
 add_library(libmarkdown
     "${_ROOT}/mkdio.c"
@@ -137,7 +141,7 @@ add_library(libmarkdown
     "${_ROOT}/generate.c"
     "${_ROOT}/resource.c"
     "${_ROOT}/docheader.c"
-    "${_ROOT}/version.c"
+    "${CMAKE_CURRENT_BINARY_DIR}/version.c"
     "${_ROOT}/toc.c"
     "${_ROOT}/css.c"
     "${_ROOT}/xml.c"
@@ -147,7 +151,8 @@ add_library(libmarkdown
     "${_ROOT}/emmatch.c"
     "${_ROOT}/github_flavoured.c"
     "${_ROOT}/setup.c"
-    "${_ROOT}/blocktags" "${_ROOT}/tags.c"
+    "${BLOCKTAGS_FILE}"
+    "${_ROOT}/tags.c"
     "${_ROOT}/html5.c"
     "${_ROOT}/v2compat.c"
     "${_ROOT}/flagprocs.c"
@@ -156,10 +161,22 @@ add_library(libmarkdown
 set_target_properties(libmarkdown PROPERTIES
     OUTPUT_NAME markdown)
 
+target_include_directories(libmarkdown
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    PRIVATE
+        $<BUILD_INTERFACE:${_ROOT}>
+)
+
 if(NOT ${PROJECT_NAME}_ONLY_LIBRARY)
     add_library(common OBJECT
         "${_ROOT}/pgm_options.c"
         "${_ROOT}/gethopt.c")
+
+    target_include_directories(common
+        PRIVATE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    )
 
     add_executable(markdown
         "${_ROOT}/main.c"
@@ -194,7 +211,7 @@ if(${PROJECT_NAME}_MAKE_INSTALL)
             "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
             CACHE STRING "The pkg-config packages")
     endif()
-    install(FILES "${_ROOT}/mkdio.h"
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/mkdio.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
     target_include_directories(libmarkdown INTERFACE
       $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
