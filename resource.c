@@ -71,6 +71,7 @@ ___mkd_freefootnote(Footnote *f)
     DELETE(f->title);
     DELETE(f->height);
     DELETE(f->width);
+    DELETE(f->extended_attr);
     if ( f->text) ___mkd_freeParagraph(f->text);
 }
 

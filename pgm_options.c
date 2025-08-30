@@ -79,6 +79,8 @@ static struct _opt {
     { "definitionlist","both discount & markdown extra definition lists", 1 },
     { "dlist",         "both discount & markdown extra definition lists", 1, 0, 1 },
     { "alt_as_title",  "use the alt text as a title if there isn't one (images)", 0, 0, 0, 1, MKD_ALT_AS_TITLE },
+    { "extended_attr", "allow extended attributes on links", 0, 0, 1, 1, MKD_EXTENDED_ATTR },
+    { "extended_attributes", "allow extended attributes on links", 0, 0, 0, 1, MKD_EXTENDED_ATTR },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])
@@ -105,20 +107,26 @@ show_flags(int byname, int verbose, mkd_flag_t *flags)
     int i;
 
     if ( byname ) {
+	int size, len=0;
+
 	qsort(opts, NR(opts), sizeof(opts[0]), (stfu)sort_by_name);
-    
+
+	for (i=0; i < NR(opts); i++)
+	    if ( (size=strlen(opts[i].name)) > len )
+		len = size;
+
 	for (i=0; i < NR(opts); i++) {
 	    if ( opts[i].alias && !verbose )
 		continue;
 	    if ( (flags==0) || is_flag_set(flags, opts[i].flag) )
-		fprintf(stderr, "%16s : %s\n", opts[i].name, opts[i].desc);
+		fprintf(stderr, "%*s : %s\n", len+1, opts[i].name, opts[i].desc);
 	}
     }
     else {
 	qsort(opts, NR(opts), sizeof(opts[0]), (stfu)sort_by_flag);
-	
+
 	for (i=0; i < NR(opts) && i < 8*sizeof(DWORD); i++) {
-	    
+
 	    if ( opts[i].special || opts[i].alias )
 		continue;
 

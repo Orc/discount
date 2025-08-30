@@ -24,5 +24,10 @@ try 'a prefixed footnote, but encased in <>' \
 [alink]: <http://link.me>' \
     '<p><a href="http://link.me">alink</a></p>'
 
+try -fextended_attributes 'A footnote with extended attributes' \
+    '[alink]
+
+[alink]: link.me {rel=_nofollow}' \
+    '<p><a href="link.me" rel=_nofollow>alink</a></p>'
 summary $0
 exit $rc

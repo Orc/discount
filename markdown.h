@@ -44,6 +44,7 @@ enum {  MKD_NOLINKS=0,		/* don't do link processing, block <a> tags  */
 	MKD_URLENCODEDANCHOR,	/* urlencode non-identifier chars instead of replacing with dots */
 	MKD_LATEX,		/* handle embedded LaTeX escapes */
 	MKD_ALT_AS_TITLE,	/* use alt text as the title if no title is listed */
+	MKD_EXTENDED_ATTR,	/* allow extended attribute suffixes */
 			/* end of user flags */
 	IS_LABEL,
 	MKD_NR_FLAGS };
@@ -124,6 +125,7 @@ typedef struct footnote {
     Paragraph *text;		/* EXTRA_FOOTNOTE content */
     
     Cstring height, width;	/* dimensions (for image link) */
+    Cstring extended_attr;	/* extended attributes iff MKD_EXTENDED_ATTR */
     int dealloc;		/* deallocation needed? */
     int refnumber;
     int fn_flags;

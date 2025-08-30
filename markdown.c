@@ -1076,6 +1076,7 @@ extrablock(Line *p)
 }
 
 
+#if 0
 /*
  * get the width & height of a footnote image
  */
@@ -1098,8 +1099,8 @@ footnote_height_and_width(char *s, struct footnote *foot)
 	if ( s[i] == '%' )
 	    EXPAND(foot->height) = '%';
     }
-
 }
+#endif
 
 
 /*
@@ -1121,6 +1122,7 @@ addfootnote(Line *p, MMIOT* f)
     foot->text = 0;
     CREATE(foot->height);
     CREATE(foot->width);
+    CREATE(foot->extended_attr);
 
     /* keep the footnote label */
     for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
@@ -1154,10 +1156,22 @@ addfootnote(Line *p, MMIOT* f)
     S(foot->link)--;
     j = nextnonblank(p,j);
 
+#if 0
     if ( T(p->text)[j] == '=' ) {
 	footnote_height_and_width(T(p->text)+j, foot);
 	j = nextblank(p, j);
 	j = nextnonblank(p,j);
+    }
+#endif
+
+    if ( is_flag_set(&f->flags, MKD_EXTENDED_ATTR) && (T(p->text)[j] == '{') ) {
+	for ( i=j; T(p->text)[i] && ( T(p->text)[i] != '}' ); i++ )
+	    ;
+	if ( T(p->text)[i] == '}' ) {
+	    for ( j++; j < i; j++ )
+		EXPAND(foot->extended_attr) = T(p->text)[j];
+	    j++;
+	}
     }
 
 

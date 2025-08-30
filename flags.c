@@ -38,6 +38,7 @@ static struct flagnames flagnames[] = {
     { MKD_LATEX,          "LATEX" },
     { MKD_EXPLICITLIST,   "EXPLICITLIST" },
     { MKD_ALT_AS_TITLE,   "ALT_AS_TITLE" },
+    { MKD_EXTENDED_ATTR,  "EXTENDED_ATTR" },
 };
 #define NR(x)	(sizeof x/sizeof x[0])
 

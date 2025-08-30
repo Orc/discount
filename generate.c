@@ -488,6 +488,21 @@ linkybroket(MMIOT *f, int image, Footnote *p)
 } /* linkybroket */
 
 
+/* extract a {}-delimited extended attribute from the input
+ * stream.
+ */
+static void
+linky_extended_attributes(MMIOT *f, struct footnote *p, int start)
+{
+    int c;
+
+    mmiotseek(f, start+1);
+
+    while ( (c = pull(f)) != '}' )
+	EXPAND(p->extended_attr) = c;
+}
+
+
 /* extract a (-prefixed url from the input stream.
  * the label is either of the format `<link>`, where I
  * extract until I find a >, or it is of the format
@@ -526,6 +541,19 @@ linkyurl(MMIOT *f, int image, Footnote *p)
     }
     if ( peek(f, 1) == ')' )
 	pull(f);
+
+    /* possible extended attributes? */
+    if ( is_flag_set(&f->flags, MKD_EXTENDED_ATTR) && (peek(f,1) == '{') ) {
+	int loc = mmiottell(f);
+	int size;
+
+	pull(f);
+
+	if ( (size = parenthetical('{','}',f)) != EOF )
+	    linky_extended_attributes(f, p, loc);
+	else
+	    mmiotseek(f, loc);
+    }
 
     ___mkd_tidy(&p->link);
 
@@ -755,6 +783,8 @@ linkyformat(MMIOT *f, Cstring text, int image, Footnote *ref)
 	    if ( S(ref->height) > 0 ) Qprintf(f," height=\"%s\"", T(ref->height));
 	    if ( S(ref->width) > 0 ) Qprintf(f, " width=\"%s\"", T(ref->width));
 	}
+	if ( S(ref->extended_attr) > 0 )
+	    Qprintf(f, " %s", T(ref->extended_attr));
 
 	if ( S(ref->title) || (is_flag_set(&f->flags, MKD_ALT_AS_TITLE) && is_flag_set(&tag->flags, MKD_ALT_AS_TITLE)) ) {
 	    Qstring(" title=\"", f);
@@ -1451,7 +1481,7 @@ text(MMIOT *f)
 			    int here = mmiottell(f);
 			    pull(f);
 
-			    if ( (len = parenthetical('(',')',f)) <= 0 ) {
+			    if ( (len = parenthetical('(',')',f)) == EOF ) {
 				mmiotseek(f,here);
 				Qchar(c, f);
 				break;
