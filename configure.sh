@@ -161,6 +161,42 @@ EOF
     __remove ngc$$.o ngc$$.c
 fi
 
+# find out if the isspace() function on this system is one
+# that dumps core of characters with the 8th bit set
+
+cat > ngc$$.c << EOF
+#include <stdlib.h>
+#include <ctype.h>
+
+main()
+{
+    char text[] = { -3 };
+
+    return isspace(text[0]);
+}
+EOF
+
+    if $AC_CC $AC_CFLAGS -o ngc$$ ngc$$.c; then
+	LOGN "is isspace() broken: "
+	if ./ngc$$ ; then
+	    LOG "no"
+	else
+	    AC_CC="$AC_CC -funsigned-char"
+
+	    $AC_CC $AC_CFLAGS -o ngc$$ ngc$$.c
+
+	    if ./ngc$$; then
+		LOG "yes (patchable)"
+	    else
+		LOG "yes (not patchable)"
+	    fi
+	fi
+    else
+	LOG "can't compile test program?"
+    fi
+    rm -rf ngc$$*
+
+
 if AC_CHECK_FUNCS srandom; then
     AC_DEFINE 'INITRNG(x)' 'srandom((unsigned int)x)'
 elif AC_CHECK_FUNCS srand; then
