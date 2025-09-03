@@ -11,9 +11,9 @@ Markdown
 .Sh SYNOPSIS
 .Fd #include <mkdio.h>
 .Ft int
-.Fn mkd_line "char *string" "int size" "char **doc" "int flags"
+.Fn mkd_line "char *string" "int size" "char **doc" "mkd_flag_t *flags"
 .Ft int
-.Fn mkd_generateline "char *string" "int size" "FILE *output" "int flags"
+.Fn mkd_generateline "char *string" "int size" "FILE *output" "mkd_flag_t *flags"
 .Sh DESCRIPTION
 .Pp
 Occasionally one might want to do markdown translations on fragments of
