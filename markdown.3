@@ -11,11 +11,11 @@ Markdown
 .Sh SYNOPSIS
 .Fd #include <mkdio.h>
 .Ft MMIOT
-.Fn *mkd_in "FILE *input" "int flags"
+.Fn *mkd_in "FILE *input" "mkd_flag_t *flags"
 .Ft MMIOT
-.Fn *mkd_string "char *string" "int size" "int flags"
+.Fn *mkd_string "char *string" "int size" "mkd_flag_t *flags"
 .Ft int
-.Fn markdown "MMIOT *doc" "FILE *output" "int flags"
+.Fn markdown "MMIOT *doc" "FILE *output" "mkd_flag_t *flags"
 .Sh DESCRIPTION
 These functions
 convert
@@ -42,85 +42,89 @@ and pass its return value to
 .Fn markdown.
 .Pp
 .Fn Markdown
-accepts the following flag values (or-ed together if needed)
-to restrict how it processes input:
+holds the flag values in an opaque flag blob that you need to
+initialize and populate before using:
+.Bl -tag -width MKD_NOSTRIKETHROUGH -compact
+.It Ft "mkd_flag_t*" Fn mkd_flag_t
+creates a mkd_flag_t structure and returns a pointer to it.
+.It Fn mkd_free_flags "mkd_flag_t *"
+deletes a mkd_flag_t structure when you are finished with it.
+.It Ft mkd_flag_t* Fn mkd_copy_flags "mkd_flag_t*"
+Makes a copy of a flag blob and returns a pointer to it.
+.It Fn mkd_flag_isset "mkd_flag_t *" "int"
+tells you if a specific flag is set
+.It Fn mkd_set_flag_num "mkd_flag_t *" "int"
+Sets a specified flag
+.It Fn mkd_clr_flag_num "mkd_flag_t *" "int"
+Clears a specified flag
+.El
+.Pp
+The following flags are currently accepted:
 .Bl -tag -width MKD_NOSTRIKETHROUGH -compact
 .It Ar MKD_NOLINKS
-Don't do link processing, block 
-.Em <a>
-tags.
+don't do link processing, block <a> tags
 .It Ar MKD_NOIMAGE
-Don't do image processing, block
-.Em <img> .
+don't do image processing, block <img>
 .It Ar MKD_NOPANTS
-Don't run 
-.Em smartypants() .
+don't run smartypants()
 .It Ar MKD_NOHTML
-Don't allow raw html through AT ALL
-.It Ar MKD_STRICT
-Disable 
-superscript and relaxed emphasis.
+don't allow raw html through AT ALL
+.It Ar MKD_NORMAL_LISTITEM
+disable github-style checkbox lists
 .It Ar MKD_TAGTEXT
-Process text to put inside an html tag (ID=, NAME=, <title>, &tc); no 
-.Em <em> ,
-no 
-.Em <bold> ,
-no html or
-.Em []
-expansion.
+process text inside an html tag
 .It Ar MKD_NO_EXT
-Don't allow pseudo-protocols.
+don't allow pseudo-protocols
+.It Ar MKD_EXPLICITLIST
+don't combine numbered/bulletted lists
 .It Ar MKD_CDATA
-Generate code for xml 
-.Em ![CDATA[...]] .
+generate code for xml ![CDATA[...]]
 .It Ar MKD_NOSUPERSCRIPT
-Don't generate superscripts.
-Emphasis happens _everywhere_
+no A^B
+.It Ar MKD_STRICT
+conform to Markdown standard as implemented in Markdown.pl
 .It Ar MKD_NOTABLES
-Disallow tables.
+disallow tables
 .It Ar MKD_NOSTRIKETHROUGH
-Forbid 
-.Em ~~strikethrough~~ .
-.It Ar MKD_TOC
-Do table-of-contents processing.
+forbid ~~strikethrough~~
 .It Ar MKD_1_COMPAT
-Compatibility with MarkdownTest_1.0
+compatibility with MarkdownTest_1.0
+.It Ar MKD_TOC
+do table-of-contents processing
 .It Ar MKD_AUTOLINK
-Make 
-.Em http://foo.com
-into a link even without
-.Em <> s.
-.It Ar MKD_SAFELINK
-Paranoid check for link protocol.
+make http://foo.com link even without <>s
 .It Ar MKD_NOHEADER
-Don't process header blocks.
+don't process header blocks
 .It Ar MKD_TABSTOP
-Expand tabs to 4 spaces.
+expand tabs to 4 spaces
+.It Ar MKD_SAFELINK
+paranoid check for link protocol
 .It Ar MKD_NODIVQUOTE
-Forbid 
-.Em >%class%
-blocks.
+forbid >%class% blocks
 .It Ar MKD_NOALPHALIST
-Forbid alphabetic lists.
-.It Ar MKD_NODLIST
-Forbid definition lists.
-.It Ar MKD_NODLDISCOUNT
-Disable the discount definition list syntax style.
-.It Ar MKD_DLEXTRA
-Enable the extra definition list syntax style.
+forbid alphabetic lists
 .It Ar MKD_EXTRA_FOOTNOTE
-Enable markdown extra-style footnotes.
+enable markdown extra-style footnotes
 .It Ar MKD_NOSTYLE
-Do not extract (omit) <style/> blocks from the output.
+don't extract <style> blocks
+.It Ar MKD_DLDISCOUNT
+enable discount-style definition lists
+.It Ar MKD_DLEXTRA
+enable extra-style definition lists
 .It Ar MKD_FENCEDCODE
-Allow fenced code blocks.
+enabled fenced code blocks
 .It Ar MKD_IDANCHOR
-Use id= anchors instead of <a name=/> for table-of-contents links.
+use id= anchors for TOC links
 .It Ar MKD_GITHUBTAGS
-Allow underscore and dash in passed through element names.
+allow dash and underscore in element names
 .It Ar MKD_URLENCODEDANCHOR
-Use html5 encoding for multibyte and nonalphanumeric characters rather
-than hex expansion in toc links.
+urlencode non-identifier chars instead of replacing with dots
+.It Ar MKD_LATEX
+handle embedded LaTeX escapes
+.It Ar MKD_ALT_AS_TITLE
+use alt text as the title if no title is listed
+.It Ar MKD_EXTENDED_ATTR
+allow extended attribute suffixes
 .El
 .Sh RETURN VALUES
 .Fn markdown

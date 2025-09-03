@@ -11,7 +11,7 @@ Markdown
 .Sh SYNOPSIS
 .Fd #include <mkdio.h>
 .Ft int
-.Fn mkd_compile "MMIOT *document" "int flags"
+.Fn mkd_compile "MMIOT *document" "mkd_flag_t *flags"
 .Ft int
 .Fn mkd_css "MMIOT *document" "char **doc"
 .Ft int
@@ -21,7 +21,7 @@ Markdown
 .Ft int
 .Fn mkd_generatehtml  "MMIOT *document" "FILE *output"
 .Ft int
-.Fn mkd_xhtmlpage "MMIOT *document" "int flags" "FILE *output"
+.Fn mkd_xhtmlpage "MMIOT *document" "mkd_flag_t *flags" "FILE *output"
 .Ft int
 .Fn mkd_toc "MMIOT *document" "char **doc"
 .Ft void
