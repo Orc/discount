@@ -29,11 +29,12 @@ OBJS=mkdio.o markdown.o dumptree.o generate.o \
      resource.o docheader.o version.o toc.o css.o \
      xml.o Csio.o xmlpage.o basename.o emmatch.o \
      github_flavoured.o setup.o tags.o html5.o \
-     @AMALLOC@ @H1TITLE@ flags.o v2compat.o flagprocs.o
+     pgm_options.o flags.o v2compat.o flagprocs.o \
+     @AMALLOC@ @H1TITLE@
 TESTFRAMEWORK=rep echo cols branch pandoc_headers space2nl
 
 # modules that markdown, makepage, mkd2html, &tc use
-COMMON=pgm_options.o gethopt.o notspecial.o
+COMMON=gethopt.o notspecial.o
 
 MAN3PAGES=mkd-callbacks.3 mkd-functions.3 markdown.3 mkd-line.3
 

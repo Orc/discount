@@ -153,6 +153,18 @@ handle_special(mkd_flag_t *flags, char *opt, int enable)
 	}
 }
 
+static void
+set_dlist(mkd_flag_t *flags, int enable)
+{
+    if ( enable ) {
+	set_mkd_flag(flags, MKD_DLDISCOUNT);
+	set_mkd_flag(flags, MKD_DLEXTRA);
+    }
+    else {
+	clear_mkd_flag(flags, MKD_DLDISCOUNT);
+	clear_mkd_flag(flags, MKD_DLEXTRA);
+    }
+}
 
 char *
 mkd_set_flag_string(mkd_flag_t *flags, char *optionstring)
@@ -202,17 +214,4 @@ mkd_set_flag_string(mkd_flag_t *flags, char *optionstring)
 	    return arg;
     }
     return 0;
-}
-
-static void
-set_dlist(mkd_flag_t *flags, int enable)
-{
-    if ( enable ) {
-	set_mkd_flag(flags, MKD_DLDISCOUNT);
-	set_mkd_flag(flags, MKD_DLEXTRA);
-    }
-    else {
-	clear_mkd_flag(flags, MKD_DLDISCOUNT);
-	clear_mkd_flag(flags, MKD_DLEXTRA);
-    }
 }
