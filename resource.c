@@ -95,19 +95,28 @@ ___mkd_freefootnotes(MMIOT *f)
 /* initialize a new MMIOT
  */
 void
-___mkd_initmmiot(MMIOT *f, void *footnotes)
+___mkd_initmmiot(MMIOT *f, void *footnotes, mkd_flag_t *flags)
 {
     if ( f ) {
 	memset(f, 0, sizeof *f);
 	CREATE(f->in);
 	CREATE(f->out);
 	CREATE(f->Q);
+	CREATE(f->extratags);
 	if ( footnotes )
 	    f->footnotes = footnotes;
 	else {
 	    f->footnotes = malloc(sizeof f->footnotes[0]);
 	    CREATE(f->footnotes->note);
 	}
+	if ( flags )
+	    COPY_FLAGS(f->flags, *flags);
+	else
+	    mkd_init_flags(&f->flags);
+
+	if ( is_flag_set(&f->flags, MKD_HTML5) )
+	    mkd_add_html5_tags(f);
+
     }
 }
 
@@ -121,8 +130,10 @@ ___mkd_freemmiot(MMIOT *f, void *footnotes)
 	DELETE(f->in);
 	DELETE(f->out);
 	DELETE(f->Q);
+	DELETE(f->extratags);
 	if ( f->footnotes != footnotes )
 	    ___mkd_freefootnotes(f);
+	
 	memset(f, 0, sizeof *f);
     }
 }

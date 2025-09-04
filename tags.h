@@ -3,17 +3,12 @@
 #ifndef _TAGS_D
 #define _TAGS_D
 
-struct kw {
-    char *id;
-    int  size;
-    int  selfclose;
-} ;
+#include <stdio.h>
 
-
-struct kw* mkd_search_tags(char *, int);
-void mkd_prepare_tags(void);
-void mkd_deallocate_tags(void);
-void mkd_sort_tags(void);
-void mkd_define_tag(char *, int);
+struct kw* mkd_search_tags(MMIOT*, char *, int);
+void mkd_sort_tags(MMIOT *);
+void mkd_define_tag(MMIOT*, char *, int);
+void ___mkd_copy_extratags(MMIOT *dst, MMIOT *src);
+void ___mkd_delete_extratags(MMIOT *doc);
 
 #endif

@@ -81,6 +81,7 @@ static struct _opt {
     { "alt_as_title",  "use the alt text as a title if there isn't one (images)", 0, 0, 0, 1, MKD_ALT_AS_TITLE },
     { "extended_attr", "allow extended attributes on links", 0, 0, 1, 1, MKD_EXTENDED_ATTR },
     { "extended_attributes", "allow extended attributes on links", 0, 0, 0, 1, MKD_EXTENDED_ATTR },
+    { "html5",         "handle html5 tags (obsolete?)", 0, 0, 0, 1, MKD_HTML5 },
 } ;
 
 #define NR(x)	(sizeof x / sizeof x[0])

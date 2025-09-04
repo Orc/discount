@@ -45,6 +45,7 @@ enum {  MKD_NOLINKS=0,		/* don't do link processing, block <a> tags  */
 	MKD_LATEX,		/* handle embedded LaTeX escapes */
 	MKD_ALT_AS_TITLE,	/* use alt text as the title if no title is listed */
 	MKD_EXTENDED_ATTR,	/* allow extended attribute suffixes */
+	MKD_HTML5,		/* handle html5 tags (obsolete?) */
 			/* end of user flags */
 	IS_LABEL,
 	MKD_NR_FLAGS };
@@ -174,6 +175,17 @@ struct footnote_list {
 } ;
 
 
+
+/* html tag structure (here for MMIOT->extratags)
+ */
+struct kw {
+    char *id;
+    int  size;
+    int  selfclose;
+} ;
+
+
+
 /* a magic markdown io thing holds all the data structures needed to
  * do the backend processing of a markdown document
  */
@@ -181,7 +193,7 @@ typedef struct mmiot {
     Cstring out;
     Cstring in;
     Qblock Q;
-    char last;	/* last text character added to out */
+    char last;				/* last text character added to out */
     int isp;
     struct escaped *esc;
     char *ref_prefix;
@@ -189,6 +201,7 @@ typedef struct mmiot {
     mkd_flag_t flags;
 
     Callback_data *cb;
+    STRING(struct kw) extratags;	/* extra (mainly html5) tags */
 } MMIOT;
 
 
@@ -262,6 +275,7 @@ extern int  mkd_line(char *, int, char **, mkd_flag_t*);
 extern int  mkd_generateline(char *, int, FILE*, mkd_flag_t*);
 #define mkd_text mkd_generateline
 extern void mkd_basename(Document*, char *);
+extern void mkd_add_html5_tags(MMIOT*);
 
 typedef int (*mkd_sta_function_t)(const int,const void*);
 extern void mkd_string_to_anchor(char*,int, mkd_sta_function_t, void*, int, MMIOT *);
@@ -273,7 +287,6 @@ extern Document *gfm_in(FILE *, mkd_flag_t*);
 extern Document *gfm_string(const char*,int, mkd_flag_t*);
 
 extern void mkd_initialize(void);
-extern void mkd_shlib_destructor(void);
 
 extern void mkd_ref_prefix(Document*, char*);
 
@@ -284,7 +297,7 @@ extern void ___mkd_freeLines(Line *);
 extern void ___mkd_freeParagraph(Paragraph *);
 extern void ___mkd_freefootnote(Footnote *);
 extern void ___mkd_freefootnotes(MMIOT *);
-extern void ___mkd_initmmiot(MMIOT *, void *);
+extern void ___mkd_initmmiot(MMIOT *, void *, mkd_flag_t*);
 extern void ___mkd_freemmiot(MMIOT *, void *);
 extern void ___mkd_freeLineRange(Line *, Line *);
 extern void ___mkd_xml(char *, int, FILE *);

@@ -4,6 +4,7 @@
 
 #define __WITHOUT_AMALLOC 1
 #include "config.h"
+#include "markdown.h"
 #include "cstring.h"
 #include "tags.h"
 

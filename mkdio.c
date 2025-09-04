@@ -13,6 +13,7 @@
 #include "cstring.h"
 #include "markdown.h"
 #include "amalloc.h"
+#include "tags.h"
 
 typedef ANCHOR(Line) LineAnchor;
 
@@ -319,11 +320,7 @@ mkd_string_to_anchor(char *s, int len, mkd_sta_function_t outchar,
 static void
 mkd_parse_line(char *bfr, int size, MMIOT *f, mkd_flag_t *flags)
 {
-    ___mkd_initmmiot(f, 0);
-    if ( flags )
-	COPY_FLAGS(f->flags, *flags);
-    else
-	mkd_init_flags(&f->flags);
+    ___mkd_initmmiot(f, 0, flags);
     ___mkd_reparse(bfr, size, NULL, f, 0);
     ___mkd_emblock(f);
 }

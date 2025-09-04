@@ -105,7 +105,7 @@ ___mkd_tidy(Cstring *t)
 static struct kw comment = { "!--", 3, 0 };
 
 static struct kw *
-isopentag(Line *p)
+isopentag(MMIOT *doc, Line *p)
 {
     int i=0, len;
     char *line;
@@ -133,7 +133,7 @@ isopentag(Line *p)
 	;
 
 
-    return mkd_search_tags(T(p->text)+1, i-1);
+    return mkd_search_tags(doc, T(p->text)+1, i-1);
 }
 
 
@@ -1269,7 +1269,7 @@ compile_document(Line *ptr, MMIOT *f)
     int previous_was_break = 1;
 
     while ( ptr ) {
-	if ( !is_flag_set(&(f->flags), MKD_NOHTML) && (tag = isopentag(ptr)) ) {
+	if ( !is_flag_set(&(f->flags), MKD_NOHTML) && (tag = isopentag(f, ptr)) ) {
 	    int blocktype;
 	    /* If we encounter a html/style block, compile and save all
 	     * of the cached source BEFORE processing the html/style.
@@ -1468,7 +1468,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 					 * processing with textblock()
 					 */
 
-	    if ( !is_flag_set(&(f->flags), MKD_NOHTML) && (tag = isopentag(ptr)) ) {
+	    if ( !is_flag_set(&(f->flags), MKD_NOHTML) && (tag = isopentag(f, ptr)) ) {
 		/* possibly an html block
 		 */
 
@@ -1527,18 +1527,13 @@ mkd_compile(Document *doc, mkd_flag_t* flags)
     }
 
     doc->compiled = 1;
-    memset(doc->ctx, 0, sizeof(MMIOT) );
+    
+    ___mkd_initmmiot(doc->ctx, NULL, flags);
+    
     doc->ctx->ref_prefix= doc->ref_prefix;
     doc->ctx->cb        = &(doc->cb);
-    if (flags)
-	COPY_FLAGS(doc->ctx->flags, *flags);
-    else
-	mkd_init_flags(&doc->ctx->flags);
-    CREATE(doc->ctx->in);
-    doc->ctx->footnotes = malloc(sizeof doc->ctx->footnotes[0]);
-    doc->ctx->footnotes->reference = 0;
-    CREATE(doc->ctx->footnotes->note);
 
+    CREATE(doc->ctx->in);
 
     mkd_initialize();
 

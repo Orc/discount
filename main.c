@@ -198,7 +198,6 @@ main(int argc, char **argv)
     int toc = 0;
     int content = 1;
     int version = 0;
-    int with_html5 = 0;
     int styles = 0;
     int use_mkd_line = 0;
     int use_e_codefmt = 0;
@@ -232,7 +231,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
 	switch (opt->optchar) {
-	case '5':   with_html5 = 1;
+	case '5':   mkd_set_flag_num(flags, MKD_HTML5);
 		    break;
 	case 'b':   urlbase = hoptarg(&blob);
 		    break;
@@ -305,8 +304,7 @@ main(int argc, char **argv)
 
 
     if ( version ) {
-	printf("%s: discount %s%s", pgm, markdown_version,
-				  with_html5 ? " +html5":"");
+	printf("%s: discount %s", pgm, markdown_version);
 	if ( version == 2 )
 	    mkd_flags_are(stdout, flags, 0);
 	putchar('\n');
@@ -315,9 +313,6 @@ main(int argc, char **argv)
 
     argc -= hoptind(&blob);
     argv += hoptind(&blob);
-
-    if ( with_html5 )
-	mkd_with_html5_tags();
 
     if ( use_mkd_line )
 	rc = mkd_generateline( text, strlen(text), stdout, flags);
@@ -377,7 +372,6 @@ main(int argc, char **argv)
 	}
 	mkd_cleanup(doc);
     }
-    mkd_deallocate_tags();
     mkd_free_flags(flags);
     adump();
     exit( (rc == 0) ? 0 : errno );

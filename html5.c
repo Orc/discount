@@ -1,21 +1,16 @@
 /* block-level tags for passing html5 blocks through the blender
  */
+#include <stdio.h>
+#include "markdown.h"
 #include "tags.h"
 
 void
-mkd_with_html5_tags(void)
+mkd_add_html5_tags(MMIOT* doc)
 {
-    static int populated = 0;
-
-    if ( populated ) return;
-    populated = 1;
-
-    mkd_define_tag("ASIDE", 0);
-    mkd_define_tag("FOOTER", 0);
-    mkd_define_tag("HEADER", 0);
-    mkd_define_tag("NAV", 0);
-    mkd_define_tag("SECTION", 0);
-    mkd_define_tag("ARTICLE", 0);
-
-    mkd_sort_tags();
+    mkd_define_tag(doc, "ASIDE", 0);
+    mkd_define_tag(doc, "FOOTER", 0);
+    mkd_define_tag(doc, "HEADER", 0);
+    mkd_define_tag(doc, "NAV", 0);
+    mkd_define_tag(doc, "SECTION", 0);
+    mkd_define_tag(doc, "ARTICLE", 0);
 }

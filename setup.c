@@ -29,11 +29,3 @@ mkd_initialize(void)
 	INITRNG(time(0));
     }
 }
-
-
-void DESTRUCTOR
-mkd_shlib_destructor(void)
-{
-    mkd_deallocate_tags();
-}
-

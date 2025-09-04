@@ -16,6 +16,7 @@
 #include "cstring.h"
 #include "markdown.h"
 #include "amalloc.h"
+#include "tags.h"
 
 typedef int (*stfu)(const void*,const void*);
 typedef void (*spanhandler)(MMIOT*,int);
@@ -213,11 +214,12 @@ ___mkd_reparse(char *bfr, int size, mkd_flag_t* flags, MMIOT *f, char *esc)
     MMIOT sub;
     struct escaped e;
 
-    ___mkd_initmmiot(&sub, f->footnotes);
+    ___mkd_initmmiot(&sub, f->footnotes, flags);
 
-    COPY_FLAGS(sub.flags, f->flags);
-    if ( flags )
-	ADD_FLAGS(&sub.flags, flags);
+    ___mkd_or_flags(&sub.flags, &f->flags);
+
+    
+    
     sub.cb = f->cb;
     sub.ref_prefix = f->ref_prefix;
 

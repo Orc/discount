@@ -3,10 +3,10 @@
 #include "config.h"
 
 #define __WITHOUT_AMALLOC 1
+#include <stdio.h>
+#include "markdown.h"
 #include "cstring.h"
 #include "tags.h"
-
-STRING(struct kw) extratags;
 
 /* the standard collection of tags are built and sorted when
  * discount is configured, so all we need to do is pull them
@@ -20,21 +20,20 @@ STRING(struct kw) extratags;
 /* define an additional html block tag
  */
 void
-mkd_define_tag(char *id, int selfclose)
+mkd_define_tag(MMIOT *doc, char *id, int selfclose)
 {
     struct kw *p;
 
     /* only add the new tag if it doesn't exist in
      * either the standard or extra tag tables.
      */
-    if ( !(p = mkd_search_tags(id, strlen(id))) ) {
-	/* extratags could be deallocated */
-	if ( S(extratags) == 0 )
-	    CREATE(extratags);
-	p = &EXPAND(extratags);
-	p->id = id;
+    if ( !(p = mkd_search_tags(doc, id, strlen(id))) ) {
+	p = &EXPAND(doc->extratags);
+	p->id = strdup(id);
 	p->size = strlen(id);
 	p->selfclose = selfclose;
+
+	mkd_sort_tags(doc);
     }
 }
 
@@ -59,16 +58,17 @@ typedef int (*stfu)(const void*,const void*);
 /* sort the list of extra html block tags for later searching
  */
 void
-mkd_sort_tags(void)
+mkd_sort_tags(MMIOT *doc)
 {
-    qsort(T(extratags), S(extratags), sizeof(struct kw), (stfu)casort);
+    if ( S(doc->extratags) )
+	qsort(T(doc->extratags), S(doc->extratags), sizeof(struct kw), (stfu)casort);
 }
 
 
 /* look for a token in the html block tag list
  */
 struct kw*
-mkd_search_tags(char *pat, int len)
+mkd_search_tags(MMIOT *doc, char *pat, int len)
 {
     struct kw key;
     struct kw *ret;
@@ -79,18 +79,45 @@ mkd_search_tags(char *pat, int len)
     if ( (ret=bsearch(&key,blocktags,NR_blocktags,sizeof key,(stfu)casort)) )
 	return ret;
 
-    if ( S(extratags) )
-	return bsearch(&key,T(extratags),S(extratags),sizeof key,(stfu)casort);
+    if ( S(doc->extratags) )
+	return bsearch(&key,T(doc->extratags),S(doc->extratags),sizeof key,(stfu)casort);
     
     return 0;
 }
 
 
-/* destroy the extratags list (for shared libraries)
+/* delete an extratags structure
+ */
+
+void
+___mkd_delete_extratags(MMIOT *doc)
+{
+    int i;
+
+    for ( i=0; i<S(doc->extratags); i++ )
+	free(T(doc->extratags)[i].id);
+
+    S(doc->extratags) = 0;
+}
+
+
+/* duplicate an extratags structure
  */
 void
-mkd_deallocate_tags(void)
+___mkd_copy_extratags(MMIOT *dst, MMIOT *src)
 {
-    if ( S(extratags) > 0 )
-	DELETE(extratags);
-} /* mkd_deallocate_tags */
+    int i;
+
+    if ( (src == NULL) || (dst == NULL) )
+	return;
+
+    if ( S(dst->extratags) )
+	___mkd_delete_extratags(dst);
+
+    for (i=0; i< S(src->extratags); i++ ) {
+	EXPAND(dst->extratags);
+	T(dst->extratags)[i].id = strdup(T(src->extratags)[i].id);
+	T(dst->extratags)[i].size = T(src->extratags)[i].size;
+	T(dst->extratags)[i].selfclose = T(src->extratags)[i].selfclose;
+    }
+}
