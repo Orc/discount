@@ -44,7 +44,7 @@ static struct _opt {
     { "image",         "images",                     0, 1, 0, 1, MKD_NOIMAGE  },
     { "links",         "links",                      0, 1, 0, 1, MKD_NOLINKS  },
     { "strict",        "conform to the markdown standard",  0, 0, 0, 1, MKD_STRICT   },
-    { "relax",         "conform to the markdown standard",  0, 1, 1, 1, MKD_STRICT   },
+    { "relax",         "(don't) conform to the markdown standard",  0, 1, 1, 1, MKD_STRICT   },
     { "standard",      "conform to the markdown standard", 0, 0, 1, 1, MKD_STRICT },
     { "tables",        "tables",                     0, 1, 0, 1, MKD_NOTABLES },
     { "header",        "pandoc-style headers",       0, 1, 0, 1, MKD_NOHEADER },

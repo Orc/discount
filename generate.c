@@ -502,6 +502,7 @@ linky_extended_attributes(MMIOT *f, struct footnote *p, int start)
 
     while ( (c = pull(f)) != '}' )
 	EXPAND(p->extended_attr) = c;
+    EXPAND(p->extended_attr) = 0;
 }
 
 

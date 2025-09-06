@@ -87,8 +87,9 @@ MMIOT *gfm_string(const char*,int,mkd_flag_t*);	/* assemble input from a buffer 
 void mkd_basename(MMIOT*,char*);
 
 void mkd_initialize(void);
-void mkd_with_html5_tags(void);
-void mkd_shlib_destructor(void);
+
+#define mkd_with_html5_tags()   0
+#define mkd_shlib_destructor()  0
 
 /* compilation, debugging, cleanup
  */
