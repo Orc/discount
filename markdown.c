@@ -1091,6 +1091,7 @@ footnote_height_and_width(char *s, struct footnote *foot)
 	/* specialcase for % width */
 	if ( s[i] == '%' )
 	    EXPAND(foot->width) = '%';
+	EXPAND(foot->width) = 0;
     }
     if ( s[i] == 'x' ) {
 	i++;
@@ -1098,6 +1099,7 @@ footnote_height_and_width(char *s, struct footnote *foot)
 	    EXPAND(foot->height) = s[i++];
 	if ( s[i] == '%' )
 	    EXPAND(foot->height) = '%';
+	EXPAND(foot->height) = 0;
     }
 }
 #endif
