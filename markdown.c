@@ -1172,6 +1172,7 @@ addfootnote(Line *p, MMIOT* f)
 	if ( T(p->text)[i] == '}' ) {
 	    for ( j++; j < i; j++ )
 		EXPAND(foot->extended_attr) = T(p->text)[j];
+	    EXPAND(foot->extended_attr) = 0;
 	    j++;
 	}
     }

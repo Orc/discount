@@ -430,6 +430,12 @@ linkysize(MMIOT *f, Footnote *ref)
 		c = eatspace(f);
 
 	    if ( (c == ')') || ((c == '\'' || c == '"') && linkytitle(f, c, ref)) ) {
+		/* add null bytes but pretend they don't exist. */
+		EXPAND(height) = 0;
+		--S(height);
+		EXPAND(width) = 0;
+		--S(width);
+
 		ref->height = height;
 		ref->width  = width;
 		return 1;
