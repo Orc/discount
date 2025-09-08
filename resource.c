@@ -107,6 +107,7 @@ ___mkd_initmmiot(MMIOT *f, void *footnotes, mkd_flag_t *flags)
 	    f->footnotes = footnotes;
 	else {
 	    f->footnotes = malloc(sizeof f->footnotes[0]);
+	    f->footnotes->reference = 0;
 	    CREATE(f->footnotes->note);
 	}
 	if ( flags )
