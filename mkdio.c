@@ -69,8 +69,7 @@ __mkd_enqueue(Document* a, Cstring *line)
 	    ++xp;
 	}
     }
-    EXPAND(p->text) = 0;
-    S(p->text)--;
+    COMPLETE(p->text);
     p->dle = mkd_firstnonblank(p);
 }
 
@@ -337,7 +336,7 @@ mkd_line(char *bfr, int size, char **res, mkd_flag_t* flags)
     mkd_parse_line(bfr, size, &f, flags);
 
     if ( len = S(f.out) ) {
-	EXPAND(f.out) = 0;
+	COMPLETE(f.out);
 	/* strdup() doesn't use amalloc(), so in an amalloc()ed
 	 * build this copies the string safely out of our memory
 	 * paranoia arena.  In a non-amalloc world, it's a spurious

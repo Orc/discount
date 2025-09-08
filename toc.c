@@ -97,7 +97,7 @@ mkd_toc(Document *p, char **doc)
     if ( (size = S(res)) > 0 ) {
 	/* null-terminate & strdup into a free()able memory chunk
 	 */
-	EXPAND(res) = 0;
+	COMPLETE(res);
 	*doc = strdup(T(res));
     }
     DELETE(res);

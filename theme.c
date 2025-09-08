@@ -294,8 +294,7 @@ finclude(MMIOT *doc, FILE *out, mkd_flag_t *flags, int whence)
 	EXPAND(include) = c;
 
     if ( c != EOF ) {
-	EXPAND(include) = 0;
-	S(include)--;
+	COMPLETE(include);
 
 	if (( f = fopen(T(include), "r") )) {
 	    while ( (c = getc(f)) != EOF )

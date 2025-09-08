@@ -69,6 +69,8 @@
 
 typedef STRING(char) Cstring;
 
+#define COMPLETE(t)	(EXPAND(t) = 0),(S(t)--)
+
 extern void Csputc(int, Cstring *);
 extern int Csprintf(Cstring *, char *, ...);
 extern int Cswrite(Cstring *, char *, int);

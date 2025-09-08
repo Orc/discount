@@ -63,7 +63,13 @@ acalloc(int count, int size)
 void*
 amalloc(int size)
 {
-    return acalloc(size,1);
+    void *ret = acalloc(1, size);
+
+    if ( ret ) {
+	/* explicitally fill the mallocated memory with a nonzero character */
+	memset(ret, 0x8f, size);
+    }
+    return ret;
 }
 
 

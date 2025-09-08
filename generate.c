@@ -408,6 +408,7 @@ linkysize(MMIOT *f, Footnote *ref)
 		EXPAND(width) = c;
 		c = pull(f);
 	    }
+	    COMPLETE(width);
 	}
 	else
 	    pull(f);
@@ -424,6 +425,7 @@ linkysize(MMIOT *f, Footnote *ref)
 		    EXPAND(height) = c;
 		    c = pull(f);
 		}
+		COMPLETE(height);
 	    }
 
 	    if ( isspace(c) )
@@ -502,7 +504,7 @@ linky_extended_attributes(MMIOT *f, struct footnote *p, int start)
 
     while ( (c = pull(f)) != '}' )
 	EXPAND(p->extended_attr) = c;
-    EXPAND(p->extended_attr) = 0;
+    COMPLETE(p->extended_attr);
 }
 
 
@@ -2151,8 +2153,7 @@ mkd_document(Document *p, char **res)
 		/* Add a null byte at the end of the generated html,
 		 * but pretend it doesn't exist.
 		 */
-		EXPAND(p->ctx->out) = 0;
-		--S(p->ctx->out);
+		COMPLETE(p->ctx->out);
 	    }
 	}
 

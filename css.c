@@ -57,7 +57,7 @@ mkd_css(Document *d, char **res)
 	    /* null-terminate, then strdup() into a free()able memory
 	     * chunk
 	     */
-	    EXPAND(f) = 0;
+	    COMPLETE(f);
 	    *res = strdup(T(f));
 	}
 	DELETE(f);

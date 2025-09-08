@@ -169,8 +169,7 @@ splitline(Line *t, int cutpoint)
 	t->next = tmp;
 
 	SUFFIX(tmp->text, T(t->text)+cutpoint, S(t->text)-cutpoint);
-	EXPAND(tmp->text) = 0;
-	S(tmp->text)--;
+	COMPLETE(tmp->text);
 
 	S(t->text) = cutpoint;
     }
@@ -1091,7 +1090,7 @@ footnote_height_and_width(char *s, struct footnote *foot)
 	/* specialcase for % width */
 	if ( s[i] == '%' )
 	    EXPAND(foot->width) = '%';
-	EXPAND(foot->width) = 0;
+	COMPLETE(foot->width);
     }
     if ( s[i] == 'x' ) {
 	i++;
@@ -1099,7 +1098,7 @@ footnote_height_and_width(char *s, struct footnote *foot)
 	    EXPAND(foot->height) = s[i++];
 	if ( s[i] == '%' )
 	    EXPAND(foot->height) = '%';
-	EXPAND(foot->height) = 0;
+	COMPLETE(foot->height);
     }
 }
 #endif
@@ -1129,8 +1128,7 @@ addfootnote(Line *p, MMIOT* f)
     /* keep the footnote label */
     for (j=i=p->dle+1; T(p->text)[j] != ']'; j++)
 	EXPAND(foot->tag) = T(p->text)[j];
-    EXPAND(foot->tag) = 0;
-    S(foot->tag)--;
+    COMPLETE(foot->tag);
 
     /* consume the closing ]: */
     j = nextnonblank(p, j+2);
@@ -1154,8 +1152,7 @@ addfootnote(Line *p, MMIOT* f)
 
     while ( (j < S(p->text)) && !isspace(T(p->text)[j]) )
 	EXPAND(foot->link) = T(p->text)[j++];
-    EXPAND(foot->link) = 0;
-    S(foot->link)--;
+    COMPLETE(foot->link);
     j = nextnonblank(p,j);
 
 #if 0
@@ -1172,6 +1169,7 @@ addfootnote(Line *p, MMIOT* f)
 	if ( T(p->text)[i] == '}' ) {
 	    for ( j++; j < i; j++ )
 		EXPAND(foot->extended_attr) = T(p->text)[j];
+	    COMPLETE(foot->extended_attr);
 	    j++;
 	}
     }
@@ -1198,8 +1196,7 @@ addfootnote(Line *p, MMIOT* f)
 	    --S(foot->title);
 	if ( S(foot->title) )	/* skip trailing quote */
 	    --S(foot->title);
-	EXPAND(foot->title) = 0;
-	--S(foot->title);
+	COMPLETE(foot->title);
     }
 
     ___mkd_freeLine(p);

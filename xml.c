@@ -77,9 +77,9 @@ mkd_xml(char *p, int size, char **res)
     /* null terminate, strdup() into a free()able memory block,
      * and return the size of everything except the null terminator
      */
-    EXPAND(f) = 0;
+    COMPLETE(f);
     *res = strdup(T(f));
-    size = S(f)-1;
+    size = S(f);
     DELETE(f);
     return size;
 }
