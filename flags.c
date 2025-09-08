@@ -110,7 +110,7 @@ mkd_init_flags(mkd_flag_t *p)
 mkd_flag_t *
 mkd_flags(void)
 {
-    mkd_flag_t *p = malloc( sizeof(mkd_flag_t) );
+    mkd_flag_t *p = calloc( 1, sizeof(mkd_flag_t) );
 
     if ( p )
 	mkd_init_flags(p);
