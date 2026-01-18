@@ -111,6 +111,42 @@ if [ "IS_BROKEN_CC" ]; then
     esac
 fi
 
+# find out if the isspace() function on this system is one
+# that dumps core of characters with the 8th bit set
+
+cat > ngc$$.c << EOF
+#include <stdlib.h>
+#include <ctype.h>
+
+main()
+{
+    char text[] = { -3 };
+
+    return isspace(text[0]);
+}
+EOF
+
+    if $AC_CC $AC_CFLAGS -o ngc$$ ngc$$.c; then
+	LOGN "is isspace() broken: "
+	if ./ngc$$ ; then
+	    LOG "no"
+	else
+	    AC_CC="$AC_CC -funsigned-char"
+
+	    $AC_CC $AC_CFLAGS -o ngc$$ ngc$$.c
+
+	    if ./ngc$$; then
+		LOG "yes (patchable)"
+	    else
+		LOG "yes (not patchable)"
+	    fi
+	fi
+    else
+	LOG "can't compile test program?"
+    fi
+    rm -rf ngc$$*
+
+
 AC_PROG ar || AC_FAIL "$TARGET requires ar"
 AC_PROG ranlib
 
