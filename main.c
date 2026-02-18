@@ -100,8 +100,9 @@ free_it(char *object, void *ctx)
 }
 
 char *
-external_codefmt(char *src, int len, char *lang)
+external_codefmt(const char *src, const int len, void *ext_lang)
 {
+    char *lang = (char*)ext_lang;
     int extra = 0;
     int i, x;
     char *res;
