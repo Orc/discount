@@ -125,13 +125,13 @@ external_codefmt(char *src, int len, char *lang)
     x = strlen(res);
     for ( i=0; i < len; i++ ) {
 	switch (src[i]) {
-	case '&':   strcpy(&src[x], "&amp;");
+	case '&':   strcpy(&res[x], "&amp;");
 		    x += 5 /*strlen(&amp;)*/ ;
 		    break;
-	case '<':   strcpy(&src[x], "&lt;");
+	case '<':   strcpy(&res[x], "&lt;");
 		    x += 4 /*strlen(&lt;)*/ ;
 		    break;
-	case '>':   strcpy(&src[x], "&gt;");
+	case '>':   strcpy(&res[x], "&gt;");
 		    x += 4 /*strlen(&gt;)*/ ;
 		    break;
 	default:    res[x++] = src[i];
