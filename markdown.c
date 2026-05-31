@@ -632,8 +632,10 @@ codeblock(Paragraph *p)
 
 
 static int
-iscodefence(Line *r, int size, line_type kind, mkd_flag_t *flags)
+iscodefence(Line *r, Line *orig, mkd_flag_t *flags)
 {
+    int kind = 0, size = 2, dle = 0;
+    
     if ( !is_flag_set(flags, MKD_FENCEDCODE) || is_flag_set(flags, MKD_STRICT) )
 	return 0;
 
@@ -644,6 +646,15 @@ iscodefence(Line *r, int size, line_type kind, mkd_flag_t *flags)
 	return 0;
 
 
+    if ( orig ) {
+	kind = orig->kind;
+	size = orig->count;
+	dle  = orig->dle;
+    }
+    
+    if ( (dle>>2) != (r->dle>>2) )
+	return 0;
+
     if ( kind )
 	return (r->kind == kind) && (r->count >= size);
     else
@@ -652,19 +663,20 @@ iscodefence(Line *r, int size, line_type kind, mkd_flag_t *flags)
 
 
 static Line *
-fencedcodechunk(Line *first, mkd_flag_t *flags)
+fencedcodechunk(Line *first, mkd_flag_t *flags, int *yes)
 {
     Line *r, *q;
 
     /* don't allow zero-length code fences
     */
-    if ( (first->next == 0) || iscodefence(first->next, first->count, first->kind, flags) ) {
+    if ( (first->next == 0) || iscodefence(first->next, first, flags) ) {
 	first->kind = chk_text;
 	first->is_fenced = 0;
 	if ( first->next) {
 	    first->next->kind = chk_text;
 	    first->next->is_fenced = 0;
 	}
+	*yes = 0;
 	return first->next;
     }
 
@@ -672,7 +684,7 @@ fencedcodechunk(Line *first, mkd_flag_t *flags)
      * past the closing fence
      */
     for ( r = first->next; r; r = r->next ) {
-	if ( iscodefence(r, first->count, first->kind, flags) ) {
+	if ( iscodefence(r, first, flags) ) {
 	    if (S(first->text) - first->count > 0) {
 		char *lang_attr = T(first->text) + first->count;
 
@@ -689,9 +701,13 @@ fencedcodechunk(Line *first, mkd_flag_t *flags)
 	    S(first->text) = S(r->text) = 0;
 	    r->is_fenced = 0;
 
-	    return r->next;
+	    *yes = 1;
+	    q = r->next;
+	    r->next = 0;
+	    return q;
 	}
     }
+    *yes = 0;
     first->is_fenced = 0;
     first->kind = chk_text;
     return first;
@@ -742,9 +758,7 @@ textblock(Paragraph *p, int toplevel, mkd_flag_t *flags)
     Line *t, *next;
 
     for ( t = p->text; t ; t = next ) {
-	if ( iscodefence(t, t->count, 0, flags) )
-	    next = fencedcodechunk(t, flags);
-	else if ( ((next = t->next) == 0) || endoftextblock(next, toplevel, flags) ) {
+	if ( ((next = t->next) == 0) || endoftextblock(next, toplevel, flags) ) {
 	    p->align = centered(p->text, t);
 	    t->next = 0;
 	    return next;
@@ -1296,24 +1310,31 @@ compile_document(Line *ptr, MMIOT *f)
 	    ptr = consume(addfootnote(ptr, f), &eaten);
 	    previous_was_break = 1;
 	}
-	else if (iscodefence(ptr, 2, 0, &(f->flags))) {
-	    Line *more = ptr;
-
+	else if ( previous_was_break && iscodefence(ptr, 0, &(f->flags)) ) {
 	    /* scoop up _everything_ in a fenced code block, including html & footnotes
 	     */
+	    int yes = 0;
+	    Line *last = fencedcodechunk(ptr, &(f->flags), &yes );
 
-	    ATTACH(source,more);
+	    if ( yes ) {
+		int dummy;
 
-	    {   Cache checkpoint = source;
-		while ( (more = more->next) && !iscodefence(more, ptr->count, ptr->kind, &(f->flags)) )
-		    ATTACH(source,more);
+		/* dump out any previously cached text
+		 */
+		uncache(&source, &d, f);
 
-		if ( more )
-		    ptr = more;
-		else {
-		    source = checkpoint;
-		    ptr = ptr->next;
-		}
+		p = Pp(&d, ptr, FENCEDCODE);
+
+		ptr = consume(last, &dummy);
+		previous_was_break = 1;
+	    }
+	    else {
+		/* unterminated fenced code; treat as regular markdown & cache until the next
+		 * fenced code, htl, or style block
+		 */
+		ATTACH(source, ptr);
+		previous_was_break = 0;
+		ptr = ptr->next;
 	    }
 	}
 	else {
@@ -1474,14 +1495,25 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 		ptr = htmlblock(p, tag, &unclosed);
 		if ( ! unclosed ) {
 		    p->typ = HTML;
+		    continue;
 		}
 	    }
-	    if ( unclosed ) {
-		ptr = textblock(p, toplevel, &(f->flags) );
-		/* tables are a special kind of paragraph */
-		if ( actually_a_table(f, p->text) )
-		    p->typ = TABLE;
+		
+	    if ( iscodefence(p->text, 0, &(f->flags)) ) {
+		int yes = 0;
+
+		ptr = fencedcodechunk(p->text, &(f->flags), &yes);
+
+		if ( yes ) {
+		    p->typ = FENCEDCODE;
+		    continue;
+		}
 	    }
+		
+	    ptr = textblock(p, toplevel, &(f->flags) );
+	    /* tables are a special kind of paragraph */
+	    if ( actually_a_table(f, p->text) )
+		p->typ = TABLE;
 	}
 	if ( (para||toplevel) && !p->align )
 	    p->align = PARA;

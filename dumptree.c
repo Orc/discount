@@ -22,6 +22,7 @@ Pptype(int typ)
     switch (typ) {
     case WHITESPACE: return "whitespace";
     case CODE      : return "code";
+    case FENCEDCODE: return "fenced code";
     case QUOTE     : return "quote";
     case MARKUP    : return "markup";
     case HTML      : return "html";

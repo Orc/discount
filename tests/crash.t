@@ -76,21 +76,10 @@ RESULT='<ul>
 
 ./rep '#header' ' ' 400 |  try -T 'a header with a bunch of trailing spaces' -heredoc "$RESULT"
 
-RESULT='<table>
-<thead>
-<tr>
-<th>: Y:</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td></td>
-</tr>
-<tr>
-<td></td>
-</tr>
-</tbody>
-</table>'
+RESULT='<p>: Y:|
+<code>|
+|
+</code>|</p>'
 
 cat << \EOF | try '-F 0x03000000' 'random input that looks like a table' -heredoc "$RESULT"
 : Y:|

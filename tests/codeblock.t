@@ -50,19 +50,17 @@ code!
 
 still code!
 ~~~' \
-    '<p><pre><code>code!
+    '<pre><code>code!
 
 still code!
-</code></pre>
-</p>'
+</code></pre>'
 
 try  -ffencedcode 'fenced code block' \
 '~~~
 code!
 ~~~' \
-    '<p><pre><code>code!
-</code></pre>
-</p>'
+    '<pre><code>code!
+</code></pre>'
 
 try  -ffencedcode 'fenced code block in list' \
 '1. ~~~
@@ -78,9 +76,9 @@ try  -ffencedcode 'fenced code block in blockquote' \
 '>~~~
 code
 ~~~' \
-'<blockquote><p><pre><code>code
+'<blockquote><pre><code>code
 </code></pre>
-</p></blockquote>'
+</blockquote>'
 
 try  -ffencedcode 'unterminated fenced code block' \
 '~~~
@@ -94,11 +92,10 @@ try  -ffencedcode 'fenced code block with tildes' \
 code with tildes
 ~~~
 ~~~~~' \
-'<p><pre><code>~~~
+'<pre><code>~~~
 code with tildes
 ~~~
-</code></pre>
-</p>'
+</code></pre>'
 
 try  -ffencedcode 'paragraph with trailing fenced block' \
 'text text text
@@ -108,17 +105,16 @@ code code code?
 ~~~' \
 '<p>text text text
 text text text
-<pre><code>code code code?
-</code></pre>
-</p>'
+~~~
+code code code?
+~~~</p>'
 
 try  -ffencedcode 'fenced code blocks with backtick delimiters' \
 '```
 code
 ```' \
-'<p><pre><code>code
-</code></pre>
-</p>'
+'<pre><code>code
+</code></pre>'
 
 try  -ffencedcode 'fenced code block with mismatched delimters' \
 '```
@@ -132,57 +128,50 @@ try  -ffencedcode 'fenced code block with lang attribute' \
 '```lang
 code
 ```' \
-'<p><pre><code class="lang">code
-</code></pre>
-</p>'
+'<pre><code class="lang">code
+</code></pre>'
 
 try  -ffencedcode 'fenced code block with lang-name attribute' \
 '```lang-name
 code
 ```' \
-'<p><pre><code class="lang-name">code
-</code></pre>
-</p>'
+'<pre><code class="lang-name">code
+</code></pre>'
 
 try  -ffencedcode 'fenced code block with lang_name attribute' \
 '```lang_name
 code
 ```' \
-'<p><pre><code class="lang_name">code
-</code></pre>
-</p>'
+'<pre><code class="lang_name">code
+</code></pre>'
 
 try  -ffencedcode 'fenced code block with lang attribute and space' \
 '``` lang
 code
 ```' \
-'<p><pre><code class="lang">code
-</code></pre>
-</p>'
+'<pre><code class="lang">code
+</code></pre>'
 
 try  -ffencedcode 'fenced code block with lang attribute and multiple spaces' \
 '```       lang
 code
 ```' \
-'<p><pre><code class="lang">code
-</code></pre>
-</p>'
+'<pre><code class="lang">code
+</code></pre>'
 
 try  -ffencedcode 'fenced code block with lang-name attribute and space' \
 '``` lang-name
 code
 ```' \
-'<p><pre><code class="lang-name">code
-</code></pre>
-</p>'
+'<pre><code class="lang-name">code
+</code></pre>'
 
 try  -ffencedcode 'fenced code block with lang_name attribute and space' \
 '``` lang_name
 code
 ```' \
-'<p><pre><code class="lang_name">code
-</code></pre>
-</p>'
+'<pre><code class="lang_name">code
+</code></pre>'
 
 try -ffencedcode 'fenced code block with blank line in the middle' \
 '```
@@ -190,20 +179,18 @@ hello
 
 sailor
 ```' \
-'<p><pre><code>hello
+'<pre><code>hello
 
 sailor
-</code></pre>
-</p>'
+</code></pre>'
 
 
 try -ffencedcode 'fenced code block with html in the middle' \
 '~~~~
 <h1>hello, sailor</h1>
 ~~~~' \
-'<p><pre><code>&lt;h1&gt;hello, sailor&lt;/h1&gt;
-</code></pre>
-</p>'
+'<pre><code>&lt;h1&gt;hello, sailor&lt;/h1&gt;
+</code></pre>'
 
 try -ffencedcode 'fenced code block with trailing spaces in list item' \
 '1.  ~~~~    
@@ -229,9 +216,8 @@ bar
 ~~~~' \
 '<p>foo</p>
 
-<p><pre><code>bar
-</code></pre>
-</p>'
+<pre><code>bar
+</code></pre>'
 
 
 try -ffencedcode 'checkline misparse as fenced code' \
@@ -241,10 +227,9 @@ content
 ```
 ' \
 '<p><a href="#code"><code>label</code></a>
-<pre><code class="class">content
-</code></pre>
-</p>'
-
+<code>class
+content
+</code></p>'
 
 summary $0
 exit $rc

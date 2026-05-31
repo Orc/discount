@@ -102,7 +102,7 @@ typedef struct paragraph {
     char *label;		/* toc label, uniqued */
     char *ident;		/* %id% tag for QUOTE */
     char *lang;			/* lang attribute for CODE */
-    enum { WHITESPACE=0, CODE, QUOTE, MARKUP,
+    enum { WHITESPACE=0, CODE, FENCEDCODE, QUOTE, MARKUP,
 	   HTML, STYLE, DL, UL, OL, AL, LISTITEM,
 	   HDR, HR, TABLE, SOURCE } typ;
     enum { IMPLICIT=0, PARA, CENTER} align;

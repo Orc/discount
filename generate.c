@@ -1867,11 +1867,7 @@ printblock(Paragraph *pp, MMIOT *f)
 
     Qstring(Begin[align], f);
     do {
-	if ( t->is_fenced ) {
-	    text(f);
-	    t = printfenced(t, f);
-	}
-	else if ( S(t->text) ) {
+	if ( S(t->text) ) {
 	    if ( t->next && S(t->text) > 2
 			 && T(t->text)[S(t->text)-2] == ' '
 			 && T(t->text)[S(t->text)-1] == ' ' ) {
@@ -2058,6 +2054,10 @@ display(Paragraph *p, MMIOT *f)
 
     case HTML:
 	printhtml(p->text, f);
+	break;
+
+    case FENCEDCODE:
+	printfenced(p->text, f);
 	break;
 
     case CODE:
