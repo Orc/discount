@@ -80,6 +80,18 @@ code
 </code></pre>
 </blockquote>'
 
+try -ffencedcode 'fenced code block in two adjacent blockquote chunks' \
+'>~~~~
+> not code
+
+> still not code
+> ~~~~ ' \
+'<blockquote><p>~~~~
+not code</p>
+
+<p>still not code
+~~~~</p></blockquote>'
+
 try  -ffencedcode 'unterminated fenced code block' \
 '~~~
 code' \

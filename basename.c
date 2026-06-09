@@ -1,5 +1,5 @@
 /*
- * mkdio -- markdown front end input functions
+ * mkd_basename -- a url callback function that adds a prefix to an absolute path.
  *
  * Copyright (C) 2007 Jessica L Parsons.
  * The redistribution terms are provided in the COPYRIGHT file that must

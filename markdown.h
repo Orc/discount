@@ -85,6 +85,7 @@ typedef struct line {
     int has_pipechar;		/* line contains a | */
     int is_checked;
     line_type kind;
+    int section_break;		/* paragraph break in blockquote */
     int is_fenced;		/* line inside a fenced code block (ick) */
     char *fence_class;		/* fenced code class (ick) */
     int count;

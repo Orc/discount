@@ -684,6 +684,8 @@ fencedcodechunk(Line *first, mkd_flag_t *flags, int *yes)
      * past the closing fence
      */
     for ( r = first->next; r; r = r->next ) {
+	if ( r->section_break )
+	    break;
 	if ( iscodefence(r, first, flags) ) {
 	    if (S(first->text) - first->count > 0) {
 		char *lang_attr = T(first->text) + first->count;
@@ -856,6 +858,8 @@ quoteblock(Paragraph *p, mkd_flag_t *flags)
 	    t = q;
 	    break;
 	}
+	if ( q != t->next )
+	    t->section_break = 1;
     }
     if ( isdivmarker(p->text,0,flags) ) {
 	char *prefix = "class";
