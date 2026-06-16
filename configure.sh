@@ -13,6 +13,7 @@ ac_help='--enable-amalloc	Enable memory allocation debugging
 --container		Build inside a container
 --pkg-config		Install pkg-config(1) glue files
 --cxx-binding		Install header files with c++ wrappers
+--with-recursion=NNN	how deeply things can nest before the become just text
 --github-checkbox[=input] Enable github-style checkboxes in lists
 			(if =input, use <input checkbox>, otherwise
 			use html ballot entities)'
@@ -237,6 +238,11 @@ if AC_CHECK_FUNCS fchdir || AC_CHECK_FUNCS getcwd ; then
 else
     AC_SUB 'THEME' '#'
 fi
+
+if [ -z "$WITH_RECURSION" ]; then
+    WITH_RECURSION=200
+fi
+AC_DEFINE 'MAX_RECURSION' $WITH_RECURSION
 
 if [ -z "$WITH_TABSTOPS" ]; then
     TABSTOP=4

@@ -1434,9 +1434,14 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 
     ptr = consume(ptr, &para);
 
+    ++(f->recursion);
     while ( ptr ) {
 
-	if ( iscode(ptr) ) {
+	if ( f->recursion > MAX_RECURSION ) {
+	    p = Pp(&d, ptr, MARKUP);
+	    ptr = textblock(p, toplevel, &(f->flags) );
+	}
+	else if ( iscode(ptr) ) {
 	    p = Pp(&d, ptr, CODE);
 
 	    if ( is_flag_set(&(f->flags), MKD_1_COMPAT) ) {
@@ -1530,6 +1535,7 @@ compile(Line *ptr, int toplevel, MMIOT *f)
 	    p->align = PARA;
 
     }
+    (f->recursion)--;
     return T(d);
 }
 

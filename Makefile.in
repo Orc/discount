@@ -31,7 +31,7 @@ OBJS=mkdio.o markdown.o dumptree.o generate.o \
      github_flavoured.o setup.o tags.o html5.o \
      pgm_options.o flags.o v2compat.o flagprocs.o \
      @AMALLOC@ @H1TITLE@
-TESTFRAMEWORK=rep echo cols branch pandoc_headers space2nl
+TESTFRAMEWORK=300 rep echo cols branch pandoc_headers space2nl
 
 # modules that markdown, makepage, mkd2html, &tc use
 COMMON=gethopt.o notspecial.o
@@ -151,6 +151,11 @@ rep.o : tools/rep.c
 	$(BUILD) -c -o rep.o tools/rep.c
 rep:    rep.o
 	$(LINK) -o rep rep.o
+	
+300.o : tools/300.c
+	$(BUILD) -c -o 300.o tools/300.c
+300:    300.o
+	$(LINK) -o 300 300.o
 	
 branch.o: tools/branch.c config.h
 	$(BUILD) -c -o branch.o tools/branch.c

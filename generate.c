@@ -235,6 +235,7 @@ ___mkd_reparse(char *bfr, int size, mkd_flag_t* flags, MMIOT *f, char *esc)
     pushc(0, &sub);
     S(sub.in)--;
 
+    sub.recursion = f->recursion+1;
     text(&sub);
     ___mkd_emblock(&sub);
 
@@ -1476,7 +1477,8 @@ text(MMIOT *f)
 			    || (f->last == 0)
 			    || ((ispunct(f->last) || isspace(f->last))
 						    && f->last != ')')
-			    || isthisspace(f,1) )
+			    || isthisspace(f,1)
+			    || f->recursion > MAX_RECURSION )
 			Qchar(c,f);
 		    else {
 			char *sup = cursor(f);

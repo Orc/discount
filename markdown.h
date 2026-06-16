@@ -196,6 +196,7 @@ typedef struct mmiot {
     Qblock Q;
     char last;				/* last text character added to out */
     int isp;
+    int recursion;
     struct escaped *esc;
     char *ref_prefix;
     struct footnote_list *footnotes;
