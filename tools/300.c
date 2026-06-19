@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int
 main(argc, argv)
 int argc;
 char **argv;
@@ -33,4 +34,5 @@ char **argv;
 	    printf("%s", pattern2);
 
     putchar('\n');
+    exit(0);
 }

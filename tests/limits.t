@@ -1,6 +1,6 @@
 . tests/functions.sh
 
-title 'Recursion limits'
+title 'recursion limits'
 rc=0
 
 limits() {
