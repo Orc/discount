@@ -8,7 +8,7 @@ limits() {
 
     res=`./300 400 $3 $4 $5 | ./markdown | tr -dc "$2" | wc -c`
 
-    if (( $res > 0 )); then
+    if [ $res -gt 0 ]; then
 	# it worked
 	test $VERBOSE && ./echo " ok"
     else
