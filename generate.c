@@ -297,12 +297,12 @@ puturl(char *s, int size, MMIOT *f, int display)
 	    Qstring("&lt;", f);
 	else if ( c == '"' )
 	    Qstring("%22", f);
-	else if ( isalnum(c) || ispunct(c) || (display && isspace(c)) )
-	    Qchar(c, f);
 	else if ( c == MKD_EOLN )	/* untokenize hard return */
 	    Qstring("  ", f);
-	else
+	else if ( (c & 0x80) || !(isalnum(c) || ispunct(c) || (display && isspace(c))) )
 	    Qprintf(f, "%%%02X", c);
+	else
+	    Qchar(c, f);
     }
 }
 

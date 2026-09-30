@@ -82,13 +82,13 @@ try '-T -ftoc' 'toc item with non-alpha start' \
 <a name="L1-header"></a>
 <h1>1 header</h1>'
 
-# Be sure to save toc.t as UTF-8.
+# The apostrophe here is an UTF-8 multibyte character.
 try '-T -ftoc,html5anchor' 'html5 multibyte chars' \
 '#It’s an apostrophe' \
 '<ul>
- <li><a href="#It’s-an-apostrophe">It’s an apostrophe</a></li>
+ <li><a href="#It%e2%80%99s-an-apostrophe">It’s an apostrophe</a></li>
 </ul>
-<a name="It’s-an-apostrophe"></a>
+<a name="It%e2%80%99s-an-apostrophe"></a>
 <h1>It’s an apostrophe</h1>'
 
 summary $0

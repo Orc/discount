@@ -253,7 +253,7 @@ mkd_anchor_format(char *s, int len, int labelformat, mkd_flag_t *flags)
 	if ( labelformat ) {
 	    if ( h4anchor
 		    ? (isalnum(c) || (c == '_') || (c == ':') || (c == '.' ) )
-		    : !(isspace(c) || c == '%') )
+		    : !(isspace(c) || c == '%' || (c & 0x80)) )
 		res[out++] = c;
 	    else if ( c == ' ' )
 		res[out++] = '-';
