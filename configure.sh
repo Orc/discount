@@ -276,6 +276,9 @@ else
 fi
 
 
+AC_DEFINE 'highbitset(x)' '((x) & 0x80)'
+
+
 [ "$OS_FREEBSD" -o "$OS_DRAGONFLY" ] || AC_CHECK_HEADERS malloc.h
 
 [ "$WITH_PANDOC_HEADER" ] && AC_DEFINE 'PANDOC_HEADER' '1'

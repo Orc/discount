@@ -86,7 +86,7 @@ isthisspace(MMIOT *f, int i)
 
     if ( c == EOF )
 	return 1;
-    if ( c & 0x80 )
+    if ( highbitset(c) )
 	return 0;
     return isspace(c) || (c < ' ');
 }
@@ -299,7 +299,7 @@ puturl(char *s, int size, MMIOT *f, int display)
 	    Qstring("%22", f);
 	else if ( c == MKD_EOLN )	/* untokenize hard return */
 	    Qstring("  ", f);
-	else if ( (c & 0x80) || !(isalnum(c) || ispunct(c) || (display && isspace(c))) )
+	else if ( highbitset(c) || !(isalnum(c) || ispunct(c) || (display && isspace(c))) )
 	    Qprintf(f, "%%%02X", c);
 	else
 	    Qchar(c, f);
@@ -1217,7 +1217,7 @@ maybe_autolink(MMIOT *f)
 	     if ( peek(f, size+2) != EOF )
 		++size;
 	}
-	else if ( c & 0x80 )	/* HACK: ignore utf-8 extended characters */
+	else if ( highbitset(c) )	/* HACK: ignore utf-8 extended characters */
 	    continue;
 	else if ( isspace(c) || strchr("'\"()[]{}<>`", c) || c == MKD_EOLN )
 	    break;

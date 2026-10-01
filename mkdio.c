@@ -126,7 +126,7 @@ populate(getc_func getc, void* ctx, mkd_flag_t *flags)
 	    __mkd_enqueue(a, &line);
 	    S(line) = 0;
 	}
-	else if ( (c & 0x80) || isprint(c) || isspace(c) )
+	else if ( highbitset(c) || isprint(c) || isspace(c) )
 	    EXPAND(line) = c;
     }
 
@@ -253,7 +253,7 @@ mkd_anchor_format(char *s, int len, int labelformat, mkd_flag_t *flags)
 	if ( labelformat ) {
 	    if ( h4anchor
 		    ? (isalnum(c) || (c == '_') || (c == ':') || (c == '.' ) )
-		    : !(isspace(c) || c == '%' || (c & 0x80)) )
+		    : !(isspace(c) || c == '%' || highbitset(c)) )
 		res[out++] = c;
 	    else if ( c == ' ' )
 		res[out++] = '-';

@@ -28,7 +28,7 @@ mkd_xmlchar(unsigned char c)
     case '&':   return "&amp;";
     case '"':   return "&quot;";
     case '\'':  return "&apos;";
-    default:    if ( (c & 0x80) || isascii(c) )
+    default:    if ( highbitset(c) || isascii(c) )
 		    return 0;
 		return "";
     }
