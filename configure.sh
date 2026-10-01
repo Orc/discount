@@ -171,15 +171,26 @@ cat > ngc$$.c << EOF
 main()
 {
     char text[] = { -3 };
+    int x;
 
-    return isspace(text[0]);
+    x = isspace(text[0]);
+
+    if ( x ) /* isspace is broken */
+	exit(1);
+
+    x = isalpha(text[0]);
+
+    if ( x ) /* isalpha is broken */
+	exit(1);
+
+    exit(0);
 }
 EOF
 
     if $AC_CC $AC_CFLAGS -o ngc$$ ngc$$.c; then
-	LOGN "is isspace() broken: "
+	LOGN "are the ctype functions broken: "
 	if ./ngc$$ ; then
-	    LOG "no"
+	    LOG "probably not"
 	else
 	    AC_CC="$AC_CC -funsigned-char"
 
