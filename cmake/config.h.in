@@ -76,4 +76,6 @@
 
 #define DESTRUCTOR
 
+#define MAX_RECURSION 200
+
 #endif /* _CONFIG_D */
