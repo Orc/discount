@@ -287,7 +287,7 @@ puturl(char *s, int size, MMIOT *f, int display)
 	if ( c == '\\' && size-- > 0 ) {
 	    c = *s++;
 
-	    if ( !( ispunct(c) || isspace(c) ) )
+	    if ( highbitset(c) || !( ispunct(c) || isspace(c) ) )
 		Qchar('\\', f);
 	}
 

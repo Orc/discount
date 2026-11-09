@@ -244,7 +244,7 @@ mkd_anchor_format(char *s, int len, int labelformat, mkd_flag_t *flags)
     if ( (res = malloc(needed)) == NULL )
 	return NULL;
 
-    if ( h4anchor && labelformat && !isalpha(s[0]) )
+    if ( h4anchor && labelformat && (highbitset(s[0]) || !isalpha(s[0])) )
 	res[out++] = 'L';
 	
     
@@ -252,7 +252,7 @@ mkd_anchor_format(char *s, int len, int labelformat, mkd_flag_t *flags)
 	c = s[i];
 	if ( labelformat ) {
 	    if ( h4anchor
-		    ? (isalnum(c) || (c == '_') || (c == ':') || (c == '.' ) )
+		    ? (!highbitset(c) && (isalnum(c) || (c == '_') || (c == ':') || (c == '.' )) )
 		    : !(isspace(c) || c == '%' || highbitset(c)) )
 		res[out++] = c;
 	    else if ( c == ' ' )
